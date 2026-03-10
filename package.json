@@ -1,6 +1,6 @@
 {
   "name": "@veritasacta/verify",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Anonymous credential verification using VOPRF (RFC 9497). Issuer-blind, offline, deterministic.",
   "license": "MIT",
   "author": "Tom Farley <tom@veritasacta.com>",

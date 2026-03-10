@@ -331,6 +331,4 @@ async function _countAndEnforce(y_b64, c_nonce, scope, config, store) {
   });
 }
 
-// ─── Exports ────────────────────────────────────────────────────────────────
-
-export { decodePoint, dleqVerify };
+// decodePoint and dleqVerify are exported inline via `export function` above.
