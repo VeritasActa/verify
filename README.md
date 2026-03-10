@@ -241,6 +241,6 @@ See [PROTOCOL.md](./PROTOCOL.md) for the formal specification including:
 
 ## License
 
-[FSL-1.1-MIT](https://fsl.software) — Source-available. Free to self-host for your own APIs. Cannot be offered as a competing hosted verification service. Converts to MIT after the change date.
+MIT — see [LICENSE](./LICENSE).
 
-The BRASS protocol is also covered by pending patent applications. See [LICENSE](./LICENSE) for details.
+The BRASS protocol is covered by pending patent applications. The code is MIT (use it freely); competing commercial issuance services may require a separate patent license.
