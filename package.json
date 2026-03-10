@@ -1,0 +1,55 @@
+{
+  "name": "@veritasacta/verify",
+  "version": "0.1.0",
+  "description": "Anonymous credential verification using VOPRF (RFC 9497). Issuer-blind, offline, deterministic.",
+  "license": "FSL-1.1-MIT",
+  "author": "Tom Farley <tom@veritasacta.com>",
+  "homepage": "https://github.com/VeritasActa/verify",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/VeritasActa/verify"
+  },
+  "keywords": [
+    "voprf",
+    "anonymous-credentials",
+    "rate-limiting",
+    "privacy",
+    "cryptography",
+    "blind-tokens",
+    "p256",
+    "cloudflare-workers",
+    "edge-compute",
+    "agent-identity",
+    "veritas",
+    "acta"
+  ],
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./crypto": "./src/crypto.js",
+    "./storage": "./src/storage.js",
+    "./adapters/kv": "./src/adapters/kv-store.js",
+    "./adapters/memory": "./src/adapters/memory-store.js"
+  },
+  "files": [
+    "src/",
+    "LICENSE",
+    "README.md",
+    "PROTOCOL.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@noble/hashes": "^1.3.0",
+    "@noble/curves": "^1.3.0"
+  },
+  "devDependencies": {
+    "vitest": "^1.0.0"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  }
+}

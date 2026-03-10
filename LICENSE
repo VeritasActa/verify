@@ -1,0 +1,39 @@
+Functional Source License, Version 1.1, MIT Future License
+
+Copyright 2026 Tom Farley
+
+Parameters
+
+Licensor:             Tom Farley
+Licensed Work:        @veritasacta/verify
+                      The Licensed Work is (c) 2026 Tom Farley.
+Additional Use Grant: You may make use of the Licensed Work, provided that
+                      you may not use the Licensed Work for a Competing Use.
+                      A Competing Use means offering the Licensed Work to
+                      third parties as a hosted or managed verification
+                      service that competes with the Licensor's paid products
+                      or services.
+Change Date:          Four years from the date the Licensed Work is published.
+Change License:       MIT
+
+For the full license text, see https://fsl.software/FSL-1.1-MIT.template.md
+
+Notice
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+Patent Notice: The BRASS protocol is covered by pending patent applications.
+The underlying protocol methods are patent-pending; commercial use of the
+protocol in competing issuance services may require a separate license.
+For details, contact patents@veritasacta.com.
