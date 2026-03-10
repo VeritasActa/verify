@@ -5,7 +5,7 @@
  * Issuer-blind, offline, deterministic.
  *
  * @module @veritasacta/verify
- * @license FSL-1.1-MIT
+ * @license MIT
  */
 
 // ─── Core verification ───────────────────────────────────────────────────────

@@ -12,7 +12,7 @@
  * or any backend that provides compare-and-swap (CAS) semantics.
  *
  * @module @veritasacta/verify/storage
- * @license FSL-1.1-MIT
+ * @license MIT
  */
 
 /**

@@ -12,7 +12,7 @@
  *   RFC 9380 — Hashing to Elliptic Curves
  *
  * @module @veritasacta/verify/crypto
- * @license FSL-1.1-MIT
+ * @license MIT
  */
 
 import { sha256 } from '@noble/hashes/sha256';

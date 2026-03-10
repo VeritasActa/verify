@@ -17,7 +17,7 @@
  * The issuer is never contacted during verification.
  *
  * @module @veritasacta/verify/verifier
- * @license FSL-1.1-MIT
+ * @license MIT
  */
 
 import { p256 } from '@noble/curves/p256';

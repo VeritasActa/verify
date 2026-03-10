@@ -11,7 +11,7 @@
  * For strict enforcement, use Durable Objects or any CAS-capable backend.
  *
  * @module @veritasacta/verify/adapters/kv
- * @license FSL-1.1-MIT
+ * @license MIT
  */
 
 import { BrassCounterStore } from '../storage.js';

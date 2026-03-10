@@ -11,7 +11,7 @@
  *   - Zero dependencies
  *
  * @module @veritasacta/verify/adapters/memory
- * @license FSL-1.1-MIT
+ * @license MIT
  */
 
 import { BrassCounterStore } from '../storage.js';
