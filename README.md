@@ -241,6 +241,6 @@ See [PROTOCOL.md](./PROTOCOL.md) for the formal specification including:
 
 ## License
 
-MIT — see [LICENSE](./LICENSE).
+Apache-2.0 — see [LICENSE](./LICENSE) and [NOTICE](./NOTICE).
 
-The BRASS protocol is covered by pending patent applications. The code is MIT (use it freely); competing commercial issuance services may require a separate patent license.
+The BRASS protocol is covered by pending patent applications. Use of this code grants you a royalty-free patent license per Apache License 2.0 Section 3. Clean-room reimplementation of patented constructions without use of this code requires a separate patent license.

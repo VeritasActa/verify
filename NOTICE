@@ -1,0 +1,13 @@
+ScopeBlind
+Copyright 2026 ScopeBlind Pty Ltd (ABN 41693027440)
+
+This product includes software developed by ScopeBlind Pty Ltd.
+
+Certain implementations in this package are covered by patent applications
+filed by ScopeBlind Pty Ltd. Use of this code grants you a royalty-free
+patent license per Apache License 2.0 Section 3. Clean-room
+reimplementation of patented constructions without use of this code
+requires a separate patent license.
+
+Patent-protected constructions are identified in source code JSDoc
+annotations with the @patent tag.
