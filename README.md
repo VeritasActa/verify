@@ -1,3 +1,5 @@
+[![CI](https://github.com/VeritasActa/verify/actions/workflows/ci.yml/badge.svg)](https://github.com/VeritasActa/verify/actions/workflows/ci.yml)
+
 # @veritasacta/verify
 
 Anonymous credential verification using VOPRF ([RFC 9497](https://datatracker.ietf.org/doc/html/rfc9497)).
