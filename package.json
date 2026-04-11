@@ -1,7 +1,7 @@
 {
   "name": "@veritasacta/verify",
-  "version": "0.1.1",
-  "description": "Anonymous credential verification using VOPRF (RFC 9497). Issuer-blind, offline, deterministic.",
+  "version": "0.2.5",
+  "description": "Verify signed receipts offline. No accounts, no API calls, no trust required. Ed25519 + JCS.",
   "license": "Apache-2.0",
   "author": "Tom Farley <tom@veritasacta.com>",
   "homepage": "https://github.com/VeritasActa/verify",
@@ -9,34 +9,35 @@
     "type": "git",
     "url": "https://github.com/VeritasActa/verify"
   },
+  "bugs": {
+    "url": "https://github.com/VeritasActa/verify/issues"
+  },
   "keywords": [
-    "voprf",
-    "anonymous-credentials",
-    "rate-limiting",
-    "privacy",
+    "verify",
+    "ed25519",
+    "receipts",
+    "offline-verification",
     "cryptography",
-    "blind-tokens",
-    "p256",
-    "cloudflare-workers",
-    "edge-compute",
-    "agent-identity",
-    "veritas",
+    "audit",
+    "compliance",
+    "agent-governance",
+    "mcp",
+    "veritasacta",
     "acta"
   ],
   "type": "module",
   "main": "src/index.js",
+  "bin": {
+    "veritasacta-verify": "src/cli.js"
+  },
   "exports": {
     ".": "./src/index.js",
-    "./crypto": "./src/crypto.js",
-    "./storage": "./src/storage.js",
-    "./adapters/kv": "./src/adapters/kv-store.js",
-    "./adapters/memory": "./src/adapters/memory-store.js"
+    "./cli": "./src/cli.js"
   },
   "files": [
     "src/",
     "LICENSE",
-    "README.md",
-    "PROTOCOL.md"
+    "README.md"
   ],
   "engines": {
     "node": ">=18"
