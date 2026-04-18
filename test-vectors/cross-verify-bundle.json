@@ -60,7 +60,142 @@
         "signature"
       ],
       "receipt_uri": null,
-      "receipt": null
+      "receipt": {
+        "receiptId": "dlr_va_ku_4b3f7c2a9d8e1f05",
+        "timestamp": "2026-04-18T00:00:00Z",
+        "decisionArtifactId": "veritasacta:ku:ku_4b3f7c2a9d8e1f05",
+        "decisionType": "knowledge_unit_deliberation",
+        "contributingSources": [
+          {
+            "sourceId": "ku:model:claude-opus-4.6",
+            "accessReceiptId": "sha256:2b06eb3385bcfa7bf29d59ae693c28124062fdb9b548a9710c1ee44f2eeae192",
+            "derivationDepth": 1,
+            "transformPath": [
+              "aggregation"
+            ],
+            "termsVersionAtAccess": "veritasacta:knowledge-unit-bundle:v1",
+            "lineageConfidence": "complete",
+            "compensationStatus": "settled"
+          },
+          {
+            "sourceId": "ku:model:gpt-5",
+            "accessReceiptId": "sha256:a54dde3a9dd2501476b0e9613990333371a29b2b669c9da02e348a86e6b2ff83",
+            "derivationDepth": 2,
+            "transformPath": [
+              "aggregation"
+            ],
+            "termsVersionAtAccess": "veritasacta:knowledge-unit-bundle:v1",
+            "lineageConfidence": "complete",
+            "compensationStatus": "settled"
+          },
+          {
+            "sourceId": "ku:model:gemini-2.5-pro",
+            "accessReceiptId": "sha256:76cce8f734ae646b56f4df333a15a400f254dcacece06e7b2bf26c97438b8bbc",
+            "derivationDepth": 3,
+            "transformPath": [
+              "aggregation"
+            ],
+            "termsVersionAtAccess": "veritasacta:knowledge-unit-bundle:v1",
+            "lineageConfidence": "complete",
+            "compensationStatus": "settled"
+          },
+          {
+            "sourceId": "ku:model:grok-4.20",
+            "accessReceiptId": "sha256:653a70f396a16d2114b42996305f514b35d5ba59e6b37527b6311aa4d9e79aeb",
+            "derivationDepth": 4,
+            "transformPath": [
+              "aggregation"
+            ],
+            "termsVersionAtAccess": "veritasacta:knowledge-unit-bundle:v1",
+            "lineageConfidence": "complete",
+            "compensationStatus": "settled"
+          },
+          {
+            "sourceId": "ku:model:claude-opus-4.6",
+            "accessReceiptId": "sha256:69eaa88bb7b4d0c66e9649096dae4aad20b84f7d9862b404f46a37e0a96e8240",
+            "derivationDepth": 5,
+            "transformPath": [
+              "aggregation"
+            ],
+            "termsVersionAtAccess": "veritasacta:knowledge-unit-bundle:v1",
+            "lineageConfidence": "complete",
+            "compensationStatus": "settled"
+          },
+          {
+            "sourceId": "ku:model:gpt-5",
+            "accessReceiptId": "sha256:18ac3cef4d85205ebe2886b8b94b368ae8d28585088762e91df80ab3031a42d6",
+            "derivationDepth": 6,
+            "transformPath": [
+              "aggregation"
+            ],
+            "termsVersionAtAccess": "veritasacta:knowledge-unit-bundle:v1",
+            "lineageConfidence": "complete",
+            "compensationStatus": "settled"
+          },
+          {
+            "sourceId": "ku:model:gemini-2.5-pro",
+            "accessReceiptId": "sha256:b69cef75b1f0eeb36ece82755df449ccea4dde04915268c254fef33508ce016f",
+            "derivationDepth": 7,
+            "transformPath": [
+              "aggregation"
+            ],
+            "termsVersionAtAccess": "veritasacta:knowledge-unit-bundle:v1",
+            "lineageConfidence": "complete",
+            "compensationStatus": "settled"
+          },
+          {
+            "sourceId": "ku:model:grok-4.20",
+            "accessReceiptId": "sha256:b744f32a94d8f1f7727e9020308a8b1db87aef8c80b53c7644398ae0078317bc",
+            "derivationDepth": 8,
+            "transformPath": [
+              "aggregation"
+            ],
+            "termsVersionAtAccess": "veritasacta:knowledge-unit-bundle:v1",
+            "lineageConfidence": "complete",
+            "compensationStatus": "settled"
+          },
+          {
+            "sourceId": "ku:arbiter:scopeblind-reference",
+            "accessReceiptId": "sha256:b0b54512737617227b1ac7569c06e71fbe8dd944011050c3ceaeac5e79526122",
+            "derivationDepth": 9,
+            "transformPath": [
+              "aggregation"
+            ],
+            "termsVersionAtAccess": "veritasacta:knowledge-unit-bundle:v1",
+            "lineageConfidence": "complete",
+            "compensationStatus": "settled"
+          },
+          {
+            "sourceId": "ku:arbiter:scopeblind-reference",
+            "accessReceiptId": "sha256:a630e18f8a394f5b8f3488b6d6ffa1ce2193380b3ae35de8b7477b640fdacb6b",
+            "derivationDepth": 10,
+            "transformPath": [
+              "aggregation"
+            ],
+            "termsVersionAtAccess": "veritasacta:knowledge-unit-bundle:v1",
+            "lineageConfidence": "complete",
+            "compensationStatus": "settled"
+          }
+        ],
+        "lineageCompleteness": "complete",
+        "externalHopsPresent": true,
+        "transformChain": [
+          "aggregation"
+        ],
+        "governingPurpose": "research:academic",
+        "jurisdictionContext": "veritasacta:knowledge-unit-bundle:v1",
+        "explanation": "APS DecisionLineageReceipt attesting to VeritasActa Knowledge Unit ku_4b3f7c2a9d8e1f05. Bundle terminal aggregate sha256: a630e18f8a394f5b8f3488b6d6ffa1ce2193380b3ae35de8b7477b640fdacb6b. Each entry in contributingSources commits to the JCS-canonical sha256 of one KU receipt; tampering any byte of any KU receipt invalidates the recorded accessReceiptId, breaking cross-layer integrity even though APS's Ed25519 signature over this DecisionLineageReceipt remains cryptographically valid.",
+        "signature": "c4ff9a5142ddf133294ccbbbed55facf077df11e3b067627fd041277832a0e5865d74d32845aac6486242aca2b8d52142699bc6c3fe8b4f0bf987e2b56001001"
+      },
+      "signing_key": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "use": "sig",
+        "issuer": "aps:test:ku-cross-verify",
+        "public_key_hex": "e91c6bc5b1ae0050db2a84ed962559e977cc6ff4cb5bd11577071bd7fa604faa",
+        "seed_note": "derived from sha256(\"aps:veritasacta:ku-cross-verify:v1\") — test key, NOT a production issuer"
+      },
+      "verifier_hint": "Verify with agent-passport-system: import { canonicalize, verify } and run verify(canonicalize({...receipt, signature: undefined}), receipt.signature, signing_key.public_key_hex). Cross-layer integrity: each contributingSources[].accessReceiptId is the JCS-canonical sha256 of the corresponding entry in bundle.receipts."
     }
   },
   "receipts": [
