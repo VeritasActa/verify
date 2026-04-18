@@ -1,0 +1,75 @@
+{
+  "format": "veritasacta:selective-disclosure-salted-commit:v1",
+  "spec": "AIP-0002 §Salted SHA-256 Commitments",
+  "generated_at": "2026-04-17T12:00:00Z",
+  "description": "Demonstrates AIP-0002 redaction: a dissenting round-1 response is published with position and confidence fields replaced by salted SHA-256 commitments. The unsigned `witness` block carries the salts + plaintext values that reveal the commitments to a need-to-know recipient. Complementary to Merkle-tree selective disclosure (APS-style): simpler and zero-dependency, but subset boundary must be fixed at commit time.",
+  "how_to_use": [
+    "Verify `redacted_receipt` with @veritasacta/verify — the Ed25519 signature is over the redacted payload, so verification succeeds without access to the witness.",
+    "For each entry in `witness.disclosures`, compute sha256(salt + \":\" + JSON.stringify(plaintext)) and compare to `expected_commitment`. If bytes match, the disclosure is authentic.",
+    "The receipt is publishable; the witness stays with parties authorized to see the dissenting response."
+  ],
+  "verification": {
+    "signing_keys": [
+      {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "kid": "MdZxWfPWCPrjb4blQEWBKFyk9FkazXCgk2K7QFiuYRw",
+        "x": "nQIE0pSO6yXnABIt3SdC01oyyLa-J1i9Wf5o1lDUtoc",
+        "use": "sig",
+        "issuer": "ku:model:grok-4.20"
+      }
+    ]
+  },
+  "redacted_receipt": {
+    "v": 2,
+    "type": "veritasacta:knowledge_unit:round_response",
+    "algorithm": "ed25519",
+    "kid": "MdZxWfPWCPrjb4blQEWBKFyk9FkazXCgk2K7QFiuYRw",
+    "issuer": "ku:model:grok-4.20",
+    "issued_at": "2026-04-17T12:00:04Z",
+    "payload": {
+      "ku_id": "ku_4b3f7c2a9d8e1f05",
+      "sequence": 4,
+      "round": 1,
+      "model": {
+        "id": "grok-4.20",
+        "vendor": "xai"
+      },
+      "topic_digest": "a0431c892bf3d1d67c63726c9a7cf00c6270b39098c8e9cdcfdf26bb73825b24",
+      "response": {
+        "_redacted": {
+          "scheme": "veritasacta:aip-0002:salted-sha256-commit",
+          "fields": {
+            "position": {
+              "commitment": "sha256:d2c291baf9d6a744e179fbf710bac30dd44dc5fef60e0934b5a16341d9b71149",
+              "commit_algorithm": "sha256(salt || \":\" || json(value))"
+            },
+            "confidence": {
+              "commitment": "sha256:3d666f5630fa1c09843635e2487c77f8e02d175b817ebebdc146a6d048106a32",
+              "commit_algorithm": "sha256(salt || \":\" || json(value))"
+            }
+          }
+        }
+      }
+    },
+    "signature": "21b69679da11974e95fc6e90cd07aeff5d439f8fd060ce0fecc4250858cff1dc953644b7cca66e6cbd772eba3f02bd1f6cbeddd21e14719377caed7bcddf0d0a"
+  },
+  "witness": {
+    "ku_id": "ku_4b3f7c2a9d8e1f05",
+    "sequence": 4,
+    "disclosures": {
+      "response.position": {
+        "salt": "sdc_salt_8f3b2a1c9d6e4702",
+        "plaintext": "linear",
+        "expected_commitment": "sha256:d2c291baf9d6a744e179fbf710bac30dd44dc5fef60e0934b5a16341d9b71149",
+        "verify": "sha256(salt || \":\" || json(plaintext)) === expected_commitment"
+      },
+      "response.confidence": {
+        "salt": "sdc_salt_11ea5f0c7b4dc893",
+        "plaintext": 0.58,
+        "expected_commitment": "sha256:3d666f5630fa1c09843635e2487c77f8e02d175b817ebebdc146a6d048106a32",
+        "verify": "sha256(salt || \":\" || json(plaintext)) === expected_commitment"
+      }
+    }
+  }
+}

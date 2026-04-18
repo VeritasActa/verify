@@ -1,0 +1,124 @@
+{
+  "format": "veritasacta:jcs-test-vectors:v1",
+  "spec": "AIP-0001 §JCS Canonicalization",
+  "normative_reference": "RFC 8785 (with ASCII-only key restriction)",
+  "generated_at": "2026-04-17T00:00:00Z",
+  "generator": "@veritasacta/artifacts canonicalize() v0.2.2",
+  "how_to_use": [
+    "For each vector, feed `input` to your JCS canonicalizer.",
+    "Compare your output string byte-for-byte to `canonical`.",
+    "Compute SHA-256 of your output and compare to `sha256` (lowercase hex).",
+    "For `ascii_only_key_rejected`, your canonicalizer MUST throw when a key contains non-ASCII."
+  ],
+  "vectors": [
+    {
+      "name": "empty_object",
+      "description": "Empty object serializes as {} with no whitespace.",
+      "input": {},
+      "canonical": "{}",
+      "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "name": "single_key_value",
+      "description": "Single key-value pair, no sorting needed.",
+      "input": {
+        "message": "hello"
+      },
+      "canonical": "{\"message\":\"hello\"}",
+      "sha256": "9b2d43affbf49a367028df2e1414f84c0e099ac98c3d54a8a80157fd7771af25"
+    },
+    {
+      "name": "nested_key_sorting",
+      "description": "Nested objects are sorted recursively by key name.",
+      "input": {
+        "b": {
+          "z": 1,
+          "a": 2
+        },
+        "a": 1
+      },
+      "canonical": "{\"a\":1,\"b\":{\"a\":2,\"z\":1}}",
+      "sha256": "8ac1db126bc92aaa214c532c8f8a53af00864832ac425cb098da92b51d3d2d2c"
+    },
+    {
+      "name": "array_order_preserved",
+      "description": "Array element order is preserved (not sorted).",
+      "input": {
+        "list": [
+          3,
+          1,
+          2,
+          "c",
+          "a",
+          "b"
+        ]
+      },
+      "canonical": "{\"list\":[3,1,2,\"c\",\"a\",\"b\"]}",
+      "sha256": "20d99e7ed3450679efc1818b4b50e843599b1c04fce06f680da13b9be53a29a4"
+    },
+    {
+      "name": "number_serialization",
+      "description": "Numbers serialize with JSON.stringify defaults. No trailing zeros, no +e notation for integers in this range.",
+      "input": {
+        "int": 42,
+        "neg": -17,
+        "zero": 0,
+        "frac": 0.5
+      },
+      "canonical": "{\"frac\":0.5,\"int\":42,\"neg\":-17,\"zero\":0}",
+      "sha256": "10657fc7d412f3ec88b9cb7fe576f65ee3979fa0fc2b866e3821b082e4d25100"
+    },
+    {
+      "name": "mixed_primitives",
+      "description": "null, true, false, string, empty array, empty object all serialize correctly.",
+      "input": {
+        "nul": null,
+        "t": true,
+        "f": false,
+        "s": "hi",
+        "empty_arr": [],
+        "empty_obj": {}
+      },
+      "canonical": "{\"empty_arr\":[],\"empty_obj\":{},\"f\":false,\"nul\":null,\"s\":\"hi\",\"t\":true}",
+      "sha256": "35b357d82e7c449132b6903fca471282b3a14b35e7c5ee44b7299fd688ebfdb2"
+    },
+    {
+      "name": "unicode_in_values_ok",
+      "description": "Non-ASCII characters in values are permitted. Only keys are restricted to ASCII (AIP-0001 §JCS Canonicalization).",
+      "input": {
+        "greeting": "héllo wörld",
+        "emoji": "✓"
+      },
+      "canonical": "{\"emoji\":\"✓\",\"greeting\":\"héllo wörld\"}",
+      "sha256": "1c36d840ffd41d2ee929ba53205490755018d76cc41f4172acb078d428ed3b4a"
+    },
+    {
+      "name": "receipt_shaped_payload",
+      "description": "Realistic receipt-shaped payload: decision, policy digest, scope, nested metadata. The shape a real KU receipt payload takes.",
+      "input": {
+        "type": "veritasacta:knowledge_unit:receipt",
+        "ku_id": "ku_4b3f7c2a",
+        "sequence": 1,
+        "model": {
+          "name": "claude-opus-4.6",
+          "vendor": "anthropic"
+        },
+        "response_digest": "sha256:f7e2d4c1b8a9",
+        "policy_digest": "sha256:abcdef0123456789",
+        "decision": "allow"
+      },
+      "canonical": "{\"decision\":\"allow\",\"ku_id\":\"ku_4b3f7c2a\",\"model\":{\"name\":\"claude-opus-4.6\",\"vendor\":\"anthropic\"},\"policy_digest\":\"sha256:abcdef0123456789\",\"response_digest\":\"sha256:f7e2d4c1b8a9\",\"sequence\":1,\"type\":\"veritasacta:knowledge_unit:receipt\"}",
+      "sha256": "1339c990ba18600a700f8116eb7d4b5982a260cf99661866996cc94d83d056a0"
+    },
+    {
+      "name": "ascii_only_key_rejected",
+      "description": "Non-ASCII characters in keys are rejected at ingest per AIP-0001 §JCS Canonicalization. This sidesteps the Unicode normalization surface (NFC vs NFD, combining marks, bidi). Matches APS v1.41.0 canonicalizer behavior.",
+      "input": {
+        "héllo": "world"
+      },
+      "expected": {
+        "error": "Non-ASCII key \"héllo\" in artifact payload. Only ASCII keys are permitted."
+      }
+    }
+  ]
+}

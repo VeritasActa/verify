@@ -1,0 +1,338 @@
+{
+  "format": "veritasacta:knowledge-unit-bundle:v1",
+  "spec": "draft-farley-acta-knowledge-units-00",
+  "ku_id": "ku_4b3f7c2a9d8e1f05",
+  "generated_at": "2026-04-17T12:00:00Z",
+  "description": "Complete Knowledge Unit deliberation: 4 models × 2 rounds + 1 synthesis + 1 aggregate = 10 Ed25519-signed receipts. Hash-chained via payload.previousReceiptHash over JCS-canonical bytes. Every receipt is individually verifiable with @veritasacta/verify; the bundle is verifiable with --bundle.",
+  "verification": {
+    "signing_keys": [
+      {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "kid": "Z-LI5A7pV_q5L0741YBXwcOCo1U13ONImZ4OkQnKkg0",
+        "x": "tiTKo_UAbc-jbX6rtdupskLamLZPIXSC30y6dPPHRWQ",
+        "use": "sig",
+        "issuer": "ku:model:claude-opus-4.6"
+      },
+      {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "kid": "yH110mxzFmSFg-rqk93G6orppuIMvxJaBBCbtB2BF1Y",
+        "x": "wLeHCJz2lKADNwV1pNMEtFbsbostfaXVjtfhEcauPs4",
+        "use": "sig",
+        "issuer": "ku:model:gpt-5"
+      },
+      {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "kid": "EOahLGtg57mQJhgTwQc-cTmZZPTVn_NGal6SH5taqJw",
+        "x": "zwJOHnOSOTkkh37-GuNxC41o54UX-Yjnn6FN_1JKJDo",
+        "use": "sig",
+        "issuer": "ku:model:gemini-2.5-pro"
+      },
+      {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "kid": "MdZxWfPWCPrjb4blQEWBKFyk9FkazXCgk2K7QFiuYRw",
+        "x": "nQIE0pSO6yXnABIt3SdC01oyyLa-J1i9Wf5o1lDUtoc",
+        "use": "sig",
+        "issuer": "ku:model:grok-4.20"
+      },
+      {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "kid": "YJMzwAk4gkCxTzWPmVAlcLtr517adDfl9gxGCLP4bDw",
+        "x": "Uy9EM6Buox0IJ9Ry0QiPtPuxj-7oZedl3_ogRzpXSd4",
+        "use": "sig",
+        "issuer": "ku:arbiter:scopeblind-reference"
+      }
+    ]
+  },
+  "external_receipts": {
+    "aps": {
+      "description": "Drop-in slot for an APS DecisionLineageReceipt that references ku_id=ku_4b3f7c2a9d8e1f05. When populated, both @veritasacta/verify and agent-passport-system verifiers should exit 0 over the same bundle.",
+      "ku_id": "ku_4b3f7c2a9d8e1f05",
+      "expected_fields": [
+        "subject",
+        "scope",
+        "ku_id",
+        "receipt_hash",
+        "signature"
+      ],
+      "receipt_uri": null,
+      "receipt": null
+    }
+  },
+  "receipts": [
+    {
+      "v": 2,
+      "type": "veritasacta:knowledge_unit:round_response",
+      "algorithm": "ed25519",
+      "kid": "Z-LI5A7pV_q5L0741YBXwcOCo1U13ONImZ4OkQnKkg0",
+      "issuer": "ku:model:claude-opus-4.6",
+      "issued_at": "2026-04-17T12:00:01Z",
+      "payload": {
+        "ku_id": "ku_4b3f7c2a9d8e1f05",
+        "sequence": 1,
+        "round": 1,
+        "model": {
+          "id": "claude-opus-4.6",
+          "vendor": "anthropic"
+        },
+        "topic_digest": "a0431c892bf3d1d67c63726c9a7cf00c6270b39098c8e9cdcfdf26bb73825b24",
+        "response": {
+          "position": "quadratic",
+          "confidence": 0.72
+        }
+      },
+      "signature": "b51bdf0dd826b63dd84d0e0d50e3700b48a5213adeebaefff7db9c3b109ba935dc70e78189fc0d306b10aa6337e32a8e74e92300e6e7eae91f76a282c2a8b609"
+    },
+    {
+      "v": 2,
+      "type": "veritasacta:knowledge_unit:round_response",
+      "algorithm": "ed25519",
+      "kid": "yH110mxzFmSFg-rqk93G6orppuIMvxJaBBCbtB2BF1Y",
+      "issuer": "ku:model:gpt-5",
+      "issued_at": "2026-04-17T12:00:02Z",
+      "payload": {
+        "ku_id": "ku_4b3f7c2a9d8e1f05",
+        "sequence": 2,
+        "round": 1,
+        "model": {
+          "id": "gpt-5",
+          "vendor": "openai"
+        },
+        "topic_digest": "a0431c892bf3d1d67c63726c9a7cf00c6270b39098c8e9cdcfdf26bb73825b24",
+        "response": {
+          "position": "quadratic",
+          "confidence": 0.65
+        },
+        "previousReceiptHash": "sha256:2b06eb3385bcfa7bf29d59ae693c28124062fdb9b548a9710c1ee44f2eeae192"
+      },
+      "signature": "14fa53712789d72d727ea7c99cf109181b42de2b6baaa76c97f8c0ac1633e667d2888672a181ddf896636e3cabb441ec68d3f4bc23f85a9f47ccc3980619680f"
+    },
+    {
+      "v": 2,
+      "type": "veritasacta:knowledge_unit:round_response",
+      "algorithm": "ed25519",
+      "kid": "EOahLGtg57mQJhgTwQc-cTmZZPTVn_NGal6SH5taqJw",
+      "issuer": "ku:model:gemini-2.5-pro",
+      "issued_at": "2026-04-17T12:00:03Z",
+      "payload": {
+        "ku_id": "ku_4b3f7c2a9d8e1f05",
+        "sequence": 3,
+        "round": 1,
+        "model": {
+          "id": "gemini-2.5-pro",
+          "vendor": "google"
+        },
+        "topic_digest": "a0431c892bf3d1d67c63726c9a7cf00c6270b39098c8e9cdcfdf26bb73825b24",
+        "response": {
+          "position": "depends_on_sequence_length",
+          "confidence": 0.8
+        },
+        "previousReceiptHash": "sha256:a54dde3a9dd2501476b0e9613990333371a29b2b669c9da02e348a86e6b2ff83"
+      },
+      "signature": "fc702aab98cdf8f35c88b90da54776c037bcd53cee00183f4b994367c642558be7c6b1113ca370e24719f0f883a5772e358fb21ec58fa1b7d726e1c03d12930c"
+    },
+    {
+      "v": 2,
+      "type": "veritasacta:knowledge_unit:round_response",
+      "algorithm": "ed25519",
+      "kid": "MdZxWfPWCPrjb4blQEWBKFyk9FkazXCgk2K7QFiuYRw",
+      "issuer": "ku:model:grok-4.20",
+      "issued_at": "2026-04-17T12:00:04Z",
+      "payload": {
+        "ku_id": "ku_4b3f7c2a9d8e1f05",
+        "sequence": 4,
+        "round": 1,
+        "model": {
+          "id": "grok-4.20",
+          "vendor": "xai"
+        },
+        "topic_digest": "a0431c892bf3d1d67c63726c9a7cf00c6270b39098c8e9cdcfdf26bb73825b24",
+        "response": {
+          "position": "linear",
+          "confidence": 0.58
+        },
+        "previousReceiptHash": "sha256:76cce8f734ae646b56f4df333a15a400f254dcacece06e7b2bf26c97438b8bbc"
+      },
+      "signature": "143109c124d8e8c857e1d0e5bc4da432be49a46fec0f77d34ee046e487efd4c2cca6e93697c56b8cec499a23e150dc7a4ea432328c7822092d15055ecf668e06"
+    },
+    {
+      "v": 2,
+      "type": "veritasacta:knowledge_unit:round_response",
+      "algorithm": "ed25519",
+      "kid": "Z-LI5A7pV_q5L0741YBXwcOCo1U13ONImZ4OkQnKkg0",
+      "issuer": "ku:model:claude-opus-4.6",
+      "issued_at": "2026-04-17T12:00:05Z",
+      "payload": {
+        "ku_id": "ku_4b3f7c2a9d8e1f05",
+        "sequence": 5,
+        "round": 2,
+        "model": {
+          "id": "claude-opus-4.6",
+          "vendor": "anthropic"
+        },
+        "topic_digest": "a0431c892bf3d1d67c63726c9a7cf00c6270b39098c8e9cdcfdf26bb73825b24",
+        "response": {
+          "position": "quadratic",
+          "confidence": 0.74,
+          "dissent_from": [
+            "grok-4.20"
+          ]
+        },
+        "previousReceiptHash": "sha256:653a70f396a16d2114b42996305f514b35d5ba59e6b37527b6311aa4d9e79aeb"
+      },
+      "signature": "cdccd1f18914a542625b2f9916729b7584e590c3f224cb8901de3547565f94696893da3db5ce10057334206b8865aef917dbe4e050633761d0c99cc5526dde03"
+    },
+    {
+      "v": 2,
+      "type": "veritasacta:knowledge_unit:round_response",
+      "algorithm": "ed25519",
+      "kid": "yH110mxzFmSFg-rqk93G6orppuIMvxJaBBCbtB2BF1Y",
+      "issuer": "ku:model:gpt-5",
+      "issued_at": "2026-04-17T12:00:06Z",
+      "payload": {
+        "ku_id": "ku_4b3f7c2a9d8e1f05",
+        "sequence": 6,
+        "round": 2,
+        "model": {
+          "id": "gpt-5",
+          "vendor": "openai"
+        },
+        "topic_digest": "a0431c892bf3d1d67c63726c9a7cf00c6270b39098c8e9cdcfdf26bb73825b24",
+        "response": {
+          "position": "depends_on_sequence_length",
+          "confidence": 0.7,
+          "updated_from_round1": true
+        },
+        "previousReceiptHash": "sha256:69eaa88bb7b4d0c66e9649096dae4aad20b84f7d9862b404f46a37e0a96e8240"
+      },
+      "signature": "5db1986b447ae954ee425449c238550244821fb7fd9b928c477375b23b38126cc9aa4f394b727e97ada3ed1646dc1ca0b7dc6ee2f5f390d5c7e8a4dc95ae9c04"
+    },
+    {
+      "v": 2,
+      "type": "veritasacta:knowledge_unit:round_response",
+      "algorithm": "ed25519",
+      "kid": "EOahLGtg57mQJhgTwQc-cTmZZPTVn_NGal6SH5taqJw",
+      "issuer": "ku:model:gemini-2.5-pro",
+      "issued_at": "2026-04-17T12:00:07Z",
+      "payload": {
+        "ku_id": "ku_4b3f7c2a9d8e1f05",
+        "sequence": 7,
+        "round": 2,
+        "model": {
+          "id": "gemini-2.5-pro",
+          "vendor": "google"
+        },
+        "topic_digest": "a0431c892bf3d1d67c63726c9a7cf00c6270b39098c8e9cdcfdf26bb73825b24",
+        "response": {
+          "position": "depends_on_sequence_length",
+          "confidence": 0.85
+        },
+        "previousReceiptHash": "sha256:18ac3cef4d85205ebe2886b8b94b368ae8d28585088762e91df80ab3031a42d6"
+      },
+      "signature": "f6483e7dc42969ac5536f6b65a9ff43305ba2f7404215368e13203f7d5500fb4e2b7537d56a63f1af3f459d0d50b124a43736e7013566548f70958ce4481540b"
+    },
+    {
+      "v": 2,
+      "type": "veritasacta:knowledge_unit:round_response",
+      "algorithm": "ed25519",
+      "kid": "MdZxWfPWCPrjb4blQEWBKFyk9FkazXCgk2K7QFiuYRw",
+      "issuer": "ku:model:grok-4.20",
+      "issued_at": "2026-04-17T12:00:08Z",
+      "payload": {
+        "ku_id": "ku_4b3f7c2a9d8e1f05",
+        "sequence": 8,
+        "round": 2,
+        "model": {
+          "id": "grok-4.20",
+          "vendor": "xai"
+        },
+        "topic_digest": "a0431c892bf3d1d67c63726c9a7cf00c6270b39098c8e9cdcfdf26bb73825b24",
+        "response": {
+          "position": "linear",
+          "confidence": 0.55,
+          "dissent_from": [
+            "claude-opus-4.6",
+            "gpt-5",
+            "gemini-2.5-pro"
+          ]
+        },
+        "previousReceiptHash": "sha256:b69cef75b1f0eeb36ece82755df449ccea4dde04915268c254fef33508ce016f"
+      },
+      "signature": "1801e655c32aff17298399d36471c4049ea75631047858160c9f698cb2dc83981d94bdeda7f5d74d0fb54664cafce206ca25c2d73d51b6a25cb28610de4b840d"
+    },
+    {
+      "v": 2,
+      "type": "veritasacta:knowledge_unit:synthesis",
+      "algorithm": "ed25519",
+      "kid": "YJMzwAk4gkCxTzWPmVAlcLtr517adDfl9gxGCLP4bDw",
+      "issuer": "ku:arbiter:scopeblind-reference",
+      "issued_at": "2026-04-17T12:00:09Z",
+      "payload": {
+        "ku_id": "ku_4b3f7c2a9d8e1f05",
+        "sequence": 9,
+        "round": 3,
+        "synthesis": {
+          "consensus": "depends_on_sequence_length",
+          "consensus_models": [
+            "gpt-5",
+            "gemini-2.5-pro"
+          ],
+          "dissenting_positions": [
+            {
+              "position": "quadratic",
+              "models": [
+                "claude-opus-4.6"
+              ],
+              "mean_confidence": 0.74
+            },
+            {
+              "position": "linear",
+              "models": [
+                "grok-4.20"
+              ],
+              "mean_confidence": 0.55
+            }
+          ],
+          "synthesis_confidence": 0.68
+        },
+        "topic_digest": "a0431c892bf3d1d67c63726c9a7cf00c6270b39098c8e9cdcfdf26bb73825b24",
+        "previousReceiptHash": "sha256:b744f32a94d8f1f7727e9020308a8b1db87aef8c80b53c7644398ae0078317bc"
+      },
+      "signature": "f6023315011bc437c0a1a6222c008affb7e14d264c4c89ad26efd12031461888858bb429eb54b2e26bbe093db53df83e80562d0199f8bdf4ed057178f947840d"
+    },
+    {
+      "v": 2,
+      "type": "veritasacta:knowledge_unit:aggregate",
+      "algorithm": "ed25519",
+      "kid": "YJMzwAk4gkCxTzWPmVAlcLtr517adDfl9gxGCLP4bDw",
+      "issuer": "ku:arbiter:scopeblind-reference",
+      "issued_at": "2026-04-17T12:00:10Z",
+      "payload": {
+        "ku_id": "ku_4b3f7c2a9d8e1f05",
+        "sequence": 10,
+        "aggregate": {
+          "binds_receipts": [
+            "sha256:2b06eb3385bcfa7bf29d59ae693c28124062fdb9b548a9710c1ee44f2eeae192",
+            "sha256:a54dde3a9dd2501476b0e9613990333371a29b2b669c9da02e348a86e6b2ff83",
+            "sha256:76cce8f734ae646b56f4df333a15a400f254dcacece06e7b2bf26c97438b8bbc",
+            "sha256:653a70f396a16d2114b42996305f514b35d5ba59e6b37527b6311aa4d9e79aeb",
+            "sha256:69eaa88bb7b4d0c66e9649096dae4aad20b84f7d9862b404f46a37e0a96e8240",
+            "sha256:18ac3cef4d85205ebe2886b8b94b368ae8d28585088762e91df80ab3031a42d6",
+            "sha256:b69cef75b1f0eeb36ece82755df449ccea4dde04915268c254fef33508ce016f",
+            "sha256:b744f32a94d8f1f7727e9020308a8b1db87aef8c80b53c7644398ae0078317bc",
+            "sha256:b0b54512737617227b1ac7569c06e71fbe8dd944011050c3ceaeac5e79526122"
+          ],
+          "round_count": 3,
+          "model_count": 4,
+          "deliberation_outcome": "synthesis_with_recorded_dissent"
+        },
+        "previousReceiptHash": "sha256:b0b54512737617227b1ac7569c06e71fbe8dd944011050c3ceaeac5e79526122"
+      },
+      "signature": "f160552fbdf28e326eacd639649fc8fe18af6dbe9a2d7a415fa424f4a638dedf77d7fa591a350fcf11ede65fbef07e3d7ea484b2ee2c7de47459097f75a03704"
+    }
+  ]
+}
