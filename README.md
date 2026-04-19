@@ -4,6 +4,29 @@ Verify signed receipts offline. No accounts, no API calls, no trust required.
 
 **Apache-2.0 · Ed25519 · Offline · Zero dependencies beyond `@noble/curves`**
 
+---
+
+> **⚠️ 0.4.0 breaking change (coming this week):** The verifier now **rejects
+> keys transported inside the receipt payload** by default. This closes a
+> spec gap surfaced via an external review: a verification key embedded in
+> the signed body does not provide authenticity against tampering (an
+> attacker who can modify the payload can also substitute the key).
+>
+> **Migration:** Pass the verification key externally via `--key <hex>`,
+> `--jwks <url>`, or a configured trust anchor. Receipts that rely on
+> embedded keys will return exit code 2 (`embedded_key_rejected`).
+>
+> A deprecated `--allow-embedded-key` flag restores pre-0.4.0 behavior for
+> one release cycle. It will be removed in 0.5.0.
+>
+> Normative language for this change lands in
+> [draft-farley-acta-signed-receipts-02](https://datatracker.ietf.org/doc/draft-farley-acta-signed-receipts/)
+> Security Considerations (Key Distribution and Trust Anchors). A matching
+> negative conformance vector set lands in
+> [ScopeBlind/agent-governance-testvectors](https://github.com/ScopeBlind/agent-governance-testvectors).
+
+---
+
 ```bash
 npm install @veritasacta/verify
 ```
