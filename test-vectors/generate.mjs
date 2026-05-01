@@ -23,7 +23,8 @@ import {
   hexToBytes,
   sha256,
 } from '@veritasacta/artifacts';
-import { writeFileSync } from 'node:fs';
+import { ed25519 } from '@noble/curves/ed25519';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 
 // ─── Deterministic seed ──────────────────────────────────────────
@@ -336,6 +337,87 @@ function buildBundle() {
   };
 }
 
+function buildApsCrossVerifyArtifacts(bundle) {
+  const seed = sha256(new TextEncoder().encode('aps:veritasacta:ku-cross-verify:v1'));
+  const priv = bytesToHex(seed);
+  const pub = ed25519.getPublicKey(seed);
+  const publicKeyHex = bytesToHex(pub);
+  const kid = 'aps-ku-cross-verify-v1';
+  const seedNote = 'derived from sha256("aps:veritasacta:ku-cross-verify:v1") — test key, NOT a production issuer';
+  const issuer = 'aps:test:ku-cross-verify';
+
+  const receipt = {
+    receiptId: `dlr_va_${KU_ID}`,
+    timestamp: '2026-04-18T00:00:00Z',
+    decisionArtifactId: `veritasacta:ku:${KU_ID}`,
+    decisionType: 'knowledge_unit_deliberation',
+    contributingSources: bundle.receipts.map((r, i) => ({
+      sourceId: r.issuer,
+      accessReceiptId: `sha256:${canonicalHash(r)}`,
+      derivationDepth: i + 1,
+      transformPath: ['aggregation'],
+      termsVersionAtAccess: 'veritasacta:knowledge-unit-bundle:v1',
+      lineageConfidence: 'complete',
+      compensationStatus: 'settled',
+    })),
+    lineageCompleteness: 'complete',
+    externalHopsPresent: true,
+    transformChain: ['aggregation'],
+    governingPurpose: 'research:academic',
+    jurisdictionContext: 'veritasacta:knowledge-unit-bundle:v1',
+    explanation:
+      `APS DecisionLineageReceipt attesting to VeritasActa Knowledge Unit ${KU_ID}. Bundle terminal aggregate sha256: ${canonicalHash(bundle.receipts.at(-1))}. Each entry in contributingSources commits to the JCS-canonical sha256 of one KU receipt; tampering any byte of any KU receipt invalidates the recorded accessReceiptId, breaking cross-layer integrity even though APS's Ed25519 signature over this DecisionLineageReceipt remains cryptographically valid.`,
+  };
+  receipt.signature = bytesToHex(ed25519.sign(new TextEncoder().encode(canonicalize(receipt)), hexToBytes(priv)));
+
+  const signingKey = {
+    kty: 'OKP',
+    crv: 'Ed25519',
+    use: 'sig',
+    issuer,
+    public_key_hex: publicKeyHex,
+    seed_note: seedNote,
+  };
+
+  const jwks = {
+    keys: [
+      {
+        kty: 'OKP',
+        crv: 'Ed25519',
+        use: 'sig',
+        kid,
+        x: Buffer.from(pub).toString('base64url'),
+        issuer,
+        seed_note: seedNote,
+      },
+    ],
+  };
+
+  const positive = JSON.parse(JSON.stringify(bundle));
+  positive.external_receipts.aps.receipt = receipt;
+  positive.external_receipts.aps.verification_key_ref = `test-vectors/keys/aps-ku-cross-verify.jwks#${kid}`;
+  positive.external_receipts.aps.verifier_hint =
+    'Verify APS DecisionLineageReceipt using the independently anchored key referenced by external_receipts.aps.verification_key_ref. Cross-layer integrity: each contributingSources[].accessReceiptId is the JCS-canonical sha256 of the corresponding entry in bundle.receipts.';
+
+  const negative = JSON.parse(JSON.stringify(bundle));
+  negative.external_receipts.aps.receipt = receipt;
+  negative.external_receipts.aps.signing_key = signingKey;
+  negative.external_receipts.aps.verifier_hint =
+    'Negative conformance fixture. A verifier MUST reject this bundle because the APS verification key is transported inside external_receipts.aps.signing_key without an independent anchor.';
+  negative.external_receipts.aps.expected_result = {
+    verifier: '@veritasacta/verify',
+    result: 'MUST_REJECT',
+    error: 'verification key transported inside receipt without independent anchor',
+  };
+  negative.expected_verification = {
+    result: 'MUST_REJECT',
+    error: 'verification key transported inside receipt without independent anchor',
+    normative_reference: 'draft-farley-acta-signed-receipts-02 Security Considerations',
+  };
+
+  return { positive, negative, jwks };
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // 3. selective-disclosure-salted-commit.json
 // ═══════════════════════════════════════════════════════════════════
@@ -440,11 +522,15 @@ function buildSelectiveDisclosure() {
 
 const jcsVecs = buildJcsVectors();
 const bundle = buildBundle();
+const aps = buildApsCrossVerifyArtifacts(bundle);
 const sdc = buildSelectiveDisclosure();
 
 const outDir = process.argv[2] || '.';
+mkdirSync(`${outDir}/keys`, { recursive: true });
 writeFileSync(`${outDir}/jcs-test-vectors.json`, JSON.stringify(jcsVecs, null, 2) + '\n');
-writeFileSync(`${outDir}/cross-verify-bundle.json`, JSON.stringify(bundle, null, 2) + '\n');
+writeFileSync(`${outDir}/cross-verify-bundle.json`, JSON.stringify(aps.positive, null, 2) + '\n');
+writeFileSync(`${outDir}/cross-verify-embedded-key-bundle.json`, JSON.stringify(aps.negative, null, 2) + '\n');
+writeFileSync(`${outDir}/keys/aps-ku-cross-verify.jwks`, JSON.stringify(aps.jwks, null, 2) + '\n');
 writeFileSync(
   `${outDir}/selective-disclosure-salted-commit.json`,
   JSON.stringify(sdc, null, 2) + '\n',
@@ -452,5 +538,7 @@ writeFileSync(
 
 console.log('Wrote:');
 console.log(`  ${outDir}/jcs-test-vectors.json (${jcsVecs.vectors.length} cases)`);
-console.log(`  ${outDir}/cross-verify-bundle.json (${bundle.receipts.length} receipts, ${bundle.verification.signing_keys.length} keys)`);
+console.log(`  ${outDir}/cross-verify-bundle.json (${bundle.receipts.length} receipts, ${bundle.verification.signing_keys.length} keys, APS sidecar key)`);
+console.log(`  ${outDir}/cross-verify-embedded-key-bundle.json (MUST reject embedded-key fixture)`);
+console.log(`  ${outDir}/keys/aps-ku-cross-verify.jwks (APS sidecar key)`);
 console.log(`  ${outDir}/selective-disclosure-salted-commit.json (${Object.keys(sdc.witness.disclosures).length} redacted fields)`);

@@ -1,0 +1,13 @@
+{
+  "keys": [
+    {
+      "kty": "OKP",
+      "crv": "Ed25519",
+      "use": "sig",
+      "kid": "aps-ku-cross-verify-v1",
+      "x": "6RxrxbGuAFDbKoTtliVZ6XfMb_TLW9EVdwcb1_pgT6o",
+      "issuer": "aps:test:ku-cross-verify",
+      "seed_note": "derived from sha256(\"aps:veritasacta:ku-cross-verify:v1\") — test key, NOT a production issuer"
+    }
+  ]
+}
