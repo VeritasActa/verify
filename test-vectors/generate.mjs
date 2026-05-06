@@ -24,8 +24,9 @@ import {
   sha256,
 } from '@veritasacta/artifacts';
 import { ed25519 } from '@noble/curves/ed25519';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
+import { REJECTION_ERROR_EMBEDDED_KEY } from '../src/constants.js';
 
 // ─── Deterministic seed ──────────────────────────────────────────
 const SEED = 'veritasacta:verify:test-vectors:2026-04-17';
@@ -407,11 +408,11 @@ function buildApsCrossVerifyArtifacts(bundle) {
   negative.external_receipts.aps.expected_result = {
     verifier: '@veritasacta/verify',
     result: 'MUST_REJECT',
-    error: 'verification key transported inside receipt without independent anchor',
+    error: REJECTION_ERROR_EMBEDDED_KEY,
   };
   negative.expected_verification = {
     result: 'MUST_REJECT',
-    error: 'verification key transported inside receipt without independent anchor',
+    error: REJECTION_ERROR_EMBEDDED_KEY,
     normative_reference: 'draft-farley-acta-signed-receipts-02 Security Considerations',
   };
 
@@ -526,10 +527,25 @@ const aps = buildApsCrossVerifyArtifacts(bundle);
 const sdc = buildSelectiveDisclosure();
 
 const outDir = process.argv[2] || '.';
+const forceNegative = process.argv.includes('--force-negative');
 mkdirSync(`${outDir}/keys`, { recursive: true });
 writeFileSync(`${outDir}/jcs-test-vectors.json`, JSON.stringify(jcsVecs, null, 2) + '\n');
 writeFileSync(`${outDir}/cross-verify-bundle.json`, JSON.stringify(aps.positive, null, 2) + '\n');
-writeFileSync(`${outDir}/cross-verify-embedded-key-bundle.json`, JSON.stringify(aps.negative, null, 2) + '\n');
+
+// Static-fixture preservation: cross-verify-embedded-key-bundle.json is the
+// MUST-reject regression target for the v0.7+ enforcement landing. The
+// generator does not own this fixture's evolution; if a generator change
+// silently rewrites it, the fixture's value as a regression target collapses.
+// Default behavior: skip if the file already exists. Pass --force-negative
+// to explicitly regenerate (e.g. on first creation, or after a normative
+// pin to REJECTION_ERROR_EMBEDDED_KEY changes).
+const negativePath = `${outDir}/cross-verify-embedded-key-bundle.json`;
+let negativeWritten = false;
+if (!existsSync(negativePath) || forceNegative) {
+  writeFileSync(negativePath, JSON.stringify(aps.negative, null, 2) + '\n');
+  negativeWritten = true;
+}
+
 writeFileSync(`${outDir}/keys/aps-ku-cross-verify.jwks`, JSON.stringify(aps.jwks, null, 2) + '\n');
 writeFileSync(
   `${outDir}/selective-disclosure-salted-commit.json`,
@@ -539,6 +555,10 @@ writeFileSync(
 console.log('Wrote:');
 console.log(`  ${outDir}/jcs-test-vectors.json (${jcsVecs.vectors.length} cases)`);
 console.log(`  ${outDir}/cross-verify-bundle.json (${bundle.receipts.length} receipts, ${bundle.verification.signing_keys.length} keys, APS sidecar key)`);
-console.log(`  ${outDir}/cross-verify-embedded-key-bundle.json (MUST reject embedded-key fixture)`);
+if (negativeWritten) {
+  console.log(`  ${outDir}/cross-verify-embedded-key-bundle.json (MUST-reject embedded-key fixture${forceNegative ? ', --force-negative' : ', first run'})`);
+} else {
+  console.log(`  ${outDir}/cross-verify-embedded-key-bundle.json (preserved, static; pass --force-negative to regenerate)`);
+}
 console.log(`  ${outDir}/keys/aps-ku-cross-verify.jwks (APS sidecar key)`);
 console.log(`  ${outDir}/selective-disclosure-salted-commit.json (${Object.keys(sdc.witness.disclosures).length} redacted fields)`);
