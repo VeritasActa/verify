@@ -1,14 +1,14 @@
 {
   "sigil_version": 1,
-  "fingerprint": "677a8a81",
-  "name": "Open Wind",
-  "sigil_hash": "677a8a812c7a9d896bee2d7f8dfde02d347ac742fa4cd8830c9e292e92b9e676",
+  "fingerprint": "90b32067",
+  "name": "True Dawn",
+  "sigil_hash": "90b320670c5e85d15f17b182738bd25771f58b7ed2100c72b6fb332597d96a9a",
   "project_public_key": "fe665e861867cec7e171c0c13bbc873c3362079faef21f54df7804b7fb9ae8af",
   "policy": {
     "version": 3,
     "package": "@veritasacta/verify",
-    "package_version": "0.5.4",
-    "source_hash": "4eca3a4aa71e50cf983285520ff8ec93e2ece12d2912f0b7b60b5c7034b879f9",
+    "package_version": "0.6.1",
+    "source_hash": "610f4996e57755ea4a9ead70173f86071a0f2caf7e78da1434d0c1c163ba541d",
     "monitored_files": [
       "cli.js",
       "src/detect.js",
@@ -56,8 +56,8 @@
       "EdDSA",
       "voprf-p256-sha256"
     ],
-    "created_at": 1776673390228
+    "created_at": 1778927172239
   },
-  "policy_hash": "3d9bbcbea4af4032c7e77fc1f0a8606553e9a53bf8df0f09ed0bcd0859faa92a",
-  "derived_at": "2026-04-20T08:23:10.228Z"
+  "policy_hash": "225de862237f54ed4b5bf6e4381eba0dd72ff3fd3b0bf593766302e71d08af8e",
+  "derived_at": "2026-05-16T10:26:12.239Z"
 }

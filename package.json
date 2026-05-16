@@ -1,6 +1,6 @@
 {
   "name": "@veritasacta/verify",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "mcpName": "io.github.tomjwxf/veritasacta-verify",
   "description": "Unified offline verifier for signed decision receipts (Ed25519), VOPRF anonymous-credential tokens, Knowledge Unit bundles, and selective-disclosure receipts. Sigil-verified canonical release.",
   "license": "Apache-2.0",
@@ -45,7 +45,7 @@
     "agent-governance"
   ],
   "scripts": {
-    "test": "node --test 'test/unit/**/*.test.js' 'test/integration/**/*.test.js'",
+    "test": "node --test test/unit/*.test.js test/integration/*.test.js",
     "test:conformance": "node test/conformance.js",
     "self-test": "node cli.js --self-test",
     "self-check": "node cli.js --self-check",

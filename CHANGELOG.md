@@ -1,5 +1,13 @@
 # Changelog
 
+
+## 0.6.1 - 2026-05-16
+
+- Support `--jwks` resolution from `file://` URLs, absolute paths, and bare relative filesystem paths for offline test-vector and CI workflows.
+- Preserve HTTP(S) JWKS behavior unchanged.
+- Surface the resolved local JWKS path in verifier output.
+- Add unit coverage for local JWKS path handling.
+
 ## 0.5.4 — 2026-04-20 (Rekor anchoring + hardware attestation + transparency profiles + watcher + SBOM bundles + AIP-0007)
 
 Ships the "differentiation roadmap" responding to the Signet / nono
