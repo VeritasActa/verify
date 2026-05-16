@@ -1,0 +1,26 @@
+apiVersion: scopeblind.profiles/v1
+kind: SandboxProfile
+metadata:
+  name: cursor
+  tool: Cursor
+  tool_url: https://www.cursor.com
+  profile_version: 1.0.0
+  maintained_by: ScopeBlind
+  license: Apache-2.0
+  veritas_acta_receipt_type: scopeblind:decision
+spec:
+  sb_runtime:
+    recommended_ring: 3
+    sandbox_backend: sb_runtime_builtin
+    receipts_dir: .veritasacta/receipts/cursor
+    policy_file: ./policy.cedar
+  nono:
+    capability_file: ./nono-capabilities.yaml
+    recommended_mode: compose
+  intended_threat_model:
+    - Cursor's MCP bridge, Composer mode, and agent tabs all produce tool calls
+    - Cursor talks to cursor.com / cursor.sh backends for LLM proxying; allow those
+    - Otherwise baseline identical to claude-code profile
+  notes:
+    - Cursor runs inside Electron so FS access patterns look different from CLI agents
+    - If you use Cursor's MCP integration with third-party servers, extend the network allowlist per-MCP-server

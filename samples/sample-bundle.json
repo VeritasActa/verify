@@ -1,0 +1,78 @@
+{
+  "format": "scopeblind:audit-bundle:v1",
+  "generated_at": "2026-03-22T00:00:00Z",
+  "issuer": "protect-mcp",
+  "description": "Sample audit bundle with 3 receipts from a protect-mcp session.",
+  "verification": {
+    "signing_keys": [
+      {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "kid": "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k",
+        "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+        "use": "sig"
+      }
+    ]
+  },
+  "receipts": [
+    {
+      "v": 2,
+      "type": "decision_receipt",
+      "algorithm": "ed25519",
+      "kid": "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k",
+      "issuer": "sb:test",
+      "issued_at": "2026-01-01T00:00:00Z",
+      "payload": {
+        "decision": "allow",
+        "policy_digest": "sha256:abcdef0123456789",
+        "scope": "my-service",
+        "tool": "read_database",
+        "tier": "signed-known",
+        "mode": "shadow",
+        "reason_code": "policy_match",
+        "request_id": "req_test_001"
+      },
+      "signature": "324a966f8d4e6652e2270311c9682157d5adc01f1f019d84b24a1125220869a5c5a0fc0096ed3afffaa66ac36cfbbd97e60d9c5f7ad632a2cf11c45c2c50fd0d"
+    },
+    {
+      "v": 2,
+      "type": "gateway_restraint",
+      "algorithm": "ed25519",
+      "kid": "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k",
+      "issuer": "sb:protect",
+      "issued_at": "2026-01-01T00:01:00Z",
+      "payload": {
+        "tool": "delete_user",
+        "decision": "deny",
+        "reason_code": "tier_insufficient",
+        "policy_digest": "sha256:abcdef0123456789",
+        "agent_id": "sb:agent:test-bot",
+        "tier": "unknown",
+        "mode": "enforce"
+      },
+      "signature": "e0acddfd57dac1d1cd1a7b48d4554c81cede6bf44aa40f97ed5cbf8825e4157ec1fb44527b0b2cc17b24e5853b2190e02e5c7a826c3919592e693f09c04fac0e"
+    },
+    {
+      "v": 2,
+      "type": "trust_ticket",
+      "algorithm": "ed25519",
+      "kid": "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k",
+      "issuer": "sb:trust-authority",
+      "issued_at": "2026-01-15T12:00:00Z",
+      "payload": {
+        "tier": "evidenced",
+        "scope": "production",
+        "expires_at": "2026-02-01T00:00:00Z",
+        "agent_id": "sb:agent:verified-bot",
+        "manifest_hash": "sha256:manifest_hash_example",
+        "evidence_summary": {
+          "receipt_count": 150,
+          "epoch_span": 30,
+          "issuer_count": 5
+        }
+      },
+      "signature": "c4e5b0048449d0f6757877410d3066f285dc07d1f73ec1e4f6222ec2f3a95a3953db3f3c9a3079c7a7cef837e36d522791a095884633f52d42876b1b25ae6600"
+    }
+  ],
+  "_note": "Verify with: npx @veritasacta/verify sample-bundle.json --bundle"
+}

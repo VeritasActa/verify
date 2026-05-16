@@ -1,56 +1,63 @@
 {
   "name": "@veritasacta/verify",
-  "version": "0.2.5",
-  "description": "Verify signed receipts offline. No accounts, no API calls, no trust required. Ed25519 + JCS.",
+  "version": "0.6.1",
+  "mcpName": "io.github.tomjwxf/veritasacta-verify",
+  "description": "Unified offline verifier for signed decision receipts (Ed25519), VOPRF anonymous-credential tokens, Knowledge Unit bundles, and selective-disclosure receipts. Sigil-verified canonical release.",
   "license": "Apache-2.0",
-  "author": "Tom Farley <tom@veritasacta.com>",
-  "homepage": "https://github.com/VeritasActa/verify",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/VeritasActa/verify"
+  "type": "module",
+  "bin": {
+    "verify-artifact": "cli.js"
   },
-  "bugs": {
-    "url": "https://github.com/VeritasActa/verify/issues"
+  "files": [
+    "cli.js",
+    "src/",
+    "sigil.json",
+    "README.md",
+    "CHANGELOG.md",
+    "THREAT-MODEL.md",
+    "SECURITY.md",
+    "ERRORS.md",
+    "ROADMAP.md",
+    "samples/",
+    "test/conformance.js"
+  ],
+  "dependencies": {
+    "@veritasacta/artifacts": "^0.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "keywords": [
     "verify",
     "ed25519",
+    "voprf",
     "receipts",
-    "offline-verification",
-    "cryptography",
-    "audit",
-    "compliance",
-    "agent-governance",
-    "mcp",
+    "knowledge-units",
+    "selective-disclosure",
     "veritasacta",
-    "acta"
+    "scopeblind",
+    "audit",
+    "offline-verification",
+    "sigil",
+    "mcp",
+    "protect-mcp",
+    "agent-safety",
+    "agent-governance"
   ],
-  "type": "module",
-  "main": "src/index.js",
-  "bin": {
-    "veritasacta-verify": "src/cli.js"
-  },
-  "exports": {
-    ".": "./src/index.js",
-    "./cli": "./src/cli.js"
-  },
-  "files": [
-    "src/",
-    "LICENSE",
-    "README.md"
-  ],
-  "engines": {
-    "node": ">=18"
-  },
-  "dependencies": {
-    "@noble/hashes": "^1.3.0",
-    "@noble/curves": "^1.3.0"
-  },
-  "devDependencies": {
-    "vitest": "^1.0.0"
-  },
   "scripts": {
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "node --test test/unit/*.test.js test/integration/*.test.js",
+    "test:conformance": "node test/conformance.js",
+    "self-test": "node cli.js --self-test",
+    "self-check": "node cli.js --self-check",
+    "capabilities": "node cli.js --capabilities",
+    "generate-sigil": "node generate-sigil.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VeritasActa/verify.git"
+  },
+  "homepage": "https://veritasacta.com",
+  "bugs": {
+    "url": "https://github.com/VeritasActa/verify/issues"
   }
 }

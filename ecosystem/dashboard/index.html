@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Veritas Acta — Audit Dashboard</title>
+  <style>
+    :root {
+      --bg: #f8f9fa;
+      --fg: #111;
+      --muted: #6c757d;
+      --border: #dee2e6;
+      --accent: #0b5394;
+      --valid: #0a7c3f;
+      --invalid: #b5271b;
+      --warn: #b28000;
+      --card: #fff;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.5;
+    }
+    header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header h1 { font-size: 1.1rem; margin: 0; font-weight: 700; }
+    header .meta { color: var(--muted); font-size: 0.85rem; }
+    main { max-width: 1280px; margin: 2rem auto; padding: 0 1.5rem; }
+    .intro { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }
+    .intro h2 { margin: 0 0 0.5rem 0; font-size: 1rem; }
+    .intro p { color: var(--muted); margin: 0.25rem 0; font-size: 0.9rem; }
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 2rem;
+      text-align: center;
+      background: var(--card);
+      margin-bottom: 1.5rem;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .drop-zone.dragover { border-color: var(--accent); background: #eef4fb; }
+    .drop-zone code { color: var(--accent); }
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+    }
+    .stat .k { color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat .v { font-size: 1.75rem; font-weight: 700; margin-top: 0.25rem; font-variant-numeric: tabular-nums; }
+    .stat .v.valid { color: var(--valid); }
+    .stat .v.invalid { color: var(--invalid); }
+    .stat .v.warn { color: var(--warn); }
+
+    table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    th, td { text-align: left; padding: 0.6rem 0.8rem; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+    th { background: #f4f6f8; color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; }
+    tr:last-child td { border-bottom: none; }
+    .status-cell { font-variant-numeric: tabular-nums; }
+    .status.valid { color: var(--valid); font-weight: 600; }
+    .status.invalid { color: var(--invalid); font-weight: 600; }
+    .status.warn { color: var(--warn); font-weight: 600; }
+    .hash { font-family: ui-monospace, SF Mono, Menlo, monospace; font-size: 0.8rem; color: var(--muted); }
+    .empty { text-align: center; color: var(--muted); padding: 3rem; font-style: italic; }
+    .footer { color: var(--muted); font-size: 0.8rem; text-align: center; margin: 3rem 0 1rem 0; }
+    .footer a { color: var(--accent); text-decoration: none; }
+    .view-toggle { display: inline-flex; gap: 0.25rem; background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 0.2rem; margin-bottom: 1rem; }
+    .view-toggle button { background: transparent; border: 0; padding: 0.4rem 0.9rem; font-size: 0.85rem; color: var(--muted); cursor: pointer; border-radius: 4px; }
+    .view-toggle button.active { background: var(--accent); color: white; }
+    #graph { width: 100%; height: 480px; background: var(--card); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; display: none; }
+    #graph svg { width: 100%; height: 100%; }
+    .node-circle { fill: var(--accent); stroke: var(--card); stroke-width: 2; cursor: pointer; }
+    .node-circle.break { fill: var(--invalid); }
+    .node-label { font-size: 11px; font-family: ui-monospace, monospace; fill: var(--fg); pointer-events: none; }
+    .edge-chain { stroke: var(--accent); stroke-opacity: 0.6; }
+    .edge-parent { stroke: var(--warn); stroke-opacity: 0.6; stroke-dasharray: 4 2; }
+    .edge-break { stroke: var(--invalid); stroke-opacity: 0.9; }
+    .legend { display: flex; gap: 1.2rem; padding: 0.5rem 1rem; color: var(--muted); font-size: 0.75rem; }
+    .legend-dot { display: inline-block; width: 20px; height: 2px; vertical-align: middle; margin-right: 0.4rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Veritas Acta — Audit Dashboard</h1>
+    <span class="meta">Offline scaffold v0.1 · runs entirely in-browser</span>
+  </header>
+
+  <main>
+    <section class="intro">
+      <h2>What this is</h2>
+      <p>A local-first, offline audit dashboard for signed decision receipts. Drop a folder or paste JSON; the dashboard reports chain depth, breaks, and per-receipt status. No data leaves the browser.</p>
+      <p>Verification is a <strong>structural</strong> check in this scaffold: JCS canonical hash + chain linkage. For full Ed25519 + VOPRF verification, paste results from <code>npx @veritasacta/verify --json</code> and the dashboard will render the output.</p>
+    </section>
+
+    <div class="drop-zone" id="dz">
+      <strong>Drop receipt files here</strong><br/>
+      <span style="color: var(--muted); font-size: 0.9rem;">
+        or paste <code>verify --json</code> / <code>verify compliance --json</code> output below
+      </span>
+      <input id="fileInput" type="file" multiple accept=".json,application/json" style="display: none" />
+    </div>
+
+    <textarea id="jsonPaste" placeholder="Paste `verify --json` output here…"
+      style="width: 100%; min-height: 140px; padding: 0.75rem; border: 1px solid var(--border);
+             border-radius: 6px; font-family: ui-monospace, SF Mono, Menlo, monospace;
+             font-size: 0.8rem; margin-bottom: 1.5rem; background: var(--card);"></textarea>
+
+    <div class="summary" id="summary" style="display:none;">
+      <div class="stat"><div class="k">Total receipts</div><div class="v" id="stat-total">—</div></div>
+      <div class="stat"><div class="k">Valid</div><div class="v valid" id="stat-valid">—</div></div>
+      <div class="stat"><div class="k">Invalid</div><div class="v invalid" id="stat-invalid">—</div></div>
+      <div class="stat"><div class="k">Chain links broken</div><div class="v warn" id="stat-broken">—</div></div>
+      <div class="stat"><div class="k">First issued</div><div class="v" id="stat-first" style="font-size: 0.95rem">—</div></div>
+      <div class="stat"><div class="k">Last issued</div><div class="v" id="stat-last" style="font-size: 0.95rem">—</div></div>
+    </div>
+
+    <div class="view-toggle" id="viewToggle" style="display:none;">
+      <button id="btn-table" class="active" data-view="table">Table</button>
+      <button id="btn-graph" data-view="graph">DAG</button>
+    </div>
+    <div class="legend" id="legend" style="display:none;">
+      <span><span class="legend-dot edge-chain" style="background:var(--accent)"></span>previousReceiptHash chain</span>
+      <span><span class="legend-dot edge-parent" style="background:var(--warn)"></span>parent_receipt_id link</span>
+      <span><span class="legend-dot edge-break" style="background:var(--invalid)"></span>broken link</span>
+    </div>
+
+    <table id="table" style="display:none;">
+      <thead>
+        <tr>
+          <th>Issued at</th>
+          <th>Action</th>
+          <th>Decision</th>
+          <th>Hash</th>
+          <th>Kid</th>
+          <th>Trace</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+
+    <div id="graph"></div>
+
+    <div id="empty" class="empty">No receipts loaded. Drop files above to begin.</div>
+
+    <div class="footer">
+      <a href="https://veritasacta.com">veritasacta.com</a> ·
+      <a href="https://github.com/VeritasActa/verify">github</a> ·
+      <a href="https://www.npmjs.com/package/@veritasacta/verify">npm</a>
+    </div>
+  </main>
+
+  <script type="module" src="./dashboard.js"></script>
+</body>
+</html>

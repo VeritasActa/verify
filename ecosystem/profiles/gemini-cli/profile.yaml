@@ -1,0 +1,21 @@
+apiVersion: scopeblind.profiles/v1
+kind: SandboxProfile
+metadata:
+  name: gemini-cli
+  tool: Google Gemini CLI
+  tool_url: https://github.com/google-gemini/gemini-cli
+  profile_version: 1.0.0
+  maintained_by: ScopeBlind
+  license: Apache-2.0
+spec:
+  sb_runtime:
+    recommended_ring: 3
+    sandbox_backend: sb_runtime_builtin
+    receipts_dir: .veritasacta/receipts/gemini-cli
+    policy_file: ./policy.cedar
+  nono:
+    capability_file: ./nono-capabilities.yaml
+  intended_threat_model:
+    - Gemini CLI tool calls go through Google AI Studio backends
+    - Shell access narrower than claude-code (read-review default)
+    - Network limited to Google AI + common dev

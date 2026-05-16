@@ -1,0 +1,114 @@
+name: Interop Leaderboard
+
+on:
+  schedule:
+    - cron: '0 12 * * 0'   # every Sunday 12:00 UTC
+  workflow_dispatch:
+
+jobs:
+  interop-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        implementation:
+          - name: protect-mcp
+            fixture-repo: scopeblind/scopeblind-gateway
+            fixture-path: test-vectors/receipts/*.json
+          - name: protect-mcp-adk
+            fixture-repo: scopeblind/protect-mcp-adk
+            fixture-path: tests/fixtures/receipts/*.json
+          - name: sb-runtime
+            fixture-repo: ScopeBlind/sb-runtime
+            fixture-path: tests/fixtures/*.json
+          - name: aps-governance-hook
+            fixture-repo: aeoess/agent-passport-system
+            fixture-path: test-vectors/*.json
+          - name: signet
+            fixture-repo: Prismer-AI/signet
+            fixture-path: fixtures/*.json
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install canonical verifier
+        run: npm install -g @veritasacta/verify@latest
+
+      - name: Self-check (prove canonical)
+        run: npx @veritasacta/verify --self-check
+
+      - name: Fetch ${{ matrix.implementation.name }} fixtures
+        run: |
+          mkdir -p fixtures/${{ matrix.implementation.name }}
+          git clone --depth=1 https://github.com/${{ matrix.implementation.fixture-repo }} /tmp/impl-repo || echo "Fixture repo not accessible (may be private)"
+          cp -r /tmp/impl-repo/${{ matrix.implementation.fixture-path }} fixtures/${{ matrix.implementation.name }}/ 2>/dev/null || echo "No fixtures found for pattern"
+
+      - name: Verify all fixtures
+        id: verify
+        run: |
+          set +e
+          TOTAL=0
+          PASSED=0
+          FAILED=0
+          for f in fixtures/${{ matrix.implementation.name }}/*.json; do
+            TOTAL=$((TOTAL + 1))
+            if npx @veritasacta/verify "$f" --strict > /tmp/result-$TOTAL.json 2>&1; then
+              PASSED=$((PASSED + 1))
+            else
+              FAILED=$((FAILED + 1))
+            fi
+          done
+          echo "total=$TOTAL" >> $GITHUB_OUTPUT
+          echo "passed=$PASSED" >> $GITHUB_OUTPUT
+          echo "failed=$FAILED" >> $GITHUB_OUTPUT
+          {
+            echo "impl=${{ matrix.implementation.name }}"
+            echo "total=$TOTAL"
+            echo "passed=$PASSED"
+            echo "failed=$FAILED"
+            echo "timestamp=$(date -Iseconds)"
+          } > /tmp/result-${{ matrix.implementation.name }}.env
+
+      - name: Upload per-implementation result
+        uses: actions/upload-artifact@v4
+        with:
+          name: result-${{ matrix.implementation.name }}
+          path: /tmp/result-*.env
+
+  aggregate:
+    needs: interop-matrix
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all results
+        uses: actions/download-artifact@v4
+        with:
+          path: results/
+
+      - name: Build leaderboard markdown
+        run: |
+          {
+            echo "# Interop Leaderboard"
+            echo ""
+            echo "Auto-generated every Sunday. Each row represents verifying that implementation's fixtures with canonical @veritasacta/verify."
+            echo ""
+            echo "| Implementation | Total | Passed | Failed | Status |"
+            echo "|---|---|---|---|---|"
+            for r in results/*/result-*.env; do
+              [[ -f "$r" ]] || continue
+              source "$r"
+              STATUS="✓ interop"
+              [[ "$failed" != "0" ]] && STATUS="⚠ partial ($failed failing)"
+              [[ "$total" == "0" ]] && STATUS="? no fixtures"
+              echo "| $impl | $total | $passed | $failed | $STATUS |"
+            done
+            echo ""
+            echo "*Last updated: $(date -u +%Y-%m-%dT%H:%M:%SZ)*"
+          } > LEADERBOARD.md
+          cat LEADERBOARD.md
+
+      - name: Commit leaderboard
+        run: |
+          git config user.name "Veritas Acta Interop Bot"
+          git config user.email "interop-bot@veritasacta.com"
+          git add LEADERBOARD.md
+          git diff --cached --quiet && echo "no changes" || (git commit -m "chore: update interop leaderboard ($(date -I))" && git push)

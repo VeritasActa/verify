@@ -1,0 +1,14 @@
+{
+  "name": "@veritasacta/sdk",
+  "version": "0.1.0",
+  "description": "Tiny SDK for producing Veritas Acta signed decision receipts. Framework-agnostic; adapters build on top.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "files": ["src/"],
+  "dependencies": {},
+  "engines": { "node": ">=18.0.0" },
+  "keywords": ["veritasacta", "receipts", "ed25519", "jcs", "agent-governance"],
+  "repository": { "type": "git", "url": "git+https://github.com/VeritasActa/sdk-js.git" }
+}

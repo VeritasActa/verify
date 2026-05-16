@@ -1,0 +1,79 @@
+# nono capability set for running Claude Code under kernel-native sandbox.
+# Use alongside sb-runtime --ring 2 so nono owns the sandbox layer and
+# sb-runtime contributes only Cedar evaluation + signed receipts.
+#
+# See: https://github.com/always-further/nono
+
+version: "1"
+profile: claude-code
+
+capabilities:
+  filesystem:
+    allow_read:
+      - /workspace
+      - /tmp
+      - /usr/bin
+      - /usr/lib
+      - /lib
+      - /etc/ssl/certs  # TLS trust roots for HTTPS to github.com etc
+    allow_readwrite:
+      - /workspace
+    deny:
+      - /etc
+      - /var
+      - /root
+      - /home  # except whatever's bind-mounted to /workspace
+      - /proc/*/mem  # stop memory inspection
+
+  network:
+    allow_egress:
+      - api.github.com
+      - "*.githubusercontent.com"
+      - "*.anthropic.com"
+      - api.pypi.org
+      - registry.npmjs.org
+    deny:
+      - 169.254.169.254  # AWS IMDS
+      - metadata.google.internal
+      - fd00:ec2::254  # IPv6 IMDS
+    block_all_other: true
+
+  syscalls:
+    # seccomp-notify for runtime supervisor upgrades; default allowlist
+    # covers normal fs + net + proc control for subprocess management.
+    default: allowlist
+    allowed:
+      - read
+      - write
+      - openat
+      - close
+      - fstat
+      - mmap
+      - brk
+      - execve  # gated by Cedar policy per-command
+      - clone
+      - wait4
+      - pipe2
+      - fork
+      - dup2
+      - accept4
+      - connect
+      - bind
+      - listen
+      - socket
+      - rt_sigaction
+      - rt_sigreturn
+      - exit_group
+    denied:
+      - ptrace
+      - process_vm_readv
+      - keyctl
+      - personality
+      - pivot_root
+      - chroot
+      - mount
+
+# When nono is composed with sb-runtime --ring 2, each capability check
+# also produces a Veritas Acta receipt per the sb-runtime skill
+# (packages/agentmesh-integrations/sb-runtime-skill/). See
+# docs/integrations/sb-runtime.md.

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.tomjwxf/veritasacta-verify",
+  "description": "Offline receipt verifier. Ed25519 signature verification without contacting any server.",
+  "repository": {
+    "url": "https://github.com/scopeblind/ScopeBlindD2",
+    "source": "github",
+    "subfolder": "packages/verify-cli"
+  },
+  "version": "0.2.1",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@veritasacta/verify",
+      "version": "0.2.1",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": []
+    }
+  ]
+}

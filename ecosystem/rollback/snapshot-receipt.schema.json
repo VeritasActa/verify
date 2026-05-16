@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://veritasacta.com/schemas/aip-0004/snapshot-receipt.schema.json",
+  "title": "AIP-0004 Snapshot / Rollback Receipt",
+  "description": "Content-addressed snapshot and rollback receipts over AIP-0001 envelope.",
+  "oneOf": [
+    { "$ref": "#/$defs/snapshot" },
+    { "$ref": "#/$defs/rollback" }
+  ],
+  "$defs": {
+    "envelope": {
+      "type": "object",
+      "required": ["payload", "signature"],
+      "properties": {
+        "payload": { "type": "object" },
+        "signature": {
+          "type": "object",
+          "required": ["alg", "kid", "sig"],
+          "properties": {
+            "alg": { "type": "string", "enum": ["ed25519", "EdDSA", "ed25519+ml-dsa-65"] },
+            "kid": { "type": "string", "minLength": 1 },
+            "sig": { "type": "string", "pattern": "^[0-9a-f]+$" }
+          }
+        }
+      }
+    },
+    "snapshot": {
+      "allOf": [{ "$ref": "#/$defs/envelope" }],
+      "properties": {
+        "payload": {
+          "type": "object",
+          "required": [
+            "type", "session_id", "snapshot_root", "snapshot_backend",
+            "file_count", "snapshot_scope", "issuer_id", "agent_id", "issued_at"
+          ],
+          "properties": {
+            "type": { "const": "snapshot" },
+            "session_id": { "type": "string", "minLength": 1 },
+            "snapshot_root": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{43}$",
+              "description": "base64url(SHA-256) no padding"
+            },
+            "snapshot_backend": {
+              "type": "string",
+              "enum": ["zfs", "btrfs", "git", "cow", "copy", "nono", "custom"]
+            },
+            "snapshot_uri": { "type": "string" },
+            "file_count": { "type": "integer", "minimum": 0 },
+            "snapshot_scope": {
+              "type": "object",
+              "required": ["allowed_read", "allowed_write"],
+              "properties": {
+                "allowed_read":  { "type": "array", "items": { "type": "string" } },
+                "allowed_write": { "type": "array", "items": { "type": "string" } },
+                "deny":          { "type": "array", "items": { "type": "string" } }
+              }
+            },
+            "policy_hash": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{43}$"
+            },
+            "previousReceiptHash": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{43}$"
+            },
+            "issuer_id": { "type": "string" },
+            "agent_id":  { "type": "string" },
+            "issued_at": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    },
+    "rollback": {
+      "allOf": [{ "$ref": "#/$defs/envelope" }],
+      "properties": {
+        "payload": {
+          "type": "object",
+          "required": [
+            "type", "session_id", "snapshot_receipt_hash",
+            "rollback_reason", "rollback_initiator", "rollback_outcome",
+            "post_rollback_root", "issuer_id", "agent_id", "issued_at"
+          ],
+          "properties": {
+            "type": { "const": "rollback" },
+            "session_id": { "type": "string", "minLength": 1 },
+            "snapshot_receipt_hash": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{43}$"
+            },
+            "rollback_reason": { "type": "string", "maxLength": 256 },
+            "rollback_initiator": {
+              "type": "string",
+              "enum": ["human", "policy", "anomaly-detector"]
+            },
+            "rollback_outcome": {
+              "type": "string",
+              "enum": ["success", "partial", "failed"]
+            },
+            "post_rollback_root": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{43}$"
+            },
+            "external_side_effects": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["receipt_hash", "action", "compensable"],
+                "properties": {
+                  "receipt_hash": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9_-]{43}$"
+                  },
+                  "action": { "type": "string" },
+                  "compensable": { "type": "boolean" }
+                }
+              }
+            },
+            "previousReceiptHash": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{43}$"
+            },
+            "issuer_id": { "type": "string" },
+            "agent_id":  { "type": "string" },
+            "issued_at": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    }
+  }
+}
