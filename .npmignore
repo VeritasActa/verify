@@ -1,0 +1,8 @@
+# Private key — NEVER publish to npm
+sigil-key.json
+
+# Sigil generation script — development only
+generate-sigil.mjs
+
+# Test files not needed by end users
+test/

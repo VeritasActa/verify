@@ -1,0 +1,11 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "verify-veritasacta-badge"
+main = "worker.js"
+compatibility_date = "2024-12-01"
+
+routes = [
+  { pattern = "verify.veritasacta.com/badge/*", zone_name = "veritasacta.com" }
+]
+
+[observability]
+enabled = true

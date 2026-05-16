@@ -1,0 +1,119 @@
+name: 'Verify with Veritas Acta'
+description: 'Verify signed decision receipts, VOPRF tokens, or Knowledge Units in CI with @veritasacta/verify.'
+author: 'Tom Farley (ScopeBlind)'
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  receipts-path:
+    description: 'Glob pattern matching receipt files to verify (e.g., "./receipts/**/*.json")'
+    required: true
+  public-key:
+    description: 'Ed25519 public key (64 hex chars) used for verification.'
+    required: false
+  jwks-url:
+    description: 'URL of a JWKS endpoint providing the signing key.'
+    required: false
+  required-tier:
+    description: 'Fail the run if any receipt does not achieve at least this tier (1-5).'
+    required: false
+    default: ''
+  pin-sigil:
+    description: 'Pin to a specific verifier Sigil fingerprint (recommended).'
+    required: false
+    default: ''
+  strict:
+    description: 'Enable --strict mode (disables all deprecated fallbacks).'
+    required: false
+    default: 'true'
+  audit-report:
+    description: 'Write an HTML audit report to this path.'
+    required: false
+    default: ''
+  verifier-version:
+    description: 'Version of @veritasacta/verify to install (defaults to latest).'
+    required: false
+    default: 'latest'
+  attest:
+    description: 'Emit a canonical verifier attestation to the step output.'
+    required: false
+    default: 'false'
+  attest-org:
+    description: 'Org name to include in the canonical attestation.'
+    required: false
+    default: ''
+
+outputs:
+  total:
+    description: 'Total receipts inspected.'
+  verified:
+    description: 'Receipts that verified successfully.'
+  failed:
+    description: 'Receipts that failed verification.'
+  sigil-fingerprint:
+    description: 'Fingerprint of the canonical verifier used.'
+  attestation:
+    description: 'Canonical attestation JSON (when `attest: true`).'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install @veritasacta/verify
+      shell: bash
+      run: npm install -g @veritasacta/verify@${{ inputs.verifier-version }}
+
+    - name: Self-check (prove canonical release)
+      shell: bash
+      run: |
+        if [[ -n "${{ inputs.pin-sigil }}" ]]; then
+          npx @veritasacta/verify --pin-sigil ${{ inputs.pin-sigil }}
+        fi
+        npx @veritasacta/verify --self-check
+
+    - name: Verify receipts
+      id: verify
+      shell: bash
+      run: |
+        set -e
+        FAILED=0
+        TOTAL=0
+        for f in $(eval ls ${{ inputs.receipts-path }}); do
+          TOTAL=$((TOTAL + 1))
+          KEY_ARG=""
+          [[ -n "${{ inputs.public-key }}" ]] && KEY_ARG="--key ${{ inputs.public-key }}"
+          [[ -n "${{ inputs.jwks-url }}" ]] && KEY_ARG="--jwks ${{ inputs.jwks-url }}"
+          TIER_ARG=""
+          [[ -n "${{ inputs.required-tier }}" ]] && TIER_ARG="--tier ${{ inputs.required-tier }}"
+          STRICT_ARG=""
+          [[ "${{ inputs.strict }}" == "true" ]] && STRICT_ARG="--strict"
+          if ! npx @veritasacta/verify "$f" $KEY_ARG $TIER_ARG $STRICT_ARG --json > /tmp/result.json; then
+            FAILED=$((FAILED + 1))
+            cat /tmp/result.json
+          fi
+        done
+        VERIFIED=$((TOTAL - FAILED))
+        echo "total=$TOTAL" >> $GITHUB_OUTPUT
+        echo "verified=$VERIFIED" >> $GITHUB_OUTPUT
+        echo "failed=$FAILED" >> $GITHUB_OUTPUT
+        if [[ $FAILED -gt 0 ]]; then exit 1; fi
+
+    - name: Canonical attestation
+      if: ${{ inputs.attest == 'true' }}
+      shell: bash
+      run: |
+        ORG_ARG=""
+        [[ -n "${{ inputs.attest-org }}" ]] && ORG_ARG='--attest-org "${{ inputs.attest-org }}"'
+        npx @veritasacta/verify --attest $ORG_ARG > /tmp/attestation.json
+        cat /tmp/attestation.json
+        echo "attestation<<EOF" >> $GITHUB_OUTPUT
+        cat /tmp/attestation.json >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
+    - name: Upload audit report
+      if: ${{ inputs.audit-report != '' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: veritasacta-audit-report
+        path: ${{ inputs.audit-report }}
+        if-no-files-found: warn

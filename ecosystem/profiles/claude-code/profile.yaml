@@ -1,0 +1,29 @@
+apiVersion: scopeblind.profiles/v1
+kind: SandboxProfile
+metadata:
+  name: claude-code
+  tool: Claude Code (Anthropic)
+  tool_url: https://www.claude.com/product/claude-code
+  profile_version: 1.0.0
+  maintained_by: ScopeBlind
+  license: Apache-2.0
+  veritas_acta_receipt_type: scopeblind:decision
+spec:
+  sb_runtime:
+    recommended_ring: 3
+    sandbox_backend: sb_runtime_builtin
+    receipts_dir: .veritasacta/receipts/claude-code
+    policy_file: ./policy.cedar
+  nono:
+    capability_file: ./nono-capabilities.yaml
+    recommended_mode: compose  # sb-runtime at ring 2, nono wraps process
+  intended_threat_model:
+    - Claude Code agent reads source, writes in workspace, runs test commands
+    - Agent cannot reach cloud metadata endpoints
+    - Agent cannot escalate outside /workspace, /tmp
+    - Agent cannot write to /etc, /usr, /root, /var/log
+    - Every tool_use produces a signed receipt linked to prior
+  known_limitations:
+    - Claude Code's MCP tool integration creates syscalls outside this profile's scope;
+      set `--allow-mcp-egress` to add a tight allowlist for specific MCP server hosts
+    - Hard-stops on aarch64 Linux sandbox until issue #1 lands

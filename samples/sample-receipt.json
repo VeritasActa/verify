@@ -1,0 +1,19 @@
+{
+  "v": 2,
+  "type": "decision_receipt",
+  "algorithm": "ed25519",
+  "kid": "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k",
+  "issuer": "sb:test",
+  "issued_at": "2026-01-01T00:00:00Z",
+  "payload": {
+    "decision": "allow",
+    "policy_digest": "sha256:abcdef0123456789",
+    "scope": "my-service",
+    "tool": "read_database",
+    "tier": "signed-known",
+    "mode": "shadow",
+    "reason_code": "policy_match",
+    "request_id": "req_test_001"
+  },
+  "signature": "324a966f8d4e6652e2270311c9682157d5adc01f1f019d84b24a1125220869a5c5a0fc0096ed3afffaa66ac36cfbbd97e60d9c5f7ad632a2cf11c45c2c50fd0d"
+}

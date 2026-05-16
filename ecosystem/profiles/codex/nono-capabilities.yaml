@@ -1,0 +1,23 @@
+version: "1"
+profile: codex
+capabilities:
+  filesystem:
+    allow_read: [/workspace, /tmp, /usr/bin, /usr/lib, /lib, /etc/ssl/certs]
+    allow_readwrite: [/workspace]
+    deny: [/etc, /var, /root, /home, /proc/*/mem]
+  network:
+    allow_egress:
+      - "*.openai.com"
+      - api.github.com
+      - "*.githubusercontent.com"
+      - api.pypi.org
+      - registry.npmjs.org
+    deny:
+      - 169.254.169.254
+      - metadata.google.internal
+      - fd00:ec2::254
+    block_all_other: true
+  syscalls:
+    default: allowlist
+    allowed: [read, write, openat, close, fstat, mmap, brk, execve, clone, wait4, pipe2, fork, dup2, accept4, connect, bind, listen, socket, rt_sigaction, rt_sigreturn, exit_group]
+    denied: [ptrace, process_vm_readv, keyctl, personality, pivot_root, chroot, mount]

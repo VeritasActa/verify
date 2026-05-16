@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://veritasacta.com/schemas/attestation-quote.schema.json",
+  "title": "AIP-0005 T2 Attestation Quote",
+  "description": "Platform attestation quote binding a signing key to a hardware secure element.",
+  "type": "object",
+  "required": ["format", "quote", "measured_kid"],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "type": "string",
+      "description": "Vendor-specific quote format identifier.",
+      "enum": [
+        "atecc608b-signed-data-v1",
+        "ta100-signed-data-v1",
+        "se050-attestation-v1",
+        "tpm2-quote-v1",
+        "sgx-dcap-v3",
+        "sev-snp-report-v1",
+        "tdx-quote-v4",
+        "apple-secure-enclave-v1",
+        "custom"
+      ]
+    },
+    "quote": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]+={0,2}$",
+      "description": "Raw quote bytes, base64url-encoded."
+    },
+    "measured_kid": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Key identifier bound in the quote. MUST match the enclosing receipt's signature.kid."
+    },
+    "provisioning_ca": {
+      "oneOf": [
+        { "type": "string", "description": "PEM-encoded CA certificate or fingerprint." },
+        {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "X.509 chain as array of x5c entries."
+        }
+      ]
+    },
+    "reference_values": {
+      "type": "object",
+      "description": "Expected reference measurements (PCRs, IMA hashes, memory ranges). Platform-specific schema.",
+      "additionalProperties": true
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://veritasacta.com/schemas/aip-0006/delegation-receipt.schema.json",
+  "title": "AIP-0006 Delegation Receipt",
+  "description": "A scoped, time-bounded authority transfer signed by a delegator over a delegate.",
+  "type": "object",
+  "required": ["payload", "signature"],
+  "additionalProperties": true,
+  "properties": {
+    "payload": {
+      "type": "object",
+      "required": [
+        "type", "delegator_kid", "delegate_kid", "scope",
+        "expires_at", "issued_at", "issuer_id"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "type": { "const": "delegation" },
+        "delegator_kid": { "type": "string", "minLength": 1 },
+        "delegate_kid":  { "type": "string", "minLength": 1 },
+        "scope": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "tools":     { "type": "array", "items": { "type": "string" } },
+            "targets":   { "type": "array", "items": { "type": "string" } },
+            "resources": { "type": "array", "items": { "type": "string" } },
+            "max_depth": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "expires_at": { "type": "string", "format": "date-time" },
+        "parent_delegation_hash": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        },
+        "issued_at": { "type": "string", "format": "date-time" },
+        "issuer_id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "signature": {
+      "type": "object",
+      "required": ["alg", "kid", "sig"],
+      "properties": {
+        "alg": { "type": "string", "enum": ["ed25519", "EdDSA", "ed25519+ml-dsa-65"] },
+        "kid": { "type": "string", "minLength": 1 },
+        "sig": { "type": "string", "minLength": 1 }
+      }
+    },
+    "cosignatures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["alg", "kid", "sig"],
+        "properties": {
+          "alg": { "type": "string" },
+          "kid": { "type": "string" },
+          "sig": { "type": "string" }
+        }
+      }
+    }
+  }
+}

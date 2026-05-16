@@ -1,0 +1,85 @@
+name: Conformance Certification (weekly)
+
+# Runs every Monday 00:00 UTC. Regenerates cross-implementation
+# conformance evidence and publishes signed certification artifacts.
+
+on:
+  schedule:
+    - cron: "0 0 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  # id-token for Sigstore anchoring
+  id-token: write
+
+jobs:
+  certify:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        aip_level: [T1, T2, T3, T4, T5]
+    steps:
+      - name: Checkout reference verifier
+        uses: actions/checkout@v4
+        with:
+          repository: VeritasActa/verify
+          path: reference
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install reference verifier
+        working-directory: reference/packages/verify-cli
+        run: npm ci
+
+      - name: Checkout integration profiles
+        uses: actions/checkout@v4
+        with:
+          repository: ScopeBlind/agt-integration-profile
+          path: profiles
+
+      - name: Run conformance vectors for ${{ matrix.aip_level }}
+        working-directory: reference/packages/verify-cli
+        run: node ecosystem/certify/run-certification.mjs
+               --aip-level ${{ matrix.aip_level }}
+               --profiles ../../../profiles/implementations/
+               --output ../../../certify-${{ matrix.aip_level }}.json
+
+      - name: Sign certification result
+        run: node reference/packages/verify-cli/ecosystem/certify/sign-result.mjs
+              --input certify-${{ matrix.aip_level }}.json
+              --key "${{ secrets.CERTIFICATION_SIGNING_KEY }}"
+              --output signed-${{ matrix.aip_level }}.json
+
+      - name: Anchor in Sigstore Rekor
+        run: |
+          cosign attest-blob \
+            --predicate signed-${{ matrix.aip_level }}.json \
+            --type veritas-acta-certification \
+            --bundle rekor-${{ matrix.aip_level }}.bundle
+
+      - name: Publish to veritasacta.com/certify/
+        run: node reference/packages/verify-cli/ecosystem/certify/publish.mjs
+              --signed signed-${{ matrix.aip_level }}.json
+              --rekor-bundle rekor-${{ matrix.aip_level }}.bundle
+              --endpoint https://api.veritasacta.com/certify/publish
+              --api-key "${{ secrets.CERTIFICATION_API_KEY }}"
+
+      - name: Update badge
+        run: node reference/packages/verify-cli/ecosystem/certify/update-badge.mjs
+              --level ${{ matrix.aip_level }}
+              --signed signed-${{ matrix.aip_level }}.json
+              --endpoint https://verify.veritasacta.com/badge/update
+              --api-key "${{ secrets.BADGE_API_KEY }}"
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: certification-${{ matrix.aip_level }}
+          path: |
+            signed-${{ matrix.aip_level }}.json
+            rekor-${{ matrix.aip_level }}.bundle

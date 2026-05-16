@@ -1,0 +1,32 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "scopeblind-swarms"
+version = "0.1.0"
+description = "Ed25519 signed decision receipts for kyegomez/swarms multi-agent systems. Wrap any tool in a Swarms agent with tamper-evident, offline-verifiable receipts in the Veritas Acta format (IETF draft-farley-acta-signed-receipts)."
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [{ name = "Tom Farley (ScopeBlind)", email = "tommy@scopeblind.com" }]
+keywords = ["swarms", "scopeblind", "veritas-acta", "receipts", "ed25519", "agent-governance", "kyegomez"]
+dependencies = [
+    "cryptography>=41.0,<47.0",
+]
+
+[project.optional-dependencies]
+swarms = ["swarms>=7.0"]
+dev = ["pytest>=7.0"]
+
+[project.urls]
+Homepage = "https://github.com/ScopeBlind/scopeblind-gateway"
+"Swarms" = "https://github.com/kyegomez/swarms"
+"Veritas Acta Draft" = "https://datatracker.ietf.org/doc/draft-farley-acta-signed-receipts/"
+"Reference Verifier" = "https://www.npmjs.com/package/@veritasacta/verify"
+
+[tool.hatch.build.targets.wheel]
+packages = ["scopeblind_swarms"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

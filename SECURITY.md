@@ -1,53 +1,97 @@
 # Security Policy
 
+## Supported Versions
+
+| Version | Status         | Support through |
+|---------|----------------|-----------------|
+| 0.5.x   | Current        | Next major      |
+| 0.4.x   | Security only  | 2026-10-19      |
+| 0.3.x   | End of life    | ended 2026-04-19|
+| < 0.3   | End of life    | —               |
+
+Receipts verified with an EOL version should be re-verified with a
+current version to confirm continued validity.
+
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in `@veritasacta/verify`, please report it responsibly.
+If you believe you have found a security vulnerability in
+`@veritasacta/verify`, please report it privately.
 
-**Email:** [security@veritasacta.com](mailto:security@veritasacta.com)
+**Email:** security@scopeblind.com
 
-Please include:
-- Description of the vulnerability
-- Steps to reproduce
-- Potential impact assessment
-- Suggested fix (if any)
+**Response time:**
+- Acknowledgment within 48 hours
+- Initial assessment within 5 business days
+- Coordinated disclosure target: 90 days (shorter for actively
+  exploited issues, longer for complex issues requiring upstream fixes)
 
-We will acknowledge receipt within 48 hours and provide an initial assessment within 7 days.
+**What to include:**
+- Version affected
+- A clear description of the issue
+- Reproduction steps (if applicable)
+- Suggested remediation (if you have one)
+- Whether you intend to publish (we can coordinate disclosure timing)
+
+**What we will do:**
+- Acknowledge your report
+- Assess severity and impact
+- Develop and test a fix
+- Coordinate disclosure with you
+- Credit you in the release notes unless you prefer otherwise
 
 ## Scope
 
-This policy covers:
-- The `@veritasacta/verify` npm package
-- All code in the [VeritasActa/verify](https://github.com/VeritasActa/verify) repository
+### In scope
 
-## Cryptographic Dependencies
+- Cryptographic verification correctness bugs in the verifier
+- Canonicalization divergence from RFC 8785 / AIP-0001
+- Supply chain risks in the published package
+- Side-channel attacks against the verification path (e.g., timing)
+- Algorithm downgrade or silent fallback behavior
+- Self-check bypass (Sigil commitment verification)
 
-This library delegates all elliptic curve and hashing operations to:
-- **[@noble/curves](https://github.com/paulmillr/noble-curves)** — audited by Cure53 (Feb 2024)
-- **[@noble/hashes](https://github.com/paulmillr/noble-hashes)** — audited by Cure53 (Feb 2024)
+### Out of scope
 
-We do not implement custom cryptographic primitives. If you find a vulnerability in the noble libraries, please report it to their maintainer directly.
+- Bugs in dependencies (report to upstream: @noble/curves, @noble/hashes)
+- Threat-model non-goals documented in THREAT-MODEL.md (e.g.,
+  compromised signing keys, issuer collusion, policy semantics)
+- Usage errors unrelated to verification correctness
+- Social engineering against the ScopeBlind team
 
-## Security Properties
+## Coordinated Disclosure Examples
 
-The BRASS protocol provides the following security guarantees:
+- **Embedded-key acceptance (fixed in 0.4.0):** surfaced publicly by
+  @desiorac on GetBindu PR #459 before reaching us privately. We
+  accept that publication of the issue on a third-party project was
+  legitimate; we responded with 0.4.0 within one week.
+- We prefer private disclosure, but we will not penalize researchers
+  who choose to disclose publicly; our goal is correct verification,
+  not reporter punishment.
 
-| Property | Guarantee |
-|----------|-----------|
-| **Issuer blindness** | The issuer cannot determine which scope a token will be redeemed against |
-| **Nullifier determinism** | Same token + same scope always produces the same nullifier |
-| **Unlinkability** | Different scopes produce unrelated nullifiers from the same token |
-| **Proof soundness** | DLEQ proofs are computationally binding under the discrete log assumption on P-256 |
-| **Offline verification** | The issuer is never contacted during token redemption |
+## Hall of Fame
 
-## Known Limitations
+Security researchers who have helped improve @veritasacta/verify:
 
-- **MemoryStore** is not suitable for distributed deployments (no cross-process synchronization)
-- **KVStore** (Cloudflare KV) is eventually consistent — overspend is bounded but possible during replication lag
-- This library implements the **verifier side** only. It does not issue tokens.
+- @desiorac — embedded-key rejection (surfaced on GetBindu #459,
+  landed in 0.4.0)
 
-## Supported Versions
+## Supply Chain
 
-| Version | Supported |
-|---------|-----------|
-| 0.1.x   | Yes       |
+Each release is published with:
+
+- `npm publish --provenance` — Sigstore-attested supply chain
+- Sigil commitment in `sigil.json` covering all source files
+- GPG-signed git tag (when the release workflow runs)
+
+Verify the integrity of your installation:
+
+```bash
+# Verify npm provenance
+npm audit signatures
+
+# Verify local files match the Sigil
+npx @veritasacta/verify --self-check
+```
+
+Cross-check the expected Sigil fingerprint against the canonical
+release published on https://veritasacta.com.

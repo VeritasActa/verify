@@ -1,0 +1,21 @@
+apiVersion: scopeblind.profiles/v1
+kind: SandboxProfile
+metadata:
+  name: codex
+  tool: OpenAI Codex CLI
+  tool_url: https://github.com/openai/codex
+  profile_version: 1.0.0
+  maintained_by: ScopeBlind
+  license: Apache-2.0
+spec:
+  sb_runtime:
+    recommended_ring: 3
+    sandbox_backend: sb_runtime_builtin
+    receipts_dir: .veritasacta/receipts/codex
+    policy_file: ./policy.cedar
+  nono:
+    capability_file: ./nono-capabilities.yaml
+  intended_threat_model:
+    - Codex CLI is aggressive by default; policy is stricter than claude-code
+    - Default-deny on exec; operator opts specific commands in per project
+    - Network limited to OpenAI API + package managers

@@ -1,0 +1,23 @@
+{
+  "name": "protect-mcp",
+  "version": "0.1.0",
+  "description": "Cedar policy enforcement + Ed25519 signed receipts for Claude Code tool calls. First cryptographic-governance plugin.",
+  "author": {
+    "name": "Tom Farley",
+    "email": "tommy@scopeblind.com"
+  },
+  "homepage": "https://scopeblind.com",
+  "license": "MIT",
+  "keywords": [
+    "governance",
+    "security",
+    "policy",
+    "receipts",
+    "ed25519",
+    "audit",
+    "mcp",
+    "protect-mcp",
+    "veritasacta",
+    "scopeblind"
+  ]
+}

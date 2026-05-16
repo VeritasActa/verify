@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx protect-mcp pre --tool '{{tool_name}}' --args '{{tool_input}}'",
+            "description": "Evaluate Cedar policy for the pending tool call. Deny exits non-zero and blocks the tool."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx protect-mcp post --tool '{{tool_name}}' --args '{{tool_input}}' --result '{{tool_result}}'",
+            "description": "Sign an Ed25519 receipt for the decision. Writes to .protect-mcp/receipts/ and chain-links via previousReceiptHash."
+          }
+        ]
+      }
+    ]
+  }
+}

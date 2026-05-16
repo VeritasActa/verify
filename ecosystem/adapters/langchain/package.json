@@ -1,0 +1,16 @@
+{
+  "name": "@veritasacta/langchain",
+  "version": "0.1.0",
+  "description": "LangChain / LangGraph adapter for Veritas Acta signed decision receipts.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "src/index.js",
+  "files": ["src/", "README.md"],
+  "peerDependencies": {
+    "@veritasacta/sdk": "^0.1.0",
+    "@langchain/core": ">=0.1.0"
+  },
+  "dependencies": {},
+  "engines": { "node": ">=18.0.0" },
+  "keywords": ["langchain", "langgraph", "veritasacta", "receipts"]
+}

@@ -1,0 +1,11 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "registry-veritasacta"
+main = "worker.js"
+compatibility_date = "2024-12-01"
+
+routes = [
+  { pattern = "registry.veritasacta.com/*", zone_name = "veritasacta.com" }
+]
+
+[observability]
+enabled = true

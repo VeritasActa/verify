@@ -1,0 +1,24 @@
+apiVersion: scopeblind.profiles/v1
+kind: SandboxProfile
+metadata:
+  name: openclaw
+  tool: OpenClaw
+  tool_url: https://github.com/openclaw-ai/openclaw
+  profile_version: 1.0.0
+  maintained_by: ScopeBlind
+  license: Apache-2.0
+spec:
+  sb_runtime:
+    recommended_ring: 3
+    sandbox_backend: sb_runtime_builtin
+    receipts_dir: .veritasacta/receipts/openclaw
+    policy_file: ./policy.cedar
+  nono:
+    capability_file: ./nono-capabilities.yaml
+  intended_threat_model:
+    - OpenClaw has its own guard-rail framework; this profile is intended to COMPOSE with it
+    - Sandbox enforces filesystem + network + exec boundaries OpenClaw's guards cannot
+    - OpenClaw's behavioral checks run in-process; sandbox catches what OpenClaw misses
+  notes:
+    - Network allowlist kept broad to match OpenClaw's typical use; tighten per deployment
+    - Expect iteration as OpenClaw's API surface evolves; maintainer PRs welcome
