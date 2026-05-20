@@ -34,7 +34,7 @@ The Veritas Acta verifier is the offline verification engine for:
 
 - **protect-mcp** -- AI agent decision receipts. See [scopeblind.com/docs/protect-mcp](https://www.scopeblind.com/docs/protect-mcp).
 - **ScopeBlind cold-chain evidence tag** -- hardware-signed sensor readings (in development; ETCF #197 in review). See [scopeblind.com/cold-chain](https://www.scopeblind.com/cold-chain).
-- **Microsoft AI Agents for Beginners** -- referenced in [Lesson 18: Securing AI Agents](https://github.com/microsoft/ai-agents-for-beginners/blob/main/18-securing-ai-agents/README.md) (33K+ ★).
+- **Microsoft AI Agents for Beginners** -- referenced in [Lesson 18: Securing AI Agents](https://github.com/microsoft/ai-agents-for-beginners/blob/main/18-securing-ai-agents/README.md) (64K+ ★).
 ## What it verifies
 
 | Mode | Input | Conformance tier |
