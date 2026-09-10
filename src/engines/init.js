@@ -3,7 +3,7 @@
  *
  * `npx @veritasacta/verify init` inspects the current directory,
  * detects the agent framework in use, generates Ed25519 signing keys,
- * creates a starter config, and emits a welcome canonical attestation.
+ * creates a starter config, and emits a welcome local-integrity attestation.
  *
  * Detection precedence (first match wins):
  *   1. Explicit `--framework <name>` override
@@ -25,7 +25,7 @@
  *   - `attester.json` (signing key, private; .gitignore'd)
  *   - `config.json` (framework + adapter selection)
  *   - `receipts/` (default receipt output directory)
- *   - `welcome-attestation.json` (canonical attestation of this init run)
+ *   - `welcome-attestation.json` (self-signed local-integrity statement)
  *
  * @module verify-cli/src/engines/init
  * @license Apache-2.0

@@ -1,11 +1,12 @@
 {
   "name": "@veritasacta/verify",
-  "version": "0.6.1",
+  "version": "0.9.7",
   "mcpName": "io.github.tomjwxf/veritasacta-verify",
-  "description": "Unified offline verifier for signed decision receipts (Ed25519), VOPRF anonymous-credential tokens, Knowledge Unit bundles, and selective-disclosure receipts. Sigil-verified canonical release.",
+  "description": "Offline verifier for Veritas Acta signed receipts. Powers protect-mcp, ScopeBlind cold-chain hardware, and Microsoft AGT Lesson 18.",
   "license": "Apache-2.0",
   "type": "module",
   "bin": {
+    "verify": "cli.js",
     "verify-artifact": "cli.js"
   },
   "files": [
@@ -19,10 +20,15 @@
     "ERRORS.md",
     "ROADMAP.md",
     "samples/",
-    "test/conformance.js"
+    "test/conformance.js",
+    "known-issuers.json"
   ],
   "dependencies": {
-    "@veritasacta/artifacts": "^0.2.0"
+    "@noble/curves": "^1.9.7",
+    "@noble/hashes": "^1.8.0",
+    "@veritasacta/artifacts": "^0.2.0",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -49,6 +55,7 @@
     "test:conformance": "node test/conformance.js",
     "self-test": "node cli.js --self-test",
     "self-check": "node cli.js --self-check",
+    "check:sigil": "node generate-sigil.mjs --check",
     "capabilities": "node cli.js --capabilities",
     "generate-sigil": "node generate-sigil.mjs"
   },

@@ -22,10 +22,10 @@ permit (
     action == Agent::Action::"exec",
     resource
 ) when {
-    context.command in [
+    [
         "ls", "cat", "grep", "rg", "find", "head", "tail", "wc",
         "git", "pytest", "npm", "node", "python", "python3", "go"
-    ]
+    ].contains(context.command)
 };
 
 permit (
@@ -69,5 +69,5 @@ forbid (
     action == Agent::Action::"exec",
     resource
 ) when {
-    context.command in ["rm", "dd", "mkfs", "shutdown", "reboot", "kill", "pkill"]
+    ["rm", "dd", "mkfs", "shutdown", "reboot", "kill", "pkill"].contains(context.command)
 };

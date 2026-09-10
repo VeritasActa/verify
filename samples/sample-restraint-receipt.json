@@ -1,0 +1,35 @@
+{
+  "type": "scopeblind.agent_vault.receipt.v1",
+  "id": "restraint-850d4d9a240d1390",
+  "tool": "gate.restrain",
+  "decision": "DENY",
+  "input_sha256": "9575d64a26f53163614e26c4709831cfd0688f537f4cb1e035546bb13562983c",
+  "result_sha256": "0a2210cc9d2c2cdf08489dff0f2465ca6c6b36c4ec31d79de77dd71fbf9cd518",
+  "at": "2026-06-21T12:00:00.000Z",
+  "signature": "6e8cbe47c16ab29064c197379b55cde79fbb1a4f90dfeb979f6d11f4880ec98e086dc8e9ce5abd58caf0f42b0b0e6adb173d2620b60e9f2ed90688d418d2e803",
+  "verification_key": "409cb9511071b8687f7884cd9cde813d7a0907bef16bd68a80a8b0bac045cd34",
+  "restraint": {
+    "salt": "sample-restraint-salt-000000000000",
+    "proposed": {
+      "symbol": "TSLA",
+      "side": "buy",
+      "qty": 5000,
+      "notional": 2000000
+    },
+    "outcome": {
+      "determining": [
+        "manifest:forbidden-instrument",
+        "concentration-single-name",
+        "gross-leverage",
+        "sector-concentration",
+        "cash-floor"
+      ],
+      "risk_band": "authority",
+      "mandate_digest": "1b92a72197028340",
+      "layers": {
+        "manifest": "deny",
+        "mandate": "deny"
+      }
+    }
+  }
+}

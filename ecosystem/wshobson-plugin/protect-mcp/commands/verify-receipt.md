@@ -9,9 +9,9 @@ Verify a Claude Code receipt produced by protect-mcp.
 
 Runs `npx @veritasacta/verify <path> --key <pubkey>` against the file path in $ARGUMENTS. Reports:
 
-- **exit 0** — valid: signature + JCS canonicalization + chain linkage all check out
-- **exit 1** — invalid: proven tampering somewhere (signature or chain)
-- **exit 2** — undecidable: malformed JSON, missing key, unsupported algorithm
+- **exit 0**: valid: signature + JCS canonicalization + chain linkage all check out
+- **exit 1**: invalid: proven tampering somewhere (signature or chain)
+- **exit 2**: undecidable: malformed JSON, missing key, unsupported algorithm
 
 ## Implementation
 

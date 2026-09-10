@@ -32,14 +32,14 @@ export const ERROR_REGISTRY = {
     code: 'invalid_signature',
     description: 'Cryptographic signature verification failed over the canonical payload.',
     class: 'tampered',
-    spec: 'draft-farley-acta-signed-receipts-03 §6.1',
+    spec: 'draft-farley-acta-signed-receipts-03 §6.6 Signature Scope',
     hint: 'The receipt has been modified or signed by a different key than the one provided.',
   },
   chain_break: {
     code: 'chain_break',
     description: 'previousReceiptHash does not match the hash of the preceding receipt.',
     class: 'tampered',
-    spec: 'draft-farley-acta-signed-receipts-03 §5.4 Chain Linkage',
+    spec: 'draft-farley-acta-signed-receipts-03 §6.7 Chain Hash Scope',
     hint: 'A receipt has been inserted, removed, or reordered in the chain.',
   },
   commitment_mismatch: {
@@ -55,6 +55,30 @@ export const ERROR_REGISTRY = {
     class: 'tampered',
     spec: 'draft-farley-acta-signed-receipts-03 §VOPRF Token Verification',
     hint: 'The VOPRF token was not produced by a valid issuer, or the proof is malformed.',
+  },
+  digest_mismatch: {
+    code: 'digest_mismatch',
+    description: 'Recomputed SHA-256 of the canonical payload does not match the digest carried in the record.',
+    class: 'tampered',
+    hint: 'The payload was modified after the digest was computed, or the digest field was altered.',
+  },
+  chain_link_mismatch: {
+    code: 'chain_link_mismatch',
+    description: 'A chained record references a parent digest or leg that does not match the rest of the bundle.',
+    class: 'tampered',
+    hint: 'Each record may still be individually authentic; this code means a cross-record link is inconsistent. Check the [chain] entries in the error list.',
+  },
+  key_mismatch: {
+    code: 'key_mismatch',
+    description: 'The verification key carried in the record does not match the key pinned with --key.',
+    class: 'tampered',
+    hint: 'The record was signed by a different identity than the one you required.',
+  },
+  schema_invalid: {
+    code: 'schema_invalid',
+    description: 'The signed payload does not satisfy the required semantic schema for its declared receipt type.',
+    class: 'tampered',
+    hint: 'The signature may be authentic, but the record is not a valid instance of the declared contract.',
   },
 
   // --- Undecidable (exit 2) ---

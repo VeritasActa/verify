@@ -1,4 +1,4 @@
-# Filesystem Rollback — AIP-0004 (v0.6.0 target)
+# Filesystem Rollback: AIP-0004 (v0.6.0 target)
 
 > **Spec:** [AIP-0004 Content-Addressed Snapshot and Rollback Receipts](../../../../specs/aip/AIP-0004-snapshot-receipts.md)
 > **Reference implementation:** [`snapshot.mjs`](./snapshot.mjs) (Merkle helper + payload builder)

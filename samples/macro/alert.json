@@ -1,0 +1,31 @@
+{
+  "payload": {
+    "schema": "scopeblind.macro.alert/1",
+    "engine_version": "macro-engine/0.1.0",
+    "as_of": "2025-08-23",
+    "alert_id": "915720cc951de3dfb99437ebac0362f02947160eca28841e6803c37979019cbb",
+    "kind": "market_state_change",
+    "severity": "critical",
+    "title": "Market state: mixed -> stress",
+    "detail": "Daily market-state classification changed (confidence 0.8).",
+    "refs": [
+      {
+        "schema": "scopeblind.macro.market-state/1",
+        "as_of": "2025-08-23",
+        "digest": "d9602f7915b69bcbf7f86c0cf1b0387965e1b448918be92339ed96d138449d80"
+      },
+      {
+        "schema": "scopeblind.macro.market-state/1",
+        "as_of": "2025-02-05",
+        "digest": "d47770c9fdcbe921596497fc1f63d18f86d8bbef302abc060d4d0e1cb7dc9e53"
+      }
+    ],
+    "budget": {
+      "position": 1,
+      "max_per_day": 2
+    }
+  },
+  "digest": "bb942d2f4fe547ffba9e7eec6518d32d5d61019c6c85da6aad4dfa051b3df460",
+  "signature": "a3ddc18d8087ae63a4b4d967d3d12a28db2476ef143f0ed21d2d1b4ecae7187eb8310a2e87ee5534c2250a533deeadb450c6e1003bcf1c43b731f96929738800",
+  "verification_key": "e324c4149db27151f65df25d528d3037d3b3bc4165b0d28c0769369cba958ae3"
+}

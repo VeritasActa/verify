@@ -1,10 +1,10 @@
-# protect-mcp — Cedar policy + signed receipts for Claude Code
+# protect-mcp: Cedar policy + signed receipts for Claude Code
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 **Every Claude Code tool call is evaluated against a Cedar policy, then signed as an Ed25519 receipt.** Offline-verifiable. Tamper-evident. No vendor lock-in.
 
-This is the first Claude Code plugin that enforces policies *cryptographically* — not just via hooks. An attacker who bypasses the hook surface still cannot forge the receipt, because forgery requires the Ed25519 signing key.
+This is the first Claude Code plugin that enforces policies *cryptographically*: not just via hooks. An attacker who bypasses the hook surface still cannot forge the receipt, because forgery requires the Ed25519 signing key.
 
 Closes [wshobson/agents#471](https://github.com/wshobson/agents/issues/471).
 
@@ -105,18 +105,18 @@ Every tool call produces a signed artifact in this shape:
 }
 ```
 
-- **Ed25519** (RFC 8032) — tamper-evident.
-- **JCS** (RFC 8785) — canonical JSON, reproducible hashes.
-- **Chain linkage** — each receipt references the previous, forming an append-only DAG.
-- **Offline verify** — no phone-home, no server, no API key.
+- **Ed25519** (RFC 8032): tamper-evident.
+- **JCS** (RFC 8785): canonical JSON, reproducible hashes.
+- **Chain linkage**: each receipt references the previous, forming an append-only DAG.
+- **Offline verify**: no phone-home, no server, no API key.
 
 ## Relationship to the broader ecosystem
 
 This plugin is the Claude Code surface for a broader governance stack:
 
-- **Protocol:** [veritasacta.com](https://veritasacta.com) — IETF drafts, open AIP specs (Apache-2.0).
-- **Verifier:** [`@veritasacta/verify`](https://www.npmjs.com/package/@veritasacta/verify) — offline CLI (Apache-2.0).
-- **Managed issuance (optional):** [scopeblind.com](https://scopeblind.com) — VOPRF anonymous credentials, chain pinning, SIEM export.
+- **Protocol:** [veritasacta.com](https://veritasacta.com): IETF drafts, open AIP specs (Apache-2.0).
+- **Verifier:** [`@veritasacta/verify`](https://www.npmjs.com/package/@veritasacta/verify): offline CLI (Apache-2.0).
+- **Managed issuance (optional):** [scopeblind.com](https://scopeblind.com): VOPRF anonymous credentials, chain pinning, SIEM export.
 
 The plugin works standalone. Adding managed issuance is optional.
 

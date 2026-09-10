@@ -36,12 +36,12 @@ permit (
     action == Agent::Action::"exec",
     resource
 ) when {
-    context.command in [
+    [
         "ls", "cat", "grep", "rg", "find", "head", "tail", "wc",
         "git", "pytest", "npm", "npx", "yarn", "pnpm",
         "python", "python3", "node", "deno", "bun",
         "cargo", "rustc", "go", "gofmt"
-    ]
+    ].contains(context.command)
 };
 
 // ------------------------------------------------------------------ NETWORK
@@ -115,6 +115,6 @@ forbid (
     action == Agent::Action::"exec",
     resource
 ) when {
-    context.command in ["rm", "dd", "mkfs", "shutdown", "reboot", "kill", "pkill"] ||
+    ["rm", "dd", "mkfs", "shutdown", "reboot", "kill", "pkill"].contains(context.command) ||
     (context.command == "git" && context.argv.contains("push") && context.argv.contains("--force"))
 };

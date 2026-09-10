@@ -15,8 +15,11 @@ class VeritasactaVerify < Formula
 
   def caveats
     <<~EOS
-      After install, verify you have the canonical release:
+      After install, compare monitored verifier source with the bundled commitment:
         veritasacta-verify --self-check
+
+      For publisher authentication, independently obtain and pin the expected
+      Sigil fingerprint before relying on this comparison.
 
       Start signing receipts with:
         veritasacta-verify init
@@ -27,7 +30,7 @@ class VeritasactaVerify < Formula
   end
 
   test do
-    # Self-check proves we installed the canonical release
-    assert_match "Canonical verifier", shell_output("#{bin}/veritasacta-verify --self-check")
+    # Self-check compares monitored verifier source with the bundled commitment.
+    assert_match "Monitored verifier source matches bundled commitment", shell_output("#{bin}/veritasacta-verify --self-check")
   end
 end

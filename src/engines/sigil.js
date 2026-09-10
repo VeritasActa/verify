@@ -4,8 +4,8 @@
  * Implements two capabilities:
  *   1. Claim 1 — Visual cryptographic commitment derivation.
  *      Deterministically derives an 11x11 visual pattern from
- *      (public_key, policy_hash, nonce). Used for canonical-release
- *      verification ("verify the verifier").
+ *      (public_key, policy_hash, nonce). Used for public local-integrity
+ *      comparison. It does not authenticate a publisher or canonical release.
  *
  *   2. Claim 2 — Live-context verification (NEW in v0.5.0).
  *      Verifies that a Sigil's policy evaluates true under live context
@@ -107,7 +107,7 @@ export function sigilPassesFilter(g) {
 }
 
 /**
- * Derive the canonical (filter-passing) Sigil grid from a public key hex.
+ * Derive the deterministic (filter-passing) Sigil grid from a public key hex.
  * Finds the smallest nonce that produces a grid passing the filter.
  *
  * @param {string} publicKeyHex
@@ -137,7 +137,8 @@ export function deriveFilteredSigil(publicKeyHex) {
 
 /**
  * @typedef {Object} SelfCheckResult
- * @property {boolean} canonical
+ * @property {boolean} canonical legacy compatibility name for integrityMatches
+ * @property {boolean} integrityMatches
  * @property {string} [name]
  * @property {string} [fingerprint]
  * @property {string} [version]
@@ -151,10 +152,10 @@ export function deriveFilteredSigil(publicKeyHex) {
  */
 
 /**
- * Perform the "verify the verifier" self-check.
+ * Perform the local verifier-integrity self-check.
  * Compares the installed cli.js (and v0.5.0+ : src/engines) to the
- * commitments in sigil.json, re-derives the Sigil hash, and confirms
- * everything matches the canonical release.
+ * commitment in sigil.json and re-derives the Sigil hash. A match does not
+ * authenticate a publisher unless the commitment is independently pinned.
  *
  * @param {Object} args
  * @param {Object} args.sigil parsed sigil.json
@@ -164,6 +165,7 @@ export function deriveFilteredSigil(publicKeyHex) {
 export function selfCheck({ sigil, installedSourceBytes }) {
   const result = {
     canonical: false,
+    integrityMatches: false,
     name: sigil?.name,
     fingerprint: sigil?.fingerprint,
     version: sigil?.policy?.package_version,
@@ -187,7 +189,8 @@ export function selfCheck({ sigil, installedSourceBytes }) {
   result.rederivedSigilHash = rederived;
   result.sigilMatches = rederived === sigil.sigil_hash;
 
-  result.canonical = result.sourceMatches && result.policyMatches && result.sigilMatches;
+  result.integrityMatches = result.sourceMatches && result.policyMatches && result.sigilMatches;
+  result.canonical = result.integrityMatches;
   return result;
 }
 

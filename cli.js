@@ -43,6 +43,16 @@ import { fileURLToPath } from 'node:url';
 
 import { detectFormat } from './src/detect.js';
 import { verifyReceipt, verifyBundle } from './src/engines/ed25519-receipt.js';
+import { verifyGateTuple, verifyGateBundle } from './src/engines/gate-receipt.js';
+import { verifyMacroTrackRecord } from './src/engines/macro-snapshot.js';
+import { verifyLegateGovernedReceipt } from './src/engines/legate-governed-receipt.js';
+import { verifyLegateProofPack } from './src/engines/legate-proof-pack.js';
+import { verifyTrustedContextPack } from './src/engines/trusted-context-pack.js';
+import {
+  CLAIMS_V211_TYPES,
+  parseClaimsJsonV211Independent,
+  verifyClaimsArtifactV211,
+} from './src/engines/claims-v211.js';
 import { verifyVoprfToken } from './src/engines/voprf-token.js';
 import { verifyKnowledgeUnit } from './src/engines/knowledge-unit.js';
 import {
@@ -72,14 +82,21 @@ import { verifyCosignatures } from './src/engines/cosign.js';
 import { parseContextArgs } from './src/context/live-context.js';
 import { detectTier } from './src/conformance.js';
 import { resolveFromJwks } from './src/util/jwks.js';
+import { loadKnownIssuers, labelFor } from './src/util/known-issuers.js';
 import { appendAuditEntry } from './src/util/audit-log.js';
 import { fipsStatus } from './src/util/fips.js';
 import { renderHtmlReport } from './src/output/html-report.js';
 import { getError, exitCodeFor } from './src/errors.js';
+import { readSigilMonitoredSource } from './src/sigil-policy.js';
 
 import {
   formatReceiptResult,
   formatBundleResult,
+  formatGateTupleResult,
+  formatGateBundleResult,
+  formatMacroTrackRecordResult,
+  formatGovernedReceiptResult,
+  formatTrustedContextPackResult,
   formatKuResult,
   formatSelfCheckResult,
   green,
@@ -102,6 +119,13 @@ const MODE_LABELS = {
   'ed25519-bundle': 'Ed25519 audit bundle',
   'voprf-token': 'VOPRF token (RFC 9497)',
   'knowledge-unit': 'Knowledge Unit bundle (draft-farley-acta-knowledge-units)',
+  'gate-receipt-tuple': 'ScopeBlind Gate receipt tuple (Ed25519 over SHA-256 payload digest)',
+  'gate-evidence-bundle': 'ScopeBlind Gate evidence bundle (receipt tuples + chain links)',
+  'macro-track-record': 'ScopeBlind macro-engine track-record bundle (signed snapshots + completeness manifest)',
+  'legate-governed-receipt': 'Legate governed receipt (Ed25519 over canonical action payload)',
+  'legate-proof-pack': 'Legate adherence / restraint proof pack (Ed25519 over canonical bytes, position-blind)',
+  'trusted-context-pack': 'ScopeBlind Trusted Context Pack (signed parsed-context attestation)',
+  'scopeblind-claims-v2.1.1': 'ScopeBlind Verifiable Claims v2.1.1 point-in-time artifact',
 };
 
 // ──────────────────────────────────────────────────────────────────
@@ -138,6 +162,7 @@ function parseArgs() {
     pinSigil: null,
     auditLog: null,
     replayChain: null,
+    emitEat: null,
     diff: null,
     auditReport: false,
     output: null,
@@ -149,8 +174,17 @@ function parseArgs() {
     proxyReceiptsDir: null,
     daemonSocket: null,
     frameworkOverride: null,
+    historyHead: null,
+    anchorHead: null,
   };
 
+  // A verifier that silently discards inputs is not correct, it is quiet.
+  // Every subcommand takes at most one file; --diff carries a second one as a
+  // flag. Any further positional is an error, never dropped.
+  const setFile = (a) => {
+    if (opts.file == null || opts.file === '') opts.file = a;
+    else (opts.extraPositionals ??= []).push(a);
+  };
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     const next = () => args[++i];
@@ -161,8 +195,11 @@ function parseArgs() {
       case '-V': opts.version = true; break;
       case '--key':
       case '-k': opts.publicKey = next(); break;
+      case '--known-issuers': opts.knownIssuers = next(); break;
       case '--jwks': opts.jwksUrl = next(); break;
       case '--trust-anchor': opts.trustAnchor = next(); break;
+      case '--history-head': opts.historyHead = next(); break;
+      case '--anchor-head': opts.anchorHead = next(); break;
       case '--stdin': opts.stdin = true; break;
       case '--mode': opts.mode = next(); break;
       case '--bundle': opts.bundle = true; break;
@@ -185,6 +222,8 @@ function parseArgs() {
       case '--pin-sigil': opts.pinSigil = next(); break;
       case '--audit-log': opts.auditLog = next(); break;
       case '--replay-chain': opts.replayChain = next(); break;
+      case '--emit-eat': opts.emitEat = 'json'; break;
+      case '--emit-eat-cbor': opts.emitEat = 'cbor'; break;
       case '--diff': opts.diff = next(); break;
       case '--audit-report': opts.auditReport = true; break;
       case '--output': opts.output = next(); break;
@@ -220,18 +259,27 @@ function parseArgs() {
       case 'compliance':
       case 'dashboard':
         if (!opts.subcommand) opts.subcommand = arg;
-        else if (!arg.startsWith('-')) opts.file = arg;
+        else if (!arg.startsWith('-')) setFile(arg);
         break;
       case 'explore':
         // `verify chain explore <file>` → subcommand stays "chain",
         // sub-subcommand captured below
         if (opts.subcommand === 'chain') opts.chainVerb = arg;
-        else if (!arg.startsWith('-')) opts.file = arg;
+        else if (!arg.startsWith('-')) setFile(arg);
         break;
       default:
-        if (!arg.startsWith('-')) opts.file = arg;
+        if (!arg.startsWith('-')) setFile(arg);
         // unknown flags silently ignored (forward-compat)
     }
+  }
+  if (opts.extraPositionals) {
+    const all = [opts.file, ...opts.extraPositionals];
+    console.error(
+      `verify: expected one <file.json>, got ${all.length}: ${all.join(', ')}\n` +
+      `  Each receipt is verified by its own invocation. Earlier releases verified only\n` +
+      `  the last file given and silently discarded the rest (exit 2, nothing verified).`
+    );
+    process.exit(2);
   }
   return opts;
 }
@@ -242,9 +290,10 @@ ${bold('@veritasacta/verify')} ${PKG.version} — unified verifier for signed re
 
 ${bold('Usage:')}
   npx @veritasacta/verify <file.json>                        Auto-detect format, verify
+  (exactly one file per invocation; extra positionals exit 2 rather than being ignored)
   npx @veritasacta/verify <file.json> --key <hex>            Provide verification key
   npx @veritasacta/verify <file.json> --jwks <url>           Fetch key from JWKS
-  npx @veritasacta/verify <file.json> --mode receipt|voprf|ku
+  npx @veritasacta/verify <file.json> --mode receipt|claims|voprf|ku|gate|gate-bundle
   npx @veritasacta/verify <bundle.json> --bundle             Verify audit bundle
   cat receipt.json | npx @veritasacta/verify --stdin         Read from stdin
   npx @veritasacta/verify <file.json> --json                 Machine-readable output
@@ -282,7 +331,9 @@ ${bold('Options:')}
   --key, -k <hex>          Ed25519 public key (64 hex chars)
   --jwks <url>             JWKS endpoint to fetch signing key
   --trust-anchor <file>    Local trust-anchor JSON with public keys
-  --mode <m>               Force mode: receipt|voprf|ku|auto (default: auto)
+  --history-head <hex>     Pin the expected macro track-record history head
+  --anchor-head <hex>      Pin the expected signed macro anchor digest
+  --mode <m>               Force mode: receipt|claims|voprf|ku|auto (default: auto)
   --bundle                 Verify as audit bundle
   --stdin                  Read input from stdin
   --json                   Output JSON
@@ -293,7 +344,7 @@ ${bold('Options:')}
   --fips                   Enforce FIPS-approved algorithms only
   --audit-log <file>       Append verification event to a local JSONL audit log
   --self-test              Verify bundled sample artifacts
-  --self-check             Prove this verifier is the canonical release
+  --self-check             Compare monitored verifier source with bundled commitment
   --capabilities           List supported modes/algorithms/tiers
   --allow-embedded-key     DEPRECATED. Accept keys embedded in payloads.
                            Removed in v0.6.0.
@@ -306,10 +357,12 @@ ${bold('Options:')}
 
 ${bold('Bulk / replay / diff:')}
   --replay-chain <file>    Verify every receipt in a JSONL chain file
+  --emit-eat               Re-emit the verified receipt as an RFC 9711 EAT claims-set (JSON)
+  --emit-eat-cbor          Same, as CBOR with integer claim keys
   --diff <other-file>      Show structural diff between two receipts
 
 ${bold('Attestation and audit:')}
-  --attest                 Emit a canonical verifier attestation (signed)
+  --attest                 Emit a signed local-verifier attestation
   --attest-org <name>      Include this org name in the attestation
   --attest-key <file>      Override attester key location
                            (default: ~/.veritasacta-verify/attester.json)
@@ -320,7 +373,8 @@ ${bold('Attestation and audit:')}
 
 ${bold('Supported formats:')}
   v1 artifacts, v2 artifacts, Passport envelopes, audit bundles,
-  VOPRF tokens, Knowledge Unit bundles, selective-disclosure receipts.
+  VOPRF tokens, Knowledge Unit bundles, selective-disclosure receipts,
+  ScopeBlind Gate receipt tuples and evidence bundles (chain-link checks).
 
 ${bold('Exit codes:')}
   0  Valid — proven authentic
@@ -358,6 +412,9 @@ function printCapabilities() {
       'sigil-live-context-claim-2',
       'conformance-tier-detection',
       'embedded-key-rejection',
+      'scopeblind-gate-tuple-verification',
+      'scopeblind-gate-evidence-bundle-chain-checks',
+      'scopeblind-claims-v2.1.1-point-in-time-artifact-verification',
     ],
     specs: [
       'RFC 8032', 'RFC 8785', 'RFC 9497', 'RFC 7517', 'RFC 7638',
@@ -373,7 +430,7 @@ function printCapabilities() {
 }
 
 // ──────────────────────────────────────────────────────────────────
-// Self-check: prove this binary is the canonical unmodified release
+// Self-check: compare installed bytes with the bundled public commitment
 // ──────────────────────────────────────────────────────────────────
 
 async function runSelfCheck() {
@@ -387,13 +444,15 @@ async function runSelfCheck() {
     process.exit(2);
   }
 
-  // Use the shared monitored file list (keeps runSelfCheck and
-  // selfCheckResult in sync).
-  const bufs = [];
-  for (const f of MONITORED_FILES_FOR_SIGIL) {
-    try { bufs.push(readFileSync(join(__dirname, f))); } catch { /* missing */ }
+  let installedSourceBytes;
+  try {
+    installedSourceBytes = readSigilMonitoredSource(__dirname);
+  } catch (error) {
+    console.log(bold('@veritasacta/verify — self-check'));
+    console.log(`\n  ${red('✗')} ${error.message}`);
+    console.log('    Refusing to compare a reduced verifier surface.\n');
+    process.exit(1);
   }
-  const installedSourceBytes = Buffer.concat(bufs);
 
   const r = selfCheck({ sigil, installedSourceBytes });
   r.projectPublicKey = sigil.project_public_key;
@@ -480,6 +539,12 @@ async function dispatch(input, opts) {
     else if (forced === 'voprf') detected.mode = 'voprf-token';
     else if (forced === 'ku') detected.mode = 'knowledge-unit';
     else if (forced === 'bundle') detected.mode = 'ed25519-bundle';
+    else if (forced === 'gate') detected.mode = 'gate-receipt-tuple';
+    else if (forced === 'gate-bundle') detected.mode = 'gate-evidence-bundle';
+    else if (forced === 'macro' || forced === 'macro-track-record') detected.mode = 'macro-track-record';
+    else if (forced === 'governed') detected.mode = 'legate-governed-receipt';
+    else if (forced === 'context' || forced === 'context-pack') detected.mode = 'trusted-context-pack';
+    else if (forced === 'claims' || forced === 'claims-v2.1.1') detected.mode = 'scopeblind-claims-v2.1.1';
   }
   if (opts.bundle) detected.mode = 'ed25519-bundle';
 
@@ -491,7 +556,7 @@ async function dispatch(input, opts) {
     const resolved = await resolveFromJwks(opts.jwksUrl, kid);
     if (resolved.key) {
       publicKey = resolved.key;
-      keySource = resolved.source?.resolved ? `jwks:${resolved.source.resolved}` : 'jwks';
+      keySource = 'jwks';
     } else {
       const result = {
         valid: false,
@@ -509,6 +574,34 @@ async function dispatch(input, opts) {
   switch (detected.mode) {
     case 'ed25519-bundle': {
       return await verifyBundle(input, subOpts);
+    }
+    case 'gate-evidence-bundle': {
+      const r = verifyGateBundle(input, subOpts);
+      return { ...r, modeLabel: MODE_LABELS['gate-evidence-bundle'] };
+    }
+    case 'macro-track-record': {
+      const r = verifyMacroTrackRecord(input, subOpts);
+      return { ...r, modeLabel: MODE_LABELS['macro-track-record'] };
+    }
+    case 'gate-receipt-tuple': {
+      const r = verifyGateTuple(input, subOpts);
+      return { ...r, modeLabel: MODE_LABELS['gate-receipt-tuple'] };
+    }
+    case 'legate-governed-receipt': {
+      const r = verifyLegateGovernedReceipt(input, subOpts);
+      return { ...r, modeLabel: MODE_LABELS['legate-governed-receipt'] };
+    }
+    case 'legate-proof-pack': {
+      const r = verifyLegateProofPack(input, subOpts);
+      return { ...r, modeLabel: MODE_LABELS['legate-proof-pack'] };
+    }
+    case 'trusted-context-pack': {
+      const r = verifyTrustedContextPack(input, subOpts);
+      return { ...r, modeLabel: MODE_LABELS['trusted-context-pack'] };
+    }
+    case 'scopeblind-claims-v2.1.1': {
+      const r = verifyClaimsArtifactV211(input, subOpts);
+      return { ...r, modeLabel: MODE_LABELS['scopeblind-claims-v2.1.1'] };
     }
     case 'knowledge-unit': {
       const r = await verifyKnowledgeUnit(input, subOpts);
@@ -941,59 +1034,22 @@ async function runDashboard(opts) {
   await new Promise(() => {});
 }
 
-/**
- * Canonical list of files committed by the Sigil.
- * MUST match generate-sigil.mjs's MONITORED_FILES exactly.
- */
-const MONITORED_FILES_FOR_SIGIL = [
-  'cli.js',
-  'src/detect.js',
-  'src/conformance.js',
-  'src/errors.js',
-  'src/engines/ed25519-receipt.js',
-  'src/engines/voprf-token.js',
-  'src/engines/knowledge-unit.js',
-  'src/engines/selective-disclosure.js',
-  'src/engines/sigil.js',
-  'src/engines/attestation.js',
-  'src/engines/bulk.js',
-  'src/engines/diff.js',
-  'src/engines/init.js',
-  'src/engines/proxy.js',
-  'src/engines/daemon.js',
-  'src/engines/prompt.js',
-  'src/engines/chain-explore.js',
-  'src/engines/compliance-export.js',
-  'src/engines/dsse.js',
-  'src/engines/delegation.js',
-  'src/engines/cosign.js',
-  'src/engines/dashboard.js',
-  'src/engines/rekor.js',
-  'src/engines/attestation-quote.js',
-  'src/engines/watch.js',
-  'src/engines/sbom.js',
-  'src/engines/transparency.js',
-  'src/context/live-context.js',
-  'src/output/terminal.js',
-  'src/output/json.js',
-  'src/output/html-report.js',
-  'src/util/canonical.js',
-  'src/util/hex.js',
-  'src/util/jwks.js',
-  'src/util/audit-log.js',
-  'src/util/fips.js',
-  'src/util/voprf-crypto.js',
-  'src/util/voprf-crypto-v2.js',
-];
-
 function selfCheckResult(sigil) {
-  if (!sigil) return { canonical: false };
-  const bufs = [];
-  for (const f of MONITORED_FILES_FOR_SIGIL) {
-    try { bufs.push(readFileSync(join(__dirname, f))); } catch { /* missing => modified */ }
+  if (!sigil) return { canonical: false, integrityMatches: false };
+  try {
+    const installedSourceBytes = readSigilMonitoredSource(__dirname);
+    return selfCheck({ sigil, installedSourceBytes });
+  } catch (error) {
+    return {
+      canonical: false,
+      integrityMatches: false,
+      sourceMatches: false,
+      policyMatches: false,
+      sigilMatches: false,
+      missingMonitoredSurface: true,
+      error: error.message,
+    };
   }
-  const installedSourceBytes = Buffer.concat(bufs);
-  return selfCheck({ sigil, installedSourceBytes });
 }
 
 async function main() {
@@ -1081,7 +1137,8 @@ async function main() {
   if (opts.replayChain) { await runReplayChain(opts); return; }
   if (opts.diff) { await runDiff(opts); return; }
 
-  // --attest without a file: emit a standalone canonical attestation
+  // --attest without a file: emit a standalone local-integrity attestation.
+  // The wire type and legacy `canonical` field remain compatibility aliases.
   if (opts.attest && !opts.file && !opts.stdin) {
     const sigil = loadSigil();
     const r = selfCheckResult(sigil);
@@ -1103,7 +1160,9 @@ async function main() {
 
   let input;
   try {
-    input = JSON.parse(raw);
+    input = [...CLAIMS_V211_TYPES].some((type) => raw.includes(type))
+      ? parseClaimsJsonV211Independent(raw)
+      : JSON.parse(raw);
   } catch (e) {
     console.error(red(`Error: invalid JSON: ${e.message}`));
     process.exit(2);
@@ -1143,6 +1202,21 @@ async function main() {
     if (meta) result.errorMeta = meta;
   }
 
+  // EAT output mode (A4): re-serialize the verified receipt as an RFC 9711 EAT
+  // claims-set so it is also a valid EAT/TRACE record (JSON names, or CBOR with
+  // integer claim keys). Authenticity round-trips to the embedded Acta receipt.
+  if (opts.emitEat) {
+    const { emitEatJson, emitEatCbor } = await import('./src/output/eat.js');
+    const out = opts.emitEat === 'cbor' ? emitEatCbor(input, result) : emitEatJson(input, result);
+    if (opts.output) {
+      writeFileSync(opts.output, out);
+      console.error(dim(`wrote ${opts.output}`));
+    } else {
+      console.log(out);
+    }
+    process.exit(result.valid ? 0 : exitCodeFor(result.error));
+  }
+
   // Audit log
   if (opts.auditLog) {
     const sigil = loadSigil();
@@ -1173,6 +1247,14 @@ async function main() {
     process.exit(result.valid ? 0 : exitCodeFor(result.error));
   }
 
+  // Resolve a human label for the signer key, if one is known. Display aid only;
+  // it never changes the verification result.
+  if (result && typeof result === 'object' && typeof result.publicKey === 'string') {
+    const issuers = loadKnownIssuers(opts.knownIssuers, join(__dirname, 'known-issuers.json'));
+    const label = labelFor(result.publicKey, issuers);
+    if (label) result.signerLabel = label;
+  }
+
   // Output
   if (opts.json) {
     const obj = JSON.parse(formatAsJson(result));
@@ -1193,6 +1275,11 @@ async function main() {
     console.log(JSON.stringify(obj, null, 2));
   } else {
     if (result.format === 'knowledge-unit') console.log(formatKuResult(result, opts));
+    else if (result.format === 'gate-evidence-bundle') console.log(formatGateBundleResult(result, opts));
+    else if (result.format === 'macro-track-record') console.log(formatMacroTrackRecordResult(result, opts));
+    else if (result.format === 'gate-tuple') console.log(formatGateTupleResult(result, opts));
+    else if (result.format === 'legate-governed-receipt') console.log(formatGovernedReceiptResult(result, opts));
+    else if (result.format === 'trusted-context-pack') console.log(formatTrustedContextPackResult(result, opts));
     else if (result.total !== undefined) console.log(formatBundleResult(result, opts));
     else console.log(formatReceiptResult(result, opts));
 
@@ -1205,9 +1292,9 @@ async function main() {
       });
       if (opts.output) {
         writeFileSync(opts.output, JSON.stringify(att, null, 2));
-        console.error(dim(`wrote canonical attestation to ${opts.output}`));
+        console.error(dim(`wrote local-integrity attestation to ${opts.output}`));
       } else {
-        console.log(`${bold('Canonical attestation:')}`);
+        console.log(`${bold('Local-integrity attestation:')}`);
         console.log(JSON.stringify(att, null, 2));
         console.log('');
       }

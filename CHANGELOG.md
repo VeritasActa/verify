@@ -1,70 +1,352 @@
 # Changelog
 
+## 0.9.7 (2026-09-10)
 
-## 0.6.1 - 2026-05-16
+### Documentation says what exists
 
-- Support `--jwks` resolution from `file://` URLs, absolute paths, and bare relative filesystem paths for offline test-vector and CI workflows.
-- Preserve HTTP(S) JWKS behavior unchanged.
-- Surface the resolved local JWKS path in verifier output.
-- Add unit coverage for local JWKS path handling.
+No code change. The README advertised an SDK that is not on npm or PyPI,
+seven adapter packages that were never published, two hostnames that do not
+resolve, Sigstore provenance the releases do not carry, and a Homebrew install
+path that is not the tap. It now names the four published packages
+(protect-mcp, protect-mcp-adk, @scopeblind/langchain, scopeblind-swarms),
+points at the source adapters and SDK helpers as source, says which ecosystem
+workers are deployed (none), and describes the supply chain as it is.
 
-## 0.5.4 — 2026-04-20 (Rekor anchoring + hardware attestation + transparency profiles + watcher + SBOM bundles + AIP-0007)
+ROADMAP is rewritten from this changelog: shipped since 0.5.4, what is next,
+and the two deprecated flags that are still parsed. SECURITY's supported
+versions start at 0.9.x. THREAT-MODEL pins this release. No em dashes remain
+in the shipped documentation.
+
+The README is part of the monitored verifier surface, so the bundled
+integrity commitment (`sigil.json`) is regenerated and this release has a new
+Sigil name. `--self-check` on 0.9.6 and on 0.9.7 each match their own bytes.
+
+## 0.9.6 (2026-09-10)
+
+### Fix: extra positionals are an error, not a silent drop
+
+`verify a.json b.json` verified only `b.json` and exited on that, printing
+one verdict for the whole set. The parser assigned every positional to the
+same `opts.file`, so the last one won and the rest were discarded without a
+word. A conformance suite that handed the verifier a glob was therefore
+checking one receipt in four (reported as finding 7 in
+ScopeBlind/agent-governance-testvectors#13).
+
+Every subcommand takes at most one file; `--diff` carries a second one as a
+flag. So a second positional is never legitimate, and it now exits 2 with a
+message naming every file given. Nothing is verified in that case. A verifier
+that silently discards inputs is not correct, it is quiet.
+
+Chain-link fixes from 0.9.5 are unchanged.
+
+## 0.9.5 (2026-08-31)
+
+### Fix: 0.9.4 shipped with a stale Sigil commitment
+
+0.9.4 carried the correct chain-hash code but the `sigil.json` commitment from
+0.9.3. Every install of 0.9.4 therefore failed its own integrity check:
+
+    npx @veritasacta/verify --self-check
+    x Monitored verifier source does not match the bundled commitment
+      It may be a fork, a development build, or a tampered copy.
+
+The source was never wrong. `src/engines/{proxy,daemon,bulk}.js` and
+`src/errors.js` are all in MONITORED_FILES, so editing them for the 0.9.4 fix
+invalidated the commitment, and `generate-sigil.mjs` was not re-run before
+publishing. This release regenerates it.
+
+`--self-check` and `--self-test` both pass on 0.9.5. Verified against a real
+install rather than the source tree.
+
+Use 0.9.5, not 0.9.4. The chain-hash fix below is present and correct in both;
+only 0.9.4's integrity commitment is wrong.
+
+## 0.9.4 (2026-08-30)
+
+### Fix: the chain link was computed over the wrong bytes
+
+`proxy` and `daemon` emitted `previousReceiptHash` as `"sha256:"` followed by
+the hash of the receipt's **payload**. The settled rule
+(draft-farley-acta-signed-receipts-03 section 6.7) is the hash of the **entire
+signed receipt including its signature member**. Both engines now do that.
+
+This was invisible because the read path in `bulk` accepts either form, so
+chains this tool wrote verified against this tool and would have failed any
+verifier implementing 6.7 strictly. Reported by an outside reviewer building
+an independent verifier.
+
+Hashing the payload alone gives a re-signed receipt the same chain link as the
+original, so a key rotation or re-issue is invisible in the chain. Verified:
+two receipts with identical payloads signed by different keys now produce
+different links, and the emitted links match what protect-mcp independently
+computes for the same receipt.
+
+### Fix: genesis receipts carried `previousReceiptHash: null`
+
+Section 2.2 requires the first receipt in a chain to omit the member entirely
+rather than carry `null`, because the two produce different JCS output and
+therefore different signed bytes. Both engines now omit it.
+
+### Spec citations corrected
+
+Error metadata and chain comments cited section 5.4 and draft-02 section 5.7,
+both superseded numbering. They now cite 6.6 (Signature Scope) and 6.7 (Chain
+Hash Scope). The stale citations are why the rule appeared to be missing from
+a release that partly implemented it.
+
+### Upgrading
+
+Chains written by 0.9.3 or earlier still verify: the read path accepts the
+payload-only form for chains predating the rule. Chains written by 0.9.4
+will not verify against 0.9.3 or earlier.
+
+## 0.9.3 (2026-07-08)
+
+### Tree reconciliation: the 0.9.1/0.9.2 line and this line are one again
+
+npm 0.9.1/0.9.2 were published from a tree that had diverged from this one.
+This release unifies them: everything published there now lives here
+(restraint-receipt openable detail with re-hashed bindings and the
+`Prevented:` terminal block, `verifyRestraintBindings` export, the RFC 9711
+EAT output modes `--emit-eat` / `--emit-eat-cbor`, the `verify` bin alias,
+`samples/sample-restraint-receipt.json`), and everything that had only
+lived here ships to npm for the first time (Legate proof-pack, macro
+snapshot and track-record, and trusted-context-pack engines).
+
+### draft-02 receipts and s5.7 chain links
+
+protect-mcp 0.10.0 emits draft-farley-acta-signed-receipts-02 envelopes;
+these verified here already via the passport path. `--replay-chain` now
+recomputes chain links under both conventions: the draft-02 section 5.7
+hash (SHA-256 over the JCS bytes of the entire previous envelope, signature
+included) and the older payload-only hash, so a mixed pre/post-migration
+receipt log replays cleanly including the link that spans the boundary.
+
+### s5.7 chain links in --replay-chain
+
+`--replay-chain` now recomputes chain links under both conventions: the
+draft-farley-acta-signed-receipts-02 section 5.7 hash (SHA-256 over the JCS
+bytes of the entire previous envelope, signature included), which is what
+protect-mcp 0.10.0+ writes, and the older payload-only hash for chains
+written before the migration. A mixed pre/post-migration receipt log
+replays cleanly, including the link that spans the boundary.
+
+Tree reconciliation blocker: RESOLVED in this release (see above).
+
+
+## 0.9.0 (2026-06-22)
+
+### Legate adherence / restraint proof packs
+
+Recognizes and verifies `scopeblind.legate.proof-pack.v1`: the allocator-facing,
+position-blind record a Legate desk produces of what the gate prevented over a
+session (held / blocked, attributed to the committed-mandate rules) plus order-path
+shadow evidence (what it would have blocked on a FIX feed), bound to the mandate
+digest, the signed book provenance, and a receipt Merkle root. The signature is
+Ed25519 over the canonical (deep-sorted, no-whitespace) bytes of the pack minus its
+`signature`, `sha256`, and `hybrid_signature` fields, against the embedded runtime
+`verification_key` (pin it with `--key`). Cross-implementation tested against a real
+desktop-runtime-signed fixture (`samples/legate-proof-pack.json`); tampering with any
+field, and a wrong pinned key, fail. An optional `hybrid_signature` (Ed25519 +
+ML-DSA-65) is recognized and reported; classical Ed25519 is verified here, with PQ
+verification documented as an optional add-on in the restraint-receipts draft.
+
+## 0.8.0 (2026-06-13)
+
+### RFC 6962 transparency log for macro track records
+
+Recognizes `scopeblind.macro.transparency-head/1` and
+`scopeblind.macro.transparency-witness/1`, and verifies the `transparency`
+evidence carried in a macro track-record bundle: every record's Merkle
+inclusion proof against the signed head (RFC 6962 hashing: leaf =
+sha256(0x00||digest), node = sha256(0x01||l||r)), plus an independent witness
+co-signature. The bundle result reports `Transparency: witness-anchored /
+self-signed / not anchored`; a tampered head or a missing inclusion fails the
+chain check. No new signing crypto: inclusion is recomputed from the path and
+checked against the head root. This is what makes a dropped or rewritten record
+detectable to anyone who retained a head, not merely a single un-trimmed export.
+
+### ScopeBlind macro-engine snapshots and track-record bundles
+
+New engine `src/engines/macro-snapshot.js` recognizes the macro-engine
+schemas (`scopeblind.macro.market-state/1`, `regime-snapshot/1`,
+`tape-snapshot/1`, `vulnerability/1`, `alert/1`, `journal-entry/1`) and the
+signed track-record bundle (`scopeblind.macro.track-record-bundle/1`). Macro
+snapshots already verified cryptographically as generic Gate tuples; this adds
+schema recognition, a per-schema semantic-contract check, and a schema-aware
+summary in the output (no more "unrecognized schema" for macro records). No
+new cryptography: crypto is delegated to `verifyGateTuple` and canonicalization
+to `canonicalGateJSON`.
+
+The track-record bundle verifier mirrors the Gate evidence-bundle: it checks
+every record's signature, single-signer custody (every record including the
+manifest shares one model key), exact manifest completeness (entries enumerate
+the snapshots then journal entries in order), the snapshot/journal counts, and
+the `history_head_digest` over the ordered record digests. Dropping or
+tampering any record breaks the bundle. `--mode macro` forces the bundle path.
+
+Anchored exports additionally carry a monotonic manifest sequence, previous
+manifest/history-head links, retained prior manifests, and a signed checkpoint
+chain. Verification rejects deletion of any previously manifested record.
+`--key` is now reported explicitly as the operator-identity trust boundary;
+without it the result proves embedded-key integrity only. `--history-head` and
+`--anchor-head` pin independently retained anti-rollback checkpoints.
+
+## 0.7.0 (2026-06-12)
+
+### Release rule for execution evidence
+
+Bundles whose entries carry fills under an unreleased decision fail the
+chain check: fills require an ALLOW parent, or an APPROVAL_REQUIRED
+parent with a present approval whose decision is approved. A DENY or
+REVIEW parent with fills always fails. Without this rule a bundle could
+present individually valid signatures as evidence of an unauthorized
+execution.
+
+### Restraint receipts: prove what was prevented, offline and position-blind
+
+A restraint receipt (`tool: gate.restrain`) is already verified as a Legate
+governed receipt. This release re-verifies and surfaces its openable detail, so
+the receipt proves not merely that a deny was signed but exactly WHAT was
+prevented and WHY:
+
+- The disclosed denial outcome (the determining rules, risk band, mandate
+  digest) is re-hashed and confirmed to bind to the signed `result_sha256`, and
+  the proposed blocked order is re-hashed under its salt and confirmed to bind to
+  `input_sha256`. Re-hashing uses the same JCS canonicalization the runtime used,
+  so altering the disclosed detail flips the binding to a failure while the
+  signature stays valid over the original hashes (you cannot lie about what was
+  blocked).
+- Position-blind by construction: the blocked order can be withheld, and the
+  outcome still verifies because the order is salt-committed into the signed input
+  hash and openable to a regulator on demand.
+- Terminal output gains a `Prevented:` block (risk band, determining rules, the
+  blocked order or a position-blind note, and the two binding checks). New
+  `verifyRestraintBindings` export. A sample lives at
+  `samples/sample-restraint-receipt.json`; see `RESTRAINT-DEMO.md`.
+- Added a `verify` bin alias (alongside `verify-artifact`) so
+  `npx @veritasacta/verify <receipt>` reads naturally.
+
+### ScopeBlind Gate receipt tuples and evidence bundles
+
+New detected format and engine: `src/engines/gate-receipt.js` verifies
+ScopeBlind Gate receipt tuples (`{ payload, digest, signature,
+verification_key }`) and signed-manifest
+`scopeblind.gate.evidence-bundle/2` exports, including their semantic
+and exact chain links.
+
+- Crypto contract: canonical form is deep-key-sorted JSON
+  (`JSON.stringify(deepSort(payload))`, arrays keep order); `digest` is
+  SHA-256 of the canonical UTF-8 bytes (lowercase hex); `signature` is
+  Ed25519 over the 32 hex-decoded digest bytes, verified with the
+  carried `verification_key`. Note this differs from the Acta receipt
+  contract (JCS canonical bytes signed directly).
+- Current bundle schema: `scopeblind.gate.evidence-bundle/2`. Its
+  gate-signed manifest exactly enumerates every exported receipt digest
+  and declares the retained-history scope. Legacy `/1` bundles are
+  detected but fail closed because they cannot prove export
+  completeness.
+- Recognized payload schemas: `scopeblind.gate.decision/2`,
+  `scopeblind.gate.batch/1`, `scopeblind.gate.batch-leg/1`,
+  `scopeblind.gate.approval/1`, `scopeblind.gate.fill/1`,
+  `scopeblind.gate.fill/2`, `scopeblind.gate.order-state/1`,
+  `scopeblind.gate.evidence-manifest/1`, and
+  `scopeblind.mandate.delegation/1`. Recognized schemas are validated
+  semantically after cryptographic verification. Tuples with
+  unknown `payload.schema` still crypto-verify as generic tuples and
+  are reported as unrecognized (no hard fail).
+- Bundle chain checks compare complete signed leg summaries, approval
+  scope/state/determining rules, fill quantities and signed-leg
+  digests, held-remainder authority, delegation holder/issuer/parent/
+  child lineage, and the signed manifest's exact inventory. Crypto
+  failures (`[crypto]`)
+  and chain failures (`[chain]`) are counted and reported separately:
+  a record can be individually authentic while its cross-record link
+  is inconsistent.
+- Signer report: distinct signing keys seen with their roles and whether
+  all gate-authored receipts match the bundle's
+  `gate_verification_key`. `--key` pins that trust anchor.
+- Honest output: the report states what a VALID result proves
+  (authenticity, integrity, schema validity, exact chain consistency,
+  and manifest coverage) and what it does not (risk-input correctness,
+  independent production corroboration for explicitly labeled demo
+  fills, or records beyond the manifest's declared history scope).
+- New error codes: `digest_mismatch`, `chain_link_mismatch`, and
+  `schema_invalid` (tampered, exit 1), plus `key_mismatch` when a
+  carried key differs from the `--key` pin.
+- New modes `gate-receipt-tuple` and `gate-evidence-bundle` in
+  detection, `--capabilities`, and forced dispatch (`--mode gate`,
+  `--mode gate-bundle`).
+- New samples signed with published deterministic demo keys:
+  `samples/sample-gate-tuple.json`, `samples/sample-gate-bundle.json`.
+- Focused unit tests in `test/unit/gate-receipt.test.js`; the signing
+  side is implemented independently in the tests per the contract.
+
+## 0.6.1 (2026-05-20)
+
+Description-only release. No on-the-wire format change. No code change.
+
+The npm description is updated to surface the broader deployment picture: this CLI is now the offline verification engine for protect-mcp (AI agent decision receipts), the ScopeBlind cold-chain evidence tag (NSW ETCF 2026 application #197, hardware programme in development), and Microsoft AI Agents for Beginners Lesson 18 (64K+ ★ curriculum): same primitive, three deployment contexts.
+
+See [scopeblind.com/cold-chain](https://www.scopeblind.com/cold-chain) for the hardware programme and [github.com/microsoft/ai-agents-for-beginners/blob/main/18-securing-ai-agents/](https://github.com/microsoft/ai-agents-for-beginners/blob/main/18-securing-ai-agents/) for Lesson 18.
+
+## 0.5.4 (2026-04-20): Rekor anchoring + hardware attestation + transparency profiles + watcher + SBOM bundles + AIP-0007
 
 Ships the "differentiation roadmap" responding to the Signet / nono
 feature-parity analysis. Thirteen new primitives across four strategic
-tiers; none of them imitate Signet or nono — they extend the shipping
+tiers; none of them imitate Signet or nono: they extend the shipping
 product to ground that only Veritas Acta holds.
 
 ### New AIP
 
-- **AIP-0007** (Draft) — Zero-Knowledge Compliance Proofs. Portable
+- **AIP-0007** (Draft): Zero-Knowledge Compliance Proofs. Portable
   receipt-chain-level proof that every receipt adhered to a declared
   policy without revealing receipts. Target release: v0.7.0; the spec
   is committed now for public review.
 
 ### New engines
 
-- **`src/engines/rekor.js`** — Transparency-log anchoring (AIP-0005 T4).
+- **`src/engines/rekor.js`**: Transparency-log anchoring (AIP-0005 T4).
   Offline verification of Rekor / Sigstore inclusion proofs.
   RFC 6962 Merkle-path recomputation + Signed-Note signature
   verification. ISO 8601 duration parsing for `anchored_within`.
-- **`src/engines/attestation-quote.js`** — Hardware-attestation quote
+- **`src/engines/attestation-quote.js`**: Hardware-attestation quote
   validator (AIP-0005 T2). Dispatches to per-platform validators:
   ATECC608B (full crypto validator), Apple Secure Enclave (full),
   TPM2 / SGX / SEV-SNP / TDX (structural in v0.5.4; full crypto in v0.7).
   Enforces that `measured_kid` matches `signature.kid`.
-- **`src/engines/watch.js`** — Live receipt watcher + webhook
+- **`src/engines/watch.js`**: Live receipt watcher + webhook
   dispatcher. Rule kinds: `cost_tier_below`, `delegation_expiring_within`,
   `chain_break`, `deny_decision`, `scrub_triggered`. Slack / Discord /
   generic JSON payloads.
-- **`src/engines/sbom.js`** — SBOM-audit bundle builder. Ingests SPDX /
+- **`src/engines/sbom.js`**: SBOM-audit bundle builder. Ingests SPDX /
   CycloneDX / unknown-format SBOMs; builds a deterministic
   `receipts_fingerprint` + canonical manifest; optional signing via
   caller-supplied callback.
-- **`src/engines/transparency.js`** — Four profiles (private, auditable,
+- **`src/engines/transparency.js`**: Four profiles (private, auditable,
   transparent, high-assurance), profile-based anchor decisions, and a
   public-facing badge JSON format.
 
 ### New packages
 
-- **`@veritasacta/cross-verify`** — Arbitrator tool for multi-format
+- **`@veritasacta/cross-verify`**: Arbitrator tool for multi-format
   sessions. Extracts canonical `(tool, input_hash, issued_at)` tuples
   from Signet / Sigstore / Acta receipts and confirms agreement.
   Emits a SHA-256 agreement fingerprint. 19 unit tests.
 
 ### Ecosystem artifacts
 
-- **`docs/voprf-issuance-for-implementers.md`** — Public pitch for
+- **`docs/voprf-issuance-for-implementers.md`**: Public pitch for
   competitors to route their T1 cost-tier through our commercial API.
-- **`docs/framework-author-guide.md`** — Adoption onboarding for
+- **`docs/framework-author-guide.md`**: Adoption onboarding for
   CrewAI / LangChain / Vercel AI / etc.
-- **`docs/posts/infrastructure-not-competitor.md`** — Public letter to
+- **`docs/posts/infrastructure-not-competitor.md`**: Public letter to
   peer receipt-format projects articulating the infrastructure stance.
-- **`docs/case-study-three-ecosystems.md`** — Microsoft + AWS +
+- **`docs/case-study-three-ecosystems.md`**: Microsoft + AWS +
   Anthropic contribution ledger.
-- **`ecosystem/certify/`** — Weekly cross-implementation conformance
+- **`ecosystem/certify/`**: Weekly cross-implementation conformance
   certification program (workflow + runner skeleton).
-- **`ecosystem/dashboard/`** — Upgraded with a DAG view for trace_id
+- **`ecosystem/dashboard/`**: Upgraded with a DAG view for trace_id
   grouping.
 
 ### Tests
@@ -76,10 +358,10 @@ product to ground that only Veritas Acta holds.
 
 ### Sigil
 
-- Canonical release: **Open Wind** (`677a8a81`).
+- Historical bundled commitment: **Open Wind** (`677a8a81`).
 - 36 source files monitored (up from 31 in v0.5.3).
 
-## 0.5.3 — 2026-04-20 (delegation chains + bilateral cosign + trace_id + proxy hardening + dashboard)
+## 0.5.3 (2026-04-20): delegation chains + bilateral cosign + trace_id + proxy hardening + dashboard
 
 Responds to the Signet / nono comparison: adds the four receipt-shape
 primitives that peer implementations have ("who authorized this
@@ -91,7 +373,7 @@ cryptography. All composes with existing AIPs.
 
 ### New AIP
 
-- **AIP-0006** (Draft) — Delegation Chains. Defines a `delegation`
+- **AIP-0006** (Draft): Delegation Chains. Defines a `delegation`
   receipt type conveying scoped, time-bounded, narrowing-only
   authority from a delegator to a delegate. Defines an
   `authorization.delegation_chain` payload field on action receipts
@@ -101,16 +383,16 @@ cryptography. All composes with existing AIPs.
 
 ### New engines
 
-- **`src/engines/delegation.js`** — `verifyDelegationChain()` walks the
+- **`src/engines/delegation.js`**: `verifyDelegationChain()` walks the
   chain from leaf to root, validating Ed25519 signatures against trust
   anchors, scope subset at each hop (narrowing-only), and the action's
   tool/target against the leaf's scope. 14 unit tests.
-- **`src/engines/cosign.js`** — `verifyCosignatures()` + `attachCosignature()`.
+- **`src/engines/cosign.js`**: `verifyCosignatures()` + `attachCosignature()`.
   Envelope-level additive signatures. Each cosignature signs the SAME
   canonical payload bytes as the primary `signature`. Default semantic:
   all cosignatures must be resolved + valid; `requireAllValid: false`
   opt-in for M-of-N. 11 unit tests.
-- **`src/engines/dashboard.js`** — `startDashboard()` spins up a
+- **`src/engines/dashboard.js`**: `startDashboard()` spins up a
   loopback-only HTTP server serving `ecosystem/dashboard/` static + a
   `/api/receipts` JSON feed for a configured directory. DNS-rebinding
   defense (rejects non-loopback Host headers) and path-traversal
@@ -118,18 +400,18 @@ cryptography. All composes with existing AIPs.
 
 ### New subcommand + CLI surface
 
-- **`verify dashboard [--port 3847] [--bind 127.0.0.1] [--receipts-dir <dir>]`** —
+- **`verify dashboard [--port 3847] [--bind 127.0.0.1] [--receipts-dir <dir>]`** : 
   Start the local dashboard. Opens immediately; no build step.
-- **`verify proxy ... --bilateral --server-key <file>`** — Proxy now
+- **`verify proxy ... --bilateral --server-key <file>`**: Proxy now
   attaches a second independent signature (via `cosignatures[]`) to
   every receipt. Enables agent + server bilateral evidence without
   touching the primary signing path.
-- **`verify proxy ... --scrub-secrets`** — Walks incoming tool args for
+- **`verify proxy ... --scrub-secrets`**: Walks incoming tool args for
   probable-secret key names (`api_key`, `token`, `password`,
   `authorization`, etc.), redacts VALUES in the outgoing call, and
   flags the redacted paths on the receipt via `scrub_detected`. Secrets
   no longer enter the receipt even as a hash of the real value.
-- **`verify proxy ... --trace-id <id>`** — Stamps every receipt with a
+- **`verify proxy ... --trace-id <id>`**: Stamps every receipt with a
   workflow `trace_id` so multi-step flows group cleanly.
 
 ### Receipt-format extensions (non-breaking)
@@ -155,10 +437,10 @@ cryptography. All composes with existing AIPs.
 
 ### Sigil
 
-- 31 source files monitored (up from 28 in v0.5.2). Canonical release:
+- 31 source files monitored (up from 28 in v0.5.2). Historical bundled commitment:
   **Bright Lake** (`ea78b16e`).
 
-## 0.5.2 — 2026-04-20 (compliance export + DSSE + BRASS v2 scaffold + AIP-0004/0005)
+## 0.5.2 (2026-04-20): compliance export + DSSE + BRASS v2 scaffold + AIP-0004/0005
 
 Ships alongside v0.5.1 as the "governance surface fill" release. Adds
 the compliance export subcommand, Sigstore DSSE envelope engine,
@@ -167,7 +449,7 @@ AIPs.
 
 ### New subcommand
 
-- **`verify compliance --receipts-dir <dir>`** — bucket a directory of
+- **`verify compliance --receipts-dir <dir>`**: bucket a directory of
   receipts into SOC 2 / ISO 42001 / EU AI Act controls and emit an
   auditor-ready JSON bundle or self-contained HTML report. Supports
   `--framework soc2|iso42001|eu-ai-act|all`, `--start-date`, `--end-date`,
@@ -176,13 +458,13 @@ AIPs.
 
 ### New engines
 
-- **`src/engines/dsse.js`** — Dead Simple Signing Envelope (DSSE) wrap /
+- **`src/engines/dsse.js`**: Dead Simple Signing Envelope (DSSE) wrap /
   unwrap / verify. Produces and consumes Sigstore-compatible envelopes
   with payload types `application/vnd.acta.receipt+json`,
   `application/vnd.acta.knowledge-unit+json`, or the standard in-toto
   statement type. Signatures bind to the DSSE pre-authentication
   encoding (PAE), not the raw payload.
-- **`src/util/voprf-crypto-v2.js`** — BRASS v2 scaffold: length-prefixed
+- **`src/util/voprf-crypto-v2.js`**: BRASS v2 scaffold: length-prefixed
   hashing (`H_LP`), nullifier derivation bound to issuer public key Y
   (`deriveNullifier_v2`), single-variable πC restatement
   (`piCVerify_v2`). Not wired into the default path; accessible to
@@ -190,12 +472,12 @@ AIPs.
 
 ### New AIPs
 
-- **AIP-0004** (Draft) — Content-Addressed Snapshot and Rollback
+- **AIP-0004** (Draft): Content-Addressed Snapshot and Rollback
   Receipts. Defines `snapshot` and `rollback` receipt types with a
   Merkle root over file-content hashes. Reference implementation at
   `ecosystem/rollback/snapshot.mjs`; schema at
   `ecosystem/rollback/snapshot-receipt.schema.json`.
-- **AIP-0005** (Draft) — Attestation Weight Profile. Defines a
+- **AIP-0005** (Draft): Attestation Weight Profile. Defines a
   portable `cost_tier` (T0–T4) over receipts, substantiated by VOPRF
   tokens (T1), hardware quotes (T2), multi-party signatures (T3), or
   transparency-log anchoring (T4). Reference implementation notes at
@@ -204,38 +486,38 @@ AIPs.
 
 ### Ecosystem additions
 
-- **`ecosystem/wshobson-plugin/protect-mcp/`** — PR-ready Claude Code
+- **`ecosystem/wshobson-plugin/protect-mcp/`**: PR-ready Claude Code
   plugin tree for `wshobson/agents` marketplace. Closes issue #471.
   Ships agents (`policy-enforcer`, `receipt-verifier`), skill
   (`protect-mcp-setup`), slash commands (`/verify-receipt`,
   `/audit-chain`), and hooks.json.
-- **`ecosystem/dashboard/index.html` + `dashboard.js`** — local-first
+- **`ecosystem/dashboard/index.html` + `dashboard.js`**: local-first
   in-browser audit dashboard scaffold. JCS + chain-integrity check
   over dropped receipts; renders `verify --json` output. No server,
   no telemetry.
-- **`ecosystem/physical-attestation/DESIGN.md`** — physical-digital
+- **`ecosystem/physical-attestation/DESIGN.md`**: physical-digital
   causal chain design for Seal hardware cost_tier T2 receipts.
 
 ### Sigil + tests
 
 - Sigil commitment expanded to **28 source files** (adds compliance
-  export, DSSE engine, v2 crypto util). Canonical release: **New Ember**
+  export, DSSE engine, v2 crypto util). Historical bundled commitment: **New Ember**
   (`b28f8d60`).
 - 41 new unit tests across prompt, chain-explore, snapshot, compliance,
   DSSE, and BRASS v2 (11 of 41 new in this release).
-- Full suite: **122 unit+integration + 26 conformance** — 148 total,
+- Full suite: **122 unit+integration + 26 conformance**: 148 total,
   all green.
 
-## 0.5.1 — 2026-04-20 (prompt provenance + chain explorer + 5 sandbox profiles)
+## 0.5.1 (2026-04-20): prompt provenance + chain explorer + 5 sandbox profiles
 
 ### New subcommands
 
-- **`verify prompt <file>`** — verify the provenance of a prompt/skill/system-instruction file against a Veritas Acta receipt asserting its SHA-256, a Sigstore DSSE bundle with an in-toto subject, or an `--expected-hash`. Closes the supply-chain attack vector where an attacker modifies `CLAUDE.md`, `SKILLS.md`, `AGENTS.md`, or a system prompt between authoring and agent runtime.
-- **`verify chain explore <receipt>`** — walk the `previousReceiptHash` chain back to its root, validating every hash link. Emits a depth-annotated ASCII tree in terminal mode, structured JSON in `--json` mode. `--search-dir <dir>` overrides the ancestor search directory; `--max-depth N` caps the walk.
+- **`verify prompt <file>`**: verify the provenance of a prompt/skill/system-instruction file against a Veritas Acta receipt asserting its SHA-256, a Sigstore DSSE bundle with an in-toto subject, or an `--expected-hash`. Closes the supply-chain attack vector where an attacker modifies `CLAUDE.md`, `SKILLS.md`, `AGENTS.md`, or a system prompt between authoring and agent runtime.
+- **`verify chain explore <receipt>`**: walk the `previousReceiptHash` chain back to its root, validating every hash link. Emits a depth-annotated ASCII tree in terminal mode, structured JSON in `--json` mode. `--search-dir <dir>` overrides the ancestor search directory; `--max-depth N` caps the walk.
 
 ### Sigil commitment expansion
 
-- Sigil v0.5.1 now covers **25 source files** (up from 24 in v0.5.0): adds `src/engines/prompt.js` + `src/engines/chain-explore.js`. Canonical release: **Bright Star** (`1cc829ab`).
+- Sigil v0.5.1 covered **25 source files** (up from 24 in v0.5.0): added `src/engines/prompt.js` + `src/engines/chain-explore.js`. Historical bundled commitment: **Bright Star** (`1cc829ab`).
 
 ### Ecosystem profiles
 
@@ -244,21 +526,22 @@ AIPs.
 ### Tests
 
 - 20 new unit tests: 10 for `verifyPrompt` (expected-hash / receipt / Sigstore / missing-source / error paths), 10 for `exploreChain` / `renderChainTree` (3-receipt chain, tamper detection, missing ancestor, maxDepth, searchDir override).
-- Full suite now: **81 unit+integration + 26 conformance** — 107 total.
+- Full suite now: **81 unit+integration + 26 conformance**: 107 total.
 
-## 0.5.0 — 2026-04-19 (unified verifier + network-effect mechanics)
+## 0.5.0 (2026-04-19): unified verifier + network-effect mechanics
 
 ### Network-effect mechanics
 
-- **`--attest`** produces a canonical verifier attestation: a signed
+- **`--attest`** produces a self-signed local-integrity attestation: a signed
   JSON artifact the user can publish anywhere to demonstrate they ran
-  the canonical unmodified verifier. Fully offline, user-signed, opt-in.
+  local bytes matching the bundled public commitment. Fully offline,
+  user-signed, opt-in; it does not authenticate the publisher.
   `--attest-org <name>` attaches an attributable identifier.
   `--attest-key <file>` overrides the default key location
   (`~/.veritasacta-verify/attester.json`).
 - **`--emit-verification-receipt`** produces a signed receipt of a
-  specific verification event — "this receipt verified valid by the
-  canonical verifier at time T." Composable with Sigstore Rekor.
+  specific verification event: "this attester reported that this verifier
+  returned valid at time T." Composable with Sigstore Rekor.
 
 ### Enterprise features
 
@@ -279,7 +562,7 @@ AIPs.
   and signature equality. Debugging aid for implementers.
 - **`--audit-report`** renders a self-contained HTML audit report
   suitable for delivery to auditors / compliance teams / counterparties.
-  Embeds the canonical attestation if `--attest` is also set.
+  Embeds the self-signed local-integrity attestation if `--attest` is also set.
   Includes verification summary, per-receipt breakdown, verifier
   provenance, and raw JSON result.
 - **`--output <file>`** writes HTML reports or attestation JSON to a
@@ -293,39 +576,39 @@ AIPs.
 
 ### New subcommands (bootstrap + integration)
 
-- **`verify init`** — zero-config onboarding wizard. Auto-detects framework across 13 supported agents (Claude Code, Claude Agent SDK, Google ADK, CrewAI, Pydantic AI, AutoGen, Smolagents, LangChain JS/Py, LangGraph JS/Py, OpenAI Agents, Vercel AI). Generates keys, writes `.veritasacta/config.json`, emits next-steps. `--framework <name>` override, `--force` overwrite.
-- **`verify proxy --target "<cmd>"`** — universal MCP proxy. Wraps any MCP server with signing. No code changes in server or agent; each `tools/call` emits a chain-linked receipt. Signet-parity.
-- **`verify daemon`** — sidecar daemon on Unix socket. Language-agnostic signing API (`POST /sign`). One daemon handles receipts for any number of agents in any language.
+- **`verify init`**: zero-config onboarding wizard. Auto-detects framework across 13 supported agents (Claude Code, Claude Agent SDK, Google ADK, CrewAI, Pydantic AI, AutoGen, Smolagents, LangChain JS/Py, LangGraph JS/Py, OpenAI Agents, Vercel AI). Generates keys, writes `.veritasacta/config.json`, emits next-steps. `--framework <name>` override, `--force` overwrite.
+- **`verify proxy --target "<cmd>"`**: universal MCP proxy. Wraps any MCP server with signing. No code changes in server or agent; each `tools/call` emits a chain-linked receipt. Signet-parity.
+- **`verify daemon`**: sidecar daemon on Unix socket. Language-agnostic signing API (`POST /sign`). One daemon handles receipts for any number of agents in any language.
 
 ### Ecosystem artifacts (`ecosystem/`)
 
 Shipped (working code):
 
-- `ecosystem/github-action/` — drop-in CI step (`VeritasActa/verify-action@v1`)
-- `ecosystem/claude-code-plugin/` — one-click Claude Code plugin + SKILL.md
-- `ecosystem/homebrew-tap/Formula/veritasacta-verify.rb` — `brew install veritasacta-verify`
-- `ecosystem/sdk-js/` — `@veritasacta/sdk` tiny signing helper (JS)
-- `ecosystem/sdk-py/` — `veritasacta-sdk` tiny signing helper (Python)
-- `ecosystem/adapters/langchain/` — LangChain adapter with full `withReceipts()` implementation
-- `ecosystem/adapters/{langgraph,crewai,openai-agents,vercel-ai,smolagents,pydantic-ai,autogen}/` — seven additional framework adapter scaffolds
-- `ecosystem/registry-worker/` — `registry.veritasacta.com` Cloudflare Worker
-- `ecosystem/badge-worker/` — `verify.veritasacta.com/badge/*` shields.io-compatible SVG badges
-- `ecosystem/interop-leaderboard/workflow.yml` — weekly cross-implementation interop CI
+- `ecosystem/github-action/`: drop-in CI step (`VeritasActa/verify-action@v1`)
+- `ecosystem/claude-code-plugin/`: one-click Claude Code plugin + SKILL.md
+- `ecosystem/homebrew-tap/Formula/veritasacta-verify.rb`: `brew install veritasacta-verify`
+- `ecosystem/sdk-js/`: `@veritasacta/sdk` tiny signing helper (JS)
+- `ecosystem/sdk-py/`: `veritasacta-sdk` tiny signing helper (Python)
+- `ecosystem/adapters/langchain/`: LangChain adapter with full `withReceipts()` implementation
+- `ecosystem/adapters/{langgraph,crewai,openai-agents,vercel-ai,smolagents,pydantic-ai,autogen}/`: seven additional framework adapter scaffolds
+- `ecosystem/registry-worker/`: `registry.veritasacta.com` Cloudflare Worker
+- `ecosystem/badge-worker/`: `verify.veritasacta.com/badge/*` shields.io-compatible SVG badges
+- `ecosystem/interop-leaderboard/workflow.yml`: weekly cross-implementation interop CI
 
 Scaffolds (design docs, implementation pending):
 
-- `ecosystem/cosign-compat/DESIGN.md` — v0.6.0 Sigstore compatibility
-- `ecosystem/rollback/DESIGN.md` — filesystem snapshots + undo (nono-style)
-- `ecosystem/supervisor/DESIGN.md` — runtime approval flows
-- `ecosystem/reputation/DESIGN.md` — issuer reputation (complement to aeoess agent reputation)
-- `ecosystem/dashboard/DESIGN.md` — web audit dashboard (Signet-style)
-- `ecosystem/browser-extension/DESIGN.md` — Claude.ai / ChatGPT consumer reach
-- `ecosystem/ebpf-observer/DESIGN.md` — kernel-level auto-instrumentation (highest novelty)
-- `ecosystem/vscode-extension/` — editor integration (v0.5.1)
-- `ecosystem/CONFORMANCE-CERTIFICATION.md` — commercial certification service design
-- `ecosystem/SIGIL-NAMING.md` + `ecosystem/RELEASE-NAMING.md` — public brand convention + historical Sigil registry
+- `ecosystem/cosign-compat/DESIGN.md`: v0.6.0 Sigstore compatibility
+- `ecosystem/rollback/DESIGN.md`: filesystem snapshots + undo (nono-style)
+- `ecosystem/supervisor/DESIGN.md`: runtime approval flows
+- `ecosystem/reputation/DESIGN.md`: issuer reputation (complement to aeoess agent reputation)
+- `ecosystem/dashboard/DESIGN.md`: web audit dashboard (Signet-style)
+- `ecosystem/browser-extension/DESIGN.md`: Claude.ai / ChatGPT consumer reach
+- `ecosystem/ebpf-observer/DESIGN.md`: kernel-level auto-instrumentation (highest novelty)
+- `ecosystem/vscode-extension/`: editor integration (v0.5.1)
+- `ecosystem/CONFORMANCE-CERTIFICATION.md`: commercial certification service design
+- `ecosystem/SIGIL-NAMING.md` + `ecosystem/RELEASE-NAMING.md`: public brand convention + historical Sigil registry
 
-## 0.5.0 core — 2026-04-19 (unified verifier)
+## 0.5.0 core: 2026-04-19 (unified verifier)
 
 ### Major
 
@@ -362,7 +645,7 @@ Scaffolds (design docs, implementation pending):
 - **AIP-0002 selective disclosure.** `--disclose field:salt:value`
   verifies salted SHA-256 commitments on redacted fields without
   needing the issuer. Redacted fields are counted and surfaced.
-- **Sigil claim 2 — live-context verification (patent #5).**
+- **Sigil claim 2: live-context verification (patent #5).**
   `--require-context clock:±5s` / `geofence:...` / `sensor:temp<18`
   evaluates predicates at verification time. The verifier aggregates
   results and fails verification when any required predicate fails.
@@ -435,7 +718,7 @@ Scaffolds (design docs, implementation pending):
 - Expanded README with conformance tiers and usage examples for
   every mode.
 
-## 0.4.0 — 2026-04-19 (embedded-key rejection)
+## 0.4.0 (2026-04-19): embedded-key rejection
 
 ### Security
 
@@ -447,6 +730,6 @@ Scaffolds (design docs, implementation pending):
   or 0.6). Restores pre-0.4.0 behaviour for one release cycle.
 - Issue surfaced publicly by @desiorac on GetBindu PR #459.
 
-## 0.3.0 — 2026-04-05 (previous release)
+## 0.3.0 (2026-04-05): previous release
 
 Offline receipt verification via `@veritasacta/verify` CLI.

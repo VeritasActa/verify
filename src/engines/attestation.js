@@ -1,17 +1,18 @@
 /**
- * Canonical attestation and verification-receipt emission.
+ * Local-integrity attestation and verification-receipt emission.
  *
  * Produces shareable cryptographic artifacts that:
  *
- * 1. A "canonical attestation" — proof that the operator ran the
- *    canonical unmodified verifier at time T. Composable network-effect
- *    artifact: orgs publish these to demonstrate they run the real
- *    verifier. Bundled with the Sigil fingerprint + verifier version.
+ * 1. A local-integrity attestation: a self-signed operator statement that
+ *    declared monitored verifier source matched the bundled public commitment
+ *    at time T.
+ *    It does not authenticate the publisher or establish a canonical release
+ *    unless the commitment and attester key are independently pinned.
  *
  * 2. A "verification receipt" — proof that the verifier checked a
  *    specific receipt and the signature was valid. Useful for
- *    transparency-log anchoring; an auditor can prove "at time T, the
- *    canonical verifier confirmed this receipt verifies."
+ *    transparency-log anchoring; an auditor can prove "at time T, this
+ *    attester reported that this verifier returned valid."
  *
  * Both artifacts are signed with an attester-held Ed25519 key. The key
  * is generated on first use and stored in `~/.veritasacta-verify/attester.json`
@@ -96,7 +97,8 @@ function signCanonical(privateKey, payload) {
  */
 
 /**
- * Produce a canonical attestation for this verifier run.
+ * Produce a local-integrity attestation for this verifier run.
+ * The legacy `canonical` field remains for wire compatibility.
  * Returns a signed JSON object the user can publish anywhere.
  *
  * @param {CanonicalAttestationOptions} opts
@@ -119,6 +121,11 @@ export function buildCanonicalAttestation(opts) {
     verifier_version: sigil.policy.package_version,
     verifier_ietf_draft: sigil.policy.ietf_draft,
     verifier_conformance_tier: sigil.policy.conformance_tier,
+    integrity_matches: Boolean(canonical),
+    publisher_authenticated: false,
+    assurance: 'self_signed_operator_statement',
+    // Legacy compatibility alias. It means only that local bytes matched the
+    // bundled public commitment; it does not establish canonical provenance.
     canonical: Boolean(canonical),
     issued_at: now.toISOString(),
     expires_at: expiry,
@@ -143,7 +150,7 @@ export function buildCanonicalAttestation(opts) {
 
 /**
  * Produce a verification receipt: a signed attestation that the
- * canonical verifier checked a specific subject-receipt and it verified.
+ * local verifier checked a specific subject-receipt and returned valid.
  *
  * @param {Object} args
  * @param {Object} args.subjectResult        result from a verifier engine

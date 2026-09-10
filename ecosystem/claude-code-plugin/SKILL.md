@@ -40,6 +40,6 @@ npx @veritasacta/verify .veritasacta/receipts/*.json --key <pubkey>
 
 ## Commands
 
-- `/verify-receipt <path>` — verify a specific receipt file
-- `/verify-chain` — verify the entire session chain
-- `/veritasacta-sigil` — show the Sigil of the installed verifier
+- `/verify-receipt <path>`: verify a specific receipt file
+- `/verify-chain`: verify the entire session chain
+- `/veritasacta-sigil`: show the Sigil of the installed verifier

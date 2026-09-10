@@ -1,4 +1,4 @@
-# Veritas Acta Ecosystem — Shipped and Planned Artifacts
+# Veritas Acta Ecosystem: Shipped and Planned Artifacts
 
 Beyond the verifier CLI itself, the `@veritasacta/verify` ecosystem
 includes adoption and distribution artifacts. This directory contains

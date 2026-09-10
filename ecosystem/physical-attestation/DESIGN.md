@@ -1,4 +1,4 @@
-# Physical-Digital Causal Chains — Seal cost-tier T2 attestation
+# Physical-Digital Causal Chains: Seal cost-tier T2 attestation
 
 **Status:** Design spec (v0.7 target)
 **Related:** AIP-0005 (Attestation Weight Profile), `memory/seal-hardware-strategy.md`
@@ -21,7 +21,7 @@ Software-only receipts can be forged by an attacker who steals the
 signing key. No amount of cryptographic sophistication in the receipt
 format can prevent key exfiltration from a compromised OS. T2
 receipts raise the forgery cost from "compromise the OS" to "extract
-a key from a tamper-resistant chip" — a 1000-2000x increase in
+a key from a tamper-resistant chip": a 1000-2000x increase in
 attacker cost (numbers from EAL certification bodies).
 
 The Seal hardware program exists specifically to produce this kind of
@@ -64,7 +64,7 @@ chain. The verifier checks three things:
    our own provisioning CA for Seal v1).
 2. The quote signs the receipt's canonical payload hash with
    `measured_kid`.
-3. `signature.kid` equals `measured_kid` — the same key that signed
+3. `signature.kid` equals `measured_kid`: the same key that signed
    the receipt also produced the platform quote.
 
 ### Sensor reading → decision receipt pipeline
@@ -91,7 +91,7 @@ chain. The verifier checks three things:
 
 The sensor is NOT trusted; only the ATECC608B's signature is. What the
 chip signs is whatever the firmware hands it. If the firmware is
-compromised to misreport temperature, T2 doesn't save you — that's why
+compromised to misreport temperature, T2 doesn't save you: that's why
 T2 is a property claim about the SIGNING, not about the truthfulness of
 the data. Higher tiers (T3 multi-party, T4 transparency-anchored) add
 additional cross-checks.
@@ -108,10 +108,10 @@ A conformant verifier implementing this extension SHOULD:
    - `tpm2` → validate the TPM2 AK certificate + quote structure.
    - `sgx` / `sev-snp` / `tdx` → platform-specific quote verification.
 3. If the platform is unknown, return `undecidable` (exit 2) rather
-   than `invalid` (exit 1) — the receipt might be valid under a
+   than `invalid` (exit 1): the receipt might be valid under a
    platform the verifier doesn't know.
 4. If the platform is known but the quote fails, return `invalid`
-   (exit 1) — this is a proven mismatch.
+   (exit 1): this is a proven mismatch.
 
 The verifier is NOT required to implement all platforms. A verifier
 might implement TPM2 only and punt on ATECC608B. It just must clearly
@@ -122,7 +122,7 @@ report *why* it can't verify.
 ### v0.5.2 (now, scaffold)
 
 This spec + the `attestation_quote` field schema shipped under
-`schemas/` + AIP-0005 tier mapping. No verifier code yet — the tier
+`schemas/` + AIP-0005 tier mapping. No verifier code yet: the tier
 is parseable but not validated.
 
 ### v0.6.0
@@ -135,7 +135,7 @@ validators deferred.
 
 ### v0.7.0
 
-One real platform validator — target is TPM2 because the quote
+One real platform validator: target is TPM2 because the quote
 format is well-documented and reference libraries exist (tpm2-tss).
 Second validator (ATECC608B, for Seal) added once the chip's
 provisioning chain is formalised.
@@ -162,7 +162,7 @@ doesn't care; only the evidence matters.
 ## Non-goals
 
 - Not a replacement for TEE attestation protocols. We don't reinvent
-  TPM2 / SGX / SEV — we reference their quotes verbatim.
+  TPM2 / SGX / SEV: we reference their quotes verbatim.
 - Not a DRM mechanism. T2 says "a specific hardware element signed
   this." It doesn't prevent the holder from doing other things with
   the receipt.

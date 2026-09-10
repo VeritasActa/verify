@@ -1,0 +1,93 @@
+{
+  "type": "scopeblind.legate.proof-pack.v1",
+  "generated_at": "2026-06-22T23:31:19.884Z",
+  "period": null,
+  "position_blind": true,
+  "runtime": {
+    "name": "Toms-MacBook-Pro.local",
+    "verification_key": "ecfc8fe8e791d84204e4889c2ccae46da41d90c8bb88f028bee1f96790c3ae2a"
+  },
+  "mandate": {
+    "name": "Global Macro IMA",
+    "sha256": "5ac8a3803737c74cbb5221ed0983ac8c1cc28954b42ed75e372ef275fd918df2",
+    "mode": "enforce",
+    "rule_count": 9,
+    "coverage": {
+      "local": [
+        "gross-exposure",
+        "net-exposure",
+        "soft-gross-band",
+        "class-gross-rates",
+        "class-gross-fx",
+        "class-gross-equity",
+        "class-gross-credit",
+        "class-gross-commodity",
+        "dv01-book"
+      ],
+      "order_context": [],
+      "delegated": []
+    }
+  },
+  "policy": {
+    "name": "Legate default agent mandate",
+    "sha256": "650d036c3b05675f3719168a41bf0266482728b5f0156c646b2649cd804c040d",
+    "version": "1",
+    "rule_count": 5
+  },
+  "book": null,
+  "governed_actions": {
+    "evaluated": 0,
+    "allowed": 0,
+    "held": 0,
+    "blocked": 0,
+    "would_block": 0
+  },
+  "restraint": {
+    "blocked": 0,
+    "held": 0,
+    "by_rule": []
+  },
+  "shadow": {
+    "observed": 2,
+    "would_block": 0,
+    "would_hold": 2,
+    "by_rule": [
+      {
+        "rule": "gross-exposure",
+        "count": 2
+      },
+      {
+        "rule": "net-exposure",
+        "count": 2
+      },
+      {
+        "rule": "class-gross-rates",
+        "count": 2
+      },
+      {
+        "rule": "class-gross-fx",
+        "count": 2
+      },
+      {
+        "rule": "class-gross-equity",
+        "count": 2
+      },
+      {
+        "rule": "class-gross-credit",
+        "count": 2
+      },
+      {
+        "rule": "class-gross-commodity",
+        "count": 2
+      }
+    ],
+    "first_at": "2026-06-22T23:31:19.814Z",
+    "last_at": "2026-06-22T23:31:19.849Z"
+  },
+  "session_merkle_root": "66308d59fa859823fe9ff774f4f4e91cb025f391327858c0e4192ab84504346d",
+  "receipt_count": 1,
+  "signer_kid": "sb:legate:ecfc8fe8",
+  "verification_key": "ecfc8fe8e791d84204e4889c2ccae46da41d90c8bb88f028bee1f96790c3ae2a",
+  "sha256": "b6c421a1d86cbfe34f9748b3976f2a8a3d3cd64cb6467f07c85e58f43ab7c360",
+  "signature": "31f1b2090f74157a55445411c1555141f656a88f089a459488e88e155f37d5a633fa62786d4974699e19536221328882651e6d8f471cc1226450f5d203e8eb0b"
+}

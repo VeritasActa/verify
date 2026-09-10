@@ -31,11 +31,11 @@ User can:
 
 1. Export session as a JSONL chain
 2. Upload to a personal receipt storage location (S3, Drive, Dropbox)
-3. Publish as a canonical attestation
+3. Publish as a self-signed local-integrity attestation
 
 ### UX
 
-- Sigil badge in the browser toolbar showing the canonical verifier
+- Sigil badge in the browser toolbar showing the bundled verifier commitment
   version + user's own kid
 - Click to show current session's receipt count + chain integrity
 - "Export session" button

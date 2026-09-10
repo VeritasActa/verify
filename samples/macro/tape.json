@@ -1,0 +1,68 @@
+{
+  "payload": {
+    "schema": "scopeblind.macro.tape-snapshot/1",
+    "engine_version": "macro-engine/0.1.0",
+    "as_of": "2025-08-23",
+    "session": "daily_close",
+    "tape_type": "mixed",
+    "coherence": 0,
+    "material": true,
+    "signals": [
+      {
+        "id": "breadth_rel",
+        "z": 0
+      },
+      {
+        "id": "credit",
+        "z": -2.631816
+      },
+      {
+        "id": "dollar",
+        "z": 3.61392
+      },
+      {
+        "id": "duration",
+        "z": 3.20995
+      },
+      {
+        "id": "equity",
+        "z": -3.860863
+      },
+      {
+        "id": "high_beta",
+        "z": -4.467346
+      },
+      {
+        "id": "smallcap_rel",
+        "z": 0
+      }
+    ],
+    "unavailable": [
+      "banks_rel",
+      "copper",
+      "gold",
+      "growth_beta",
+      "oil"
+    ],
+    "untestable_types": [
+      "inflation_shock"
+    ],
+    "attribution": {
+      "tier": "unknown",
+      "detail": "material moves without a coherent cross-asset pattern or scheduled catalyst",
+      "events": []
+    },
+    "inputs_digest": "c202156a133cdee47311f843fbc18082311ca653dd4293496ea1c47346fa68c7",
+    "would_change": [
+      "a coherent cross-asset pattern forming would move this off mixed"
+    ],
+    "notes": [
+      "degraded: unavailable signals banks_rel, copper, gold, growth_beta, oil",
+      "untestable tape types with current data: inflation_shock",
+      "session basis: daily close-to-close; intraday windows plug into the same rules when a live feed is configured"
+    ]
+  },
+  "digest": "43e98d770cb3b4e47c915164d7fe0aa7ec257968978a5cd1aa914e9e2403decd",
+  "signature": "f7cf06b796186a7a6b76053f30b5dd3b96affb6b3853df78550719576d0059bc4a36d34c74afd3d122770e34cbdda03e3f0adcd794c314396a411d3ee5f2590f",
+  "verification_key": "e324c4149db27151f65df25d528d3037d3b3bc4165b0d28c0769369cba958ae3"
+}

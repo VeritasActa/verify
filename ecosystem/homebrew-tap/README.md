@@ -19,7 +19,7 @@ verify samples/sample-receipt.json --key <pubkey>
 
 ## Formula
 
-See `Formula/veritasacta-verify.rb`. The formula wraps `npm install -g @veritasacta/verify` with a Sigil self-check step on post-install, so every Homebrew installation cryptographically confirms it got the canonical release.
+See `Formula/veritasacta-verify.rb`. The formula wraps `npm install -g @veritasacta/verify` with a Sigil self-check. That check compares local bytes with the commitment bundled in the same installation. It does not authenticate the publisher unless the expected fingerprint is obtained independently and pinned.
 
 ## Deployment
 

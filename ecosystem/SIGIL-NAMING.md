@@ -1,8 +1,11 @@
 # Veritas Acta Sigil Naming Convention
 
-Every release of `@veritasacta/verify` receives a unique Sigil — a
-visual cryptographic commitment to the binary. Each Sigil has a
-deterministic name derived from its fingerprint.
+Every release of `@veritasacta/verify` receives a unique Sigil: a visual name
+for a deterministic public self-integrity commitment over the verifier's
+explicitly ordered monitored-file set. It is not a commitment to every byte in
+a packaged binary, and matching the bundled commitment does not authenticate
+the publisher or npm provenance. Each Sigil has a deterministic name derived
+from its fingerprint.
 
 ## How names are generated
 
@@ -44,26 +47,28 @@ Orchard · Meadow · Hearth · Anchor · Vessel · Thread
 2. **Visibility.** Release announcements lead with the name. The
    fingerprint is the precise handle; the name is the social handle.
 3. **Non-interchangeability.** A fork that produces its own Sigil gets
-   a DIFFERENT name. Users can see at a glance whether the installed
-   verifier is the canonical release.
+   a DIFFERENT name. Users can compare an installed copy with a fingerprint
+   they obtained and pinned independently.
 4. **Longevity.** Names compose with version numbers: "Swift Wind
    0.5.0" vs "New Wind 0.5.0" signals which Sigil commitment is
    active.
 
-## Historical Sigil registry
+## Historical Sigil record
 
 | Version | Sigil name | Fingerprint | Released | Notes |
 |---|---|---|---|---|
-| 0.3.0 | Slow Reed | dd0443f0 | 2026-04-13 | First Sigil-attested release |
+| 0.3.0 | Slow Reed | dd0443f0 | 2026-04-13 | First bundled Sigil commitment |
 | 0.4.0 | Slow Cairn | e6647ab1 | 2026-04-19 | Embedded-key rejection |
 | 0.5.0 | (pending)  | (TBD)    | (pending) | Unified verifier |
 
-Future releases add to this table as they ship. The canonical registry
-lives at `https://veritasacta.com/sigils` once the badge service is
-deployed.
+Future releases add to this table as they ship. A hosted copy may live at
+`https://veritasacta.com/sigils`, but it is a discovery convenience rather
+than an authenticated authoritative source. A relying party must obtain and pin
+the expected fingerprint through an independently authenticated channel if it
+needs publisher provenance.
 
 ## Related
 
-- `packages/verify-cli/generate-sigil.mjs` — derivation code
-- `packages/verify-cli/sigil.json` — current commitment
-- `patents/filed/provisional-5/` — Sigil patent claims
+- `packages/verify-cli/generate-sigil.mjs`: derivation code
+- `packages/verify-cli/sigil.json`: current commitment
+- `patents/filed/provisional-5/`: Sigil patent claims

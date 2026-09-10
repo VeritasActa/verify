@@ -52,6 +52,38 @@ test('integration: roundtrip passport-envelope receipt', async () => {
   assert.equal(r.algorithm, 'EdDSA');
 });
 
+test('integration: a governed receipt surfaces its evidence grade and limitations', async () => {
+  const { privateKey, pubHex } = generateEd25519();
+  const payload = {
+    type: 'scopeblind:decision',
+    spec: 'draft-farley-acta-signed-receipts-03',
+    tool_name: 'place_order',
+    decision: 'allow',
+    issued_at: '2026-06-11T12:00:00.000Z',
+    issuer_id: 'legate',
+    sequence: 1,
+    previousReceiptHash: null,
+    evidence: {
+      grade: 'device-authorized',
+      limitations: ['A signed receipt proves what Legate recorded; it does not independently prove an external system completed the action.'],
+      claims: {
+        entitlement_attested: true,
+        entitlement_verified_by_runtime: true,
+      },
+    },
+  };
+  const sigHex = signPayload(privateKey, payload);
+  const receipt = { payload, signature: { alg: 'EdDSA', kid: 'k1', sig: sigHex } };
+
+  const detected = detectFormat(receipt);
+  const r = await verifyReceipt(receipt, detected.mode, { publicKey: pubHex });
+  assert.equal(r.valid, true);
+  assert.equal(r.evidenceGrade, 'device-authorized');
+  assert.match(r.evidenceLimitations[0], /does not independently prove/);
+  assert.equal(r.entitlementVerifiedByRuntime, true);
+  assert.equal(r.entitlementAttested, true);
+});
+
 test('integration: tampered receipt is rejected', async () => {
   const { privateKey, pubHex } = generateEd25519();
   const payload = {

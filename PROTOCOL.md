@@ -197,7 +197,7 @@ Proves the issuer applied the same key k to both G (producing Y) and M (producin
 | bind | H3(c_nonce, d, η, tlsBinding) |
 | label | `OPRF_METERING_DLEQ_v1` |
 
-Proves the client knows the blinding factor r such that M = r·P, bound to a fresh nonce. Prevents token theft — a stolen (Z, Z') is useless without r.
+Proves the client knows the blinding factor r such that M = r·P, bound to a fresh nonce. Prevents token theft: a stolen (Z, Z') is useless without r.
 
 ## Origin canonicalization
 
@@ -313,9 +313,9 @@ Consistency guarantees vary by backend:
 
 ## References
 
-- [RFC 9497 — VOPRF](https://datatracker.ietf.org/doc/html/rfc9497)
-- [RFC 9380 — Hashing to Elliptic Curves](https://datatracker.ietf.org/doc/html/rfc9380)
-- [RFC 9449 — DPoP](https://datatracker.ietf.org/doc/html/rfc9449)
-- [RFC 5705 — TLS Keying Material Exporters](https://datatracker.ietf.org/doc/html/rfc5705)
-- [@noble/curves](https://github.com/paulmillr/noble-curves) — Audited P-256 implementation
-- [@noble/hashes](https://github.com/paulmillr/noble-hashes) — Audited SHA-256/HMAC
+- [RFC 9497: VOPRF](https://datatracker.ietf.org/doc/html/rfc9497)
+- [RFC 9380: Hashing to Elliptic Curves](https://datatracker.ietf.org/doc/html/rfc9380)
+- [RFC 9449: DPoP](https://datatracker.ietf.org/doc/html/rfc9449)
+- [RFC 5705: TLS Keying Material Exporters](https://datatracker.ietf.org/doc/html/rfc5705)
+- [@noble/curves](https://github.com/paulmillr/noble-curves): Audited P-256 implementation
+- [@noble/hashes](https://github.com/paulmillr/noble-hashes): Audited SHA-256/HMAC

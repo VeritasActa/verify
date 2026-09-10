@@ -3,7 +3,7 @@ kind: SandboxProfile
 metadata:
   name: openclaw
   tool: OpenClaw
-  tool_url: https://github.com/openclaw-ai/openclaw
+  tool_url: https://github.com/openclaw/openclaw
   profile_version: 1.0.0
   maintained_by: ScopeBlind
   license: Apache-2.0

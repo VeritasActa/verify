@@ -1,4 +1,4 @@
-# OS-Level Auto-Instrumentation (v0.7.0 target — highest novelty)
+# OS-Level Auto-Instrumentation (v0.7.0 target: highest novelty)
 
 eBPF (Linux) / Endpoint Security Framework (macOS) / ETW (Windows)
 programs that observe agent processes at the syscall layer and emit
@@ -18,9 +18,9 @@ required.
 ### Linux (eBPF)
 
 - eBPF program attached to syscalls:
-  - `openat()`, `unlink()` — file mutations
-  - `connect()`, `sendto()` — network activity
-  - `execve()` — subprocess spawning
+  - `openat()`, `unlink()`: file mutations
+  - `connect()`, `sendto()`: network activity
+  - `execve()`: subprocess spawning
 - User-space daemon consumes kernel ring buffer events
 - Daemon maintains a per-pid receipt chain
 - Daemon signs receipts using a project attester key
@@ -28,9 +28,9 @@ required.
 ### macOS (Endpoint Security Framework)
 
 - ESF client subscribes to:
-  - `ES_EVENT_TYPE_AUTH_EXEC` — process execution
-  - `ES_EVENT_TYPE_NOTIFY_OPEN` / `NOTIFY_WRITE` — file access
-  - `ES_EVENT_TYPE_NOTIFY_CREATE` — new files
+  - `ES_EVENT_TYPE_AUTH_EXEC`: process execution
+  - `ES_EVENT_TYPE_NOTIFY_OPEN` / `NOTIFY_WRITE`: file access
+  - `ES_EVENT_TYPE_NOTIFY_CREATE`: new files
 - ES client requires Team ID + System Extension entitlements
 - Runs as a privileged daemon
 

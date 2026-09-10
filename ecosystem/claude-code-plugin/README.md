@@ -1,4 +1,4 @@
-# Veritas Acta Verify — Claude Code Plugin
+# Veritas Acta Verify: Claude Code Plugin
 
 One-click installation of the Veritas Acta receipt-signing pipeline for Claude Code. Every tool call produces a cryptographic receipt you can verify offline.
 
@@ -23,7 +23,9 @@ Both paths do the same thing: generate a signing key, wire up PreToolUse / PostT
 1. **Every tool call signs a receipt.** Stored at `.veritasacta/receipts/`.
 2. **PreToolUse policy check.** Cedar policy gates run before the tool fires.
 3. **Chain linkage.** Receipts form a tamper-evident chain via `previousReceiptHash`.
-4. **Self-check.** `verify --self-check` proves the installed verifier is canonical.
+4. **Self-check.** `verify --self-check` compares installed bytes with the bundled
+   commitment. Pin an independently obtained fingerprint to authenticate the
+   expected build.
 5. **One-line audit.** `npx @veritasacta/verify .veritasacta/receipts/*.json` verifies everything.
 
 ## Verify a session

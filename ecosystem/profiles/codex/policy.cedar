@@ -27,7 +27,7 @@ permit (
     action == Agent::Action::"exec",
     resource
 ) when {
-    context.command in ["ls", "cat", "grep", "rg", "find", "head", "tail", "wc"]
+    ["ls", "cat", "grep", "rg", "find", "head", "tail", "wc"].contains(context.command)
 };
 
 // Network: OpenAI API + package managers only.
@@ -72,5 +72,5 @@ forbid (
     action == Agent::Action::"exec",
     resource
 ) when {
-    context.command in ["rm", "dd", "mkfs", "shutdown", "reboot", "kill", "pkill", "chmod", "chown"]
+    ["rm", "dd", "mkfs", "shutdown", "reboot", "kill", "pkill", "chmod", "chown"].contains(context.command)
 };

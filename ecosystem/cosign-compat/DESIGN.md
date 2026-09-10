@@ -61,10 +61,10 @@ Composes with Sigstore's keyless signing pattern.
 
 ## Implementation path for v0.6.0
 
-1. Add `src/engines/dsse.js` — DSSE envelope wrap/unwrap
-2. Add `--emit-dsse` flag — wraps verification output as a DSSE envelope
-3. Add `--verify-dsse` flag — accepts a DSSE-wrapped receipt as input
-4. Add `--rekor-anchor <url>` — verifies Rekor inclusion proof when
+1. Add `src/engines/dsse.js`: DSSE envelope wrap/unwrap
+2. Add `--emit-dsse` flag: wraps verification output as a DSSE envelope
+3. Add `--verify-dsse` flag: accepts a DSSE-wrapped receipt as input
+4. Add `--rekor-anchor <url>`: verifies Rekor inclusion proof when
    present
 5. Publish the in-toto predicate type once PR #549 lands
 6. Add `cosign-verify-blob` examples to README

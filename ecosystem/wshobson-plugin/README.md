@@ -1,4 +1,4 @@
-# wshobson/agents — `protect-mcp` plugin (PR-staging)
+# wshobson/agents: `protect-mcp` plugin (PR-staging)
 
 PR-ready tree for submitting `protect-mcp` to [wshobson/agents](https://github.com/wshobson/agents), a 33K-star community Claude Code plugin marketplace.
 
@@ -45,19 +45,19 @@ protect-mcp/
 
 > Closes #471.
 >
-> Adds the `protect-mcp` plugin — first Claude Code plugin that enforces policies **cryptographically**, not just via hooks. Every tool call is:
+> Adds the `protect-mcp` plugin: first Claude Code plugin that enforces policies **cryptographically**, not just via hooks. Every tool call is:
 >
 > 1. Evaluated against a Cedar policy at `PreToolUse`
 > 2. Signed as an Ed25519 receipt at `PostToolUse`
 > 3. Chain-linked via `previousReceiptHash`
 > 4. Verifiable offline with `@veritasacta/verify`
 >
-> **Why this design.** Hook-only approaches can be bypassed (disable the hook, tool call runs unenforced). Signing the decision makes the receipt tamper-evident — an attacker who disables the hook still cannot forge evidence that a denied action was allowed.
+> **Why this design.** Hook-only approaches can be bypassed (disable the hook, tool call runs unenforced). Signing the decision makes the receipt tamper-evident: an attacker who disables the hook still cannot forge evidence that a denied action was allowed.
 >
 > **What ships:**
-> - 1 skill — `protect-mcp-setup` (step-by-step setup)
-> - 2 agents — `policy-enforcer` (Cedar authoring), `receipt-verifier` (chain audit)
-> - 2 commands — `/verify-receipt`, `/audit-chain`
+> - 1 skill: `protect-mcp-setup` (step-by-step setup)
+> - 2 agents: `policy-enforcer` (Cedar authoring), `receipt-verifier` (chain audit)
+> - 2 commands: `/verify-receipt`, `/audit-chain`
 > - hooks.json wiring PreToolUse + PostToolUse
 >
 > **Dependencies:** `protect-mcp` (MIT) + `@veritasacta/verify` (Apache-2.0). Both on npm. No network at runtime.
@@ -68,10 +68,10 @@ protect-mcp/
 > - [ ] `npx @veritasacta/verify .protect-mcp/receipts/*.json` exits 0
 > - [ ] Tampering with a receipt causes exit 1
 >
-> Thanks @<issue-author> for opening #471 — this PR directly implements the structure you requested.
+> Thanks @<issue-author> for opening #471: this PR directly implements the structure you requested.
 
 ## Strategic context
 
-- **wshobson/agents has 33.6K stars** — huge discovery surface for Claude Code users.
+- **wshobson/agents has 33.6K stars**: huge discovery surface for Claude Code users.
 - **Pioneers `governance` category** in a marketplace that currently has `security` but no cryptographic-governance entries.
-- **Every install exercises `@veritasacta/verify`** — adoption multiplier for the verifier.
+- **Every install exercises `@veritasacta/verify`**: adoption multiplier for the verifier.

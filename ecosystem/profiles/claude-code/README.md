@@ -41,9 +41,9 @@ npx @veritasacta/verify .veritasacta/receipts/claude-code/ --key operator-public
 
 ## When to customise
 
-- **Cursor, Codex, or another IDE-embedded agent** — copy this profile and relax the HTTPS allowlist (Cursor talks to its own backend)
-- **Production CI** — tighten to deny-by-default on exec, add an explicit allowlist only for your build commands
-- **Enterprise with air-gap** — remove the network block entirely, keep only Cedar allow/deny on file and exec
+- **Cursor, Codex, or another IDE-embedded agent**: copy this profile and relax the HTTPS allowlist (Cursor talks to its own backend)
+- **Production CI**: tighten to deny-by-default on exec, add an explicit allowlist only for your build commands
+- **Enterprise with air-gap**: remove the network block entirely, keep only Cedar allow/deny on file and exec
 
 ## Threat model
 
@@ -51,22 +51,22 @@ This profile assumes Claude Code is **semi-trusted**: we trust the binary is unm
 
 Known attack vectors this profile addresses:
 
-- **Credential exfiltration via file read** — blocked at policy + nono filesystem layer
-- **Cloud metadata access (SSRF-like)** — blocked at network layer
-- **Destructive shell via LLM confusion** — blocked at Cedar exec allowlist
-- **System-file tampering** — blocked at policy + nono filesystem layer
+- **Credential exfiltration via file read**: blocked at policy + nono filesystem layer
+- **Cloud metadata access (SSRF-like)**: blocked at network layer
+- **Destructive shell via LLM confusion**: blocked at Cedar exec allowlist
+- **System-file tampering**: blocked at policy + nono filesystem layer
 
 Known attack vectors **NOT** addressed (need operator-specific handling):
 
-- **Data exfiltration via allowed HTTPS endpoints** — Claude Code can post to api.github.com; if that's a real concern, narrow the allowlist further
-- **Supply-chain attacks via allowed package managers** — `npm install` of a malicious package is not blocked; use [`verify prompt <file>`](../../../src/engines/prompt.js) to verify `.claude/settings.json` and `CLAUDE.md` provenance
+- **Data exfiltration via allowed HTTPS endpoints**: Claude Code can post to api.github.com; if that's a real concern, narrow the allowlist further
+- **Supply-chain attacks via allowed package managers**: `npm install` of a malicious package is not blocked; use [`verify prompt <file>`](../../../src/engines/prompt.js) to verify `.claude/settings.json` and `CLAUDE.md` provenance
 
 ## Maintaining this profile
 
 Profile updates follow semver. The current version is 1.0.0. Changes:
 
-- **Patch** — allowlist additions for already-covered command families
-- **Minor** — new action types (e.g., a new Claude Code tool), new endpoint allowlist entries
-- **Major** — changes to default-deny posture or removal of previously-allowed patterns
+- **Patch**: allowlist additions for already-covered command families
+- **Minor**: new action types (e.g., a new Claude Code tool), new endpoint allowlist entries
+- **Major**: changes to default-deny posture or removal of previously-allowed patterns
 
 File issues or proposed updates in the main [`VeritasActa/verify`](https://github.com/VeritasActa/verify) repo.

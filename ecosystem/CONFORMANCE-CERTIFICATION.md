@@ -1,4 +1,4 @@
-# Conformance Certification — Commercial Service Design
+# Conformance Certification: Commercial Service Design
 
 Draft spec for a commercial conformance certification service. Not an
 open-source artifact; this document is internal product spec for the

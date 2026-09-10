@@ -1,0 +1,14 @@
+{
+  "payload": {
+    "schema": "scopeblind.macro.transparency-head/1",
+    "engine_version": "macro-engine/0.1.0",
+    "log_id": "scopeblind.macro.demo-log",
+    "tree_size": 5,
+    "root_hash": "40efcc8314749f9b68e2d9555e16d6d223dba67069434108808e18249eb46c3c",
+    "timestamp": "2026-05-01T00:00:00Z",
+    "previous_root_hash": null
+  },
+  "digest": "6fd187a85cb09a7e01f383e6dee761801b044c04e3c518f00473db4edd626e78",
+  "signature": "629823481769449e85c793ccd06cfe819b60192ae0a0e72f62b6108b3082b66e8fab5f86c7ae738f599b8ec0a079747ecf308b9540168d8fdc59afbc75dfd409",
+  "verification_key": "e324c4149db27151f65df25d528d3037d3b3bc4165b0d28c0769369cba958ae3"
+}

@@ -1,20 +1,31 @@
 {
   "sigil_version": 1,
-  "fingerprint": "90b32067",
-  "name": "True Dawn",
-  "sigil_hash": "90b320670c5e85d15f17b182738bd25771f58b7ed2100c72b6fb332597d96a9a",
+  "fingerprint": "1798eb7f",
+  "name": "Gilded Thread",
+  "sigil_hash": "1798eb7fbd7c5ea7d23660798adbc8d4f71aae775a8dcc8311d32aa080c61dd3",
   "project_public_key": "fe665e861867cec7e171c0c13bbc873c3362079faef21f54df7804b7fb9ae8af",
+  "commitment_authentication": "public_recomputable_integrity_only",
   "policy": {
     "version": 3,
     "package": "@veritasacta/verify",
-    "package_version": "0.6.1",
-    "source_hash": "610f4996e57755ea4a9ead70173f86071a0f2caf7e78da1434d0c1c163ba541d",
+    "package_version": "0.9.7",
+    "source_hash": "43ae56676666a07e16bb089b51500cdb5c44a3ad63d6950846b8cf345dfa0bf6",
     "monitored_files": [
+      "README.md",
       "cli.js",
+      "src/sigil-policy.js",
       "src/detect.js",
       "src/conformance.js",
       "src/errors.js",
       "src/engines/ed25519-receipt.js",
+      "src/engines/gate-receipt.js",
+      "src/engines/claims-v211.js",
+      "src/generated/claims-v211-schemas.js",
+      "src/engines/macro-snapshot.js",
+      "src/engines/legate-governed-receipt.js",
+      "src/engines/legate-proof-pack.js",
+      "src/engines/trusted-context-pack.js",
+      "src/engines/commitment-mode.js",
       "src/engines/voprf-token.js",
       "src/engines/knowledge-unit.js",
       "src/engines/selective-disclosure.js",
@@ -37,7 +48,9 @@
       "src/engines/watch.js",
       "src/engines/sbom.js",
       "src/engines/transparency.js",
+      "src/engines/policy-decision-reexec.js",
       "src/context/live-context.js",
+      "src/output/eat.js",
       "src/output/terminal.js",
       "src/output/json.js",
       "src/output/html-report.js",
@@ -46,6 +59,9 @@
       "src/util/jwks.js",
       "src/util/audit-log.js",
       "src/util/fips.js",
+      "src/util/known-issuers.js",
+      "src/util/brass-v2.js",
+      "src/util/merkle.js",
       "src/util/voprf-crypto.js",
       "src/util/voprf-crypto-v2.js"
     ],
@@ -56,8 +72,8 @@
       "EdDSA",
       "voprf-p256-sha256"
     ],
-    "created_at": 1778927172239
+    "created_at": 1784267169966
   },
-  "policy_hash": "225de862237f54ed4b5bf6e4381eba0dd72ff3fd3b0bf593766302e71d08af8e",
-  "derived_at": "2026-05-16T10:26:12.239Z"
+  "policy_hash": "ad0adf991fe9524c279d70880a0ba5d6848bab9039b8c1c4ec2ce7659ede36a2",
+  "derived_at": "2026-07-17T05:46:09.966Z"
 }

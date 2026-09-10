@@ -46,7 +46,7 @@ examples/
 
 ## Guidelines
 
-1. **All functions in `crypto.js` must be pure** — no side effects, no I/O, no global state.
+1. **All functions in `crypto.js` must be pure**: no side effects, no I/O, no global state.
 2. **All cryptographic operations** must use `@noble/curves` and `@noble/hashes`. No custom crypto.
 3. **Every new function needs tests.** Aim for determinism tests (same input = same output) and isolation tests (different scopes produce different results).
 4. **No new runtime dependencies** unless absolutely necessary and audited.

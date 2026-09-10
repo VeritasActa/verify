@@ -2,7 +2,7 @@
 
 Every release of `@veritasacta/verify` gets a unique Sigil with a
 deterministic name derived from its cryptographic fingerprint. The name
-is not chosen — it emerges from the release's own content.
+is not chosen: it emerges from the release's own content.
 
 ## How names are generated
 
@@ -13,7 +13,7 @@ When `generate-sigil.mjs` produces a Sigil, it:
 3. Parses `n = int(fingerprint[0:4], 16)`, `m = int(fingerprint[4:8], 16)`
 4. Selects `name = ADJECTIVE[n % 24] + " " + NOUN[m % 24]`
 
-This is **deterministic** — two verifier binaries with the same source
+This is **deterministic**: two verifier binaries with the same source
 hash and the same project key produce the same Sigil, same fingerprint,
 same name.
 
@@ -22,8 +22,9 @@ same name.
 1. **Memorable.** "We pinned to Swift Wind" is easier than "pinned to
    Sigil fingerprint 87727f4b."
 2. **Visible in release notes.** Every announcement leads with the name.
-3. **Counterfeit detection.** A fork produces a DIFFERENT Sigil →
-   different name. Users see at a glance.
+3. **Pinned-drift detection.** A fork produces a DIFFERENT Sigil →
+   different name. Users can compare it with a fingerprint obtained through
+   an independently authenticated channel.
 4. **Marketing contagion.** Release names become conversational shorthand.
 
 ## Pool
@@ -47,21 +48,23 @@ Orchard · Meadow · Hearth · Anchor · Vessel · Thread
 
 | Version | Sigil name | Fingerprint | Released | Highlight |
 |---|---|---|---|---|
-| 0.3.0 | Slow Reed | `dd0443f0` | 2026-04-13 | First Sigil-attested release |
+| 0.3.0 | Slow Reed | `dd0443f0` | 2026-04-13 | First bundled Sigil commitment |
 | 0.4.0 | Slow Cairn | `e6647ab1` | 2026-04-19 | Embedded-key rejection |
 | 0.5.0 | (current) | (current) | 2026-04-19 | Unified verifier |
 
-After each release, this table is updated. The canonical live registry
-is at `https://veritasacta.com/sigils`.
+After each release, this table is updated. The public registry is at
+`https://veritasacta.com/sigils`; high-assurance callers must authenticate
+that registry or obtain the expected fingerprint through another trusted
+channel before pinning it.
 
 ## Marketing cadence
 
 - **Release announcement**: leads with the Sigil name. "Swift Wind is
   live."
 - **Monthly "Sigil of the Month" blog post**: features the current
-  release, technical changes, and a case study from any org that
-  canonically attested that version.
-- **Merchandise**: T-shirts, stickers, print art — each release can
+  release, technical changes, and a case study from an organization that
+  independently pinned and reported that fingerprint.
+- **Merchandise**: T-shirts, stickers, print art: each release can
   generate its own limited-edition asset. Optional but reinforces
   identity.
 
@@ -74,7 +77,7 @@ fingerprint.
 
 ## Related
 
-- `ecosystem/SIGIL-NAMING.md` — this file
-- `generate-sigil.mjs` — derivation code
-- `src/engines/sigil.js` — runtime verification
-- Patent provisional #5 — Sigil visual commitment
+- `ecosystem/SIGIL-NAMING.md`: this file
+- `generate-sigil.mjs`: derivation code
+- `src/engines/sigil.js`: runtime verification
+- Patent provisional #5: Sigil visual commitment

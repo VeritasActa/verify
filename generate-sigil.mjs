@@ -7,9 +7,10 @@
  * It computes SHA-256 of cli.js, builds a policy, derives the Sigil,
  * and writes sigil.json.
  *
- * The Veritas Acta project keypair is stored in sigil-key.json (PRIVATE,
- * never published to npm). The public key is embedded in sigil.json
- * (published with the package).
+ * The stable Veritas Acta project public key is embedded in sigil.json
+ * (published with the package). An optional sigil-key.json is used only by
+ * --init to establish a new project identity; the current Sigil derivation is
+ * a public integrity commitment, not a project-key signature.
  *
  * Usage:
  *   node generate-sigil.mjs [--init]   # --init creates a new keypair
@@ -20,6 +21,10 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  readSigilMonitoredSource,
+  SIGIL_MONITORED_FILES,
+} from './src/sigil-policy.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -77,6 +82,9 @@ function sigilName(fingerprint) {
 const keyPath = join(__dirname, 'sigil-key.json');
 const sigilPath = join(__dirname, 'sigil.json');
 const pkg = JSON.parse(readFileSync(join(__dirname, 'package.json'), 'utf-8'));
+const existingSigil = existsSync(sigilPath)
+  ? JSON.parse(readFileSync(sigilPath, 'utf-8'))
+  : null;
 
 // Init mode: generate a new keypair
 if (process.argv.includes('--init')) {
@@ -91,78 +99,60 @@ if (process.argv.includes('--init')) {
   console.log(`  Saved to: sigil-key.json (KEEP PRIVATE — do NOT publish to npm)`);
 }
 
-// Load existing keypair
-if (!existsSync(keyPath)) {
-  console.error('No sigil-key.json found. Run: node generate-sigil.mjs --init');
+// Reuse the established public project identity. The derivation below never
+// uses a private key, so a clean release checkout must not require one merely
+// to refresh the monitored-source commitment.
+let key;
+if (existsSync(keyPath)) {
+  key = JSON.parse(readFileSync(keyPath, 'utf-8'));
+} else if (existingSigil) {
+  if (typeof existingSigil.project_public_key !== 'string'
+    || !/^[0-9a-f]{64}$/i.test(existingSigil.project_public_key)) {
+    console.error('Existing sigil.json has no valid project public key. Run --init in the project custody environment.');
+    process.exit(1);
+  }
+  key = { pubHex: existingSigil.project_public_key };
+  console.log('  Reusing the published project public key from sigil.json.');
+} else {
+  console.error('No project public key found. Run --init in the project custody environment.');
   process.exit(1);
 }
 
-const key = JSON.parse(readFileSync(keyPath, 'utf-8'));
-
-// Compute source hash over cli.js PLUS monitored engine/util files.
-// v0.5.0 Sigil commits to the entire verification surface, not just cli.js,
-// so that modification of any engine file invalidates --self-check.
-const MONITORED_FILES = [
-  'cli.js',
-  'src/detect.js',
-  'src/conformance.js',
-  'src/errors.js',
-  'src/engines/ed25519-receipt.js',
-  'src/engines/voprf-token.js',
-  'src/engines/knowledge-unit.js',
-  'src/engines/selective-disclosure.js',
-  'src/engines/sigil.js',
-  'src/engines/attestation.js',
-  'src/engines/bulk.js',
-  'src/engines/diff.js',
-  'src/engines/init.js',
-  'src/engines/proxy.js',
-  'src/engines/daemon.js',
-  'src/engines/prompt.js',
-  'src/engines/chain-explore.js',
-  'src/engines/compliance-export.js',
-  'src/engines/dsse.js',
-  'src/engines/delegation.js',
-  'src/engines/cosign.js',
-  'src/engines/dashboard.js',
-  'src/engines/rekor.js',
-  'src/engines/attestation-quote.js',
-  'src/engines/watch.js',
-  'src/engines/sbom.js',
-  'src/engines/transparency.js',
-  'src/context/live-context.js',
-  'src/output/terminal.js',
-  'src/output/json.js',
-  'src/output/html-report.js',
-  'src/util/canonical.js',
-  'src/util/hex.js',
-  'src/util/jwks.js',
-  'src/util/audit-log.js',
-  'src/util/fips.js',
-  'src/util/voprf-crypto.js',
-  'src/util/voprf-crypto-v2.js',
-];
-
-import { readFileSync as _readFileSync } from 'node:fs';
-const bufs = [];
-for (const rel of MONITORED_FILES) {
-  try { bufs.push(_readFileSync(join(__dirname, rel))); }
-  catch (e) { console.error(`  WARNING: monitored file missing: ${rel}`); }
+// Compute the source hash over the declared monitored surface. Release tests
+// require this list to include cli.js and every shipped executable JavaScript
+// module under src/, so changing any runtime module invalidates --self-check.
+let combined;
+try {
+  combined = readSigilMonitoredSource(__dirname);
+} catch (error) {
+  console.error(`  ERROR: ${error.message}`);
+  console.error('  Refusing to seal a reduced verifier surface.');
+  process.exit(1);
 }
-const combined = Buffer.concat(bufs);
 const sourceHash = createHash('sha256').update(combined).digest('hex');
 
-// Build the policy (v0.5.0 schema)
+const sourceDateEpoch = process.env.SOURCE_DATE_EPOCH;
+const createdAt = sourceDateEpoch !== undefined
+  ? Number(sourceDateEpoch) * 1000
+  : existingSigil?.policy?.created_at ?? 0;
+if (!Number.isSafeInteger(createdAt) || createdAt < 0) {
+  console.error('SOURCE_DATE_EPOCH or existing Sigil created_at must resolve to a non-negative integer.');
+  process.exit(1);
+}
+
+// Build the deterministic policy. created_at is a stable policy epoch, not the
+// wall-clock time of regeneration, so identical sources produce identical
+// commitments.
 const policy = {
   version: 3,
   package: pkg.name,
   package_version: pkg.version,
   source_hash: sourceHash,
-  monitored_files: MONITORED_FILES,
+  monitored_files: SIGIL_MONITORED_FILES,
   ietf_draft: 'draft-farley-acta-signed-receipts-03',
   conformance_tier: 'T4',
   supported_algorithms: ['ed25519', 'EdDSA', 'voprf-p256-sha256'],
-  created_at: Date.now(),
+  created_at: createdAt,
 };
 
 // Compute policy hash
@@ -181,12 +171,24 @@ const sigil = {
   name,
   sigil_hash: sigilHash,
   project_public_key: key.pubHex,
+  commitment_authentication: 'public_recomputable_integrity_only',
   policy,
   policy_hash: policyHash,
-  derived_at: new Date().toISOString(),
+  derived_at: new Date(createdAt).toISOString(),
 };
 
-writeFileSync(sigilPath, JSON.stringify(sigil, null, 2) + '\n');
+const serialized = JSON.stringify(sigil, null, 2) + '\n';
+if (process.argv.includes('--check')) {
+  const current = existsSync(sigilPath) ? readFileSync(sigilPath, 'utf8') : '';
+  if (current !== serialized) {
+    console.error('Sigil commitment is stale. Run npm run generate-sigil and review the change.');
+    process.exit(1);
+  }
+  console.log('Sigil public integrity commitment is current and reproducible.');
+  process.exit(0);
+}
+
+writeFileSync(sigilPath, serialized);
 
 console.log(`\n✓ Sigil committed for ${pkg.name}@${pkg.version}`);
 console.log(`  Name:        ${name}`);
@@ -195,4 +197,5 @@ console.log(`  Source hash:  ${sourceHash.slice(0, 16)}...`);
 console.log(`  Policy hash:  ${policyHash.slice(0, 16)}...`);
 console.log(`  Sigil hash:   ${sigilHash.slice(0, 16)}...`);
 console.log(`  Written to:   sigil.json`);
-console.log(`\n  Anyone can verify: npx @veritasacta/verify --self-check\n`);
+console.log('  Authentication: public recomputation only (not a project signature)');
+console.log(`\n  Anyone can check local integrity: npx @veritasacta/verify --self-check\n`);

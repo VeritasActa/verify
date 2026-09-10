@@ -1,6 +1,6 @@
 # Profile: OpenClaw
 
-Run [OpenClaw](https://github.com/openclaw-ai/openclaw) under sb-runtime + nono + signed receipts, **composing with OpenClaw's own guard-rail framework** rather than replacing it.
+Run [OpenClaw](https://github.com/openclaw/openclaw) under sb-runtime + nono + signed receipts, **composing with OpenClaw's own guard-rail framework** rather than replacing it.
 
 ## Composition model
 

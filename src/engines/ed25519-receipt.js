@@ -169,6 +169,16 @@ export async function verifyReceipt(input, detectedMode, opts = {}) {
   const payload = input.payload || input;
   const payloadFields = collectPayloadFields(payload);
 
+  // Evidence grade: a Legate governed receipt carries an honest grade and its
+  // limitations. Surface them so a valid signature is never mistaken for proof
+  // that the underlying action actually happened.
+  const evidenceBlock = payload.evidence || payload.result?.governance?.evidence || null;
+  const evidenceGrade = evidenceBlock && typeof evidenceBlock.grade === 'string' ? evidenceBlock.grade : undefined;
+  const evidenceLimitations = evidenceBlock && Array.isArray(evidenceBlock.limitations) ? evidenceBlock.limitations : undefined;
+  const entitlementVerifiedByRuntime = Boolean(evidenceBlock?.claims?.entitlement_verified_by_runtime);
+  const entitlementAttested = entitlementVerifiedByRuntime
+    || Boolean(evidenceBlock?.claims?.entitlement_attested);
+
   // Normalize upstream error codes to our canonical registry.
   let normalizedError;
   if (!result.valid) {
@@ -193,6 +203,10 @@ export async function verifyReceipt(input, detectedMode, opts = {}) {
     publicKey,
     algorithm,
     payloadFields,
+    evidenceGrade,
+    evidenceLimitations,
+    entitlementAttested,
+    entitlementVerifiedByRuntime,
     hash: result.hash,
   };
 }

@@ -224,7 +224,10 @@ export async function runProxy(opts) {
           issued_at: new Date().toISOString(),
           issuer_id: issuerId,
           sequence,
-          previousReceiptHash,
+          // Genesis omits the member entirely. Carrying null or an empty
+          // string changes the JCS output and therefore the signature.
+          // draft-farley-acta-signed-receipts-03 section 2.2.
+          ...(previousReceiptHash ? { previousReceiptHash } : {}),
           ...(traceId ? { trace_id: traceId } : {}),
           ...(scrubDetected.length > 0 ? { scrub_detected: scrubDetected } : {}),
         };
@@ -246,9 +249,13 @@ export async function runProxy(opts) {
           ];
         }
 
-        // Update chain hash
-        const canonical = canonicalize(payload);
-        previousReceiptHash = 'sha256:' + createHash('sha256').update(canonical, 'utf-8').digest('hex');
+        // Update chain hash. The preimage is the whole receipt including its
+        // signature, not the payload alone: hashing the payload gives a
+        // re-signed receipt the same link as the original, so a key rotation
+        // or re-issue would be invisible in the chain.
+        // draft-farley-acta-signed-receipts-03 section 6.7.
+        previousReceiptHash =
+          'sha256:' + createHash('sha256').update(canonicalize(receipt), 'utf-8').digest('hex');
 
         // Persist
         const receiptFile = join(receiptsDir, `rcpt_${String(sequence).padStart(6, '0')}.json`);

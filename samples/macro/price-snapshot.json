@@ -1,0 +1,77 @@
+{
+  "payload": {
+    "schema": "scopeblind.macro.price-snapshot/1",
+    "engine_version": "macro-engine/0.1.0",
+    "as_of": "2026-06-12T20:00:00Z",
+    "source": "Massive Market Data daily settle (delayed feed; not a live tick)",
+    "delay_minutes": 15,
+    "levels": {
+      "rates": {
+        "level": 85.77,
+        "instrument": "TLT",
+        "unit": "price",
+        "note": "long-duration UST proxy; loads via DV01, not notional"
+      },
+      "equity": {
+        "level": 741.75,
+        "instrument": "SPY",
+        "unit": "price",
+        "multiplier": 500,
+        "note": "ES notional = level x 500 (x10 index ratio, $50 point value)"
+      },
+      "fx_eur": {
+        "level": 1.15655,
+        "instrument": "EURUSD",
+        "unit": "fx_rate"
+      },
+      "fx_jpy": {
+        "level": 160.215,
+        "instrument": "USDJPY",
+        "unit": "fx_rate"
+      },
+      "credit_ig": {
+        "level": 109.01,
+        "instrument": "LQD",
+        "unit": "price",
+        "note": "IG proxy; loads via CS01, not notional"
+      },
+      "credit_hy": {
+        "level": 79.94,
+        "instrument": "HYG",
+        "unit": "price",
+        "note": "HY proxy; loads via CS01, not notional"
+      },
+      "commodity_oil": {
+        "level": 125.43,
+        "instrument": "USO",
+        "unit": "price",
+        "note": "crude proxy ETF (roll-affected); provenance only"
+      },
+      "commodity_gold": {
+        "level": 386.54,
+        "instrument": "GLD",
+        "unit": "price",
+        "note": "gold proxy ETF; provenance only"
+      }
+    },
+    "coverage": [
+      "commodity_gold",
+      "commodity_oil",
+      "credit_hy",
+      "credit_ig",
+      "equity",
+      "fx_eur",
+      "fx_jpy",
+      "rates"
+    ],
+    "missing": [],
+    "notes": [
+      "levels are official daily closes (settle) for the 2026-06-12 session, from a delayed feed",
+      "instruments are liquid ETF/FX proxies, not the futures themselves; the snapshot never overstates what it observed",
+      "only the equity (ES) factor carries a notional multiplier; the rest are signed provenance and load via DV01/CS01"
+    ]
+  },
+  "digest": "32a46e47fd2639b9991dfd8133c600c8ed7e9a86b56f3ec5372870c35624c165",
+  "signature": "676678d1d4ce516869d80f185bf3fd207d33c02109e4deb4e6fc5a8a2a557ed3ac6c12b3f8f12d55c03b7670a20e457dd86ccfbd5fe994015d0ed2e8f782a50b",
+  "verification_key": "e324c4149db27151f65df25d528d3037d3b3bc4165b0d28c0769369cba958ae3"
+}

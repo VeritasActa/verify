@@ -29,9 +29,10 @@ The verifier provides, for any artifact it reports as VALID:
   if and only if the field content is authentic.
 - **VOPRF DLEQ proof verification** (when full extraction lands):
   tokens are proven issued by the claimed issuer key.
-- **Canonical-release provenance** (`--self-check`): the installed
-  verifier binary + engine files are the canonical unmodified release
-  committed by the Sigil.
+- **Local byte-integrity comparison** (`--self-check`): the installed
+  verifier binary + engine files match the commitment bundled in that
+  installation. This is not publisher authentication unless the caller
+  independently pins the expected commitment.
 - **Offline operation**: verification uses no network calls unless the
   caller explicitly passes `--jwks`.
 
@@ -94,26 +95,32 @@ Recommended key distribution mechanisms:
 
 The verifier executes in Node.js. A compromised Node.js runtime or a
 compromised installation of the verifier can produce arbitrary output.
-The `--self-check` command is the caller's tool for proving the
-installed verifier is the canonical release; however, `--self-check`
-itself runs in the same potentially-compromised environment and is
-therefore subject to the same caveat. Callers operating in
-high-assurance environments should reproduce the verification from
-source, in a separate trust domain.
+The `--self-check` command compares the declared monitored source with the
+commitment bundled beside it. The monitored runtime includes `cli.js` and
+every shipped executable JavaScript module under `src/`; a release test fails
+if that runtime tree and the declaration diverge. A compromised environment
+can alter both source and commitment, so a passing self-check does not
+authenticate the publisher or prove an independently canonical release.
+Callers operating in high-assurance environments should pin the expected
+commitment through an authenticated channel and reproduce the verification in
+a separate trust domain.
 
 ### 3.3 The caller must authentically obtain the verifier
 
-The npm package ships with a Sigil commitment that binds the published
-release to specific file hashes. `--self-check` confirms installed
-files match the Sigil commitment. The authenticity of the Sigil is
-anchored in the npm publication (with `--provenance` attestation via
-Sigstore). Callers verifying an installation should:
+The npm package ships with a Sigil commitment over specific file hashes.
+`--self-check` confirms the declared monitored source matches that bundled
+commitment only.
+An npm provenance attestation is a separate supply-chain artifact; callers
+must verify it independently and must not infer it from a passing self-check.
+Callers verifying an installation should:
 
 1. Install via `npm install @veritasacta/verify` (Sigstore-attested)
-2. Run `npx @veritasacta/verify --self-check` to confirm local files
-   match the Sigil
-3. For high-assurance use, cross-check the installed Sigil fingerprint
-   against the fingerprint published on https://veritasacta.com
+2. Verify the npm provenance attestation using the registry's supported
+   mechanism
+3. Obtain the expected Sigil fingerprint through an authenticated,
+   independently trusted channel
+4. Run `npx @veritasacta/verify --pin-sigil <fingerprint>` and
+   `--self-check` to confirm local files match that pinned commitment
 
 ## 4. Explicit Attack Classes
 
@@ -199,19 +206,23 @@ path (`ed25519+ml-dsa-65`) provides forward compatibility.
 
 The v0.5.0 package is published with:
 
-- `npm publish --provenance` — Sigstore-attested supply chain
-- Sigil commitment in `sigil.json` covering all 15 source files
+- `npm publish --provenance`: Sigstore-attested supply chain
+- Sigil commitment in `sigil.json` covering `cli.js`, every shipped
+  executable JavaScript module under `src/`, and the other explicitly
+  declared monitored sources
 - `@veritasacta/artifacts` as the single declared dependency
 - Transitive dependencies limited to `@noble/curves` and
   `@noble/hashes`
 
 Callers verifying the supply chain should:
 
-1. Install from npm: `npm install @veritasacta/verify@0.5.0`
+1. Install from npm: `npm install @veritasacta/verify@0.9.6`
 2. Verify the npm provenance attestation via `npm audit signatures`
    or Sigstore's cosign
-3. Run `--self-check` to confirm the installed files match the Sigil
-4. Cross-check the Sigil fingerprint against https://veritasacta.com
+3. Obtain and pin the expected Sigil fingerprint through an independently
+   authenticated channel
+4. Run `--self-check` to confirm the installed files match that pinned
+   commitment
 
 ## 7. Reporting Issues
 

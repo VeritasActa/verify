@@ -1,0 +1,14 @@
+{
+  "payload": {
+    "schema": "scopeblind.macro.transparency-witness/1",
+    "engine_version": "macro-engine/0.1.0",
+    "head_digest": "6fd187a85cb09a7e01f383e6dee761801b044c04e3c518f00473db4edd626e78",
+    "root_hash": "40efcc8314749f9b68e2d9555e16d6d223dba67069434108808e18249eb46c3c",
+    "tree_size": 5,
+    "witnessed_at": "2026-05-01T00:00:00Z",
+    "note": "demo transparency witness (independent dev key)"
+  },
+  "digest": "dd0978d2a1aaefa180e346f8b28d64f31c3bdf7f90b3d2c1f632e45c05cac911",
+  "signature": "87348b1ac8cc85a280cac613489696ece8a6c668d42cb87d5799930b96978aa39ea4598419425b664365a97c8c0c9618b1ab534506264755d6c108178e4c1002",
+  "verification_key": "f65f4bc4a3a2d5dc899cb8d99682cd8492789c2d73e5f9e939caa3adc875c322"
+}

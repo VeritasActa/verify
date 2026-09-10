@@ -1,0 +1,34 @@
+{
+  "payload": {
+    "schema": "scopeblind.macro.journal-entry/1",
+    "engine_version": "macro-engine/0.1.0",
+    "as_of": "2025-08-23",
+    "author": "demo-model",
+    "note": "Regime read stagflation while the daily tape printed stress. Cut gross and lengthened nothing; the book is long the wrong factors here.",
+    "references": [
+      {
+        "schema": "scopeblind.macro.market-state/1",
+        "as_of": "2025-08-23",
+        "digest": "f469ddc93ce803456bf6eed265c1ffa94690bb3ed972e9dff95c7dab52972e94"
+      },
+      {
+        "schema": "scopeblind.macro.vulnerability/1",
+        "as_of": "2025-08-23",
+        "digest": "d277793511a0dcda199889d8beedbe849146cf0fc4cb216ce1dc77cadf20b237"
+      },
+      {
+        "schema": "scopeblind.macro.regime-snapshot/1",
+        "as_of": "2026-05-01",
+        "digest": "27a4b9dd293ae77487e919adbf428e4911da62907c39dd017c50376ad9e77591"
+      }
+    ],
+    "tags": [
+      "risk-off",
+      "stagflation",
+      "vulnerability"
+    ]
+  },
+  "digest": "95415964066eaf10e5de3e49dd18763c8c7d79099baa0bbe670b402f52243923",
+  "signature": "adce443ba5de6d2e2edea9b5cc19744ae0a7842ad552860c03e895e5393434f4f0448bb5eb5d81f2aae7cbf222494931bfcab30ad465931f073ca2350e042b0c",
+  "verification_key": "e324c4149db27151f65df25d528d3037d3b3bc4165b0d28c0769369cba958ae3"
+}

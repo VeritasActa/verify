@@ -8,6 +8,8 @@ on:
 jobs:
   interop-matrix:
     runs-on: ubuntu-latest
+    env:
+      VERIFIER_VERSION: 0.9.3
     strategy:
       matrix:
         implementation:
@@ -29,11 +31,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install canonical verifier
-        run: npm install -g @veritasacta/verify@latest
+      - name: Install selected verifier build
+        run: |
+          npm install --prefix .interop-verifier --ignore-scripts "@veritasacta/verify@${VERIFIER_VERSION}"
+          echo "VERIFIER_BIN=$PWD/.interop-verifier/node_modules/.bin/verify" >> "$GITHUB_ENV"
 
-      - name: Self-check (prove canonical)
-        run: npx @veritasacta/verify --self-check
+      - name: Self-check (compare with bundled commitment)
+        run: |
+          "$VERIFIER_BIN" --self-check
 
       - name: Fetch ${{ matrix.implementation.name }} fixtures
         run: |
@@ -50,7 +55,7 @@ jobs:
           FAILED=0
           for f in fixtures/${{ matrix.implementation.name }}/*.json; do
             TOTAL=$((TOTAL + 1))
-            if npx @veritasacta/verify "$f" --strict > /tmp/result-$TOTAL.json 2>&1; then
+            if "$VERIFIER_BIN" "$f" --strict > /tmp/result-$TOTAL.json 2>&1; then
               PASSED=$((PASSED + 1))
             else
               FAILED=$((FAILED + 1))
@@ -64,6 +69,8 @@ jobs:
             echo "total=$TOTAL"
             echo "passed=$PASSED"
             echo "failed=$FAILED"
+            echo "verifier_version=$VERIFIER_VERSION"
+            echo "verifier_integrity=local_bundled_commitment_match"
             echo "timestamp=$(date -Iseconds)"
           } > /tmp/result-${{ matrix.implementation.name }}.env
 
@@ -89,17 +96,17 @@ jobs:
           {
             echo "# Interop Leaderboard"
             echo ""
-            echo "Auto-generated every Sunday. Each row represents verifying that implementation's fixtures with canonical @veritasacta/verify."
+            echo "Auto-generated every Sunday. Each row records fixture verification with the selected @veritasacta/verify build after a local self-check against its bundled commitment. This does not authenticate the publisher or package provenance."
             echo ""
-            echo "| Implementation | Total | Passed | Failed | Status |"
-            echo "|---|---|---|---|---|"
+            echo "| Implementation | Verifier | Total | Passed | Failed | Status |"
+            echo "|---|---|---|---|---|---|"
             for r in results/*/result-*.env; do
               [[ -f "$r" ]] || continue
               source "$r"
               STATUS="✓ interop"
               [[ "$failed" != "0" ]] && STATUS="⚠ partial ($failed failing)"
               [[ "$total" == "0" ]] && STATUS="? no fixtures"
-              echo "| $impl | $total | $passed | $failed | $STATUS |"
+              echo "| $impl | $verifier_version | $total | $passed | $failed | $STATUS |"
             done
             echo ""
             echo "*Last updated: $(date -u +%Y-%m-%dT%H:%M:%SZ)*"

@@ -36,11 +36,11 @@ inputs:
     required: false
     default: 'latest'
   attest:
-    description: 'Emit a canonical verifier attestation to the step output.'
+    description: 'Emit a self-signed local-integrity attestation to the step output.'
     required: false
     default: 'false'
   attest-org:
-    description: 'Org name to include in the canonical attestation.'
+    description: 'Org name to include in the local-integrity attestation.'
     required: false
     default: ''
 
@@ -52,9 +52,9 @@ outputs:
   failed:
     description: 'Receipts that failed verification.'
   sigil-fingerprint:
-    description: 'Fingerprint of the canonical verifier used.'
+    description: 'Fingerprint of the bundled verifier commitment used.'
   attestation:
-    description: 'Canonical attestation JSON (when `attest: true`).'
+    description: 'Local-integrity attestation JSON (when `attest: true`).'
 
 runs:
   using: 'composite'
@@ -63,7 +63,7 @@ runs:
       shell: bash
       run: npm install -g @veritasacta/verify@${{ inputs.verifier-version }}
 
-    - name: Self-check (prove canonical release)
+    - name: Self-check (compare with bundled or pinned commitment)
       shell: bash
       run: |
         if [[ -n "${{ inputs.pin-sigil }}" ]]; then

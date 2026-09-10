@@ -1,0 +1,110 @@
+{
+  "payload": {
+    "schema": "scopeblind.macro.market-state/1",
+    "engine_version": "macro-engine/0.1.0",
+    "as_of": "2025-08-23",
+    "universe_digest": "e71b066c5c05624984187e810d8dc3422964825d7cefa5338f738d57a1e1dd76",
+    "inputs_digest": "51b8add91569d3da3b761f5c0a1fefba25fabbe486214fe36a6204347cc904e3",
+    "pillars": {
+      "trend": -2,
+      "breadth": 0,
+      "liquidity": -2,
+      "credit": -2,
+      "volatility": -2
+    },
+    "evidence": {
+      "trend": {
+        "inputs": [
+          {
+            "symbol": "SPY",
+            "feature": "ma_structure",
+            "value": -2,
+            "vote": -2
+          }
+        ],
+        "missing": [
+          "QQQ",
+          "ACWI"
+        ]
+      },
+      "breadth": {
+        "inputs": [
+          {
+            "symbol": "RSP/SPY",
+            "feature": "ret20d_z",
+            "value": 0,
+            "vote": 0
+          },
+          {
+            "symbol": "IWM/SPY",
+            "feature": "ret20d_z",
+            "value": 0,
+            "vote": 0
+          }
+        ],
+        "missing": []
+      },
+      "liquidity": {
+        "inputs": [
+          {
+            "symbol": "UUP",
+            "feature": "ret20d_z_inv",
+            "value": -6.554929,
+            "vote": -2
+          },
+          {
+            "symbol": "BTCUSD",
+            "feature": "ret20d_z",
+            "value": -6.478535,
+            "vote": -2
+          }
+        ],
+        "missing": [
+          "EEM/EFA",
+          "SMH/SPY"
+        ]
+      },
+      "credit": {
+        "inputs": [
+          {
+            "symbol": "HYG/IEF",
+            "feature": "ret20d_z",
+            "value": -6.352958,
+            "vote": -2
+          }
+        ],
+        "missing": [
+          "LQD/IEF",
+          "XLF/SPY"
+        ]
+      },
+      "volatility": {
+        "inputs": [
+          {
+            "symbol": "SPY",
+            "feature": "rvol20_pctile_1y",
+            "value": 0.932806,
+            "vote": -2
+          }
+        ],
+        "missing": [
+          "VIX"
+        ]
+      }
+    },
+    "classification": "stress",
+    "confidence": 0.8,
+    "would_change": [
+      "robust: no single-pillar one-notch change alters this classification"
+    ],
+    "notes": [
+      "HYG: HYG/IEF ratio proxies HY OAS direction intraday; true OAS (daily, lagged) comes from FRED BAMLH0A0HYM2 in the regime layer.",
+      "RSP: Equal-weight ratio proxies constituent breadth; true %>200dma needs constituent data (licensing-gated).",
+      "UUP: DXY proxy; futures DX licensing-gated at this tier.",
+      "degraded: missing inputs ACWI, EEM/EFA, LQD/IEF, QQQ, SMH/SPY, VIX, XLF/SPY"
+    ]
+  },
+  "digest": "f469ddc93ce803456bf6eed265c1ffa94690bb3ed972e9dff95c7dab52972e94",
+  "signature": "0f93202e78e81ea84ba36e2c2e787ef493aba32c61140a948553f314a3403f042220ac64cf04e8d22e9044b2e6e9712587b1e023cb0dd796353543609aec380a",
+  "verification_key": "e324c4149db27151f65df25d528d3037d3b3bc4165b0d28c0769369cba958ae3"
+}

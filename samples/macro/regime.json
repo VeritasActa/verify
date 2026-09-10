@@ -1,0 +1,260 @@
+{
+  "payload": {
+    "schema": "scopeblind.macro.regime-snapshot/1",
+    "engine_version": "macro-engine/0.1.0",
+    "as_of": "2026-05-01",
+    "pillars": {
+      "growth": -2,
+      "inflation": 2,
+      "liquidity": -2,
+      "policy_freedom": -2,
+      "credit_conditions": -2
+    },
+    "inputs": [
+      {
+        "series_id": "ICSA",
+        "transform": "diff13w",
+        "value": 35123.671753,
+        "z": -6.764746,
+        "vote": -2,
+        "asof_digest": "73fa36d5ba21ff19e82757760ffc56899c4d33ca617cbdf79523e2eb1550f573",
+        "latest_vintage": "2026-04-29"
+      },
+      {
+        "series_id": "PAYEMS",
+        "transform": "mom3_ann",
+        "value": -0.036344,
+        "z": -3.501479,
+        "vote": -2,
+        "asof_digest": "64ca109e3b7d52348a813e5c7fa3695ce0801b30a9ac8cc2aa7cc248e6292abf",
+        "latest_vintage": "2026-04-08"
+      },
+      {
+        "series_id": "INDPRO",
+        "transform": "mom6_ann",
+        "value": -0.036233,
+        "z": -4.775509,
+        "vote": -2,
+        "asof_digest": "880c1c9898d45bca6a5d9803d3a687e7702ada5b4dee082d68e685fb8540be82",
+        "latest_vintage": "2026-04-17"
+      },
+      {
+        "series_id": "RSXFS",
+        "transform": "mom3_ann",
+        "value": -0.036344,
+        "z": -3.485408,
+        "vote": -2,
+        "asof_digest": "87bb798c4e9efdfb41f31a11cc3f49f96fe9db48d753cd5aaa0643f3b4a59e1d",
+        "latest_vintage": "2026-04-17"
+      },
+      {
+        "series_id": "USALOLITONOSTSAM",
+        "transform": "diff6m",
+        "value": -1.152544,
+        "z": -5.744365,
+        "vote": -2,
+        "asof_digest": "4e7ae6048b479286b801201eebf6db1d28ada976b1841d8b41cb5d95c99d9929",
+        "latest_vintage": "2026-04-10"
+      },
+      {
+        "series_id": "CPILFESL",
+        "transform": "mom3_ann",
+        "value": 0.069551,
+        "z": 3.342129,
+        "vote": 2,
+        "asof_digest": "b0a91055ce6a6a879010796266ef9236bb911a888a54ce6af7b24e6010183ca3",
+        "latest_vintage": "2026-04-14"
+      },
+      {
+        "series_id": "PCEPILFE",
+        "transform": "mom3_ann",
+        "value": 0.067001,
+        "z": 3.342148,
+        "vote": 2,
+        "asof_digest": "b53a27bb365e01fa1e2ac25f446930ff6f852c4ed2a6fd2eefff38cc96c9da57",
+        "latest_vintage": "2026-04-29"
+      },
+      {
+        "series_id": "T10YIE",
+        "transform": "diff3m",
+        "value": 0.153311,
+        "z": 5.226471,
+        "vote": 2,
+        "asof_digest": "b839addb59d3c4a84a0a4b27e6ad47636b83a3729b1cc7144bea8dd58db2ff73",
+        "latest_vintage": "2026-05-01"
+      },
+      {
+        "series_id": "DCOILWTICO",
+        "transform": "mom3_ann",
+        "value": 0.653636,
+        "z": 5.382054,
+        "vote": 2,
+        "asof_digest": "97178dd3c33fa82c7479b66c6132a7d8d96e47ccc39ffc4ba93d64cc38ab65b8",
+        "latest_vintage": "2026-05-01"
+      },
+      {
+        "series_id": "AHETPI",
+        "transform": "mom3_ann",
+        "value": 0.067001,
+        "z": 3.3094,
+        "vote": 2,
+        "asof_digest": "783bab21a0e6c7c761d4c62ceab7c582cefa6d050b2e03898a4a62f80971ef90",
+        "latest_vintage": "2026-04-08"
+      },
+      {
+        "series_id": "WALCL",
+        "transform": "diff13w",
+        "value": -355139.244176,
+        "z": -6.539508,
+        "vote": -2,
+        "asof_digest": "af2dd3799a152fdb8171b203aec25bd0b0e276e87df7be9bdc8a989f48a51346",
+        "latest_vintage": "2026-04-25"
+      },
+      {
+        "series_id": "WTREGEN",
+        "transform": "diff13w",
+        "value": 98346.28091,
+        "z": -6.764746,
+        "vote": -2,
+        "asof_digest": "0e493e335271dcbeeae69f95d4683b35988eba5248e525fed6151b840f127989",
+        "latest_vintage": "2026-04-25"
+      },
+      {
+        "series_id": "RRPONTSYD",
+        "transform": "diff13w",
+        "value": 158.625566,
+        "z": -5.60151,
+        "vote": -2,
+        "asof_digest": "62bd49d946bd279358ff87d32d370fa6d0a68c37682b1ba7ad99e3bfd1687daa",
+        "latest_vintage": "2026-05-01"
+      },
+      {
+        "series_id": "M2SL",
+        "transform": "mom6_ann",
+        "value": -0.036233,
+        "z": -4.775509,
+        "vote": -2,
+        "asof_digest": "8b96e538db1b6659919cb95408ff3d5ee407783a03e7f26e0920aa50123e9a19",
+        "latest_vintage": "2026-04-27"
+      },
+      {
+        "series_id": "DTWEXBGS",
+        "transform": "diff3m",
+        "value": 7.998853,
+        "z": -5.226471,
+        "vote": -2,
+        "asof_digest": "05d20fa0c9d7d5f2dff3d84ec7ff62579e7eaea87ff66bb50a2a8e869165de5d",
+        "latest_vintage": "2026-05-01"
+      },
+      {
+        "series_id": "DFEDTARU",
+        "transform": "level",
+        "value": 0.999608,
+        "z": null,
+        "vote": null,
+        "asof_digest": "3922373305be0976cddffb6778d61343e9289d3f6d3fe8039a2ca95a765c735f",
+        "latest_vintage": "2026-05-01"
+      },
+      {
+        "series_id": "DFII10",
+        "transform": "diff3m",
+        "value": 0.119983,
+        "z": -5.226471,
+        "vote": -2,
+        "asof_digest": "474a4dd5f297eb398235b01334b7fc283979b30c96c1b1ac57351eedc6064cdf",
+        "latest_vintage": "2026-05-01"
+      },
+      {
+        "series_id": "T5YIFR",
+        "transform": "level",
+        "value": 3.201024,
+        "z": null,
+        "vote": -2,
+        "asof_digest": "b8e076fbcd90990be22e3f6fc53461a74d5f0a4553cb0152b70c4fea50f4530f",
+        "latest_vintage": "2026-05-01"
+      },
+      {
+        "series_id": "BAMLH0A0HYM2",
+        "transform": "diff13w",
+        "value": 1.110379,
+        "z": -5.60151,
+        "vote": -2,
+        "asof_digest": "8ec3d58658b36d414849b002fef15350817a81ddcb81e9e203a9ada8bd8d1c3f",
+        "latest_vintage": "2026-05-01"
+      },
+      {
+        "series_id": "BAMLC0A0CM",
+        "transform": "diff13w",
+        "value": 0.073323,
+        "z": -5.226471,
+        "vote": -2,
+        "asof_digest": "370a4e107534d46a1a542d1e16ce9f9f4a17aeeb377f9e5c4481f1e0f3a2facb",
+        "latest_vintage": "2026-05-01"
+      },
+      {
+        "series_id": "NFCI",
+        "transform": "level",
+        "value": 0.550016,
+        "z": null,
+        "vote": -2,
+        "asof_digest": "f0f61455659b69270627f8c5cf767fc2f5dc72985c36d682edad857629df4d9d",
+        "latest_vintage": "2026-04-29"
+      },
+      {
+        "series_id": "NET_LIQUIDITY",
+        "transform": "diff13w",
+        "value": -650.297517,
+        "z": -6.328823,
+        "vote": -2,
+        "asof_digest": "1e43b543c63afcf7659de4c5ddaf99ba96dc4d1c7f55052aa392b0aadd1207a9",
+        "latest_vintage": "2026-04-25"
+      },
+      {
+        "series_id": "REAL_POLICY_RATE",
+        "transform": "level",
+        "value": -3.905295,
+        "z": null,
+        "vote": -2,
+        "asof_digest": "9427fbf69d076b6f3a9536742e8d4f2ac15c4e4085075a8b60273d34970b0f4d",
+        "latest_vintage": "2026-05-01"
+      }
+    ],
+    "vintage_digest": "77304f7e1203df3211824c78c7c9e800a0dd52b744f5173324524174ad96d3bc",
+    "candidate_regime": "stagflation",
+    "regime": "stagflation",
+    "liquidity_overlay": "contraction",
+    "hysteresis": {
+      "current": "stagflation",
+      "candidate": null,
+      "candidate_weeks": 0,
+      "weeks_since_switch": 999
+    },
+    "transition": null,
+    "playbook": {
+      "prefer": [
+        "energy",
+        "gold",
+        "dollar",
+        "defensives",
+        "cash"
+      ],
+      "avoid": [
+        "unhedged cyclicals",
+        "levered credit"
+      ],
+      "confidence": "medium"
+    },
+    "confidence": 0.956522,
+    "would_change": [
+      "robust: no single-pillar one-notch change alters this candidate regime"
+    ],
+    "notes": [
+      "degraded: no usable vote from DFEDTARU",
+      "Net liquidity (WALCL - TGA - RRP) validity is regime-dependent: strongest when reserve scarcity binds.",
+      "PMI family is licensing-gated: growth diffusion uses claims, payrolls, production, retail, and OECD CLI."
+    ]
+  },
+  "digest": "27a4b9dd293ae77487e919adbf428e4911da62907c39dd017c50376ad9e77591",
+  "signature": "806c531043618f2c4da47180ace2020def35fbf12bbf603061e4fb3264b97940c2bcfd50e395d16c8f2e45bdbe2ff69a84c00ddbe330fcaa29bc95296da66207",
+  "verification_key": "e324c4149db27151f65df25d528d3037d3b3bc4165b0d28c0769369cba958ae3"
+}

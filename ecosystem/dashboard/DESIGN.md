@@ -9,15 +9,15 @@ self-host version.
 
 ### Views
 
-1. **Chain view** — timeline of receipts in a session with
+1. **Chain view**: timeline of receipts in a session with
    chain-integrity visualization (Signet-style)
-2. **Per-receipt detail** — full receipt payload, verification result,
+2. **Per-receipt detail**: full receipt payload, verification result,
    tier, attestation links
-3. **Conformance report** — tier distribution, top issuers, error
+3. **Conformance report**: tier distribution, top issuers, error
    distribution
-4. **Audit report generator** — one-click export of an HTML / PDF
+4. **Audit report generator**: one-click export of an HTML / PDF
    report for auditor delivery
-5. **Anomaly detection** — flag unusual patterns (sudden tier drops,
+5. **Anomaly detection**: flag unusual patterns (sudden tier drops,
    chain breaks, unsigned deltas)
 
 ### Inputs
@@ -30,7 +30,7 @@ self-host version.
 
 - HTML audit report (matches `--audit-report` CLI output)
 - PDF auditor deliverable
-- Signed canonical attestation of the dashboard session
+- Signed local-integrity attestation of the dashboard session
 
 ## Technology
 

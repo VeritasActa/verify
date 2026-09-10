@@ -4,7 +4,7 @@
 receipt-format implementation in the Veritas Acta ecosystem.**
 
 This is the certification program that backs the
-`veritasacta.com/certify` public badge — not prose, not self-
+`veritasacta.com/certify` public badge: not prose, not self-
 assertion, but continuously-run cross-verification evidence.
 
 ## What it does
@@ -38,12 +38,12 @@ A conformance certification is specific to:
 An implementation is considered "conformant at level L" when it passes
 every conformance vector tagged at or below level L. Levels:
 
-- **T1 Basic** — Ed25519 signature + JCS canonicalization + chain
+- **T1 Basic**: Ed25519 signature + JCS canonicalization + chain
   linkage
-- **T2 Disclosure** — T1 + AIP-0002 selective-disclosure commitments
-- **T3 Attestation** — T2 + AIP-0003 holder binding + attestation_mode
-- **T4 Privacy** — T3 + VOPRF (full dual-DLEQ) + AIP-0005 cost_tier
-- **T5 Full** — T4 + AIP-0006 delegation + AIP-0007 ZK compliance
+- **T2 Disclosure**: T1 + AIP-0002 selective-disclosure commitments
+- **T3 Attestation**: T2 + AIP-0003 holder binding + attestation_mode
+- **T4 Privacy**: T3 + VOPRF (full dual-DLEQ) + AIP-0005 cost_tier
+- **T5 Full**: T4 + AIP-0006 delegation + AIP-0007 ZK compliance
 
 ## Why this is a moat
 
@@ -58,7 +58,7 @@ implementation can produce alone:
    on which AIPs. Buyers choose implementations partly based on this
    graph.
 3. **Temporal trust.** "Conformant as of 2026-04-20" is a stronger
-   statement than "conformant" — it tells customers the certification
+   statement than "conformant": it tells customers the certification
    is live, not stale.
 
 ## How to register an implementation

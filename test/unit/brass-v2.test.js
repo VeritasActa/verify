@@ -1,126 +1,63 @@
-/**
- * Unit tests for BRASS v2 scaffolding.
- *
- * Verifies the three hardening properties:
- *   1. Length-prefixed hashing rejects concat-collision inputs that
- *      plain concatenation would treat as equivalent.
- *   2. Nullifier derivation is bound to the issuer public key Y.
- *   3. Single-variable πC verifier accepts a well-formed proof and
- *      rejects a tampered one.
- *
- * These are scaffold tests — not wired into production verification,
- * but ensure the v0.6.0 migration target is implementable.
- */
+import assert from "node:assert/strict";
+import test from "node:test";
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-import test from 'node:test';
-import assert from 'node:assert/strict';
+// brass-voprf.js is a monorepo module (functions/fn/_lib). A standalone checkout
+// of this package does not have it, so these tests skip there with a reason.
+const BRASS_LIB = resolve(fileURLToPath(new URL("../../../../functions/fn/_lib/brass-voprf.js", import.meta.url)));
+const MONOREPO = existsSync(BRASS_LIB);
+const needsMonorepo = { skip: !MONOREPO && "needs fixtures from the monorepo root; not present in a standalone checkout" };
+const brass = MONOREPO ? await import(pathToFileURL(BRASS_LIB).href) : {};
+const { G, clientBlind, clientBuildRedemption, clientUnblind, encodePoint, issuerBlindEvaluate, issuerPublicKey, randScalar } = brass;
+import { verifyVoprfToken } from "../../src/engines/voprf-token.js";
 
-import {
-  H_LP,
-  H_LPlabel,
-  deriveNullifier_v2,
-  piCVerify_v2,
-} from '../../src/util/voprf-crypto-v2.js';
-import { G, H, modN, bytesToBig } from '../../src/util/voprf-crypto.js';
-
-// Build a concrete (P, M, c, r, AAD, kid) tuple where r is known and
-// c is recomputed — effectively a honest-prover scenario.
-function honestPiCTuple({ AADr = 'aad', kid = 'test-kid' } = {}) {
-  const privScalar = 7n;
-  const r = 9n;
-  const P = G.multiply(privScalar);
-  const M = P.multiply(r);
-  const A = P.multiply(r); // honest prover picks k=r; here we set A=r·P so c=0 works trivially
-
-  // Real Fiat-Shamir: pick random k, A=k·P, derive c, s = k - c·r.
-  // For a verifier test we construct a valid (c, r') tuple:
-  // choose k, compute A = k·P, compute c = H_LP(…, A, …), then r' = k - c·r.
-  const k = 13n;
-  const Areal = P.multiply(k);
-  const digest = H_LPlabel(
-    'BRASS_BIND_v1',
-    P.toRawBytes(true),
-    M.toRawBytes(true),
-    Areal.toRawBytes(true),
-    AADr,
-    kid
-  );
-  const c = modN(bytesToBig(digest));
-  // response r' := k - c·r (mod N)
-  const N = 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551n;
-  const r2 = ((k - c * r) % N + N) % N;
-
-  // Now the verifier reconstructs A' = r'·P + c·M. Does it match A?
-  // A' = (k - c·r)·P + c·r·P = k·P = A. Yes.
-  return { P, M, c, r: r2, AADr, kid };
+function ceremony() {
+  const secret = randScalar();
+  const issuerPublic = issuerPublicKey(secret);
+  const scope = "opaque-scope-test";
+  const kid = "brass-v2-test";
+  const { r, M } = clientBlind(scope);
+  const issued = issuerBlindEvaluate(secret, M);
+  const Zprime = clientUnblind(r, issued.Z);
+  const proof = clientBuildRedemption({
+    scope,
+    r,
+    kid,
+    issuerPkB64: issuerPublic,
+    origin: "https://scopeblind.com",
+    epoch: 1,
+    policy: "legate-run-entitlement",
+    window: 1,
+    Mb64: M,
+    Zb64: issued.Z,
+    ZprimeB64: Zprime,
+    cNonce: encodePoint(G.multiply(randScalar())),
+    d: "run-digest",
+    aadr: "run:test",
+  });
+  proof.type = "scopeblind.brass.redemption.v2";
+  proof.piI = issued.piI;
+  return { proof, issuerPublic, kid };
 }
 
-test('H_LP: length-prefix distinguishes ("a","bc") from ("ab","c")', () => {
-  const a = H_LP('a', 'bc');
-  const b = H_LP('ab', 'c');
-  assert.notDeepEqual(a, b);
+test("canonical BRASS v2 verifies only with the pinned issuer key", needsMonorepo, async () => {
+  const { proof, issuerPublic, kid } = ceremony();
+  const ok = await verifyVoprfToken(proof, { issuerPublicKey: issuerPublic, expectedKid: kid });
+  assert.equal(ok.valid, true, ok.error);
+  assert.equal(ok.dleq.issuer, true);
+  assert.equal(ok.dleq.client, true);
+
+  const unpinned = await verifyVoprfToken(proof);
+  assert.equal(unpinned.valid, false);
+  assert.equal(unpinned.error, "issuer_key_pin_required");
 });
 
-test('H_LP: same inputs produce same digest', () => {
-  const a = H_LP('alpha', 'beta');
-  const b = H_LP('alpha', 'beta');
-  assert.deepEqual(a, b);
-});
-
-test('H_LP vs plain H: length-prefix changes the digest', () => {
-  // H is the plain-concat hash; H_LP should differ.
-  const plain = H('alpha', 'beta');
-  const lp = H_LP('alpha', 'beta');
-  assert.notDeepEqual(plain, lp);
-});
-
-test('H_LPlabel: label changes digest', () => {
-  const a = H_LPlabel('LABEL_A', 'x');
-  const b = H_LPlabel('LABEL_B', 'x');
-  assert.notDeepEqual(a, b);
-});
-
-test('deriveNullifier_v2: different Y ⇒ different nullifier (kid-space disjoint)', () => {
-  const Y1 = G.multiply(7n);
-  const Y2 = G.multiply(11n);
-  const n1 = deriveNullifier_v2(Y1, 'duplicate-kid', 'epoch-1');
-  const n2 = deriveNullifier_v2(Y2, 'duplicate-kid', 'epoch-1');
-  assert.notDeepEqual(n1, n2);
-});
-
-test('deriveNullifier_v2: same inputs ⇒ same nullifier', () => {
-  const Y = G.multiply(3n);
-  const a = deriveNullifier_v2(Y, 'kid-x', 'extra');
-  const b = deriveNullifier_v2(Y, 'kid-x', 'extra');
-  assert.deepEqual(a, b);
-});
-
-test('deriveNullifier_v2: different kid ⇒ different nullifier', () => {
-  const Y = G.multiply(3n);
-  const a = deriveNullifier_v2(Y, 'kid-1');
-  const b = deriveNullifier_v2(Y, 'kid-2');
-  assert.notDeepEqual(a, b);
-});
-
-test('piCVerify_v2: honest prover tuple verifies', () => {
-  const tup = honestPiCTuple({});
-  assert.equal(piCVerify_v2(tup), true);
-});
-
-test('piCVerify_v2: tampered AAD fails verification', () => {
-  const tup = honestPiCTuple({ AADr: 'aad-original' });
-  const tampered = { ...tup, AADr: 'aad-tampered' };
-  assert.equal(piCVerify_v2(tampered), false);
-});
-
-test('piCVerify_v2: tampered kid fails verification', () => {
-  const tup = honestPiCTuple({ kid: 'kid-1' });
-  const tampered = { ...tup, kid: 'kid-2' };
-  assert.equal(piCVerify_v2(tampered), false);
-});
-
-test('piCVerify_v2: perturbed response r fails verification', () => {
-  const tup = honestPiCTuple({});
-  const bad = { ...tup, r: (tup.r + 1n) };
-  assert.equal(piCVerify_v2(bad), false);
+test("canonical BRASS v2 rejects transcript tampering", needsMonorepo, async () => {
+  const { proof, issuerPublic, kid } = ceremony();
+  proof.d = "different-run";
+  const result = await verifyVoprfToken(proof, { issuerPublicKey: issuerPublic, expectedKid: kid });
+  assert.equal(result.valid, false);
+  assert.equal(result.error, "invalid_piC");
 });

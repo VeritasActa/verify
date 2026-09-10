@@ -1,26 +1,28 @@
-# Issuer Reputation Layer (v0.7.0 target)
+# Issuer Reputation Layer
 
-Bayesian reputation over RECEIPT ISSUERS (not agents — aeoess already
+> Status: not pursued. Veritas Acta does not rank issuers or agents; receipts are verified, not scored. Kept as a record of the idea and why it was set aside.
+
+Bayesian reputation over RECEIPT ISSUERS (not agents: aeoess already
 has agent reputation; this complements it with the inverse).
 
 ## Goal
 
 Track which issuer keys reliably produce valid, well-formed,
 conformance-tier-appropriate receipts. Give verifiers an additional
-signal — not a replacement for cryptographic verification, but a
+signal: not a replacement for cryptographic verification, but a
 reliability metric that composes with it.
 
 ## Axes
 
 Per issuer key (kid), track:
 
-- **Conformance rate** — fraction of receipts that pass full
+- **Conformance rate**: fraction of receipts that pass full
   verification
-- **Chain integrity rate** — fraction of chains that verify without
+- **Chain integrity rate**: fraction of chains that verify without
   breakage
-- **Tier distribution** — which conformance tiers the issuer reaches
-- **Receipt frequency** — issuance rate over time
-- **Jurisdictional distribution** — where receipts are verified
+- **Tier distribution**: which conformance tiers the issuer reaches
+- **Receipt frequency**: issuance rate over time
+- **Jurisdictional distribution**: where receipts are verified
 
 ## Data source
 

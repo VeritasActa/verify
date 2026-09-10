@@ -1,6 +1,6 @@
 # scopeblind-swarms
 
-Ed25519 signed decision receipts for [kyegomez/swarms](https://github.com/kyegomez/swarms) multi-agent systems. Wrap any tool with tamper-evident, offline-verifiable receipts in the [Veritas Acta receipt format](https://datatracker.ietf.org/doc/draft-farley-acta-signed-receipts/) — the same format used by Microsoft Agent Governance Toolkit, protect-mcp, sb-runtime, hermes-decision-receipts, and Signet.
+Ed25519 signed decision receipts for [kyegomez/swarms](https://github.com/kyegomez/swarms) multi-agent systems. Wrap any tool with tamper-evident, offline-verifiable receipts in the [Veritas Acta receipt format](https://datatracker.ietf.org/doc/draft-farley-acta-signed-receipts/): the same format used by Microsoft Agent Governance Toolkit, protect-mcp, sb-runtime, hermes-decision-receipts, and Signet.
 
 **MIT · Python · Runs alongside any Swarms agent · No fork of Swarms required**
 
@@ -107,10 +107,10 @@ def post_draft(content: str) -> str:
 
 Fields:
 
-- `action_ref` — SHA-256 of the JCS-canonicalized tool arguments. Agents can cross-correlate the same tool invocation across engines.
-- `result_hash` — SHA-256 of the tool return value. The receipt attests to what the tool returned without carrying raw output (privacy default).
-- `previousReceiptHash` — SHA-256 of the prior receipt in this chain. Successive tool calls form a tamper-evident chain.
-- `policy_id`, `policy_digest` — bound into every receipt so an auditor can confirm which policy the agent was operating under.
+- `action_ref`: SHA-256 of the JCS-canonicalized tool arguments. Agents can cross-correlate the same tool invocation across engines.
+- `result_hash`: SHA-256 of the tool return value. The receipt attests to what the tool returned without carrying raw output (privacy default).
+- `previousReceiptHash`: SHA-256 of the prior receipt in this chain. Successive tool calls form a tamper-evident chain.
+- `policy_id`, `policy_digest`: bound into every receipt so an auditor can confirm which policy the agent was operating under.
 
 ## Offline verification
 
@@ -135,19 +135,19 @@ Your operator public key is published out-of-band (JWKS URL, DID document servic
 
 `scopeblind-swarms` doesn't ship a Cedar evaluator. If you want Cedar policy enforcement, pair with one of:
 
-- [`bindu-scopeblind`](https://github.com/ScopeBlind/bindu-scopeblind) — Python Cedar extension
-- [`sb-runtime`](https://github.com/ScopeBlind/sb-runtime) — Rust binary with Cedar + sandbox + receipts
+- [`bindu-scopeblind`](https://github.com/ScopeBlind/bindu-scopeblind): Python Cedar extension
+- [`sb-runtime`](https://github.com/ScopeBlind/sb-runtime): Rust binary with Cedar + sandbox + receipts
 - Direct use of `cedarpy` in your `decision` computation before calling `sign_tool`
 
 The `decision` field in every receipt accepts `"allow" | "deny" | "require_approval"`; you can vary it per call from your own policy evaluation logic.
 
 ## Related
 
-- **Microsoft Agent Governance Toolkit** — [docs/integrations/sb-runtime.md](https://github.com/microsoft/agent-governance-toolkit/blob/main/docs/integrations/sb-runtime.md) (same receipt format)
-- **Reference verifier** — [`@veritasacta/verify`](https://github.com/ScopeBlind/verify) (Apache-2.0, offline)
-- **IETF draft** — [draft-farley-acta-signed-receipts-02](https://datatracker.ietf.org/doc/draft-farley-acta-signed-receipts/)
-- **Conformance profile** — [VeritasActa/agt-integration-profile](https://github.com/VeritasActa/agt-integration-profile)
-- **Other framework adapters** — LangChain, CrewAI, OpenAI Agents SDK, Vercel AI SDK, Smolagents, Pydantic AI, AutoGen, LangGraph (all in the same ecosystem)
+- **Microsoft Agent Governance Toolkit**: [docs/integrations/sb-runtime.md](https://github.com/microsoft/agent-governance-toolkit/blob/main/docs/integrations/sb-runtime.md) (same receipt format)
+- **Reference verifier**: [`@veritasacta/verify`](https://github.com/ScopeBlind/verify) (Apache-2.0, offline)
+- **IETF draft**: [draft-farley-acta-signed-receipts-02](https://datatracker.ietf.org/doc/draft-farley-acta-signed-receipts/)
+- **Conformance profile**: [VeritasActa/agt-integration-profile](https://github.com/VeritasActa/agt-integration-profile)
+- **Other framework adapters**: LangChain, CrewAI, OpenAI Agents SDK, Vercel AI SDK, Smolagents, Pydantic AI, AutoGen, LangGraph (all in the same ecosystem)
 
 ## License
 

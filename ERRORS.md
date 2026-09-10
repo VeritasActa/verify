@@ -36,11 +36,27 @@ rather than rely on human-readable text.
 - **Spec:** `draft-farley-acta-signed-receipts-03 §VOPRF Token Verification`
 - **Hint:** The VOPRF token was not produced by a valid issuer, or the proof is malformed.
 
+#### `digest_mismatch`
+- **Description:** Recomputed SHA-256 of the canonical payload does not match the digest carried in the record (ScopeBlind Gate tuples).
+- **Hint:** The payload was modified after the digest was computed, or the digest field was altered.
+
+#### `chain_link_mismatch`
+- **Description:** A chained record references a parent digest or leg that does not match the rest of the bundle (ScopeBlind Gate evidence bundles).
+- **Hint:** Each record may still be individually authentic; this code means a cross-record link is inconsistent. Check the `[chain]` entries in the error list.
+
+#### `key_mismatch`
+- **Description:** The verification key carried in the record does not match the key pinned with `--key`.
+- **Hint:** The record was signed by a different identity than the one you required.
+
+#### `schema_invalid`
+- **Description:** A cryptographically authentic Gate payload violates the semantic contract of its declared schema.
+- **Hint:** Treat the artifact as invalid even if its signature verifies; inspect the semantic error details.
+
 ### Undecidable (exit 2)
 
 #### `embedded_key_rejected`
 - **Description:** Receipt contains a verification key in its payload, which is not trusted by default.
-- **Spec:** `draft-farley-acta-signed-receipts-03 §Security Considerations — Key Distribution`
+- **Spec:** `draft-farley-acta-signed-receipts-03 §Security Considerations: Key Distribution`
 - **Hint:** Provide `--key`, `--jwks`, or `--trust-anchor` externally. The deprecated `--allow-embedded-key` restores pre-0.4.0 behaviour for one release cycle.
 
 #### `no_public_key`
@@ -76,7 +92,7 @@ rather than rely on human-readable text.
 
 #### `context_requirement_unmet`
 - **Description:** One or more `--require-context` predicates evaluated false at verification time.
-- **Spec:** Patent #5 claim 2 — Live-context verification
+- **Spec:** Patent #5 claim 2: Live-context verification
 
 #### `tier_not_achieved`
 - **Description:** Verification succeeded but did not achieve the tier required by `--tier`.
@@ -93,7 +109,7 @@ When `--json` is used, errors appear as:
     "code": "embedded_key_rejected",
     "description": "Receipt contains a verification key in its payload, which is not trusted by default.",
     "class": "undecidable",
-    "spec": "draft-farley-acta-signed-receipts-03 §Security Considerations — Key Distribution",
+    "spec": "draft-farley-acta-signed-receipts-03 §Security Considerations: Key Distribution",
     "hint": "Provide --key, --jwks, or --trust-anchor externally."
   },
   "format": "ed25519-passport",

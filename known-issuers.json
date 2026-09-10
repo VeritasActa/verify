@@ -1,0 +1,4 @@
+{
+  "_comment": "Map an Ed25519 verification_key (lowercase hex) to a human label so the CLI prints 'Signer: <label>' instead of raw hex. Add your desk/issuer keys here, or pass your own file with --known-issuers <path>. This is a display aid layered on --key pinning, never a trust shortcut: an unlabeled key still verifies, and a label is only as good as the map you chose to load.",
+  "_example": "0000000000000000000000000000000000000000000000000000000000000000 -> Example Desk (remove this)"
+}

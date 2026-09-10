@@ -1,4 +1,4 @@
-# Veritas Acta Implementations Registry — Cloudflare Worker
+# Veritas Acta Implementations Registry: Cloudflare Worker
 
 Public, read-only registry of Veritas Acta ecosystem implementations.
 Mirrors JSON files from `VeritasActa/agt-integration-profile/implementations/`
@@ -45,8 +45,8 @@ directly (rate-limited to 60 req/hour unauthenticated).
 
 Open a PR against `VeritasActa/agt-integration-profile` adding:
 
-1. `implementations/{name}.json` — record metadata
-2. `implementations/{name}/attestation.json` — signed conformance attestation
+1. `implementations/{name}.json`: record metadata
+2. `implementations/{name}/attestation.json`: signed conformance attestation
 
 The registry serves updates automatically after PR merge.
 

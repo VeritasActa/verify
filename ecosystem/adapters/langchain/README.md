@@ -14,7 +14,7 @@ npm install @veritasacta/langchain @veritasacta/sdk
 pip install veritasacta-langchain veritasacta-sdk
 ```
 
-## Usage — JavaScript
+## Usage: JavaScript
 
 ```ts
 import { ChatOpenAI } from '@langchain/openai';
@@ -40,7 +40,7 @@ const result = await auditedAgent.invoke({ input: 'What happened this week?' });
 // Each tool call produced a signed receipt under .veritasacta/receipts/
 ```
 
-## Usage — Python
+## Usage: Python
 
 ```python
 from langchain_openai import ChatOpenAI
@@ -89,8 +89,8 @@ npx @veritasacta/verify .veritasacta/receipts/*.json --key <pubkey>
 
 ## Related
 
-- [@veritasacta/verify](https://www.npmjs.com/package/@veritasacta/verify) — the verifier
-- [@veritasacta/sdk](https://www.npmjs.com/package/@veritasacta/sdk) — the underlying signer
+- [@veritasacta/verify](https://www.npmjs.com/package/@veritasacta/verify): the verifier
+- [@veritasacta/sdk](https://www.npmjs.com/package/@veritasacta/sdk): the underlying signer
 - [Veritas Acta protocol](https://veritasacta.com)
 
 ## License

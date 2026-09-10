@@ -3,7 +3,7 @@
  *
  * Produces a single self-contained HTML file suitable for delivery to
  * an auditor, compliance team, or counterparty. Contains verification
- * summary, per-receipt breakdown, Sigil attestation, and all the
+ * summary, per-receipt breakdown, local-integrity attestation, and all the
  * provenance metadata needed to independently re-verify.
  *
  * The HTML file is safe to email, publish, or print. It contains no
@@ -36,7 +36,7 @@ function esc(s) {
  * @param {Object} args
  * @param {Object} args.result         bulk or single verification result
  * @param {Object} args.sigil          parsed sigil.json
- * @param {Object} [args.attestation]  canonical attestation (optional)
+ * @param {Object} [args.attestation]  local-integrity attestation (optional)
  * @param {string} [args.title]        report title
  * @returns {string}
  */
@@ -83,9 +83,9 @@ export function renderHtmlReport({ result, sigil, attestation, title }) {
   ` : '';
 
   const attestationBlock = attestation ? `
-    <h2>Canonical attestation</h2>
+    <h2>Local-integrity attestation</h2>
     <pre>${esc(JSON.stringify(attestation, null, 2))}</pre>
-    <p class="note">Publish this attestation to demonstrate the verifier was canonical at the time of this report.</p>
+    <p class="note">This self-signed statement reports that the declared monitored verifier source matched the bundled public commitment. It does not authenticate the publisher or establish trust unless the commitment and attester key are independently pinned.</p>
   ` : '';
 
   return `<!DOCTYPE html>

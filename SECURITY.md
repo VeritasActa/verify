@@ -4,10 +4,8 @@
 
 | Version | Status         | Support through |
 |---------|----------------|-----------------|
-| 0.5.x   | Current        | Next major      |
-| 0.4.x   | Security only  | 2026-10-19      |
-| 0.3.x   | End of life    | ended 2026-04-19|
-| < 0.3   | End of life    | —               |
+| 0.9.x   | Current        | Next major      |
+| < 0.9   | End of life    | Upgrade. 0.9.6 pins the chain link to draft-farley-acta-signed-receipts-03 section 6.7. |
 
 Receipts verified with an EOL version should be re-verified with a
 current version to confirm continued validity.
@@ -72,15 +70,17 @@ If you believe you have found a security vulnerability in
 
 Security researchers who have helped improve @veritasacta/verify:
 
-- @desiorac — embedded-key rejection (surfaced on GetBindu #459,
+- @desiorac: embedded-key rejection (surfaced on GetBindu #459,
   landed in 0.4.0)
 
 ## Supply Chain
 
 Each release is published with:
 
-- `npm publish --provenance` — Sigstore-attested supply chain
-- Sigil commitment in `sigil.json` covering all source files
+- `npm publish --provenance`: Sigstore-attested supply chain
+- Sigil commitment in `sigil.json` covering `cli.js`, every shipped
+  executable JavaScript module under `src/`, and the other explicitly
+  declared monitored sources
 - GPG-signed git tag (when the release workflow runs)
 
 Verify the integrity of your installation:
@@ -93,5 +93,7 @@ npm audit signatures
 npx @veritasacta/verify --self-check
 ```
 
-Cross-check the expected Sigil fingerprint against the canonical
-release published on https://veritasacta.com.
+Obtain the expected Sigil fingerprint through an independently authenticated
+channel, then pass it to `--pin-sigil`. A self-check without an independently
+pinned fingerprint is only a local comparison with the bundled commitment; it
+does not authenticate the package publisher.

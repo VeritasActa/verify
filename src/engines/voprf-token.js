@@ -50,6 +50,7 @@ import {
   dleqVerifyIssuer,
   sentinelTlsHash,
 } from '../util/voprf-crypto.js';
+import { verifyBrassV2 } from '../util/brass-v2.js';
 
 /**
  * @typedef {Object} VoprfVerifyOptions
@@ -83,6 +84,15 @@ import {
  * @returns {Promise<VoprfVerifyResult>}
  */
 export async function verifyVoprfToken(input, opts = {}) {
+  // Canonical BRASS 2.0 uses length-prefixed transcripts and {c,z} DLEQs.
+  // Keep the legacy production dialect below for existing tokens, but never
+  // reinterpret a v2 proof with the old plain-concat verifier.
+  if (input?.protocol === 'BRASS' && input?.version === '2.0' && input?.piI?.z) {
+    return verifyBrassV2(input, {
+      issuerPublicKey: opts.issuerPublicKey,
+      expectedKid: opts.expectedKid,
+    });
+  }
   const algorithm = input.algorithm || 'voprf-p256-sha256';
   if (algorithm !== 'voprf-p256-sha256') {
     return {

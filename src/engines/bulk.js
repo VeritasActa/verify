@@ -43,6 +43,10 @@ export async function replayChain(filePath, opts = {}) {
   };
 
   let previousPayloadHash = null;
+  // draft-farley-acta-signed-receipts-03 section 6.7: the chain hash covers
+  // the ENTIRE previous receipt, signature included. Kept alongside the older
+  // payload-only convention so chains spanning the migration verify.
+  let previousEnvelopeHash = null;
 
   for (let i = 0; i < lines.length; i++) {
     let receipt;
@@ -59,15 +63,18 @@ export async function replayChain(filePath, opts = {}) {
     const payload = receipt.payload || receipt;
     const expectedPrev = payload.previousReceiptHash;
 
-    if (expectedPrev !== undefined && expectedPrev !== null && previousPayloadHash !== null) {
+    if (expectedPrev !== undefined && expectedPrev !== null
+        && (previousPayloadHash !== null || previousEnvelopeHash !== null)) {
       const expectedPrevHex = expectedPrev.startsWith('sha256:')
         ? expectedPrev.slice(7)
         : expectedPrev;
-      if (expectedPrevHex !== previousPayloadHash) {
+      // The section 6.7 whole-receipt hash is the current convention; the
+      // payload-only hash is accepted for chains written before it settled.
+      if (expectedPrevHex !== previousEnvelopeHash && expectedPrevHex !== previousPayloadHash) {
         results.failed++;
         results.chainBreaks++;
         results.errors.push(
-          `Line ${i + 1}: chain_break (expected prev sha256:${previousPayloadHash.slice(0, 16)}..., got ${expectedPrev.slice(0, 24)}...)`,
+          `Line ${i + 1}: chain_break (expected prev ${String(previousEnvelopeHash).slice(0, 16)}... (6.7) or ${String(previousPayloadHash).slice(0, 16)}... (payload-only), got ${expectedPrev.slice(0, 24)}...)`,
         );
         results.valid = false;
       }
@@ -95,7 +102,14 @@ export async function replayChain(filePath, opts = {}) {
       results.errors.push(`Line ${i + 1}: ${r.error}`);
     }
 
-    // Compute the canonical hash of this receipt's payload for the next chain check
+    // Compute both chain-link candidates for the next check: the section 6.7
+    // hash of the entire receipt as written (signature included), and the
+    // older payload-only hash.
+    try {
+      previousEnvelopeHash = createHash('sha256').update(canonicalize(receipt), 'utf-8').digest('hex');
+    } catch {
+      previousEnvelopeHash = null;
+    }
     try {
       const canonicalStr = canonicalize(payload);
       previousPayloadHash = createHash('sha256').update(canonicalStr, 'utf-8').digest('hex');

@@ -1,0 +1,36 @@
+{
+  "payload": {
+    "schema": "scopeblind.gate.decision/2",
+    "proposal_id": "P-SAMPLE-001",
+    "proposal": {
+      "symbol": "ZN",
+      "side": "buy",
+      "qty": 40
+    },
+    "decision": "ALLOW",
+    "determining": [],
+    "checks": [
+      {
+        "rule": "gross-exposure-cap",
+        "status": "pass"
+      },
+      {
+        "rule": "restricted-list",
+        "status": "pass"
+      }
+    ],
+    "mandate": {
+      "name": "Meridian IMA (sample)",
+      "digest": "7777777777777777777777777777777777777777777777777777777777777777",
+      "parent_digest": null,
+      "holder": "sample-pm"
+    },
+    "mandate_digest": "7777777777777777777777777777777777777777777777777777777777777777",
+    "book_digest": "8888888888888888888888888888888888888888888888888888888888888888",
+    "nav": 500000000,
+    "evaluated_at": "2026-06-12T09:30:00.000Z"
+  },
+  "digest": "a60f082df4a13e4c5e1aaf8ed6e2a1e323d47e81ed2395644531176281285dfa",
+  "signature": "74f3ed4710b440ab63e465c8ae86e4fcd453f5fb9a2128acfe65ad2ebfbe9bd3d0afefe7567e6cf050c317d1e6e48e8c8be848f1998a7b91a625e1f6a94a5d05",
+  "verification_key": "0f37d844c1934a03851a48d7927e5109be76d8cbed6eac1dc8684ed89d977790"
+}

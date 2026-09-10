@@ -1,0 +1,260 @@
+{
+  "schema": "scopeblind.gate.evidence-bundle/2",
+  "exported_at": "2026-06-12T11:00:00.000Z",
+  "gate_verification_key": "0f37d844c1934a03851a48d7927e5109be76d8cbed6eac1dc8684ed89d977790",
+  "manifest": {
+    "payload": {
+      "schema": "scopeblind.gate.evidence-manifest/1",
+      "bundle_id": "BUNDLE-SAMPLE-001",
+      "exported_at": "2026-06-12T11:00:00.000Z",
+      "completeness": {
+        "scope": "complete_browser_history",
+        "definition": "Every retained Gate history entry and nested signed record at export time.",
+        "history_entry_count": 1,
+        "history_limit": 50
+      },
+      "gate_verification_key": "0f37d844c1934a03851a48d7927e5109be76d8cbed6eac1dc8684ed89d977790",
+      "entries": [
+        {
+          "receipt_digest": "367eac5a98bf6f3cadd18d12c9dc09c243f53bc981c6fc748e2438367cf43b5d",
+          "leg_digests": [
+            "f5868f69977ef64189d54a174da11db41cd511a8abab380ebbc3dd08847dcc50",
+            "20ced3a250fe30dc7e268ade2dd770555fe03990565f769ce7e929dcc204edf9"
+          ],
+          "approval_digest": "d9325d2633fe48f43c58df1bbc876161431576f43c17db8ab5e50fdcd5a8406d",
+          "fill_digests": [
+            "008debdc2461faaaee26cb917887e985f4596811a0e0dd16f8b9190a5610d66e",
+            "74b1822ee6e3c61286fb1b125f6f899becc7c6ee2d373e84cdb02d04c8c7924e"
+          ],
+          "order_state_digests": [
+            "51f60ce94861f1aa6d3dfe4de7529f5e7f3eb3becdc9f480771eca9ba51a5f8e"
+          ]
+        }
+      ],
+      "record_count": 7,
+      "history_head_digest": "dad9529b3073f17d4ddd143d492e716ef9862a6af137f6f8660dc764be304dab"
+    },
+    "digest": "4fe2ecfc441210b8ce2693adc40db4c26dc9d5cd66f838923542c268cf9c5324",
+    "signature": "59d250919aae8958c7e0f44b42d862c5a566123f5be0b9007b73f76c44bb5861d1b332a7d03a343735e59d79493c97fe1ead4106c5e15ed6197f11fba2882d01",
+    "verification_key": "0f37d844c1934a03851a48d7927e5109be76d8cbed6eac1dc8684ed89d977790"
+  },
+  "entries": [
+    {
+      "kind": "batch",
+      "receipt": {
+        "payload": {
+          "schema": "scopeblind.gate.batch/1",
+          "batch_id": "B-SAMPLE-001",
+          "kind": "rebalance",
+          "model": {
+            "risk": "parametric_covariance",
+            "correlation_matrix_digest": "6666666666666666666666666666666666666666666666666666666666666666",
+            "psd_repaired": false,
+            "min_eigenvalue_before": 0.21
+          },
+          "nav": 500000000,
+          "decision": "APPROVAL_REQUIRED",
+          "determining": [
+            "approval-threshold"
+          ],
+          "legs": [
+            {
+              "leg_id": "L-SAMPLE-1",
+              "position_id": "POS-ZN-1",
+              "symbol": "ZN",
+              "side": "buy",
+              "qty": 40,
+              "pre_position_qty": 100,
+              "post_position_qty": 140,
+              "target_pct": 2.1,
+              "achieved_pct": 2.05,
+              "residual_bp": -5
+            },
+            {
+              "leg_id": "L-SAMPLE-2",
+              "position_id": "POS-ES-1",
+              "symbol": "ES",
+              "side": "sell",
+              "qty": 25,
+              "pre_position_qty": 75,
+              "post_position_qty": 50,
+              "target_pct": 1.4,
+              "achieved_pct": 1.38,
+              "residual_bp": -2
+            }
+          ],
+          "mandate": {
+            "name": "Meridian IMA (sample)",
+            "digest": "7777777777777777777777777777777777777777777777777777777777777777",
+            "parent_digest": null,
+            "holder": "sample-pm"
+          },
+          "mandate_digest": "7777777777777777777777777777777777777777777777777777777777777777",
+          "book_digest": "8888888888888888888888888888888888888888888888888888888888888888",
+          "post_book_digest": "9999999999999999999999999999999999999999999999999999999999999999",
+          "evaluated_at": "2026-06-12T09:31:00.000Z"
+        },
+        "digest": "367eac5a98bf6f3cadd18d12c9dc09c243f53bc981c6fc748e2438367cf43b5d",
+        "signature": "4f16409e9efc178775ba5ade2d2f4f1184a91983d868de34f67c885d4d1a4181dee3a45b5e6220c055a37887d703a541c6d2b86b44a34177b19171fa7036b30f",
+        "verification_key": "0f37d844c1934a03851a48d7927e5109be76d8cbed6eac1dc8684ed89d977790"
+      },
+      "legs": [
+        {
+          "payload": {
+            "schema": "scopeblind.gate.batch-leg/1",
+            "batch_id": "B-SAMPLE-001",
+            "batch_receipt_digest": "367eac5a98bf6f3cadd18d12c9dc09c243f53bc981c6fc748e2438367cf43b5d",
+            "leg_id": "L-SAMPLE-1",
+            "position_id": "POS-ZN-1",
+            "symbol": "ZN",
+            "side": "buy",
+            "qty": 40,
+            "pre_position_qty": 100,
+            "post_position_qty": 140,
+            "target_pct": 2.1,
+            "achieved_pct": 2.05,
+            "residual_bp": -5,
+            "decision": "APPROVAL_REQUIRED",
+            "evaluated_at": "2026-06-12T09:31:00.000Z"
+          },
+          "digest": "f5868f69977ef64189d54a174da11db41cd511a8abab380ebbc3dd08847dcc50",
+          "signature": "bab776fb48a9a60764e4fc7b07f9f74f5454d3fcc78b30e52b63ba6a4edc4aee392d39683a71a85f8b5352de42cc101741bf78bcdce842ca5afbec121bfecc04",
+          "verification_key": "0f37d844c1934a03851a48d7927e5109be76d8cbed6eac1dc8684ed89d977790"
+        },
+        {
+          "payload": {
+            "schema": "scopeblind.gate.batch-leg/1",
+            "batch_id": "B-SAMPLE-001",
+            "batch_receipt_digest": "367eac5a98bf6f3cadd18d12c9dc09c243f53bc981c6fc748e2438367cf43b5d",
+            "leg_id": "L-SAMPLE-2",
+            "position_id": "POS-ES-1",
+            "symbol": "ES",
+            "side": "sell",
+            "qty": 25,
+            "pre_position_qty": 75,
+            "post_position_qty": 50,
+            "target_pct": 1.4,
+            "achieved_pct": 1.38,
+            "residual_bp": -2,
+            "decision": "APPROVAL_REQUIRED",
+            "evaluated_at": "2026-06-12T09:31:00.000Z"
+          },
+          "digest": "20ced3a250fe30dc7e268ade2dd770555fe03990565f769ce7e929dcc204edf9",
+          "signature": "7c253f1b165a5e193dc91a384e98fd9ab2d18c253ba329e577a61bc900d81f477f08d9a5d0019398c7c881ecac200404bfb454d4064d98c6c74c7ab551258703",
+          "verification_key": "0f37d844c1934a03851a48d7927e5109be76d8cbed6eac1dc8684ed89d977790"
+        }
+      ],
+      "approval": {
+        "payload": {
+          "schema": "scopeblind.gate.approval/1",
+          "evaluation_digest": "367eac5a98bf6f3cadd18d12c9dc09c243f53bc981c6fc748e2438367cf43b5d",
+          "scope": "basket",
+          "subject": "B-SAMPLE-001",
+          "determining": [
+            "approval-threshold"
+          ],
+          "decision": "approved",
+          "approver": {
+            "name": "Sample PM phone",
+            "method": "device"
+          },
+          "decided_at": "2026-06-12T09:35:00.000Z"
+        },
+        "digest": "d9325d2633fe48f43c58df1bbc876161431576f43c17db8ab5e50fdcd5a8406d",
+        "signature": "54d4618f3c0c6f9481be389a0297bff33d8109cf7c7ecc1da01377b3c2377dbb1d810f65c8d9058df0590ea7a1142dbe99381765ab8b872a1ca74f9c376cb50c",
+        "verification_key": "7c552c8a15989d53fedc22ece565fb2bd8024a00afc15c6553998caa5386afd0"
+      },
+      "fills": [
+        {
+          "payload": {
+            "schema": "scopeblind.gate.fill/2",
+            "batch_id": "B-SAMPLE-001",
+            "batch_receipt_digest": "367eac5a98bf6f3cadd18d12c9dc09c243f53bc981c6fc748e2438367cf43b5d",
+            "leg_receipt_digest": "f5868f69977ef64189d54a174da11db41cd511a8abab380ebbc3dd08847dcc50",
+            "leg_id": "L-SAMPLE-1",
+            "position_id": "POS-ZN-1",
+            "client_order_id": "B-SAMPLE-001:L-SAMPLE-1",
+            "external_order_id": "EXT-001",
+            "execution_id": "EXEC-001",
+            "fill_id": "FILL-001",
+            "account": "Meridian Global Macro",
+            "venue": "Sample EMS",
+            "currency": "USD",
+            "symbol": "ZN",
+            "side": "buy",
+            "qty_ordered": 40,
+            "qty_filled": 40,
+            "remaining_qty": 0,
+            "status": "filled",
+            "remaining_authority": "none",
+            "filled_at": "2026-06-12T10:02:00.000Z",
+            "source": {
+              "name": "Sample custodian feed",
+              "independence": "independent",
+              "verification_key": "8969e958b59558aea3dfec2f631b1e900eb0d69fa5e368543375a3220a5850cb",
+              "trust": "custodian_signed"
+            }
+          },
+          "digest": "008debdc2461faaaee26cb917887e985f4596811a0e0dd16f8b9190a5610d66e",
+          "signature": "9ebf830c4587c1daa27e8585542170ee2cfa4708467cede4778bc027cb34f16c91040f7c619d7a4685919eddcee7514589c8a0b06ccc312e6b13c7316363bd0f",
+          "verification_key": "8969e958b59558aea3dfec2f631b1e900eb0d69fa5e368543375a3220a5850cb"
+        },
+        {
+          "payload": {
+            "schema": "scopeblind.gate.fill/2",
+            "batch_id": "B-SAMPLE-001",
+            "batch_receipt_digest": "367eac5a98bf6f3cadd18d12c9dc09c243f53bc981c6fc748e2438367cf43b5d",
+            "leg_receipt_digest": "20ced3a250fe30dc7e268ade2dd770555fe03990565f769ce7e929dcc204edf9",
+            "leg_id": "L-SAMPLE-2",
+            "position_id": "POS-ES-1",
+            "client_order_id": "B-SAMPLE-001:L-SAMPLE-2",
+            "external_order_id": "EXT-002",
+            "execution_id": "EXEC-002",
+            "fill_id": "FILL-002",
+            "account": "Meridian Global Macro",
+            "venue": "Sample EMS",
+            "currency": "USD",
+            "symbol": "ES",
+            "side": "sell",
+            "qty_ordered": 25,
+            "qty_filled": 10,
+            "remaining_qty": 15,
+            "status": "partial",
+            "remaining_authority": "none",
+            "filled_at": "2026-06-12T10:02:00.000Z",
+            "source": {
+              "name": "Sample custodian feed",
+              "independence": "independent",
+              "verification_key": "8969e958b59558aea3dfec2f631b1e900eb0d69fa5e368543375a3220a5850cb",
+              "trust": "custodian_signed"
+            }
+          },
+          "digest": "74b1822ee6e3c61286fb1b125f6f899becc7c6ee2d373e84cdb02d04c8c7924e",
+          "signature": "9e1f1ad752e6582ec22481c9eaa3ec52da85ab1a92fb6651907d9dab9d238c904f58937c84269c0fb8e4a88fabbdb64e07c1ddb1eb7f6a62f088cee9f606800d",
+          "verification_key": "8969e958b59558aea3dfec2f631b1e900eb0d69fa5e368543375a3220a5850cb"
+        }
+      ],
+      "order_states": [
+        {
+          "payload": {
+            "schema": "scopeblind.gate.order-state/1",
+            "batch_id": "B-SAMPLE-001",
+            "batch_receipt_digest": "367eac5a98bf6f3cadd18d12c9dc09c243f53bc981c6fc748e2438367cf43b5d",
+            "leg_receipt_digest": "20ced3a250fe30dc7e268ade2dd770555fe03990565f769ce7e929dcc204edf9",
+            "fill_receipt_digest": "74b1822ee6e3c61286fb1b125f6f899becc7c6ee2d373e84cdb02d04c8c7924e",
+            "leg_id": "L-SAMPLE-2",
+            "client_order_id": "B-SAMPLE-001:L-SAMPLE-2",
+            "state": "partially_filled_remainder_held",
+            "remaining_qty": 15,
+            "authorized_remaining_qty": 0,
+            "requires_new_decision": true,
+            "recorded_at": "2026-06-12T10:02:00.000Z"
+          },
+          "digest": "51f60ce94861f1aa6d3dfe4de7529f5e7f3eb3becdc9f480771eca9ba51a5f8e",
+          "signature": "7d3cb0548d2aba37af5a63531c9c176dd144df783cd29bbcdf8b7cb1ec55e7580c6c9262d167bfeffc36ac5bd37e0c157302d7c5c18cdb9910fbbdf7f419d60a",
+          "verification_key": "0f37d844c1934a03851a48d7927e5109be76d8cbed6eac1dc8684ed89d977790"
+        }
+      ]
+    }
+  ]
+}

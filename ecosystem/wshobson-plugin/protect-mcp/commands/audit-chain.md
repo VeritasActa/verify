@@ -27,9 +27,9 @@ Output is an ASCII tree: tip first, root last, each link annotated with status. 
 
 ## Interpreting results
 
-- **`valid=true, links_broken=0`** — entire chain verifies. No tamper detected.
-- **`links_broken > 0`** — a receipt was modified, deleted, or inserted. The warning text identifies the failure point.
-- **`Chain ends at receipt[N]: previousReceiptHash ... not found in searchDir`** — the chain is incomplete. Either the root was reached (if `previousReceiptHash` is absent) or an ancestor file is missing.
+- **`valid=true, links_broken=0`**: entire chain verifies. No tamper detected.
+- **`links_broken > 0`**: a receipt was modified, deleted, or inserted. The warning text identifies the failure point.
+- **`Chain ends at receipt[N]: previousReceiptHash ... not found in searchDir`**: the chain is incomplete. Either the root was reached (if `previousReceiptHash` is absent) or an ancestor file is missing.
 
 For compliance-grade output (HTML report, self-contained, auditor-ready), use:
 
@@ -40,6 +40,6 @@ npx @veritasacta/verify --replay-chain .protect-mcp/receipts.jsonl \
 
 ## When to run
 
-- At session end — confirm no receipts were tampered with during the run.
-- Before shipping an audit bundle — proves chain integrity.
-- After a suspicious tool call — verify the chain wasn't rewritten to hide the event.
+- At session end: confirm no receipts were tampered with during the run.
+- Before shipping an audit bundle: proves chain integrity.
+- After a suspicious tool call: verify the chain wasn't rewritten to hide the event.

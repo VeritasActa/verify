@@ -1,0 +1,818 @@
+{
+  "schema": "scopeblind.macro.track-record-bundle/1",
+  "version": "0.1.0",
+  "exported_at": "2026-05-01T00:00:00Z",
+  "model_verification_key": "e324c4149db27151f65df25d528d3037d3b3bc4165b0d28c0769369cba958ae3",
+  "custody": "dev-deterministic",
+  "period": {
+    "from": "2025-01-02",
+    "to": "2026-05-01"
+  },
+  "snapshots": [
+    {
+      "payload": {
+        "schema": "scopeblind.macro.market-state/1",
+        "engine_version": "macro-engine/0.1.0",
+        "as_of": "2025-08-23",
+        "universe_digest": "e71b066c5c05624984187e810d8dc3422964825d7cefa5338f738d57a1e1dd76",
+        "inputs_digest": "51b8add91569d3da3b761f5c0a1fefba25fabbe486214fe36a6204347cc904e3",
+        "pillars": {
+          "trend": -2,
+          "breadth": 0,
+          "liquidity": -2,
+          "credit": -2,
+          "volatility": -2
+        },
+        "evidence": {
+          "trend": {
+            "inputs": [
+              {
+                "symbol": "SPY",
+                "feature": "ma_structure",
+                "value": -2,
+                "vote": -2
+              }
+            ],
+            "missing": [
+              "QQQ",
+              "ACWI"
+            ]
+          },
+          "breadth": {
+            "inputs": [
+              {
+                "symbol": "RSP/SPY",
+                "feature": "ret20d_z",
+                "value": 0,
+                "vote": 0
+              },
+              {
+                "symbol": "IWM/SPY",
+                "feature": "ret20d_z",
+                "value": 0,
+                "vote": 0
+              }
+            ],
+            "missing": []
+          },
+          "liquidity": {
+            "inputs": [
+              {
+                "symbol": "UUP",
+                "feature": "ret20d_z_inv",
+                "value": -6.554929,
+                "vote": -2
+              },
+              {
+                "symbol": "BTCUSD",
+                "feature": "ret20d_z",
+                "value": -6.478535,
+                "vote": -2
+              }
+            ],
+            "missing": [
+              "EEM/EFA",
+              "SMH/SPY"
+            ]
+          },
+          "credit": {
+            "inputs": [
+              {
+                "symbol": "HYG/IEF",
+                "feature": "ret20d_z",
+                "value": -6.352958,
+                "vote": -2
+              }
+            ],
+            "missing": [
+              "LQD/IEF",
+              "XLF/SPY"
+            ]
+          },
+          "volatility": {
+            "inputs": [
+              {
+                "symbol": "SPY",
+                "feature": "rvol20_pctile_1y",
+                "value": 0.932806,
+                "vote": -2
+              }
+            ],
+            "missing": [
+              "VIX"
+            ]
+          }
+        },
+        "classification": "stress",
+        "confidence": 0.8,
+        "would_change": [
+          "robust: no single-pillar one-notch change alters this classification"
+        ],
+        "notes": [
+          "HYG: HYG/IEF ratio proxies HY OAS direction intraday; true OAS (daily, lagged) comes from FRED BAMLH0A0HYM2 in the regime layer.",
+          "RSP: Equal-weight ratio proxies constituent breadth; true %>200dma needs constituent data (licensing-gated).",
+          "UUP: DXY proxy; futures DX licensing-gated at this tier.",
+          "degraded: missing inputs ACWI, EEM/EFA, LQD/IEF, QQQ, SMH/SPY, VIX, XLF/SPY"
+        ]
+      },
+      "digest": "f469ddc93ce803456bf6eed265c1ffa94690bb3ed972e9dff95c7dab52972e94",
+      "signature": "0f93202e78e81ea84ba36e2c2e787ef493aba32c61140a948553f314a3403f042220ac64cf04e8d22e9044b2e6e9712587b1e023cb0dd796353543609aec380a",
+      "verification_key": "e324c4149db27151f65df25d528d3037d3b3bc4165b0d28c0769369cba958ae3"
+    },
+    {
+      "payload": {
+        "schema": "scopeblind.macro.tape-snapshot/1",
+        "engine_version": "macro-engine/0.1.0",
+        "as_of": "2025-08-23",
+        "session": "daily_close",
+        "tape_type": "mixed",
+        "coherence": 0,
+        "material": true,
+        "signals": [
+          {
+            "id": "breadth_rel",
+            "z": 0
+          },
+          {
+            "id": "credit",
+            "z": -2.631816
+          },
+          {
+            "id": "dollar",
+            "z": 3.61392
+          },
+          {
+            "id": "duration",
+            "z": 3.20995
+          },
+          {
+            "id": "equity",
+            "z": -3.860863
+          },
+          {
+            "id": "high_beta",
+            "z": -4.467346
+          },
+          {
+            "id": "smallcap_rel",
+            "z": 0
+          }
+        ],
+        "unavailable": [
+          "banks_rel",
+          "copper",
+          "gold",
+          "growth_beta",
+          "oil"
+        ],
+        "untestable_types": [
+          "inflation_shock"
+        ],
+        "attribution": {
+          "tier": "unknown",
+          "detail": "material moves without a coherent cross-asset pattern or scheduled catalyst",
+          "events": []
+        },
+        "inputs_digest": "c202156a133cdee47311f843fbc18082311ca653dd4293496ea1c47346fa68c7",
+        "would_change": [
+          "a coherent cross-asset pattern forming would move this off mixed"
+        ],
+        "notes": [
+          "degraded: unavailable signals banks_rel, copper, gold, growth_beta, oil",
+          "untestable tape types with current data: inflation_shock",
+          "session basis: daily close-to-close; intraday windows plug into the same rules when a live feed is configured"
+        ]
+      },
+      "digest": "43e98d770cb3b4e47c915164d7fe0aa7ec257968978a5cd1aa914e9e2403decd",
+      "signature": "f7cf06b796186a7a6b76053f30b5dd3b96affb6b3853df78550719576d0059bc4a36d34c74afd3d122770e34cbdda03e3f0adcd794c314396a411d3ee5f2590f",
+      "verification_key": "e324c4149db27151f65df25d528d3037d3b3bc4165b0d28c0769369cba958ae3"
+    },
+    {
+      "payload": {
+        "schema": "scopeblind.macro.regime-snapshot/1",
+        "engine_version": "macro-engine/0.1.0",
+        "as_of": "2026-05-01",
+        "pillars": {
+          "growth": -2,
+          "inflation": 2,
+          "liquidity": -2,
+          "policy_freedom": -2,
+          "credit_conditions": -2
+        },
+        "inputs": [
+          {
+            "series_id": "ICSA",
+            "transform": "diff13w",
+            "value": 35123.671753,
+            "z": -6.764746,
+            "vote": -2,
+            "asof_digest": "73fa36d5ba21ff19e82757760ffc56899c4d33ca617cbdf79523e2eb1550f573",
+            "latest_vintage": "2026-04-29"
+          },
+          {
+            "series_id": "PAYEMS",
+            "transform": "mom3_ann",
+            "value": -0.036344,
+            "z": -3.501479,
+            "vote": -2,
+            "asof_digest": "64ca109e3b7d52348a813e5c7fa3695ce0801b30a9ac8cc2aa7cc248e6292abf",
+            "latest_vintage": "2026-04-08"
+          },
+          {
+            "series_id": "INDPRO",
+            "transform": "mom6_ann",
+            "value": -0.036233,
+            "z": -4.775509,
+            "vote": -2,
+            "asof_digest": "880c1c9898d45bca6a5d9803d3a687e7702ada5b4dee082d68e685fb8540be82",
+            "latest_vintage": "2026-04-17"
+          },
+          {
+            "series_id": "RSXFS",
+            "transform": "mom3_ann",
+            "value": -0.036344,
+            "z": -3.485408,
+            "vote": -2,
+            "asof_digest": "87bb798c4e9efdfb41f31a11cc3f49f96fe9db48d753cd5aaa0643f3b4a59e1d",
+            "latest_vintage": "2026-04-17"
+          },
+          {
+            "series_id": "USALOLITONOSTSAM",
+            "transform": "diff6m",
+            "value": -1.152544,
+            "z": -5.744365,
+            "vote": -2,
+            "asof_digest": "4e7ae6048b479286b801201eebf6db1d28ada976b1841d8b41cb5d95c99d9929",
+            "latest_vintage": "2026-04-10"
+          },
+          {
+            "series_id": "CPILFESL",
+            "transform": "mom3_ann",
+            "value": 0.069551,
+            "z": 3.342129,
+            "vote": 2,
+            "asof_digest": "b0a91055ce6a6a879010796266ef9236bb911a888a54ce6af7b24e6010183ca3",
+            "latest_vintage": "2026-04-14"
+          },
+          {
+            "series_id": "PCEPILFE",
+            "transform": "mom3_ann",
+            "value": 0.067001,
+            "z": 3.342148,
+            "vote": 2,
+            "asof_digest": "b53a27bb365e01fa1e2ac25f446930ff6f852c4ed2a6fd2eefff38cc96c9da57",
+            "latest_vintage": "2026-04-29"
+          },
+          {
+            "series_id": "T10YIE",
+            "transform": "diff3m",
+            "value": 0.153311,
+            "z": 5.226471,
+            "vote": 2,
+            "asof_digest": "b839addb59d3c4a84a0a4b27e6ad47636b83a3729b1cc7144bea8dd58db2ff73",
+            "latest_vintage": "2026-05-01"
+          },
+          {
+            "series_id": "DCOILWTICO",
+            "transform": "mom3_ann",
+            "value": 0.653636,
+            "z": 5.382054,
+            "vote": 2,
+            "asof_digest": "97178dd3c33fa82c7479b66c6132a7d8d96e47ccc39ffc4ba93d64cc38ab65b8",
+            "latest_vintage": "2026-05-01"
+          },
+          {
+            "series_id": "AHETPI",
+            "transform": "mom3_ann",
+            "value": 0.067001,
+            "z": 3.3094,
+            "vote": 2,
+            "asof_digest": "783bab21a0e6c7c761d4c62ceab7c582cefa6d050b2e03898a4a62f80971ef90",
+            "latest_vintage": "2026-04-08"
+          },
+          {
+            "series_id": "WALCL",
+            "transform": "diff13w",
+            "value": -355139.244176,
+            "z": -6.539508,
+            "vote": -2,
+            "asof_digest": "af2dd3799a152fdb8171b203aec25bd0b0e276e87df7be9bdc8a989f48a51346",
+            "latest_vintage": "2026-04-25"
+          },
+          {
+            "series_id": "WTREGEN",
+            "transform": "diff13w",
+            "value": 98346.28091,
+            "z": -6.764746,
+            "vote": -2,
+            "asof_digest": "0e493e335271dcbeeae69f95d4683b35988eba5248e525fed6151b840f127989",
+            "latest_vintage": "2026-04-25"
+          },
+          {
+            "series_id": "RRPONTSYD",
+            "transform": "diff13w",
+            "value": 158.625566,
+            "z": -5.60151,
+            "vote": -2,
+            "asof_digest": "62bd49d946bd279358ff87d32d370fa6d0a68c37682b1ba7ad99e3bfd1687daa",
+            "latest_vintage": "2026-05-01"
+          },
+          {
+            "series_id": "M2SL",
+            "transform": "mom6_ann",
+            "value": -0.036233,
+            "z": -4.775509,
+            "vote": -2,
+            "asof_digest": "8b96e538db1b6659919cb95408ff3d5ee407783a03e7f26e0920aa50123e9a19",
+            "latest_vintage": "2026-04-27"
+          },
+          {
+            "series_id": "DTWEXBGS",
+            "transform": "diff3m",
+            "value": 7.998853,
+            "z": -5.226471,
+            "vote": -2,
+            "asof_digest": "05d20fa0c9d7d5f2dff3d84ec7ff62579e7eaea87ff66bb50a2a8e869165de5d",
+            "latest_vintage": "2026-05-01"
+          },
+          {
+            "series_id": "DFEDTARU",
+            "transform": "level",
+            "value": 0.999608,
+            "z": null,
+            "vote": null,
+            "asof_digest": "3922373305be0976cddffb6778d61343e9289d3f6d3fe8039a2ca95a765c735f",
+            "latest_vintage": "2026-05-01"
+          },
+          {
+            "series_id": "DFII10",
+            "transform": "diff3m",
+            "value": 0.119983,
+            "z": -5.226471,
+            "vote": -2,
+            "asof_digest": "474a4dd5f297eb398235b01334b7fc283979b30c96c1b1ac57351eedc6064cdf",
+            "latest_vintage": "2026-05-01"
+          },
+          {
+            "series_id": "T5YIFR",
+            "transform": "level",
+            "value": 3.201024,
+            "z": null,
+            "vote": -2,
+            "asof_digest": "b8e076fbcd90990be22e3f6fc53461a74d5f0a4553cb0152b70c4fea50f4530f",
+            "latest_vintage": "2026-05-01"
+          },
+          {
+            "series_id": "BAMLH0A0HYM2",
+            "transform": "diff13w",
+            "value": 1.110379,
+            "z": -5.60151,
+            "vote": -2,
+            "asof_digest": "8ec3d58658b36d414849b002fef15350817a81ddcb81e9e203a9ada8bd8d1c3f",
+            "latest_vintage": "2026-05-01"
+          },
+          {
+            "series_id": "BAMLC0A0CM",
+            "transform": "diff13w",
+            "value": 0.073323,
+            "z": -5.226471,
+            "vote": -2,
+            "asof_digest": "370a4e107534d46a1a542d1e16ce9f9f4a17aeeb377f9e5c4481f1e0f3a2facb",
+            "latest_vintage": "2026-05-01"
+          },
+          {
+            "series_id": "NFCI",
+            "transform": "level",
+            "value": 0.550016,
+            "z": null,
+            "vote": -2,
+            "asof_digest": "f0f61455659b69270627f8c5cf767fc2f5dc72985c36d682edad857629df4d9d",
+            "latest_vintage": "2026-04-29"
+          },
+          {
+            "series_id": "NET_LIQUIDITY",
+            "transform": "diff13w",
+            "value": -650.297517,
+            "z": -6.328823,
+            "vote": -2,
+            "asof_digest": "1e43b543c63afcf7659de4c5ddaf99ba96dc4d1c7f55052aa392b0aadd1207a9",
+            "latest_vintage": "2026-04-25"
+          },
+          {
+            "series_id": "REAL_POLICY_RATE",
+            "transform": "level",
+            "value": -3.905295,
+            "z": null,
+            "vote": -2,
+            "asof_digest": "9427fbf69d076b6f3a9536742e8d4f2ac15c4e4085075a8b60273d34970b0f4d",
+            "latest_vintage": "2026-05-01"
+          }
+        ],
+        "vintage_digest": "77304f7e1203df3211824c78c7c9e800a0dd52b744f5173324524174ad96d3bc",
+        "candidate_regime": "stagflation",
+        "regime": "stagflation",
+        "liquidity_overlay": "contraction",
+        "hysteresis": {
+          "current": "stagflation",
+          "candidate": null,
+          "candidate_weeks": 0,
+          "weeks_since_switch": 999
+        },
+        "transition": null,
+        "playbook": {
+          "prefer": [
+            "energy",
+            "gold",
+            "dollar",
+            "defensives",
+            "cash"
+          ],
+          "avoid": [
+            "unhedged cyclicals",
+            "levered credit"
+          ],
+          "confidence": "medium"
+        },
+        "confidence": 0.956522,
+        "would_change": [
+          "robust: no single-pillar one-notch change alters this candidate regime"
+        ],
+        "notes": [
+          "degraded: no usable vote from DFEDTARU",
+          "Net liquidity (WALCL - TGA - RRP) validity is regime-dependent: strongest when reserve scarcity binds.",
+          "PMI family is licensing-gated: growth diffusion uses claims, payrolls, production, retail, and OECD CLI."
+        ]
+      },
+      "digest": "27a4b9dd293ae77487e919adbf428e4911da62907c39dd017c50376ad9e77591",
+      "signature": "806c531043618f2c4da47180ace2020def35fbf12bbf603061e4fb3264b97940c2bcfd50e395d16c8f2e45bdbe2ff69a84c00ddbe330fcaa29bc95296da66207",
+      "verification_key": "e324c4149db27151f65df25d528d3037d3b3bc4165b0d28c0769369cba958ae3"
+    },
+    {
+      "payload": {
+        "schema": "scopeblind.macro.vulnerability/1",
+        "engine_version": "macro-engine/0.1.0",
+        "as_of": "2025-08-23",
+        "posture": {
+          "regime": "stagflation",
+          "market_state": "stress",
+          "refs": [
+            {
+              "schema": "scopeblind.macro.market-state/1",
+              "as_of": "2025-08-23",
+              "digest": "f469ddc93ce803456bf6eed265c1ffa94690bb3ed972e9dff95c7dab52972e94"
+            },
+            {
+              "schema": "scopeblind.macro.tape-snapshot/1",
+              "as_of": "2025-08-23",
+              "digest": "43e98d770cb3b4e47c915164d7fe0aa7ec257968978a5cd1aa914e9e2403decd"
+            },
+            {
+              "schema": "scopeblind.macro.regime-snapshot/1",
+              "as_of": "2026-05-01",
+              "digest": "27a4b9dd293ae77487e919adbf428e4911da62907c39dd017c50376ad9e77591"
+            }
+          ]
+        },
+        "factor_exposures": [
+          {
+            "factor": "equity_beta",
+            "net": 0.55,
+            "gross": 0.55,
+            "contributors": [
+              {
+                "symbol": "SPY",
+                "weight": 0.45
+              },
+              {
+                "symbol": "EEM",
+                "weight": 0.1
+              }
+            ]
+          },
+          {
+            "factor": "duration",
+            "net": 0.3,
+            "gross": 0.3,
+            "contributors": [
+              {
+                "symbol": "IEF",
+                "weight": 0.3
+              }
+            ]
+          },
+          {
+            "factor": "credit",
+            "net": 0.15,
+            "gross": 0.15,
+            "contributors": [
+              {
+                "symbol": "HYG",
+                "weight": 0.15
+              }
+            ]
+          },
+          {
+            "factor": "usd_sensitivity",
+            "net": 0.1,
+            "gross": 0.1,
+            "contributors": [
+              {
+                "symbol": "EEM",
+                "weight": 0.1
+              }
+            ]
+          },
+          {
+            "factor": "global",
+            "net": 0.1,
+            "gross": 0.1,
+            "contributors": [
+              {
+                "symbol": "EEM",
+                "weight": 0.1
+              }
+            ]
+          }
+        ],
+        "betas": [
+          {
+            "factor": "equity_beta",
+            "proxy": "SPY",
+            "beta": 0.562937,
+            "r2": 0.926912,
+            "n": 120
+          },
+          {
+            "factor": "duration",
+            "proxy": "IEF",
+            "beta": -1.916486,
+            "r2": 0.368425,
+            "n": 120
+          },
+          {
+            "factor": "credit",
+            "proxy": "HYG",
+            "beta": 0.344651,
+            "r2": 0.727716,
+            "n": 120
+          },
+          {
+            "factor": "usd",
+            "proxy": "UUP",
+            "beta": -1.562837,
+            "r2": 0.635209,
+            "n": 120
+          },
+          {
+            "factor": "liquidity_beta",
+            "proxy": "BTCUSD",
+            "beta": 0.318435,
+            "r2": 0.917171,
+            "n": 120
+          },
+          {
+            "factor": "commodity",
+            "proxy": "DBC",
+            "beta": null,
+            "r2": null,
+            "n": 0,
+            "note": "proxy DBC unavailable or short"
+          },
+          {
+            "factor": "real_assets",
+            "proxy": "GLD",
+            "beta": null,
+            "r2": null,
+            "n": 0,
+            "note": "proxy GLD unavailable or short"
+          }
+        ],
+        "vulnerabilities": [
+          {
+            "factor": "equity_beta",
+            "exposure": 0.55,
+            "scenario_sensitivity": -2,
+            "pain": 1.1,
+            "note": "net long equity_beta; scenario expects equity_beta down (-2)"
+          },
+          {
+            "factor": "duration",
+            "exposure": 0.3,
+            "scenario_sensitivity": -1,
+            "pain": 0.3,
+            "note": "net long duration; scenario expects duration down (-1)"
+          },
+          {
+            "factor": "credit",
+            "exposure": 0.15,
+            "scenario_sensitivity": -2,
+            "pain": 0.3,
+            "note": "net long credit; scenario expects credit down (-2)"
+          }
+        ],
+        "inputs_digest": "10f7e77fbbec4240ac6e203bf443a6ee03fb19184dceec2950774c066796f8c6",
+        "would_change": [
+          "reducing net equity_beta exposure toward zero removes the top vulnerability",
+          "a regime or market-state transition reselects the scenario stress vector"
+        ],
+        "notes": [
+          "decision aid with stated scenario priors; not a covariance risk model and not a VaR claim"
+        ]
+      },
+      "digest": "d277793511a0dcda199889d8beedbe849146cf0fc4cb216ce1dc77cadf20b237",
+      "signature": "416c38e1ed67583d2cff5b8c4020accd9d550eb49dde5956af750f4dae5b0d0ca994f564fe3db7b4a40aaab062b6236f0f8962ee5a4f4d9d00fde5400ef64506",
+      "verification_key": "e324c4149db27151f65df25d528d3037d3b3bc4165b0d28c0769369cba958ae3"
+    }
+  ],
+  "journal": [
+    {
+      "payload": {
+        "schema": "scopeblind.macro.journal-entry/1",
+        "engine_version": "macro-engine/0.1.0",
+        "as_of": "2025-08-23",
+        "author": "demo-model",
+        "note": "Regime read stagflation while the daily tape printed stress. Cut gross and lengthened nothing; the book is long the wrong factors here.",
+        "references": [
+          {
+            "schema": "scopeblind.macro.market-state/1",
+            "as_of": "2025-08-23",
+            "digest": "f469ddc93ce803456bf6eed265c1ffa94690bb3ed972e9dff95c7dab52972e94"
+          },
+          {
+            "schema": "scopeblind.macro.vulnerability/1",
+            "as_of": "2025-08-23",
+            "digest": "d277793511a0dcda199889d8beedbe849146cf0fc4cb216ce1dc77cadf20b237"
+          },
+          {
+            "schema": "scopeblind.macro.regime-snapshot/1",
+            "as_of": "2026-05-01",
+            "digest": "27a4b9dd293ae77487e919adbf428e4911da62907c39dd017c50376ad9e77591"
+          }
+        ],
+        "tags": [
+          "risk-off",
+          "stagflation",
+          "vulnerability"
+        ]
+      },
+      "digest": "95415964066eaf10e5de3e49dd18763c8c7d79099baa0bbe670b402f52243923",
+      "signature": "adce443ba5de6d2e2edea9b5cc19744ae0a7842ad552860c03e895e5393434f4f0448bb5eb5d81f2aae7cbf222494931bfcab30ad465931f073ca2350e042b0c",
+      "verification_key": "e324c4149db27151f65df25d528d3037d3b3bc4165b0d28c0769369cba958ae3"
+    }
+  ],
+  "manifest": {
+    "payload": {
+      "schema": "scopeblind.macro.track-record-manifest/1",
+      "engine_version": "macro-engine/0.1.0",
+      "exported_at": "2026-05-01T00:00:00Z",
+      "model_verification_key": "e324c4149db27151f65df25d528d3037d3b3bc4165b0d28c0769369cba958ae3",
+      "period": {
+        "from": "2025-01-02",
+        "to": "2026-05-01"
+      },
+      "entries": [
+        {
+          "schema": "scopeblind.macro.market-state/1",
+          "as_of": "2025-08-23",
+          "digest": "f469ddc93ce803456bf6eed265c1ffa94690bb3ed972e9dff95c7dab52972e94"
+        },
+        {
+          "schema": "scopeblind.macro.tape-snapshot/1",
+          "as_of": "2025-08-23",
+          "digest": "43e98d770cb3b4e47c915164d7fe0aa7ec257968978a5cd1aa914e9e2403decd"
+        },
+        {
+          "schema": "scopeblind.macro.regime-snapshot/1",
+          "as_of": "2026-05-01",
+          "digest": "27a4b9dd293ae77487e919adbf428e4911da62907c39dd017c50376ad9e77591"
+        },
+        {
+          "schema": "scopeblind.macro.vulnerability/1",
+          "as_of": "2025-08-23",
+          "digest": "d277793511a0dcda199889d8beedbe849146cf0fc4cb216ce1dc77cadf20b237"
+        },
+        {
+          "schema": "scopeblind.macro.journal-entry/1",
+          "as_of": "2025-08-23",
+          "digest": "95415964066eaf10e5de3e49dd18763c8c7d79099baa0bbe670b402f52243923"
+        }
+      ],
+      "snapshot_count": 4,
+      "journal_count": 1,
+      "history_head_digest": "15fdd1acd962b562e05b73ca37b9ce3cce064b072fee5b27528edc9cd61eb62f",
+      "sequence": 1,
+      "previous_manifest_digest": null,
+      "previous_history_head_digest": null
+    },
+    "digest": "e5697c073e213bc94b2e73a53a2bd140f80821b905daf4e547a9c5674f29643f",
+    "signature": "c7356a7845c73f0c055144c9e784c8b77826ed85cd6e6271acf2a2c5e4b60be8131bb78a0a914e58de57bc9c0294753700b5ae1f5d72ddf4af494a7a2b8e2e0f",
+    "verification_key": "e324c4149db27151f65df25d528d3037d3b3bc4165b0d28c0769369cba958ae3"
+  },
+  "prior_manifests": [],
+  "anchor_chain": [
+    {
+      "payload": {
+        "schema": "scopeblind.macro.track-record-anchor/1",
+        "engine_version": "macro-engine/0.1.0",
+        "anchored_at": "2026-05-01T00:00:00Z",
+        "sequence": 1,
+        "manifest_digest": "e5697c073e213bc94b2e73a53a2bd140f80821b905daf4e547a9c5674f29643f",
+        "history_head_digest": "15fdd1acd962b562e05b73ca37b9ce3cce064b072fee5b27528edc9cd61eb62f",
+        "previous_anchor_digest": null
+      },
+      "digest": "062188f17b7d0ef9d1acb11e4e85b4ab8c61abb5c192c4ce0d7a784bbf7fb07c",
+      "signature": "b41012fe8a60cf65da5d28368251994e6d51ab81b81427078297aab11aa74f4dcdc163959cf14d742bb7a67a5c1ccccb332cde49a701d570535af2691a4a6d09",
+      "verification_key": "e324c4149db27151f65df25d528d3037d3b3bc4165b0d28c0769369cba958ae3"
+    }
+  ],
+  "transparency": {
+    "head": {
+      "payload": {
+        "schema": "scopeblind.macro.transparency-head/1",
+        "engine_version": "macro-engine/0.1.0",
+        "log_id": "scopeblind.macro.demo-log",
+        "tree_size": 5,
+        "root_hash": "40efcc8314749f9b68e2d9555e16d6d223dba67069434108808e18249eb46c3c",
+        "timestamp": "2026-05-01T00:00:00Z",
+        "previous_root_hash": null
+      },
+      "digest": "6fd187a85cb09a7e01f383e6dee761801b044c04e3c518f00473db4edd626e78",
+      "signature": "629823481769449e85c793ccd06cfe819b60192ae0a0e72f62b6108b3082b66e8fab5f86c7ae738f599b8ec0a079747ecf308b9540168d8fdc59afbc75dfd409",
+      "verification_key": "e324c4149db27151f65df25d528d3037d3b3bc4165b0d28c0769369cba958ae3"
+    },
+    "witness": {
+      "payload": {
+        "schema": "scopeblind.macro.transparency-witness/1",
+        "engine_version": "macro-engine/0.1.0",
+        "head_digest": "6fd187a85cb09a7e01f383e6dee761801b044c04e3c518f00473db4edd626e78",
+        "root_hash": "40efcc8314749f9b68e2d9555e16d6d223dba67069434108808e18249eb46c3c",
+        "tree_size": 5,
+        "witnessed_at": "2026-05-01T00:00:00Z",
+        "note": "demo transparency witness (independent dev key)"
+      },
+      "digest": "dd0978d2a1aaefa180e346f8b28d64f31c3bdf7f90b3d2c1f632e45c05cac911",
+      "signature": "87348b1ac8cc85a280cac613489696ece8a6c668d42cb87d5799930b96978aa39ea4598419425b664365a97c8c0c9618b1ab534506264755d6c108178e4c1002",
+      "verification_key": "f65f4bc4a3a2d5dc899cb8d99682cd8492789c2d73e5f9e939caa3adc875c322"
+    },
+    "inclusions": [
+      {
+        "digest": "f469ddc93ce803456bf6eed265c1ffa94690bb3ed972e9dff95c7dab52972e94",
+        "proof": {
+          "leaf_index": 0,
+          "tree_size": 5,
+          "audit_path": [
+            "5ed6de6f809567a968c710ba86d0737c2f811bcabcddc437a8cfa53f83ffe09f",
+            "888f0215bbdc34f19b01cfbe9010e5883d2404aec1b1b17fb28c9798f46895df",
+            "d043a0e988ecdfe94fb63804f73d51365e514243e9a248e2ab16b317ce0b3f8d"
+          ]
+        }
+      },
+      {
+        "digest": "43e98d770cb3b4e47c915164d7fe0aa7ec257968978a5cd1aa914e9e2403decd",
+        "proof": {
+          "leaf_index": 1,
+          "tree_size": 5,
+          "audit_path": [
+            "74d3d8019a6944bbfb0324a1bf9a54e2bf61fb7c46cb43f700df1f158894b5e6",
+            "888f0215bbdc34f19b01cfbe9010e5883d2404aec1b1b17fb28c9798f46895df",
+            "d043a0e988ecdfe94fb63804f73d51365e514243e9a248e2ab16b317ce0b3f8d"
+          ]
+        }
+      },
+      {
+        "digest": "27a4b9dd293ae77487e919adbf428e4911da62907c39dd017c50376ad9e77591",
+        "proof": {
+          "leaf_index": 2,
+          "tree_size": 5,
+          "audit_path": [
+            "a5947d673a413432359ca27bb4d2903f119fa05a8770bb3bae40c90f0e019038",
+            "7c8ed8da587a98ec9a30df018b41bd793f33a938459fdfa96c549abcd0f05f85",
+            "d043a0e988ecdfe94fb63804f73d51365e514243e9a248e2ab16b317ce0b3f8d"
+          ]
+        }
+      },
+      {
+        "digest": "d277793511a0dcda199889d8beedbe849146cf0fc4cb216ce1dc77cadf20b237",
+        "proof": {
+          "leaf_index": 3,
+          "tree_size": 5,
+          "audit_path": [
+            "31f0efb1db7235d4c11de485b83bbb9a9989a38069b24f443835a73b118fca22",
+            "7c8ed8da587a98ec9a30df018b41bd793f33a938459fdfa96c549abcd0f05f85",
+            "d043a0e988ecdfe94fb63804f73d51365e514243e9a248e2ab16b317ce0b3f8d"
+          ]
+        }
+      },
+      {
+        "digest": "95415964066eaf10e5de3e49dd18763c8c7d79099baa0bbe670b402f52243923",
+        "proof": {
+          "leaf_index": 4,
+          "tree_size": 5,
+          "audit_path": [
+            "43feda61a2b32f67b92add7d712447aa9ddcc96af2bda2553b5cca926cfdc897"
+          ]
+        }
+      }
+    ]
+  }
+}

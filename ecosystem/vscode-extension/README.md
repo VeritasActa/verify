@@ -1,4 +1,4 @@
-# Veritas Acta Verify — VS Code Extension (scaffold)
+# Veritas Acta Verify: VS Code Extension (scaffold)
 
 Planned v0.5.1+ artifact. Provides:
 

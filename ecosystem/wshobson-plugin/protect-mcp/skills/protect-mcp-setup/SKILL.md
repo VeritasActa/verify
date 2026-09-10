@@ -26,20 +26,20 @@ What `init` does:
 1. Generates an Ed25519 keypair at `.protect-mcp/signer.json`
 2. Writes a default policy at `.protect-mcp/policy.cedar`
 3. Creates `.protect-mcp/receipts/` for receipt storage
-4. Installs `hooks/hooks.json` — PreToolUse + PostToolUse triggers
+4. Installs `hooks/hooks.json`: PreToolUse + PostToolUse triggers
 
 ## Step 2: Review the default policy
 
 Open `.protect-mcp/policy.cedar`. The default allows reads + grep/glob, permits writes under `./src/` and `./tests/`, and forbids destructive bash. Edit to suit.
 
-The `policy-enforcer` agent (shipped with the plugin) can translate rules from plain English — "never allow curl piped to sh" — into Cedar.
+The `policy-enforcer` agent (shipped with the plugin) can translate rules from plain English: "never allow curl piped to sh": into Cedar.
 
 ## Step 3: Run a session
 
 Any Claude Code session that uses tools will now:
 
-- Evaluate the Cedar policy at `PreToolUse` — deny decisions surface in the transcript
-- Sign a receipt at `PostToolUse` — written to `.protect-mcp/receipts/NNNN-tool.json`
+- Evaluate the Cedar policy at `PreToolUse`: deny decisions surface in the transcript
+- Sign a receipt at `PostToolUse`: written to `.protect-mcp/receipts/NNNN-tool.json`
 
 Receipts chain via `previousReceiptHash`. The chain is append-only. Any tamper breaks the chain under offline verification.
 
@@ -47,8 +47,8 @@ Receipts chain via `previousReceiptHash`. The chain is append-only. Any tamper b
 
 Use the plugin's built-in commands:
 
-- `/verify-receipt <path>` — verify a single receipt
-- `/audit-chain` — walk the chain from the most recent tip
+- `/verify-receipt <path>`: verify a single receipt
+- `/audit-chain`: walk the chain from the most recent tip
 
 Or from the shell:
 
@@ -68,21 +68,26 @@ npx @veritasacta/verify --replay-chain .protect-mcp/receipts.jsonl \
 
 ## Step 5: (optional) Pin the verifier
 
-Supply chain: make sure the verifier you run is the canonical one.
+Obtain the expected Sigil fingerprint through an independently authenticated
+channel, then compare the installed verifier with that pinned commitment:
 
 ```bash
+npx @veritasacta/verify --pin-sigil <fingerprint>
 npx @veritasacta/verify --self-check
 ```
 
-Every verify invocation accepts `--pin-sigil <fingerprint>` to refuse to run unless the installed verifier matches a specific Sigil.
+Every verify invocation accepts `--pin-sigil <fingerprint>` to refuse to run
+unless the installed verifier matches a specific Sigil. Self-check without an
+independently obtained fingerprint is only a local comparison with the bundled
+commitment; it does not authenticate the publisher.
 
 ## Troubleshooting
 
-**Receipts aren't appearing.** Check that `hooks/hooks.json` was registered — `claude config list | grep hooks` should show PreToolUse and PostToolUse entries for protect-mcp.
+**Receipts aren't appearing.** Check that `hooks/hooks.json` was registered: `claude config list | grep hooks` should show PreToolUse and PostToolUse entries for protect-mcp.
 
 **"cedar_policy_denied" on unexpected tools.** Run `/policy-enforcer` to propose a narrower Cedar rule, or edit `.protect-mcp/policy.cedar` directly.
 
-**Verification fails with `hash_mismatch`.** Someone modified a receipt. The chain is tamper-evident — this is working as designed.
+**Verification fails with `hash_mismatch`.** Someone modified a receipt. The chain is tamper-evident: this is working as designed.
 
 **Verification fails with `unknown_algorithm`.** You're using a verifier older than v0.5.0. Upgrade: `npm i -g @veritasacta/verify@latest`.
 

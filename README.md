@@ -1,21 +1,21 @@
 # @veritasacta/verify
 
-**Unified offline verifier for signed machine-decision artifacts. Network-effect mechanics built in.**
+**Offline verifier for signed machine-decision receipts and artifacts.**
 
-Apache-2.0 · Ed25519 + VOPRF · Offline · Sigil-verified canonical release · Auto-onboarding · MCP proxy · Sidecar daemon
+Apache-2.0 · Ed25519 + VOPRF · Offline · Locally recomputable integrity commitment · Auto-onboarding · MCP proxy · Sidecar daemon
 
 > **Receipt format:** ScopeBlind emits Veritas Acta receipts. Legacy ScopeBlind
-> receipts remain verifiable, but Acta v0.1 is the canonical format going
-> forward. Spec: [`@veritasacta/protocol`](https://www.npmjs.com/package/@veritasacta/protocol)
+> receipts remain verifiable; Acta receipts (draft-farley-acta-signed-receipts-03)
+> are the canonical format. Spec: [`@veritasacta/protocol`](https://www.npmjs.com/package/@veritasacta/protocol)
 > · IETF: [draft-farley-acta-signed-receipts](https://datatracker.ietf.org/doc/draft-farley-acta-signed-receipts/).
 
 ```bash
 # Install
 npm install -g @veritasacta/verify
 # Or
-brew install veritasacta/verify/veritasacta-verify
+brew install veritasacta/tap/veritasacta-verify
 
-# Prove canonical release
+# Compare installed bytes with the bundled integrity commitment
 npx @veritasacta/verify --self-check
 
 # Zero-config onboarding (auto-detects framework)
@@ -27,14 +27,6 @@ npx @veritasacta/verify receipt.json --key <pubkey>
 
 Part of the [Veritas Acta](https://veritasacta.com) protocol for machine-decision evidence.
 
-
-## Used by
-
-The Veritas Acta verifier is the offline verification engine for:
-
-- **protect-mcp** -- AI agent decision receipts. See [scopeblind.com/docs/protect-mcp](https://www.scopeblind.com/docs/protect-mcp).
-- **ScopeBlind cold-chain evidence tag** -- hardware-signed sensor readings (in development; ETCF #197 in review). See [scopeblind.com/cold-chain](https://www.scopeblind.com/cold-chain).
-- **Microsoft AI Agents for Beginners** -- referenced in [Lesson 18: Securing AI Agents](https://github.com/microsoft/ai-agents-for-beginners/blob/main/18-securing-ai-agents/README.md) (64K+ ★).
 ## What it verifies
 
 | Mode | Input | Conformance tier |
@@ -45,6 +37,8 @@ The Veritas Acta verifier is the offline verification engine for:
 | VOPRF token | Anonymous credential tokens (RFC 9497, BRASS wire format). Full Schnorr DLEQ verification for both πI (issuer) and πC (client). | T4 |
 | Knowledge Unit | Multi-model deliberation bundles (draft-farley-acta-knowledge-units-00) | varies |
 | Audit bundle | Multiple receipts with embedded signing keys | varies |
+| Gate receipt / bundle | ScopeBlind Gate receipt tuples (`scopeblind.gate.*`) and signed-manifest `scopeblind.gate.evidence-bundle/2` exports with semantic and exact chain checks | T1 |
+| Macro track record | Signed macro snapshots, append-only manifest sequence, and signed history checkpoints | T1 |
 
 ## Subcommands
 
@@ -58,8 +52,8 @@ verify daemon                   # unix-socket sidecar, language-agnostic signing
 verify prompt <file>            # verify provenance of a CLAUDE.md / SKILL.md / system prompt
 verify chain explore <r.json>   # walk a receipt chain to its root, validate every hash link
 verify --replay-chain ...       # bulk verification with chain-linkage check
-verify --self-check             # prove this binary is the canonical release
-verify --attest                 # emit a shareable canonical attestation
+verify --self-check             # compare monitored source with bundled commitment
+verify --attest                 # emit a signed local-verifier attestation
 ```
 
 ### Prompt provenance
@@ -88,16 +82,53 @@ verify chain explore ./receipts/tip.json
 verify chain explore ./receipts/tip.json --search-dir ./audit/ --max-depth 200 --json
 ```
 
+### ScopeBlind Gate receipts
+
+Verifies the receipt tuples emitted by the ScopeBlind Gate (the pre-trade mandate gate): single decisions, batch decisions and their exact signed legs, PM co-sign approvals, execution fills, held-remainder states, and issuer-signed mandate delegations. Version 2 evidence bundles add a gate-signed completeness manifest that enumerates every exported digest. Tuples sign the SHA-256 of the deep-key-sorted payload; the Ed25519 signature covers the digest bytes and verifies against the `verification_key` carried in the tuple.
+
+```bash
+verify gate-receipt.json                      # auto-detected tuple
+verify gate-bundle.json                       # schemas, exact links, and signed manifest checked
+verify gate-receipt.json --key <gate-pubkey>  # pin the expected signer
+verify gate-bundle.json --key <gate-pubkey>   # pin the bundle trust anchor
+verify samples/sample-gate-bundle.json        # try it (deterministic demo keys)
+```
+
+A VALID result proves cryptographic authenticity, payload integrity, recognized-schema validity, exact parent-child consistency, fail-closed partial-fill handling, and that the signed manifest exactly covers the records in the export. It does NOT prove the risk inputs were correct, that a demo fill came from an independent production custodian, or that records outside the manifest's declared history scope do not exist. Verification keys travel inside the records, so pin the expected gate signer with `--key` for identity assurance. Crypto and chain failures are reported separately (`[crypto]` vs `[chain]`): a record can be individually authentic while its semantic or cross-record relationship is invalid.
+
+Legacy `scopeblind.gate.evidence-bundle/1` files are detected but fail closed because they do not contain a signed completeness manifest. Re-export them as `/2`.
+
+### ScopeBlind macro track records
+
+Macro exports verify offline. An embedded key proves internal signature
+integrity, not who controls that key. Pin the operator key and an independently
+retained anti-rollback head for identity and historical assurance:
+
+```bash
+npx @veritasacta/verify@0.9.7 legate-macro-track-record.json \
+  --key <operator-ed25519-public-key> \
+  --history-head <expected-history-head> \
+  --anchor-head <expected-anchor-digest>
+```
+
+The verifier checks every record, the exact current manifest inventory, prior
+manifest links, retention of previously manifested records, and the signed
+checkpoint chain. Publication at a mutable URL is not itself a transparency
+log; retain or independently timestamp checkpoint heads.
+
 ### Pre-built sandbox profiles
 
-`ecosystem/profiles/` ships sandboxing profiles (Cedar policy + nono capabilities + README) for common agent runtimes — Claude Code, Cursor, Codex, Gemini CLI, OpenClaw. Compose with `sb-runtime --ring 3 --policy ./policy.cedar` + `nono run --caps ./nono-capabilities.yaml`.
+`ecosystem/profiles/` ships sandboxing profiles (Cedar policy + nono capabilities + README) for common agent runtimes: Claude Code, Cursor, Codex, Gemini CLI, OpenClaw. Compose with `sb-runtime --ring 3 --policy ./policy.cedar` + `nono run --caps ./nono-capabilities.yaml`.
 
 ## Verification properties
 
 - **Offline.** No network contacted unless `--jwks <url>` is explicitly passed.
 - **Tamper-evident.** Exit 1 is proven tampering; exit 2 is undecidable (malformed, missing key, unsupported algorithm).
 - **No vendor trust.** Only Ed25519 (RFC 8032) and JCS (RFC 8785) in the verification path.
-- **Self-verifying.** `--self-check` cryptographically proves the installed verifier (24 source files) matches the canonical release.
+- **Locally integrity-checkable.** `--self-check` recomputes the bundled
+  commitment over the verifier surface. This detects byte drift relative to
+  that copy; it is not a publisher signature or independent supply-chain
+  attestation unless the fingerprint is separately pinned.
 - **Algorithm-agile.** Hybrid PQ (`ed25519+ml-dsa-65`) recognized; full PQ in v0.6+.
 - **Zero telemetry.** The verifier never phones home.
 
@@ -125,7 +156,7 @@ Verify:
 
 Init auto-detects your framework from `package.json` / `pyproject.toml` / `requirements.txt` across 13 supported frameworks (Claude Code, Claude Agent SDK, Google ADK, CrewAI, Pydantic AI, AutoGen, Smolagents, LangChain JS/Python, LangGraph JS/Python, OpenAI Agents SDK, Vercel AI SDK).
 
-## Universal MCP proxy — zero code changes
+## Universal MCP proxy: zero code changes
 
 ```bash
 $ verify proxy --target "node my-mcp-server.js"
@@ -136,7 +167,7 @@ $ verify proxy --target "node my-mcp-server.js"
 
 Wraps any MCP server with signing. No changes in the server. No changes in the agent. Every `tools/call` gets a chain-linked Ed25519 receipt.
 
-## Sidecar daemon — language-agnostic signing
+## Sidecar daemon: language-agnostic signing
 
 Run once; any process in the same user context signs receipts by POST.
 
@@ -152,9 +183,16 @@ $ curl --unix-socket /tmp/veritasacta-$UID.sock -X POST http://_/sign \
 
 One daemon, N agents, zero SDK embedding.
 
-## Canonical attestation — network-effect mechanics
+## Local-integrity attestation
 
-Every user who runs `--self-check` can emit a **canonical attestation** — a signed JSON artifact proving they ran the canonical unmodified verifier. Publish wherever (GitHub README, status page, SBOM, Rekor).
+Every user who runs `--self-check` can emit a **local-integrity attestation**:
+a self-signed statement that the declared monitored source on that machine
+matched the bundled public commitment. The monitored runtime includes
+`cli.js` and every shipped executable JavaScript module under `src/`; a release
+test fails if a module is omitted. This does not authenticate the package
+publisher, prove an independently canonical release, or establish trust in
+the attester unless the recipient separately pins the commitment and attester
+key.
 
 ```bash
 $ verify --attest --attest-org "Acme Corp" --output attestation.json
@@ -166,8 +204,11 @@ Output:
 {
   "payload": {
     "type": "veritasacta:verifier-attestation",
-    "sigil_fingerprint": "6391ae72",
-    "sigil_name": "Quiet Orchard",
+    "sigil_fingerprint": "<from sigil.json>",
+    "sigil_name": "<from sigil.json>",
+    "integrity_matches": true,
+    "publisher_authenticated": false,
+    "assurance": "self_signed_operator_statement",
     "canonical": true,
     "attester_org": "Acme Corp",
     "issued_at": "2026-04-19T...",
@@ -179,7 +220,10 @@ Output:
 }
 ```
 
-Offline. User-signed. Counterfeit forks produce attestations marked `canonical: false` — detectable across the network.
+Offline and user-signed. The legacy `canonical` field is retained for wire
+compatibility and aliases `integrity_matches`. Neither field authenticates the
+publisher. Missing monitored files fail closed rather than sealing a reduced
+verification surface.
 
 ## Verification receipts
 
@@ -187,7 +231,9 @@ Offline. User-signed. Counterfeit forks produce attestations marked `canonical: 
 $ verify receipt.json --key <pubkey> --emit-verification-receipt
 ```
 
-Produces a signed "the canonical verifier checked this receipt and it was valid" artifact. Anchor in Sigstore Rekor, publish in SBOMs, attach to compliance reports.
+Produces a signed "this local verifier checked this receipt and reported it
+valid" artifact. The attester key and any independently pinned verifier
+fingerprint determine whether a recipient should trust it.
 
 ## Enterprise features
 
@@ -228,81 +274,77 @@ Gates verification on live context (NTP, sensors, feeds). Predicate fails → ve
 | T4 Privacy | T3 + VOPRF + `holder_binding` |
 | T5 Full | T4 + ZK compliance proofs (v1.0+) |
 
-Each verification surfaces the tier achieved. Implementations earn tier badges for their READMEs.
+Pass `--tier N` to require a minimum tier.
 
 ## Framework adapters
 
+Published packages:
+
 | Framework | Package | Language |
 |---|---|---|
-| Claude Code (MCP hooks) | `protect-mcp` | JS |
-| Google ADK | `protect-mcp-adk` | Python |
-| LangChain | `@veritasacta/langchain` / `veritasacta-langchain` | JS / Python |
-| LangGraph | `@veritasacta/langgraph` / `veritasacta-langgraph` | JS / Python |
-| CrewAI | `veritasacta-crewai` | Python |
-| Pydantic AI | `veritasacta-pydantic-ai` | Python |
-| AutoGen | `veritasacta-autogen` | Python |
-| Smolagents | `veritasacta-smolagents` | Python |
-| OpenAI Agents SDK | `@veritasacta/openai-agents` | JS / Python |
-| Vercel AI SDK | `@veritasacta/vercel-ai` | JS |
+| Claude Code, Codex, Cursor, Gemini, Hermes (hooks) and any MCP server (gateway) | [`protect-mcp`](https://www.npmjs.com/package/protect-mcp) | JS |
+| Google ADK | [`protect-mcp-adk`](https://pypi.org/project/protect-mcp-adk/) | Python |
+| LangChain | [`@scopeblind/langchain`](https://www.npmjs.com/package/@scopeblind/langchain) | JS |
+| Swarms | [`scopeblind-swarms`](https://pypi.org/project/scopeblind-swarms/) | Python |
 | Any MCP server | `verify proxy --target "<cmd>"` | language-agnostic |
 | Anything else | `verify daemon` + HTTP POST | language-agnostic |
 
+Source adapters for LangGraph, CrewAI, Pydantic AI, AutoGen, Smolagents, the
+OpenAI Agents SDK and the Vercel AI SDK live under
+[`ecosystem/adapters/`](./ecosystem/adapters/) and are not published as
+packages.
+
 ## SDK
 
-Tiny language-agnostic signing helpers for custom integrations:
-
-```bash
-npm install @veritasacta/sdk
-pip install veritasacta-sdk
-```
-
-```js
-import { Signer } from '@veritasacta/sdk';
-const signer = Signer.fromKeyFile('.veritasacta/attester.json');
-const receipt = signer.signDecision({ tool: 'x', args: {}, decision: 'allow' });
-```
+Tiny signing helpers for custom integrations ship as source in
+[`ecosystem/sdk-js/`](./ecosystem/sdk-js/) and [`ecosystem/sdk-py/`](./ecosystem/sdk-py/).
+They are not published as packages; copy the file you need. Receipts they
+produce verify with this CLI.
 
 ## Release names (Sigil brand convention)
 
-Every release gets a unique deterministic name from its cryptographic fingerprint. Current release: **Quiet Orchard** (`6391ae72`). Full registry at [veritasacta.com/sigils](https://veritasacta.com/sigils). See [ecosystem/RELEASE-NAMING.md](./ecosystem/RELEASE-NAMING.md) for the derivation.
+Every committed verifier surface gets a unique deterministic name from its
+cryptographic fingerprint. The bundled `sigil.json` is the authoritative name
+and fingerprint for the installed copy; `verify --self-check` recomputes it.
+See
+[ecosystem/RELEASE-NAMING.md](./ecosystem/RELEASE-NAMING.md) for the derivation.
 
 ## Ecosystem artifacts
 
-The `ecosystem/` directory ships:
+The `ecosystem/` directory ships source, not deployed services:
 
-- **GitHub Action** (`ecosystem/github-action/`) — drop-in CI step
-- **Claude Code plugin** (`ecosystem/claude-code-plugin/`) — one-click Claude Code install
-- **Homebrew tap** (`ecosystem/homebrew-tap/`) — `brew install veritasacta-verify`
-- **Registry worker** (`ecosystem/registry-worker/`) — public implementations registry (`registry.veritasacta.com`)
-- **Badge worker** (`ecosystem/badge-worker/`) — shields.io-compatible badges (`verify.veritasacta.com/badge/*`)
-- **Interop leaderboard** (`ecosystem/interop-leaderboard/`) — weekly cross-implementation CI
-- **Language SDKs** (`ecosystem/sdk-js/`, `ecosystem/sdk-py/`) — tiny signing helpers
-- **Framework adapters** (`ecosystem/adapters/*`) — LangChain, CrewAI, OpenAI Agents, Vercel AI, Smolagents, Pydantic AI, AutoGen, LangGraph
-- **Design docs** (`ecosystem/rollback/`, `ecosystem/supervisor/`, `ecosystem/reputation/`, `ecosystem/dashboard/`, `ecosystem/browser-extension/`, `ecosystem/ebpf-observer/`, `ecosystem/cosign-compat/`, `ecosystem/CONFORMANCE-CERTIFICATION.md`)
+- **GitHub Action** (`ecosystem/github-action/`): a CI step that verifies receipts
+- **Claude Code plugin** (`ecosystem/claude-code-plugin/`)
+- **Homebrew tap** (`ecosystem/homebrew-tap/`): the formula behind `brew install veritasacta/tap/veritasacta-verify`
+- **Registry and badge workers** (`ecosystem/registry-worker/`, `ecosystem/badge-worker/`): Cloudflare Worker source; no public instance is running
+- **Interop leaderboard** (`ecosystem/interop-leaderboard/`): cross-implementation CI design
+- **Language SDKs** (`ecosystem/sdk-js/`, `ecosystem/sdk-py/`): signing helpers, unpublished
+- **Framework adapters** (`ecosystem/adapters/*`): see the table above
+- **Design docs** (`ecosystem/rollback/`, `ecosystem/supervisor/`, `ecosystem/dashboard/`)
 
 See [`ecosystem/README.md`](./ecosystem/README.md) for the full map.
 
 ## Relationship to the Veritas Acta stack
 
-- **Protocol:** [veritasacta.com](https://veritasacta.com) — open IETF drafts, AIP specs, Apache-2.0.
+- **Protocol:** [veritasacta.com](https://veritasacta.com): open IETF drafts, AIP specs, Apache-2.0.
 - **Verifier:** this package. Open, offline, fully user-controlled.
-- **Managed issuance (commercial):** [scopeblind.com](https://scopeblind.com) — managed receipt infrastructure + VOPRF issuance API.
+- **Managed issuance (commercial):** [scopeblind.com](https://scopeblind.com): managed receipt infrastructure + VOPRF issuance API.
 
 Open verifier + closed issuer. The verifier is always free. The commercial product is the managed service.
 
 ## Supply chain
 
-v0.5.0 is published with:
-
-- `npm publish --provenance` — Sigstore-attested supply chain
-- Sigil commitment covering 24 source files
-- Minimum dependency tree: only `@veritasacta/artifacts` (+ transitively `@noble/curves`, `@noble/hashes`)
+Releases are published from the source of record after the bundled integrity
+commitment is regenerated and `--self-check` passes on the exact bytes
+shipped. The dependency tree is small: `@veritasacta/artifacts`, `@noble/curves`,
+`@noble/hashes`, `ajv` and `ajv-formats`. npm registry signatures apply to every
+version; Sigstore provenance attestations are not currently published.
 
 Verify your installation:
 
 ```bash
-npm audit signatures             # Sigstore attestation
-verify --self-check              # matches canonical Sigil
+npm audit signatures             # registry signatures
+verify --self-check              # matches the bundled integrity commitment
 verify --pin-sigil <fingerprint> # enforce a specific release
 ```
 
@@ -317,11 +359,11 @@ verify --pin-sigil <fingerprint> # enforce a specific release
 
 ## Documentation
 
-- [CHANGELOG.md](./CHANGELOG.md) — release history
-- [THREAT-MODEL.md](./THREAT-MODEL.md) — what the verifier protects against and what it doesn't
-- [SECURITY.md](./SECURITY.md) — disclosure policy + supported versions
-- [ERRORS.md](./ERRORS.md) — complete error-code registry
-- [ecosystem/RELEASE-NAMING.md](./ecosystem/RELEASE-NAMING.md) — Sigil naming convention
+- [CHANGELOG.md](./CHANGELOG.md): release history
+- [THREAT-MODEL.md](./THREAT-MODEL.md): what the verifier protects against and what it doesn't
+- [SECURITY.md](./SECURITY.md): disclosure policy + supported versions
+- [ERRORS.md](./ERRORS.md): complete error-code registry
+- [ecosystem/RELEASE-NAMING.md](./ecosystem/RELEASE-NAMING.md): Sigil naming convention
 
 ## License
 
