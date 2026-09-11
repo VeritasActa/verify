@@ -50,11 +50,11 @@
       "dataset": {
         "name": "terminal-bench/original-tasks",
         "revision": "d28711d0da2675d0bb1d56de45ae5df6082438a3",
-        "digest": "sha256:52057cab17aa97b85950102b6183edd9ef69d5382900e43a610ccb1c33ef3d83"
+        "digest": "sha256:86e96c233772a87a86d9b371e491655ed51d55f6455c5e0ebf2c3f45e9102d3c"
       },
       "harness": {
         "name": "legate-verified-run",
-        "digest": "sha256:3839321d50a104921ab767d9839856bec8ed0c1c1dc09ded33d4be66fa31ed1e"
+        "digest": "sha256:8ce9a1aac24bfe5683e5b143fdc164d6360a87c7ac6f75a8cc373a2f62be155d"
       },
       "time_limit_seconds": 900,
       "model_route": "chatgpt.com (Codex)"
@@ -138,9 +138,9 @@
   "issued_at": "2026-09-11T00:00:00.000Z",
   "expires_at": "2027-12-31T00:00:00.000Z",
   "nonce": "c0ffee00c0ffee00c0ffee00c0ffee02",
-  "digest": "d6ffc37cbb2b985ff0fb150b5ffdb537ac4a652227eef3e0919953bbf766145d",
+  "digest": "e1a7f5fe58408baa93375a46f550aa45cd4ab95e02ae0c870780558ce22d4eab",
   "signature": {
     "algorithm": "Ed25519",
-    "value": "d602ea5b80ecc70f250fdc6d41007d74d5c9d4c85f3ca022e2f330c1ef06d3ab693e388e0c0c975c75b714cbf44a9db4eb26f2420d89a206ebe737add2413602"
+    "value": "35178a2b1f01c66aaa0464be7a5da76e3c0ab097abb307e1d6c06b4b31aecaaf08bfbebd160330fb8ee7180dda640ed8b7ef1c73102fce135247765d24f6280a"
   }
 }

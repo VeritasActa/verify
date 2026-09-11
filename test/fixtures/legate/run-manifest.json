@@ -1,10 +1,10 @@
 {
   "type": "scopeblind.run_manifest.v1",
   "version": 1,
-  "run_id": "run:12f28ec00e698f9a",
+  "run_id": "run:dbb50f54c4176eaa",
   "standard": {
     "request_id": "pr:7a1e5b9c3d2f4e60",
-    "digest": "d6ffc37cbb2b985ff0fb150b5ffdb537ac4a652227eef3e0919953bbf766145d",
+    "digest": "e1a7f5fe58408baa93375a46f550aa45cd4ab95e02ae0c870780558ce22d4eab",
     "recipient_key": "6c360b0c2def60adf93e97019f61df31d2670bbc3bfad933859dc1663c1d9eac",
     "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f"
   },
@@ -16,14 +16,14 @@
   },
   "harness": {
     "name": "legate-verified-run",
-    "digest": "sha256:3839321d50a104921ab767d9839856bec8ed0c1c1dc09ded33d4be66fa31ed1e",
+    "digest": "sha256:8ce9a1aac24bfe5683e5b143fdc164d6360a87c7ac6f75a8cc373a2f62be155d",
     "gateway": "protect-mcp 0.13.2"
   },
   "dataset": {
     "name": "terminal-bench/original-tasks",
     "revision": "d28711d0da2675d0bb1d56de45ae5df6082438a3",
-    "digest": "sha256:52057cab17aa97b85950102b6183edd9ef69d5382900e43a610ccb1c33ef3d83",
-    "task_count": 1
+    "digest": "sha256:86e96c233772a87a86d9b371e491655ed51d55f6455c5e0ebf2c3f45e9102d3c",
+    "task_count": 4
   },
   "environment": {
     "sandbox": "Codex CLI sandbox, workspace-write, network disabled (macOS Seatbelt)",
@@ -34,16 +34,16 @@
   "gateway": {
     "key_id": "sb:issuer:GsAFpSRUAvaU",
     "verification_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
-    "receipt_count": 3,
-    "chain_head": "sha256:cee8e88748dfbe84b2f320beadf6b4154d999bc0257abfd73d47c3735414bce8",
-    "log_digest": "sha256:cc170cb8806651b06c37bee3647c14bd5c841edd9c26512b66208b54191722c3"
+    "receipt_count": 27,
+    "chain_head": "sha256:11abd908bbecd7fef394386f602c94844e36f4c2bc3db96acaaddb8dcbdc4c7d",
+    "log_digest": "sha256:8751b60994a95e38075596597f08c558e104518b9e8fff57daf6edc0c88e7fb7"
   },
   "attempts": [
     {
       "task_id": "hello-world",
       "attempt": 1,
-      "started_at": "2026-09-11T06:14:35.478Z",
-      "ended_at": "2026-09-11T06:14:54.154Z",
+      "started_at": "2026-09-11T07:05:32.057Z",
+      "ended_at": "2026-09-11T07:05:52.125Z",
       "receipts": {
         "from": 0,
         "to": 3
@@ -55,7 +55,76 @@
         "runner": "pytest 9.0.2, run by the harness",
         "passed": 2,
         "failed": 0,
-        "output_digest": "sha256:dcacd6b70a5dc63859abad2dd646b9f6a022406bcfd64a1003b115e24121e80d"
+        "output_digest": "sha256:5493b35e17568286e15e51167cd54e0979f23d42751d54b5c81e84c8add6f497"
+      },
+      "agent": {
+        "exit_code": 0,
+        "timed_out": false
+      }
+    },
+    {
+      "task_id": "countdown-game",
+      "attempt": 1,
+      "started_at": "2026-09-11T07:05:52.934Z",
+      "ended_at": "2026-09-11T07:06:15.132Z",
+      "receipts": {
+        "from": 3,
+        "to": 5
+      },
+      "calls": 2,
+      "refused": 0,
+      "verdict": "pass",
+      "tests": {
+        "runner": "pytest 9.0.2, run by the harness",
+        "passed": 2,
+        "failed": 0,
+        "output_digest": "sha256:2bdb725e78d264a5810da2417e1050341a7b336b108cc707d5e8aae4bc07f8ef"
+      },
+      "agent": {
+        "exit_code": 0,
+        "timed_out": false
+      }
+    },
+    {
+      "task_id": "bank-trans-filter",
+      "attempt": 1,
+      "started_at": "2026-09-11T07:06:15.860Z",
+      "ended_at": "2026-09-11T07:07:03.550Z",
+      "receipts": {
+        "from": 5,
+        "to": 14
+      },
+      "calls": 9,
+      "refused": 0,
+      "verdict": "pass",
+      "tests": {
+        "runner": "pytest 9.0.2, run by the harness",
+        "passed": 1,
+        "failed": 0,
+        "output_digest": "sha256:1feeb25f96a6dbd4fff4903d1278eb4ed40bba72d6a38d7b4b42c8e9110b93da"
+      },
+      "agent": {
+        "exit_code": 0,
+        "timed_out": false
+      }
+    },
+    {
+      "task_id": "assign-seats",
+      "attempt": 1,
+      "started_at": "2026-09-11T07:07:04.427Z",
+      "ended_at": "2026-09-11T07:07:57.529Z",
+      "receipts": {
+        "from": 14,
+        "to": 27
+      },
+      "calls": 13,
+      "refused": 1,
+      "verdict": "pass",
+      "tests": {
+        "runner": "pytest 9.0.2, run by the harness",
+        "passed": 2,
+        "failed": 0,
+        "output_digest": "sha256:b54429a07e4a047a5c96c4429c2452bf39e0271e19b5a4759104d8fa1e72de2d"
       },
       "agent": {
         "exit_code": 0,
@@ -64,23 +133,23 @@
     }
   ],
   "summary": {
-    "tasks": 1,
-    "passed": 1,
+    "tasks": 4,
+    "passed": 4,
     "failed": 0,
     "errored": 0,
-    "calls": 3,
-    "refused": 1
+    "calls": 27,
+    "refused": 2
   },
   "signer": {
     "name": "Legate verified-run harness (demo)",
     "key_id": "harness:faef67591c23b631",
     "verification_key": "33d3c584cbbb91063446ee05591b4226d15c464cefe7fb9e075cfc9db0910727"
   },
-  "issued_at": "2026-09-11T06:14:55.562Z",
-  "nonce": "de612f46d10a9aed5ddd97f8a72be19b",
-  "digest": "2dbf79b917d86ca45b170447f811b9b5b43a3ff2f3615ea4445706d32caff7c7",
+  "issued_at": "2026-09-11T07:07:58.385Z",
+  "nonce": "dacd2f1578fa531d70e75f11e5a535b6",
+  "digest": "46e7b05a5bebf11b16bb9ecdd2cb0dd95f000b406d19116051c733fe286df9a1",
   "signature": {
     "algorithm": "Ed25519",
-    "value": "6ce6b82d2fbdc9bf77365d3215de79ddb989ee4f678569751d2c089004b0fdf7d07a1fe976a720ab8ad9907374ac7265ad4cda030171e59b74f810adfd053c02"
+    "value": "65188efa0ab34325115133524c4117d4e36b869926bf2edab9cb53c9aa4f53ba6ca94ce7fd1d5859889218f59e3999fc5d95e9821708b03b3d3485a828692100"
   }
 }

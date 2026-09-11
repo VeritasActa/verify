@@ -19,9 +19,9 @@ test('a run manifest is detected and verifies alone as intact but unbound', asyn
   assert.equal(r.valid, true, JSON.stringify(r.checks));
   assert.equal(r.artifact_type, 'scopeblind.run_manifest.v1');
   assert.equal(r.binding, 'manifest_only');
-  assert.equal(r.summary.passed, 1);
+  assert.equal(r.summary.passed, manifest.summary.passed);
   assert.equal(r.signer.demo, true);
-  assert.match(r.in_plain_words, /Result: 1 of 1 passed; 3 governed calls, 1 refused/);
+  assert.match(r.in_plain_words, new RegExp(`Result: ${manifest.summary.passed} of ${manifest.summary.tasks} passed; ${manifest.summary.calls} governed calls, ${manifest.summary.refused} refused`));
   assert.ok(r.not_established.some((s) => /supply the signed standard/.test(s)));
 });
 
@@ -29,8 +29,9 @@ test('with the standard and the receipts beside it, the run manifest is bound an
   const r = await verifyLegateStandard(fixture('run-manifest.json'), { now: NOW, standard: fixture('run-standard.json'), receipts: fixture('run-receipts.json') });
   assert.equal(r.valid, true);
   assert.equal(r.binding, 'bound', JSON.stringify(r.checks.filter((c) => !c.ok)));
-  assert.equal(r.chain.count, 3);
-  assert.equal(r.chain.deny, 1);
+  const manifest = fixture('run-manifest.json');
+  assert.equal(r.chain.count, manifest.gateway.receipt_count);
+  assert.equal(r.chain.deny, manifest.summary.refused);
   assert.ok(r.checks.some((c) => c.id === 'tools' && c.ok));
   assert.ok(r.checks.some((c) => c.id === 'chain_head' && c.ok));
   assert.ok(r.establishes.some((s) => /every allowed call on the tool list/.test(s)));
@@ -61,6 +62,6 @@ test('the CLI takes --standard and --receipts and reports the binding', () => {
   assert.equal(out.binding, 'bound');
   const alone = spawnSync(process.execPath, [cli, fixturePath('run-manifest.json')], { encoding: 'utf8', env: { ...process.env, NO_COLOR: '1' } });
   assert.equal(alone.status, 0, alone.stderr);
-  assert.match(alone.stdout, /Run manifest verifies: 1 of 1 passed, unbound/);
+  assert.match(alone.stdout, /Run manifest verifies: \d+ of \d+ passed, unbound/);
   assert.match(alone.stdout, /manifest only \(add --standard and --receipts to bind\)/);
 });
