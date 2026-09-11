@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.10.1 (2026-09-11)
+
+### Added
+- Run manifests (`scopeblind.run_manifest.v1`): a harness's signed account of a governed run, such as a benchmark submission made with every tool call through the gateway. Alone, the file verifies as intact and prints its result. With `--standard <standard.json>` and `--receipts <receipts.jsonl>` beside it, the verifier checks that the manifest names that standard by digest, that the receipts are the ones the manifest names (count and chain head), that every receipt cites the policy compiled from the standard, that every allowed call names a tool on the standard's list, that no task exceeds the allowed attempts or time, that the task-set and harness pins match, and that the gateway key is one the standard accepts. What it does not establish is printed with it: who holds the keys, whether the sandbox enforced its network rule (that is the environment attestation's job), and anything the agent said.
+
 ## 0.10.0 (2026-09-11)
 
 ### Added

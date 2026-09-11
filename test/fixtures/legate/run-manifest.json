@@ -1,0 +1,86 @@
+{
+  "type": "scopeblind.run_manifest.v1",
+  "version": 1,
+  "run_id": "run:12f28ec00e698f9a",
+  "standard": {
+    "request_id": "pr:7a1e5b9c3d2f4e60",
+    "digest": "d6ffc37cbb2b985ff0fb150b5ffdb537ac4a652227eef3e0919953bbf766145d",
+    "recipient_key": "6c360b0c2def60adf93e97019f61df31d2670bbc3bfad933859dc1663c1d9eac",
+    "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f"
+  },
+  "agent": {
+    "name": "codex-cli",
+    "version": "0.145.0",
+    "model": "gpt-5.5",
+    "model_route": "chatgpt.com (Codex)"
+  },
+  "harness": {
+    "name": "legate-verified-run",
+    "digest": "sha256:3839321d50a104921ab767d9839856bec8ed0c1c1dc09ded33d4be66fa31ed1e",
+    "gateway": "protect-mcp 0.13.2"
+  },
+  "dataset": {
+    "name": "terminal-bench/original-tasks",
+    "revision": "d28711d0da2675d0bb1d56de45ae5df6082438a3",
+    "digest": "sha256:52057cab17aa97b85950102b6183edd9ef69d5382900e43a610ccb1c33ef3d83",
+    "task_count": 1
+  },
+  "environment": {
+    "sandbox": "Codex CLI sandbox, workspace-write, network disabled (macOS Seatbelt)",
+    "egress": [],
+    "attestation": null,
+    "note": "Demonstration run on a developer machine: the host's own sandbox stood in for the benchmark's Docker image; task paths were rebased from /app to a workspace and the tests were run with the same rebase."
+  },
+  "gateway": {
+    "key_id": "sb:issuer:GsAFpSRUAvaU",
+    "verification_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
+    "receipt_count": 3,
+    "chain_head": "sha256:cee8e88748dfbe84b2f320beadf6b4154d999bc0257abfd73d47c3735414bce8",
+    "log_digest": "sha256:cc170cb8806651b06c37bee3647c14bd5c841edd9c26512b66208b54191722c3"
+  },
+  "attempts": [
+    {
+      "task_id": "hello-world",
+      "attempt": 1,
+      "started_at": "2026-09-11T06:14:35.478Z",
+      "ended_at": "2026-09-11T06:14:54.154Z",
+      "receipts": {
+        "from": 0,
+        "to": 3
+      },
+      "calls": 3,
+      "refused": 1,
+      "verdict": "pass",
+      "tests": {
+        "runner": "pytest 9.0.2, run by the harness",
+        "passed": 2,
+        "failed": 0,
+        "output_digest": "sha256:dcacd6b70a5dc63859abad2dd646b9f6a022406bcfd64a1003b115e24121e80d"
+      },
+      "agent": {
+        "exit_code": 0,
+        "timed_out": false
+      }
+    }
+  ],
+  "summary": {
+    "tasks": 1,
+    "passed": 1,
+    "failed": 0,
+    "errored": 0,
+    "calls": 3,
+    "refused": 1
+  },
+  "signer": {
+    "name": "Legate verified-run harness (demo)",
+    "key_id": "harness:faef67591c23b631",
+    "verification_key": "33d3c584cbbb91063446ee05591b4226d15c464cefe7fb9e075cfc9db0910727"
+  },
+  "issued_at": "2026-09-11T06:14:55.562Z",
+  "nonce": "de612f46d10a9aed5ddd97f8a72be19b",
+  "digest": "2dbf79b917d86ca45b170447f811b9b5b43a3ff2f3615ea4445706d32caff7c7",
+  "signature": {
+    "algorithm": "Ed25519",
+    "value": "6ce6b82d2fbdc9bf77365d3215de79ddb989ee4f678569751d2c089004b0fdf7d07a1fe976a720ab8ad9907374ac7265ad4cda030171e59b74f810adfd053c02"
+  }
+}

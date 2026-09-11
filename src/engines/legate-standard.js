@@ -17,6 +17,12 @@
  *     that record was sound is a separate question; supply it to recompute.
  *   - Action assurance bundle: the request, approval, and receipt verify and
  *     link to one another. Without --key the signers are reported as unpinned.
+ *   - Run manifest: a harness's signed account of a governed run (a benchmark
+ *     submission): task set and harness pinned by digest, every attempt with
+ *     its receipts and the harness's own test verdict, the receipt chain head.
+ *     Alone it verifies as intact. Supply the standard (--standard) and the
+ *     gateway's receipt log (--receipts) to check the pins, the policy, the
+ *     tool list, the attempts, the time limit, and the chain head against it.
  *
  * @module verify-cli/src/engines/legate-standard
  * @license Apache-2.0
@@ -29,6 +35,7 @@ export const LEGATE_STANDARD_TYPES = new Set([
   'scopeblind.proof_request.v1',
   'scopeblind.admission_decision.v1',
   'scopeblind.action_assurance_bundle.v1',
+  'scopeblind.run_manifest.v1',
 ]);
 
 /** Evidence files that verify only beside a decision or a standard. */
@@ -73,6 +80,27 @@ export async function verifyLegateStandard(input, opts = {}) {
       in_plain_words: v.cryptographically_valid ? m.proofRequestReadback(input) : undefined,
       trust: v.cryptographically_valid ? m.trustProvenance(input.trust).summary : undefined,
       not_established: ['Who holds the recipient key: pin it through a channel you already trust.', 'That any operator can meet the standard, or that meeting it obliges the recipient to anything beyond the stated path.'],
+    };
+  }
+
+  if (type === 'scopeblind.run_manifest.v1') {
+    const standard = opts.standard ?? null;
+    const receipts = Array.isArray(opts.receipts) ? opts.receipts : null;
+    const v = m.verifyRunManifest(input, { standard, receipts }, now);
+    return {
+      valid: v.cryptographically_valid,
+      ...base,
+      error: v.cryptographically_valid ? undefined : !v.shape_valid ? 'malformed_artifact' : !v.digest_valid ? 'digest_mismatch' : 'invalid_signature',
+      artifact_id: input.run_id,
+      binding: v.binding,
+      title: v.title,
+      summary: input.summary,
+      signer: input.signer ? { name: input.signer.name, key_id: input.signer.key_id, verification_key: input.signer.verification_key, demo: m.isDemoRunSignerKey(input.signer.verification_key) } : undefined,
+      checks: checksOf(v.checks),
+      chain: v.chain ? { count: v.chain.count, all_signatures_valid: v.chain.all_signatures_valid, chain_unbroken: v.chain.chain_unbroken, allow: v.chain.summary.allow, deny: v.chain.summary.deny } : null,
+      in_plain_words: v.cryptographically_valid ? m.runManifestReadback(input) : undefined,
+      establishes: v.establishes,
+      not_established: v.not_established,
     };
   }
 

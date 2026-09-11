@@ -214,6 +214,43 @@ export function formatReceiptResult(result, opts = {}) {
   return lines.join('\n');
 }
 
+/**
+ * A Legate run manifest: the harness's signed account of a governed run.
+ * Prints the checks, what is established, what is not, and the plain-words
+ * readback, so a maintainer reading a submission sees the same thing the
+ * site shows.
+ */
+export function formatRunManifestResult(result, opts = {}) {
+  const lines = [];
+  const icon = result.valid ? green('✓') : red('✗');
+  lines.push(`\n${icon} ${bold(result.title || (result.valid ? 'Run manifest verifies' : 'Run manifest does not verify'))}`);
+  if (result.modeLabel) lines.push(`  Mode:       ${result.modeLabel}`);
+  if (result.artifact_id) lines.push(`  Run:        ${result.artifact_id}`);
+  if (result.binding) lines.push(`  Binding:    ${result.binding === 'bound' ? green('bound to the standard and the receipts supplied') : result.binding === 'manifest_only' ? yellow('manifest only (add --standard and --receipts to bind)') : red('does not bind to what was supplied')}`);
+  if (result.signer) lines.push(`  Signer:     ${result.signer.name} (${result.signer.key_id})${result.signer.demo ? dim(' demonstration key') : ''}`);
+  if (result.summary) lines.push(`  Result:     ${result.summary.passed} of ${result.summary.tasks} passed; ${result.summary.calls} governed call(s), ${result.summary.refused} refused`);
+  if (result.chain) lines.push(`  Receipts:   ${result.chain.count} (${result.chain.allow} allowed, ${result.chain.deny} refused), ${result.chain.all_signatures_valid && result.chain.chain_unbroken ? green('chain intact') : red('chain not intact')}`);
+  if (Array.isArray(result.checks) && result.checks.length) {
+    lines.push(`  ${bold('Checks:')}`);
+    for (const c of result.checks) lines.push(`    ${c.ok ? green('✓') : red('✗')} ${c.label}: ${c.detail}`);
+  }
+  if (Array.isArray(result.establishes) && result.establishes.length) {
+    lines.push(`  ${bold('Established:')}`);
+    for (const e of result.establishes) lines.push(`    ${e}`);
+  }
+  if (Array.isArray(result.not_established) && result.not_established.length) {
+    lines.push(`  ${bold('Not established:')}`);
+    for (const e of result.not_established) lines.push(`    ${dim(e)}`);
+  }
+  if (result.in_plain_words && opts.verbose) {
+    lines.push(`  ${bold('In plain words:')}`);
+    for (const l of String(result.in_plain_words).split('\n')) lines.push(`    ${l}`);
+  }
+  if (result.error && !result.valid) lines.push(`  Error:      ${red(result.error)}`);
+  lines.push('');
+  return lines.join('\n');
+}
+
 export function formatBundleResult(result, opts = {}) {
   const lines = [];
   const icon = result.valid ? green('✓') : red('✗');

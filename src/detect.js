@@ -12,7 +12,7 @@
  *   - 'gate-receipt-tuple'   — ScopeBlind Gate tuple ({ payload, digest, signature, verification_key })
  *   - 'gate-evidence-bundle' — ScopeBlind Gate evidence bundle (scopeblind.gate.evidence-bundle/2)
  *   - 'macro-track-record'   — ScopeBlind macro-engine track-record bundle (scopeblind.macro.track-record-bundle/1)
- *   - 'legate-standard'      — Legate signed standard, recipient decision, or action assurance bundle
+ *   - 'legate-standard'      — Legate signed standard, recipient decision, action assurance bundle, or run manifest
  *   - 'unknown'
  *
  * Detection is structural: checks for marker fields without trying to
@@ -83,6 +83,7 @@ export function detectFormat(input) {
       'scopeblind.proof_request.v1',
       'scopeblind.admission_decision.v1',
       'scopeblind.action_assurance_bundle.v1',
+      'scopeblind.run_manifest.v1',
       'scopeblind.presentation.v1',
       'scopeblind.effect_readback.v1',
       'scopeblind.anchor_witness.v1',

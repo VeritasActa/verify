@@ -2051,10 +2051,10 @@ function hexToBytes2(hex) {
   }
   return array;
 }
-function utf8ToBytes(str) {
-  if (typeof str !== "string")
+function utf8ToBytes(str2) {
+  if (typeof str2 !== "string")
     throw new TypeError("string expected");
-  return new Uint8Array(new TextEncoder().encode(str));
+  return new Uint8Array(new TextEncoder().encode(str2));
 }
 function createHasher3(hashCons, info = {}) {
   const hashC = (msg, opts) => hashCons(opts).update(msg).digest();
@@ -2731,13 +2731,13 @@ var contribMsg = (kind, c) => lp(
   c.attester_id
 );
 var resolutionMsg = (charter_digest, epoch, as_of, kind) => lp("legate-covenant/resolution/v2", charter_digest, epoch, as_of, kind);
-function verifyEpochBundle(signed, bundle) {
+function verifyEpochBundle(signed2, bundle) {
   const checks = [];
   const push = (id, label, ok2, detail) => checks.push({ id, label, ok: ok2, detail });
-  const ch = signed.charter;
+  const ch = signed2.charter;
   const dig = charterDigest(ch);
   const keyOf = new Map(ch.roster.map((p) => [p.party_id, p.public_key]));
-  const sigBy = new Map(signed.signatures.map((s) => [s.party_id, s.signature]));
+  const sigBy = new Map(signed2.signatures.map((s) => [s.party_id, s.signature]));
   const unsigned2 = [];
   for (const p of ch.roster) {
     const s = sigBy.get(p.party_id);
@@ -2891,8 +2891,8 @@ function verifyEpochBundle(signed, bundle) {
   ];
   return { verdict: { ok, checks, scope }, outcome, tierMix };
 }
-function covenantState(signed, bundles, nowIso) {
-  const ch = signed.charter;
+function covenantState(signed2, bundles, nowIso) {
+  const ch = signed2.charter;
   const t0 = Date.parse(ch.created_at);
   const now = Date.parse(nowIso);
   const { every_ms, grace_ms } = ch.cadence;
@@ -2914,7 +2914,7 @@ function covenantState(signed, bundles, nowIso) {
       epochs.push({ epoch: String(i), window_start: windowStart, deadline, state: "stale", detail: "no bundle by deadline; silence is a signal" });
       continue;
     }
-    const res = verifyEpochBundle(signed, b);
+    const res = verifyEpochBundle(signed2, b);
     if (res.outcome === "under_cap") epochs.push({ epoch: String(i), window_start: windowStart, deadline, state: "healthy", detail: "under-cap proof verified", tierMix: res.tierMix });
     else if (res.outcome === "over_cap") epochs.push({ epoch: String(i), window_start: windowStart, deadline, state: "breached", detail: "breach affirmatively proven; only the bit revealed", tierMix: res.tierMix });
     else epochs.push({ epoch: String(i), window_start: windowStart, deadline, state: "stale", detail: res.outcome === "unresolved" ? "unresolved by deadline" : `invalid bundle: ${res.verdict.checks.find((c) => !c.ok)?.id ?? "check failed"}` });
@@ -3075,10 +3075,10 @@ function hexToBytes3(hex) {
   }
   return array;
 }
-function utf8ToBytes2(str) {
-  if (typeof str !== "string")
+function utf8ToBytes2(str2) {
+  if (typeof str2 !== "string")
     throw new Error("string expected");
-  return new Uint8Array(new TextEncoder().encode(str));
+  return new Uint8Array(new TextEncoder().encode(str2));
 }
 function toBytes(data) {
   if (typeof data === "string")
@@ -7580,7 +7580,7 @@ function recipientKeyFromPrivate(priv, name, organization) {
   return { name, organization, key_id: keyIdFor(verification_key), verification_key, priv };
 }
 var DEMO_TRUST_SEEDS = ["gate", "treasurer", "controller", "bank-ledger", "log-witness"];
-var DEMO_RECIPIENT_SEEDS = ["bank-a-pilot-desk", "allocator-odd-desk"];
+var DEMO_RECIPIENT_SEEDS = ["benchmark-maintainer", "bank-a-pilot-desk", "allocator-odd-desk"];
 var demoTrustKeys = null;
 var demoRecipientKeys = null;
 function demoTrustKeySet() {
@@ -7622,6 +7622,11 @@ function shapeErrors(v) {
   if (isRecord(q) && q.action_limits !== void 0 && q.action_limits !== null) {
     const al = q.action_limits;
     if (!isRecord(al) || !isRecord(al.amount_max) || typeof al.amount_max.amount !== "number" || !(al.amount_max.amount > 0) || typeof al.amount_max.currency !== "string" || !/^[A-Z]{3}$/.test(al.amount_max.currency) || al.per_instruction !== true) errors.push("action_limits malformed");
+  }
+  if (isRecord(q) && q.run !== void 0 && q.run !== null) {
+    const r2 = q.run;
+    const strs = (x) => Array.isArray(x) && x.every((s) => typeof s === "string" && s.trim());
+    if (!isRecord(r2) || !strs(r2.allowed_tools) || r2.allowed_tools.length === 0 || !strs(r2.egress_allowlist) || !Number.isSafeInteger(r2.attempts_per_task) || r2.attempts_per_task <= 0 || !isRecord(r2.dataset) || typeof r2.dataset.name !== "string" || typeof r2.dataset.digest !== "string" || !/^sha256:[0-9a-f]{64}$/.test(r2.dataset.digest) || r2.dataset.revision !== void 0 && typeof r2.dataset.revision !== "string" || !isRecord(r2.harness) || typeof r2.harness.name !== "string" || typeof r2.harness.digest !== "string" || !/^sha256:[0-9a-f]{64}$/.test(r2.harness.digest) || !Number.isSafeInteger(r2.time_limit_seconds) || r2.time_limit_seconds <= 0 || typeof r2.model_route !== "string" || !r2.model_route.trim()) errors.push("run requirements malformed");
   }
   const enf = v.enforcement;
   if (enf !== void 0 && enf !== null) {
@@ -7676,13 +7681,17 @@ function proofRequestReadback(r) {
   lines.push(`Environment: ${q.environment_class_min} or stronger`);
   lines.push(`Approval: ${APPROVER_ASSURANCE_LABELS[q.approver_assurance_min]}${q.human_approval.required_above ? `; a named person must approve above ${money(q.human_approval.required_above.amount, q.human_approval.required_above.currency)}` : ""}${q.human_approval.distinct_approvers === 2 ? "; two distinct approvers" : ""}`);
   if (q.action_limits) lines.push(`Limit: each instruction at most ${money(q.action_limits.amount_max.amount, q.action_limits.amount_max.currency)}, enforced by the gateway before the call runs`);
+  if (q.run) {
+    lines.push(`Run: tools ${q.run.allowed_tools.join(", ")} only, enforced by the gateway before each call; network to ${q.run.egress_allowlist.join(", ") || "nothing"} only, enforced by the environment; ${q.run.attempts_per_task} attempt${q.run.attempts_per_task === 1 ? "" : "s"} per task; ${Math.round(q.run.time_limit_seconds / 60)} minutes per task`);
+    lines.push(`Run pins: task set ${q.run.dataset.name}${q.run.dataset.revision ? ` @ ${q.run.dataset.revision}` : ""} (${q.run.dataset.digest.slice(0, 19)}); harness ${q.run.harness.name} (${q.run.harness.digest.slice(0, 19)}); model route ${q.run.model_route}`);
+  }
   lines.push(`Authority freshness: approval no older than ${Math.round(q.authority_max_age_seconds / 60)} minutes at dispatch`);
   lines.push(`Coverage: ${COVERAGE_LABELS[q.coverage]}`);
   lines.push(`Effect: ${EFFECT_EVIDENCE_LABELS[q.effect_evidence]}`);
   lines.push(`Time basis: ${q.anchoring === "anchored" ? "the receipt must be anchored by an accepted witness; the gate clock alone is not enough" : "the gate clock is accepted as the dispatch time"}`);
   lines.push(`Partial settlement: ${q.partial_settlement_permitted ? "permitted, reported as partial completion" : "not permitted, reported as a contradiction"}`);
   lines.push(`Trust anchors: ${trustProvenance(r.trust).summary}`);
-  if (r.enforcement) lines.push(`Gate policy: ${r.enforcement.policy_digest} (${r.enforcement.policy_format}, tool ${r.enforcement.tool}); enforced at the gate: ${r.enforcement.gate_enforced.join(", ") || "nothing"}; checked on the records or by a person: ${r.enforcement.not_gate_enforced.length} clause${r.enforcement.not_gate_enforced.length === 1 ? "" : "s"}`);
+  if (r.enforcement) lines.push(`Gate policy: ${r.enforcement.policy_digest} (${r.enforcement.policy_format}, ${r.enforcement.tool.includes(",") ? "tools" : "tool"} ${r.enforcement.tool}); enforced at the gate: ${r.enforcement.gate_enforced.join(", ") || "nothing"}; checked on the records or by a person: ${r.enforcement.not_gate_enforced.length} clause${r.enforcement.not_gate_enforced.length === 1 ? "" : "s"}`);
   if (r.disclosure.required_fields.length) lines.push(`Disclose: ${r.disclosure.required_fields.join(", ")}; inspection ${r.disclosure.inspection.replace(/_/g, " ")}`);
   if (r.limitations_permitted.length) lines.push(`Permitted limitations: ${r.limitations_permitted.join("; ")}`);
   if (r.rejection_criteria.length) lines.push(`Rejected if: ${r.rejection_criteria.join("; ")}`);
@@ -8078,22 +8087,375 @@ async function recomputeAdmissionDecision(decision, context) {
     detail: matches ? `Recomputed from the presented evidence at ${decision.decided_at}: ${report.verdict}, matching the acknowledged result.` : `Recomputed result is ${report.verdict} (${report.title}); the decision acknowledges ${decision.acknowledged_verdict}${digest !== decision.report_digest ? " and its report digest does not match" : ""}. The signature is valid; the acknowledged report is not.`
   };
 }
+
+// src/acta-receipt.ts
+function canonicalize2(obj) {
+  return JSON.stringify(obj, (_key, value) => {
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      const sorted = {};
+      for (const k of Object.keys(value).sort()) {
+        if (!/^[\x20-\x7E]*$/.test(k)) throw new Error(`Non-ASCII key "${k}" in receipt payload. Only ASCII keys are permitted.`);
+        sorted[k] = value[k];
+      }
+      return sorted;
+    }
+    return value;
+  });
+}
+function sha256Hex(text) {
+  return bytesToHex2(sha256(utf8ToBytes(text)));
+}
+function receiptHash(obj) {
+  return sha256Hex(canonicalize2(obj));
+}
+function chainLink(receipt) {
+  return `sha256:${receiptHash(receipt)}`;
+}
+var HEX_642 = /^[0-9a-f]{64}$/i;
+var isRecord2 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+function receiptPayload(receipt) {
+  if (!isRecord2(receipt)) return {};
+  if (isRecord2(receipt.payload) && isRecord2(receipt.signature)) return receipt.payload;
+  const { signature: _sig, ...rest } = receipt;
+  return rest;
+}
+function receiptIdentity(receipt) {
+  if (!isRecord2(receipt)) return { kid: null, issuer: null, type: null };
+  if (isRecord2(receipt.signature)) {
+    const payload = receiptPayload(receipt);
+    return {
+      kid: typeof receipt.signature.kid === "string" ? receipt.signature.kid : null,
+      issuer: typeof payload.issuer_id === "string" ? payload.issuer_id : typeof payload.issuer_name === "string" ? payload.issuer_name : null,
+      type: typeof payload.type === "string" ? payload.type : null
+    };
+  }
+  return {
+    kid: typeof receipt.kid === "string" ? receipt.kid : null,
+    issuer: typeof receipt.issuer === "string" ? receipt.issuer : null,
+    type: typeof receipt.type === "string" ? receipt.type : null
+  };
+}
+function verifyReceipt2(receipt, publicKeyHex) {
+  try {
+    if (!isRecord2(receipt)) return { valid: false, shape: null, error: "not_an_object" };
+    const signature = receipt.signature;
+    if (isRecord2(signature)) {
+      if (signature.alg !== "EdDSA") return { valid: false, shape: "acta-02", error: `unsupported_alg:${String(signature.alg)}` };
+      if (typeof signature.sig !== "string" || !isRecord2(receipt.payload)) return { valid: false, shape: "acta-02", error: "malformed_envelope" };
+      const valid = ed25519.verify(hexToBytes2(signature.sig), utf8ToBytes(canonicalize2(receipt.payload)), hexToBytes2(publicKeyHex));
+      return valid ? { valid: true, shape: "acta-02", hash: receiptHash(receipt) } : { valid: false, shape: "acta-02", error: "invalid_signature" };
+    }
+    if (typeof signature === "string") {
+      const rest = {};
+      for (const k of Object.keys(receipt)) if (k !== "signature") rest[k] = receipt[k];
+      const valid = ed25519.verify(hexToBytes2(signature), utf8ToBytes(canonicalize2(rest)), hexToBytes2(publicKeyHex));
+      const shape = receipt.v === 2 ? "legacy-v2" : "legacy-v1";
+      return valid ? { valid: true, shape, hash: receiptHash(receipt) } : { valid: false, shape, error: "invalid_signature" };
+    }
+    return { valid: false, shape: null, error: "missing_signature" };
+  } catch (err) {
+    return { valid: false, shape: null, error: `verification_error:${err instanceof Error ? err.message : "unknown"}` };
+  }
+}
+function resolveReceiptKey(receipt, suppliedHex) {
+  if (suppliedHex && HEX_642.test(suppliedHex.trim())) return { key: suppliedHex.trim().toLowerCase(), source: "supplied" };
+  const payload = receiptPayload(receipt);
+  const carried = typeof payload.public_key === "string" ? payload.public_key : isRecord2(receipt) && typeof receipt.public_key === "string" ? receipt.public_key : null;
+  if (carried && HEX_642.test(carried)) return { key: carried.toLowerCase(), source: "carried" };
+  return { key: null, source: "none" };
+}
+var str = (v) => typeof v === "string" ? v : null;
+function linkOf(receipt) {
+  const payload = receiptPayload(receipt);
+  const v = payload.previousReceiptHash ?? (isRecord2(receipt) ? receipt.previousReceiptHash : void 0);
+  return typeof v === "string" ? v : null;
+}
+function citesPre03(receipt) {
+  const spec = str(receiptPayload(receipt).spec);
+  return !spec || /-0[12]$/.test(spec);
+}
+function verifyActaChain(receipts, options = {}) {
+  const acceptLegacy = options.acceptLegacyLinks ?? true;
+  const checks = [];
+  let keySource = "none";
+  for (let i = 0; i < receipts.length; i++) {
+    const receipt = receipts[i];
+    const payload = receiptPayload(receipt);
+    const { key, source } = resolveReceiptKey(receipt, options.publicKeyHex);
+    if (i === 0) keySource = source;
+    const sigResult = key ? verifyReceipt2(receipt, key) : null;
+    let link;
+    const stored = linkOf(receipt);
+    if (i === 0) link = stored ? "dangling" : "genesis";
+    else if (!stored) link = "missing";
+    else {
+      const prev = receipts[i - 1];
+      const storedHex = stored.startsWith("sha256:") ? stored.slice(7) : stored;
+      if (storedHex.toLowerCase() === receiptHash(prev)) link = "linked";
+      else if (acceptLegacy && citesPre03(prev) && storedHex.toLowerCase() === sha256Hex(canonicalize2(receiptPayload(prev)))) link = "linked_legacy";
+      else link = "broken";
+    }
+    const digest = str(payload.payload_digest) ?? (isRecord2(payload.payload_digest) ? str(payload.payload_digest.input_hash) : null);
+    checks.push({
+      index: i,
+      identity: receiptIdentity(receipt),
+      shape: sigResult?.shape ?? (isRecord2(receipt) && isRecord2(receipt.signature) ? "acta-02" : isRecord2(receipt) && typeof receipt.signature === "string" ? "legacy-v1" : null),
+      signature: !key ? "unchecked" : sigResult?.valid ? "valid" : "invalid",
+      keySource: source,
+      error: sigResult && !sigResult.valid ? sigResult.error : void 0,
+      link,
+      hash: receiptHash(receipt),
+      tool: str(payload.tool_name) ?? str(payload.tool),
+      decision: str(payload.decision),
+      reason: str(payload.reason) ?? str(payload.reason_code),
+      policy_digest: str(payload.policy_digest),
+      issued_at: str(payload.issued_at),
+      spec: str(payload.spec),
+      request_id: str(payload.request_id),
+      input_hash: digest
+    });
+  }
+  const signaturesChecked = checks.length > 0 && checks.every((c) => c.signature !== "unchecked");
+  const allValid = signaturesChecked && checks.every((c) => c.signature === "valid");
+  const chainUnbroken = checks.every((c) => c.link === "genesis" || c.link === "linked" || c.link === "linked_legacy");
+  const uniq = (xs) => [...new Set(xs.filter((x) => !!x))];
+  const allow = checks.filter((c) => c.decision === "allow").length;
+  const deny = checks.filter((c) => c.decision === "deny").length;
+  const established = [];
+  const not_established = [];
+  if (allValid) established.push(keySource === "supplied" ? "Every receipt is signed by the key you supplied, and none has been altered since." : "Every receipt is signed by the key the file carries, and none has been altered since. That proves the file is self-consistent, not who holds the key.");
+  else if (!signaturesChecked) not_established.push("Signatures were not checked: no key was supplied and the file carries none. Paste the issuer's public key to check them.");
+  else not_established.push("At least one signature does not verify. Treat the log as altered or signed by a different key.");
+  if (checks.length > 1) {
+    if (chainUnbroken) established.push(`The ${checks.length} receipts form one unbroken chain: none was inserted, removed, or reordered between the first and the last shown.${checks.some((c) => c.link === "linked_legacy") ? " Some links use the older payload-only rule from before draft -03." : ""}`);
+    else not_established.push("The chain is broken: a receipt was inserted, removed, reordered, or re-signed between the first and the last shown.");
+  }
+  not_established.push("Who holds the signing key. A receipt proves possession of the key that signed it, not the organisation behind it; that comes from a key you pin out of band.");
+  not_established.push("Anything about calls that did not pass through this gateway. Coverage is declared per route, never assumed.");
+  return {
+    receipts: checks,
+    count: checks.length,
+    all_signatures_valid: allValid,
+    signatures_checked: signaturesChecked,
+    chain_unbroken: chainUnbroken,
+    legacy_links: checks.filter((c) => c.link === "linked_legacy").length,
+    key_source: keySource,
+    summary: {
+      allow,
+      deny,
+      other: checks.length - allow - deny,
+      tools: uniq(checks.map((c) => c.tool)),
+      policy_digests: uniq(checks.map((c) => c.policy_digest)),
+      kids: uniq(checks.map((c) => c.identity.kid)),
+      specs: uniq(checks.map((c) => c.spec)),
+      first_issued_at: checks[0]?.issued_at ?? null,
+      last_issued_at: checks[checks.length - 1]?.issued_at ?? null
+    },
+    established,
+    not_established
+  };
+}
+
+// src/run-manifest.ts
+var RUN_MANIFEST_V1 = "scopeblind.run_manifest.v1";
+var RUN_MANIFEST_DOMAIN = "scopeblind.run-manifest.v1";
+var encoder2 = new TextEncoder();
+var MANIFEST_UNSIGNED_KEYS = ["type", "version", "run_id", "standard", "agent", "harness", "dataset", "environment", "gateway", "attempts", "summary", "signer", "issued_at", "nonce"];
+function runSignerFromSeed(seed, name) {
+  return runSignerFromPrivate(sha256(encoder2.encode(`scopeblind.run-manifest.demo.v1\0${seed}`)), name);
+}
+function runSignerFromPrivate(priv, name) {
+  const verification_key = bytesToHex2(ed25519.getPublicKey(priv));
+  return { name, key_id: keyIdFor(verification_key, "harness"), verification_key, priv };
+}
+var DEMO_SIGNER_SEEDS = ["legate-verified-run"];
+var demoSignerKeys = null;
+function isDemoRunSignerKey(verificationKey) {
+  if (!demoSignerKeys) demoSignerKeys = new Set(DEMO_SIGNER_SEEDS.map((s) => runSignerFromSeed(s, "").verification_key));
+  return demoSignerKeys.has(verificationKey.toLowerCase());
+}
+var isRecord3 = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
+var isIso2 = (v) => typeof v === "string" && !Number.isNaN(Date.parse(v));
+var isDigest = (v) => typeof v === "string" && /^sha256:[0-9a-f]{64}$/.test(v);
+var isHex64 = (v) => typeof v === "string" && /^[0-9a-f]{64}$/.test(v);
+function shapeErrors2(value) {
+  const errors = [];
+  if (!isRecord3(value)) return ["not an object"];
+  const m = value;
+  if (m.type !== RUN_MANIFEST_V1 || m.version !== 1) errors.push("not a scopeblind.run_manifest.v1");
+  if (typeof m.run_id !== "string" || !m.run_id.trim()) errors.push("run_id missing");
+  const s = m.standard;
+  if (!isRecord3(s) || typeof s.request_id !== "string" || !isHex64(s.digest) || !isHex64(s.recipient_key) || !isDigest(s.policy_digest)) errors.push("standard binding malformed");
+  const a = m.agent;
+  if (!isRecord3(a) || ["name", "version", "model", "model_route"].some((k) => typeof a[k] !== "string")) errors.push("agent malformed");
+  const h = m.harness;
+  if (!isRecord3(h) || typeof h.name !== "string" || !isDigest(h.digest) || typeof h.gateway !== "string") errors.push("harness malformed");
+  const d = m.dataset;
+  if (!isRecord3(d) || typeof d.name !== "string" || !isDigest(d.digest) || !Number.isSafeInteger(d.task_count) || d.revision !== void 0 && typeof d.revision !== "string") errors.push("dataset malformed");
+  const e = m.environment;
+  if (!isRecord3(e) || typeof e.sandbox !== "string" || !Array.isArray(e.egress) || !e.egress.every((x) => typeof x === "string") || !(e.attestation === null || isRecord3(e.attestation) && typeof e.attestation.kind === "string" && typeof e.attestation.reference === "string" && isDigest(e.attestation.digest))) errors.push("environment malformed");
+  const g = m.gateway;
+  if (!isRecord3(g) || typeof g.key_id !== "string" || !isHex64(g.verification_key) || !Number.isSafeInteger(g.receipt_count) || !(g.chain_head === null || isDigest(g.chain_head)) || !isDigest(g.log_digest)) errors.push("gateway malformed");
+  if (!Array.isArray(m.attempts) || !m.attempts.every((t) => isRecord3(t) && typeof t.task_id === "string" && Number.isSafeInteger(t.attempt) && isIso2(t.started_at) && isIso2(t.ended_at) && isRecord3(t.receipts) && Number.isSafeInteger(t.receipts.from) && Number.isSafeInteger(t.receipts.to) && t.receipts.from <= t.receipts.to && Number.isSafeInteger(t.calls) && Number.isSafeInteger(t.refused) && ["pass", "fail", "error"].includes(t.verdict) && isRecord3(t.tests) && typeof t.tests.runner === "string" && Number.isSafeInteger(t.tests.passed) && Number.isSafeInteger(t.tests.failed) && isDigest(t.tests.output_digest) && isRecord3(t.agent) && (t.agent.exit_code === null || Number.isSafeInteger(t.agent.exit_code)) && typeof t.agent.timed_out === "boolean")) errors.push("attempts malformed");
+  const u = m.summary;
+  if (!isRecord3(u) || ["tasks", "passed", "failed", "errored", "calls", "refused"].some((k) => !Number.isSafeInteger(u[k]))) errors.push("summary malformed");
+  const sg = m.signer;
+  if (!isRecord3(sg) || typeof sg.name !== "string" || typeof sg.key_id !== "string" || !isHex64(sg.verification_key)) errors.push("signer malformed");
+  if (!isIso2(m.issued_at) || typeof m.nonce !== "string" || typeof m.digest !== "string" || !isRecord3(m.signature) || m.signature.algorithm !== "Ed25519" || typeof m.signature.value !== "string") errors.push("envelope malformed");
+  return errors;
+}
+function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()) {
+  const checks = [];
+  const errors = shapeErrors2(value);
+  const shape_valid = errors.length === 0;
+  checks.push({ id: "shape", label: "Shape", ok: shape_valid, detail: shape_valid ? "Every required field is present and well formed." : errors.join("; ") });
+  const fail = (title2) => ({ shape_valid, digest_valid: false, signature_valid: false, cryptographically_valid: false, binding: "unbound", checks, chain: null, title: title2, establishes: [], not_established: ["Nothing rests on a manifest that does not verify."] });
+  if (!shape_valid) return fail("Not a run manifest, or malformed");
+  const m = value;
+  const { digest_valid, signature_valid } = checkEnvelope(RUN_MANIFEST_DOMAIN, m, MANIFEST_UNSIGNED_KEYS, m.signer.verification_key);
+  checks.push({ id: "digest", label: "Digest", ok: digest_valid, detail: digest_valid ? "The digest matches the canonical bytes of the manifest." : "The digest does not match: the manifest was altered after it was signed." });
+  checks.push({ id: "signature", label: "Signature", ok: signature_valid, detail: signature_valid ? `Ed25519 signature verifies against the harness key ${m.signer.key_id}. This proves possession of that key, not who holds it.` : "The signature does not verify against the key carried in the manifest." });
+  if (!digest_valid || !signature_valid) return fail("Run manifest does not verify");
+  const sorted = [...m.attempts].sort((a, b) => a.receipts.from - b.receipts.from);
+  let cursor = 0;
+  let contiguous = true;
+  for (const t of sorted) {
+    if (t.receipts.from !== cursor) contiguous = false;
+    cursor = t.receipts.to;
+  }
+  const partition = contiguous && cursor === m.gateway.receipt_count;
+  checks.push({ id: "attempts_cover_chain", label: "Attempts cover the chain", ok: partition, detail: partition ? `${m.attempts.length} attempt${m.attempts.length === 1 ? " accounts" : "s account"} for all ${m.gateway.receipt_count} receipts, with no gap and no overlap.` : "The attempts do not account for every receipt exactly once: a call was left out of the attempts, or counted twice." });
+  const counted = { tasks: new Set(m.attempts.map((t) => t.task_id)).size, passed: m.attempts.filter((t) => t.verdict === "pass").length, failed: m.attempts.filter((t) => t.verdict === "fail").length, errored: m.attempts.filter((t) => t.verdict === "error").length, calls: m.attempts.reduce((n, t) => n + t.calls, 0), refused: m.attempts.reduce((n, t) => n + t.refused, 0) };
+  const summaryOk = Object.keys(counted).every((k) => counted[k] === m.summary[k]) && m.attempts.every((t) => t.calls === t.receipts.to - t.receipts.from);
+  checks.push({ id: "summary", label: "Summary matches attempts", ok: summaryOk, detail: summaryOk ? `${counted.tasks} task${counted.tasks === 1 ? "" : "s"}: ${counted.passed} passed, ${counted.failed} failed, ${counted.errored} errored; ${counted.calls} governed call${counted.calls === 1 ? "" : "s"}, ${counted.refused} refused.` : "The summary does not add up from the attempts." });
+  const timely = m.attempts.every((t) => !t.agent.timed_out);
+  checks.push({ id: "timeouts", label: "Time", ok: timely, detail: timely ? "No attempt hit the harness time limit." : `${m.attempts.filter((t) => t.agent.timed_out).length} attempt(s) were stopped at the time limit.`, informational: true });
+  const establishes = [];
+  const not_established = [];
+  let bound = true;
+  let anythingGiven = false;
+  const std = context.standard ?? null;
+  if (std) {
+    anythingGiven = true;
+    const sv = verifyProofRequest(std, now);
+    const run = std.requirements.run ?? null;
+    const same = sv.cryptographically_valid && std.request_id === m.standard.request_id && std.digest === m.standard.digest && std.recipient.verification_key.toLowerCase() === m.standard.recipient_key.toLowerCase();
+    checks.push({ id: "standard", label: "Standard", ok: same, detail: same ? `The manifest names this standard by request id and digest (${std.request_id}), and the standard verifies.` : !sv.cryptographically_valid ? "The standard supplied does not itself verify." : "The manifest names a different standard (request id, digest, or recipient key differ)." });
+    bound &&= same;
+    const policyOk = Boolean(std.enforcement && std.enforcement.policy_digest === m.standard.policy_digest);
+    checks.push({ id: "policy", label: "Gate policy", ok: policyOk, detail: policyOk ? `The policy digest the manifest records is the one compiled from the standard (${m.standard.policy_digest.slice(0, 19)}\u2026).` : std.enforcement ? "The manifest records a different policy digest from the one the standard carries." : "The standard carries no compiled gate policy." });
+    bound &&= policyOk;
+    if (run) {
+      const dataOk = run.dataset.digest === m.dataset.digest && run.dataset.name === m.dataset.name;
+      checks.push({ id: "dataset_pin", label: "Task set pin", ok: dataOk, detail: dataOk ? `The task set digest equals the standard's pin (${run.dataset.name}${run.dataset.revision ? ` at ${run.dataset.revision}` : ""}).` : "The task set the run used is not the one the standard pins." });
+      const harnessOk = run.harness.digest === m.harness.digest && run.harness.name === m.harness.name;
+      checks.push({ id: "harness_pin", label: "Harness pin", ok: harnessOk, detail: harnessOk ? `The harness digest equals the standard's pin (${run.harness.name}).` : "The harness that ran is not the one the standard pins." });
+      const perTask = /* @__PURE__ */ new Map();
+      for (const t of m.attempts) perTask.set(t.task_id, (perTask.get(t.task_id) ?? 0) + 1);
+      const attemptsOk = [...perTask.values()].every((n) => n <= run.attempts_per_task);
+      checks.push({ id: "attempts", label: "Attempts", ok: attemptsOk, detail: attemptsOk ? `No task has more than ${run.attempts_per_task} attempt${run.attempts_per_task === 1 ? "" : "s"}.` : `A task has more attempts than the standard allows (${run.attempts_per_task}).` });
+      const timeOk = m.attempts.every((t) => (Date.parse(t.ended_at) - Date.parse(t.started_at)) / 1e3 <= run.time_limit_seconds);
+      checks.push({ id: "time_limit", label: "Time limit", ok: timeOk, detail: timeOk ? `Every attempt finished within ${Math.round(run.time_limit_seconds / 60)} minutes, on the harness clock.` : "An attempt ran longer than the standard allows." });
+      const egressOk = m.environment.egress.every((h) => run.egress_allowlist.includes(h));
+      checks.push({ id: "egress", label: "Network", ok: egressOk, detail: egressOk ? `The environment declares egress to ${m.environment.egress.join(", ") || "nothing"}, within the standard's allowlist. Declared by the harness; enforced by the sandbox, not by anything this page can check.` : "The environment declares egress the standard does not allow.", informational: !m.environment.attestation });
+      const routeOk = m.agent.model_route === run.model_route;
+      checks.push({ id: "model_route", label: "Model route", ok: routeOk, detail: routeOk ? `Model calls declared to ${m.agent.model_route}, as the standard requires. Declared, not observed: the gateway never sees model traffic.` : `The manifest declares model route ${m.agent.model_route}; the standard requires ${run.model_route}.`, informational: true });
+      bound &&= dataOk && harnessOk && attemptsOk && timeOk && egressOk;
+      const accepted = std.trust.accepted_gate_keys.map((k) => k.toLowerCase()).includes(m.gateway.verification_key.toLowerCase());
+      checks.push({ id: "gate_key", label: "Gateway key", ok: accepted, detail: accepted ? "The gateway key the manifest names is one the standard accepts." : "The standard does not accept the gateway key the manifest names." });
+      bound &&= accepted;
+    } else {
+      checks.push({ id: "run_clause", label: "Run requirements", ok: false, detail: "The standard has no run requirements, so it says nothing about attempts, time, task set, or harness." });
+      bound = false;
+    }
+  }
+  let chain = null;
+  const receipts = context.receipts ?? null;
+  if (receipts) {
+    anythingGiven = true;
+    chain = verifyActaChain(receipts, { publicKeyHex: m.gateway.verification_key });
+    const intact = chain.all_signatures_valid && chain.chain_unbroken && chain.signatures_checked;
+    checks.push({ id: "chain", label: "Receipt chain", ok: intact, detail: intact ? `${chain.count} receipt${chain.count === 1 ? "" : "s"} verify against the gateway key and link without a gap.` : "The receipts do not all verify against the gateway key, or the chain is broken." });
+    const head = receipts.length ? chainLink(receipts[receipts.length - 1]) : null;
+    const headOk = chain.count === m.gateway.receipt_count && head === m.gateway.chain_head;
+    checks.push({ id: "chain_head", label: "Chain head", ok: headOk, detail: headOk ? "The receipt count and the hash of the last receipt equal what the manifest names: nothing was added or removed after signing." : "The receipt log differs from the one the manifest names (count or head hash)." });
+    const policyOk = chain.receipts.every((r) => r.policy_digest === m.standard.policy_digest);
+    checks.push({ id: "receipt_policy", label: "Receipts under the policy", ok: policyOk, detail: policyOk ? "Every receipt cites the policy digest the manifest records." : "A receipt cites a different policy digest: it was not produced under this run's gate policy." });
+    const refused = chain.receipts.filter((r) => r.decision === "deny").length;
+    const refusedOk = refused === m.summary.refused;
+    checks.push({ id: "refusals", label: "Refusals", ok: refusedOk, detail: refusedOk ? `${refused} call${refused === 1 ? "" : "s"} refused by the gate, as the manifest says.` : `The chain shows ${refused} refusal(s); the manifest says ${m.summary.refused}.` });
+    bound &&= intact && headOk && policyOk && refusedOk;
+    if (std?.requirements.run) {
+      const allowed = std.requirements.run.allowed_tools;
+      const offList = chain.receipts.filter((r) => r.decision === "allow" && (r.tool === null || !allowed.includes(r.tool)));
+      const toolsOk = offList.length === 0;
+      checks.push({ id: "tools", label: "Tools", ok: toolsOk, detail: toolsOk ? `Every allowed call names a tool on the standard's list (${allowed.join(", ")}).` : `${offList.length} allowed call(s) name a tool off the list: the gate did not enforce this standard.` });
+      bound &&= toolsOk;
+      for (const t of m.attempts) {
+        const slice = chain.receipts.slice(t.receipts.from, t.receipts.to);
+        const times = slice.map((r) => r.issued_at ? Date.parse(r.issued_at) : NaN).filter((n) => !Number.isNaN(n));
+        if (times.length >= 2) {
+          const span = (Math.max(...times) - Math.min(...times)) / 1e3;
+          const ok = span <= std.requirements.run.time_limit_seconds;
+          checks.push({ id: `receipt_time_${t.task_id}_${t.attempt}`, label: `Receipt times, ${t.task_id}`, ok, detail: ok ? `First to last receipt: ${Math.round(span)} s, within the limit, on the gate clock.` : `First to last receipt spans ${Math.round(span)} s, over the limit.` });
+          bound &&= ok;
+        }
+      }
+    }
+  }
+  const binding = !anythingGiven ? "manifest_only" : bound && partition && summaryOk ? "bound" : "partial";
+  establishes.push(`A harness holding key ${m.signer.key_id} signed this account of run ${m.run_id}: ${m.summary.tasks} task${m.summary.tasks === 1 ? "" : "s"} of ${m.dataset.name}, ${m.summary.passed} passed, ${m.summary.failed} failed, ${m.summary.calls} governed call${m.summary.calls === 1 ? "" : "s"}, ${m.summary.refused} refused.`);
+  if (binding === "bound") {
+    if (std) establishes.push(`The run was under ${std.recipient.organization}'s standard ${std.request_id}: the pinned task set and harness, the compiled gate policy, at most ${std.requirements.run?.attempts_per_task ?? "?"} attempt(s) and ${Math.round((std.requirements.run?.time_limit_seconds ?? 0) / 60)} minutes per task.`);
+    if (receipts && chain) establishes.push(`The ${chain.count} receipts are the ones the manifest names, every one under that policy, every allowed call on the tool list, and the refusals counted match.`);
+  }
+  not_established.push("Who holds the harness key or the gateway key: pin them through a channel you already trust.");
+  if (!m.environment.attestation) not_established.push("That the sandbox enforced the declared network rule: this run carries no environment attestation, so egress and model route are the harness's declaration.");
+  else establishes.push(`An environment attestation (${m.environment.attestation.kind}, ${m.environment.attestation.reference}) is carried; check it with its own verifier.`);
+  not_established.push("What the agent said or reasoned: the receipts record tool calls and the harness records test verdicts, not the transcript.");
+  if (!std) not_established.push("Which standard the run was under: supply the signed standard to check the pins and the policy.");
+  if (!receipts) not_established.push("That the receipts the manifest names exist and verify: supply the gateway's receipt log.");
+  const title = binding === "bound" ? `Verified run: ${m.summary.passed} of ${m.summary.tasks} passed under ${std?.recipient.organization ?? "the standard"}` : binding === "manifest_only" ? `Run manifest verifies: ${m.summary.passed} of ${m.summary.tasks} passed, unbound` : "Run manifest verifies, but does not bind to what was supplied";
+  return { shape_valid, digest_valid, signature_valid, cryptographically_valid: true, binding, checks, chain, title, establishes, not_established };
+}
+function runManifestReadback(m) {
+  const lines = [];
+  lines.push(`Run ${m.run_id}, signed by ${m.signer.name} (${m.signer.key_id}) at ${m.issued_at}`);
+  lines.push(`Task set: ${m.dataset.name}${m.dataset.revision ? ` at ${m.dataset.revision}` : ""}, ${m.dataset.task_count} task${m.dataset.task_count === 1 ? "" : "s"}, digest ${m.dataset.digest.slice(0, 19)}`);
+  lines.push(`Agent: ${m.agent.name} ${m.agent.version}, model ${m.agent.model} via ${m.agent.model_route}`);
+  lines.push(`Harness: ${m.harness.name} (${m.harness.digest.slice(0, 19)}), gateway ${m.harness.gateway}`);
+  lines.push(`Environment: ${m.environment.sandbox}; egress to ${m.environment.egress.join(", ") || "nothing"}; attestation ${m.environment.attestation ? `${m.environment.attestation.kind} ${m.environment.attestation.reference}` : "none carried"}`);
+  lines.push(`Standard: ${m.standard.request_id}, digest ${m.standard.digest.slice(0, 16)}, gate policy ${m.standard.policy_digest.slice(0, 19)}`);
+  lines.push(`Receipts: ${m.gateway.receipt_count} signed by ${m.gateway.key_id}, chain head ${m.gateway.chain_head ? m.gateway.chain_head.slice(0, 19) : "none"}`);
+  for (const t of m.attempts) lines.push(`${t.task_id} attempt ${t.attempt}: ${t.verdict} (${t.tests.passed} passed, ${t.tests.failed} failed, ${t.tests.runner}); ${t.calls} call${t.calls === 1 ? "" : "s"}, ${t.refused} refused; ${Math.round((Date.parse(t.ended_at) - Date.parse(t.started_at)) / 1e3)} s${t.agent.timed_out ? ", stopped at the time limit" : ""}`);
+  lines.push(`Result: ${m.summary.passed} of ${m.summary.tasks} passed; ${m.summary.calls} governed calls, ${m.summary.refused} refused`);
+  return lines.join("\n");
+}
+function taskSetDigest(name, revision, tasks) {
+  const canonical = { name, revision: revision ?? null, tasks: tasks.map((t) => ({ id: t.id, files: [...t.files].sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0) })).sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0) };
+  return `sha256:${sha256Hex(canonicalize2(canonical))}`;
+}
 export {
   ACTION_ASSURANCE_BUNDLE_V1,
   ADMISSION_DECISION_V1,
   PROOF_REQUEST_V1,
+  RUN_MANIFEST_V1,
   charterDigest,
   covenantState,
   isActionAssuranceBundleV1,
   isDemoRecipientKey,
+  isDemoRunSignerKey,
   isDemoTrustKey,
   parseClaimsJson,
   proofRequestReadback,
   recomputeAdmissionDecision,
+  runManifestReadback,
+  taskSetDigest,
   trustProvenance,
   verifyActionAssuranceBundleV1,
   verifyAdmissionDecision,
   verifyCosignedDiversification,
   verifyEpochBundle,
-  verifyProofRequest
+  verifyProofRequest,
+  verifyRunManifest
 };

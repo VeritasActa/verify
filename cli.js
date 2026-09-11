@@ -97,7 +97,7 @@ import {
   formatGateBundleResult,
   formatMacroTrackRecordResult,
   formatGovernedReceiptResult,
-  formatTrustedContextPackResult,
+  formatTrustedContextPackResult, formatRunManifestResult,
   formatKuResult,
   formatSelfCheckResult,
   green,
@@ -127,7 +127,7 @@ const MODE_LABELS = {
   'legate-proof-pack': 'Legate adherence / restraint proof pack (Ed25519 over canonical bytes, position-blind)',
   'trusted-context-pack': 'ScopeBlind Trusted Context Pack (signed parsed-context attestation)',
   'scopeblind-claims-v2.1.1': 'ScopeBlind Verifiable Claims v2.1.1 point-in-time artifact',
-  'legate-standard': 'Legate signed standard, recipient decision, or action assurance bundle (the site\'s own verification core, offline)',
+  'legate-standard': 'Legate signed standard, recipient decision, action assurance bundle, or run manifest (the site\'s own verification core, offline)',
 };
 
 // ──────────────────────────────────────────────────────────────────
@@ -205,6 +205,8 @@ function parseArgs() {
       case '--stdin': opts.stdin = true; break;
       case '--mode': opts.mode = next(); break;
       case '--bundle': opts.bundle = true; break;
+      case '--standard': opts.standardFile = next(); break;
+      case '--receipts': opts.receiptsFile = next(); break;
       case '--json': opts.json = true; break;
       case '--verbose':
       case '-v': opts.verbose = true; break;
@@ -337,6 +339,8 @@ ${bold('Options:')}
   --anchor-head <hex>      Pin the expected signed macro anchor digest
   --mode <m>               Force mode: receipt|claims|voprf|ku|auto (default: auto)
   --bundle                 Verify as audit bundle
+  --standard <file>        Legate run manifest: the signed standard to check the pins and policy against
+  --receipts <file>        Legate run manifest: the gateway's receipt log (JSONL or array) to check the chain against
   --stdin                  Read input from stdin
   --json                   Output JSON
   --verbose, -v            Detailed verification info
@@ -599,6 +603,15 @@ async function dispatch(input, opts) {
       return { ...r, modeLabel: MODE_LABELS['legate-proof-pack'] };
     }
     case 'legate-standard': {
+      // A run manifest binds to a standard and a receipt log; both are optional files beside it.
+      if (input?.type === 'scopeblind.run_manifest.v1') {
+        const { readFileSync } = await import('node:fs');
+        if (opts.standardFile) subOpts.standard = JSON.parse(readFileSync(opts.standardFile, 'utf8'));
+        if (opts.receiptsFile) {
+          const text = readFileSync(opts.receiptsFile, 'utf8').trim();
+          subOpts.receipts = text.startsWith('[') ? JSON.parse(text) : text.split('\n').filter(Boolean).map((l) => JSON.parse(l));
+        }
+      }
       const r = await verifyLegateStandard(input, subOpts);
       return { ...r, modeLabel: MODE_LABELS['legate-standard'] };
     }
@@ -1287,6 +1300,7 @@ async function main() {
     else if (result.format === 'gate-tuple') console.log(formatGateTupleResult(result, opts));
     else if (result.format === 'legate-governed-receipt') console.log(formatGovernedReceiptResult(result, opts));
     else if (result.format === 'trusted-context-pack') console.log(formatTrustedContextPackResult(result, opts));
+    else if (result.artifact_type === 'scopeblind.run_manifest.v1') console.log(formatRunManifestResult(result, opts));
     else if (result.total !== undefined) console.log(formatBundleResult(result, opts));
     else console.log(formatReceiptResult(result, opts));
 

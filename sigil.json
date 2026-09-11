@@ -1,15 +1,15 @@
 {
   "sigil_version": 1,
-  "fingerprint": "10bd5255",
-  "name": "Fair Grove",
-  "sigil_hash": "10bd5255f8ecffea4892026f1d9240cb609a5736c7d501e24f7864e8218aa003",
+  "fingerprint": "168d74da",
+  "name": "Fair Tide",
+  "sigil_hash": "168d74dac88705a3d8d15002cba44b06d133f609ee73495d3a15799f1541f279",
   "project_public_key": "fe665e861867cec7e171c0c13bbc873c3362079faef21f54df7804b7fb9ae8af",
   "commitment_authentication": "public_recomputable_integrity_only",
   "policy": {
     "version": 3,
     "package": "@veritasacta/verify",
-    "package_version": "0.10.0",
-    "source_hash": "068ceffb7a7af0d9c2a626d39a723aac52790abeff8ea2a3c95c197ae8d0fd0d",
+    "package_version": "0.10.1",
+    "source_hash": "7a83ee754d53c50bade183b6c12a90cd9bf188f1a87be820d14284071eb08377",
     "monitored_files": [
       "README.md",
       "cli.js",
@@ -75,6 +75,6 @@
     ],
     "created_at": 1784267169966
   },
-  "policy_hash": "3312f80c4cd108ca1d28a39190170f8eba975ad6f71d179f586fe91ce613dc0f",
+  "policy_hash": "3beaa15acc5a46cc4416ae36aec8f6f76fb7f684c8592ad6dce466c98b57aa40",
   "derived_at": "2026-07-17T05:46:09.966Z"
 }

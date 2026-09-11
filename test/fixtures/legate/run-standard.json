@@ -1,0 +1,146 @@
+{
+  "type": "scopeblind.proof_request.v1",
+  "version": 1,
+  "request_id": "pr:7a1e5b9c3d2f4e60",
+  "recipient": {
+    "name": "Benchmark maintainer",
+    "organization": "Terminal-Bench (demo)",
+    "key_id": "recipient:27aa70064bb192c4",
+    "verification_key": "6c360b0c2def60adf93e97019f61df31d2670bbc3bfad933859dc1663c1d9eac"
+  },
+  "operator": {
+    "name": "Submitter (demo run)"
+  },
+  "decision": {
+    "kind": "reliance",
+    "owner": "Benchmark maintainer",
+    "statement": "Rely on this run's score as a verified run of the pinned task set",
+    "purpose": "Leaderboard entry"
+  },
+  "boundary": {
+    "workflow": "Benchmark run",
+    "action_class": "tool_call",
+    "resources": [
+      "the task workspace"
+    ],
+    "destinations": [],
+    "period": {
+      "starts_at": "2026-09-11T00:00:00.000Z",
+      "ends_at": "2027-12-31T00:00:00.000Z"
+    }
+  },
+  "requirements": {
+    "environment_class_min": "sandbox",
+    "approver_assurance_min": "policy_automatic",
+    "human_approval": {
+      "required_above": null,
+      "distinct_approvers": 1
+    },
+    "authority_max_age_seconds": 900,
+    "coverage": "governed_route",
+    "effect_evidence": "independently_reconciled",
+    "anchoring": "self_attested",
+    "partial_settlement_permitted": false,
+    "run": {
+      "allowed_tools": [
+        "Bash"
+      ],
+      "egress_allowlist": [],
+      "attempts_per_task": 1,
+      "dataset": {
+        "name": "terminal-bench/original-tasks",
+        "revision": "d28711d0da2675d0bb1d56de45ae5df6082438a3",
+        "digest": "sha256:52057cab17aa97b85950102b6183edd9ef69d5382900e43a610ccb1c33ef3d83"
+      },
+      "harness": {
+        "name": "legate-verified-run",
+        "digest": "sha256:3839321d50a104921ab767d9839856bec8ed0c1c1dc09ded33d4be66fa31ed1e"
+      },
+      "time_limit_seconds": 900,
+      "model_route": "chatgpt.com (Codex)"
+    }
+  },
+  "trust": {
+    "accepted_gate_keys": [
+      "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225"
+    ],
+    "accepted_approver_keys": [],
+    "accepted_readback_sources": [],
+    "accepted_anchor_witnesses": []
+  },
+  "disclosure": {
+    "required_fields": [
+      "tool calls",
+      "verdicts",
+      "chain head"
+    ],
+    "inspection": "on_request"
+  },
+  "limitations_permitted": [
+    "The agent's own sandbox stands in for the benchmark's Docker image; task paths are rebased from /app to the workspace and the tests are run with the same rebase",
+    "The gate clock is accepted as the dispatch time",
+    "No environment attestation is required for a demonstration run"
+  ],
+  "rejection_criteria": [
+    "Any tool call not on the allowed list",
+    "Any gap in the receipt chain",
+    "More than one attempt per task",
+    "Any self-reported pass"
+  ],
+  "hold_criteria": [
+    "A harness other than the pinned one",
+    "A run whose environment attestation is missing"
+  ],
+  "deadline": {
+    "respond_by": "2027-12-31T00:00:00.000Z",
+    "evidence_max_age_seconds": 2592000
+  },
+  "consequence": {
+    "if_met": "Listed as a verified run: the score stands on the receipts and the manifest, not on the submitter's word.",
+    "if_not_met": "Listed as unverified, or not listed. No score is taken from this submission.",
+    "not_a_promise": true
+  },
+  "claim_contract_digest": null,
+  "enforcement": {
+    "compiler": "legate-standard-compiler.v1",
+    "policy_format": "cedar",
+    "construction": "acta-policy-digest-v1",
+    "file_name": "standard.cedar",
+    "policy": "// Compiled by legate-standard-compiler.v1 from the signed standard's structured requirements.\n// The standard carries this file's digest (acta-policy-digest-v1). Edit the standard, not this file.\n// Allowed tools: Bash. The name must match exactly. The gate does not read the tool's input.\n// Network, model route, attempts, time, and the task set are not visible here; the environment enforces the first two and the manifest carries the rest.\n\npermit (\n  principal,\n  action == Action::\"MCP::Tool::call\",\n  resource\n) when {\n  resource in [Tool::\"Bash\"]\n};\n\nforbid (\n  principal,\n  action == Action::\"MCP::Tool::call\",\n  resource\n) unless {\n  resource in [Tool::\"Bash\"]\n};\n",
+    "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
+    "action_model": "mcp",
+    "tool": "Bash",
+    "gate_enforced": [
+      "run_tools"
+    ],
+    "not_gate_enforced": [
+      "run_egress",
+      "run_model_route",
+      "run_attempts",
+      "run_time_limit",
+      "run_dataset",
+      "run_harness",
+      "limit_amount",
+      "environment",
+      "coverage",
+      "effect",
+      "anchoring",
+      "disclosure",
+      "payment_controls",
+      "rejection_0_tool_not_listed",
+      "rejection_1_chain_intact",
+      "rejection_2_attempts",
+      "rejection_3_harness_verdict",
+      "hold_0_run_pins",
+      "hold_1"
+    ]
+  },
+  "issued_at": "2026-09-11T00:00:00.000Z",
+  "expires_at": "2027-12-31T00:00:00.000Z",
+  "nonce": "c0ffee00c0ffee00c0ffee00c0ffee02",
+  "digest": "d6ffc37cbb2b985ff0fb150b5ffdb537ac4a652227eef3e0919953bbf766145d",
+  "signature": {
+    "algorithm": "Ed25519",
+    "value": "d602ea5b80ecc70f250fdc6d41007d74d5c9d4c85f3ca022e2f330c1ef06d3ab693e388e0c0c975c75b714cbf44a9db4eb26f2420d89a206ebe737add2413602"
+  }
+}
