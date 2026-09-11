@@ -54,7 +54,7 @@
       },
       "harness": {
         "name": "legate-verified-run",
-        "digest": "sha256:8ce9a1aac24bfe5683e5b143fdc164d6360a87c7ac6f75a8cc373a2f62be155d"
+        "digest": "sha256:63092e4125ab179a17f793bcca3bcb847b9abd0efe282da3cf19b29ad79db201"
       },
       "time_limit_seconds": 900,
       "model_route": "chatgpt.com (Codex)"
@@ -65,7 +65,9 @@
       "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225"
     ],
     "accepted_approver_keys": [],
-    "accepted_readback_sources": [],
+    "accepted_readback_sources": [
+      "33d3c584cbbb91063446ee05591b4226d15c464cefe7fb9e075cfc9db0910727"
+    ],
     "accepted_anchor_witnesses": []
   },
   "disclosure": {
@@ -79,7 +81,8 @@
   "limitations_permitted": [
     "The agent's own sandbox stands in for the benchmark's Docker image; task paths are rebased from /app to the workspace and the tests are run with the same rebase",
     "The gate clock is accepted as the dispatch time",
-    "No environment attestation is required for a demonstration run"
+    "No environment attestation is required for a demonstration run",
+    "Demonstration keys sign the standard, the receipts, and the manifest; they prove the mechanism, not identity"
   ],
   "rejection_criteria": [
     "Any tool call not on the allowed list",
@@ -138,9 +141,9 @@
   "issued_at": "2026-09-11T00:00:00.000Z",
   "expires_at": "2027-12-31T00:00:00.000Z",
   "nonce": "c0ffee00c0ffee00c0ffee00c0ffee02",
-  "digest": "e1a7f5fe58408baa93375a46f550aa45cd4ab95e02ae0c870780558ce22d4eab",
+  "digest": "139fb512e846baa08a654c6d3aaaf5c207b96da624aaf092433e15c73256a96f",
   "signature": {
     "algorithm": "Ed25519",
-    "value": "35178a2b1f01c66aaa0464be7a5da76e3c0ab097abb307e1d6c06b4b31aecaaf08bfbebd160330fb8ee7180dda640ed8b7ef1c73102fce135247765d24f6280a"
+    "value": "ab6a3f233615fab4d5faa9ef778ddd8cfebd530b9cf15d143533b12538d6740c86c1cb0107b9b14dc154b5732150fb03feafc089898b3d22be8437b23a592703"
   }
 }

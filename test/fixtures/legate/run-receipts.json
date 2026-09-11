@@ -6,25 +6,25 @@
       "decision": "allow",
       "reason": "cedar_allow",
       "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
-      "scope": "tu-1789110341017-izdu",
+      "scope": "tu-1789126618398-2c3b",
       "mode": "enforce",
-      "request_id": "tu-1789110341017-izdu",
+      "request_id": "tu-1789126618398-2c3b",
       "spec": "draft-farley-acta-signed-receipts-03",
       "issuer_certification": "self-signed",
       "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
       "issuer_name": "protect-mcp",
       "payload_digest": {
-        "input_hash": "9132170e388ce04e8ee94d87cfca3ea3cc6cc9d64488dee618ebfe4a15388515",
-        "input_size": 39,
+        "input_hash": "8870dec1ba822fdc77a44cd4c406f0dd6d8ec5e56650798285d381a153c5822b",
+        "input_size": 26,
         "canonical": "jcs"
       },
-      "issued_at": "2026-09-11T07:05:41.018Z",
+      "issued_at": "2026-09-11T11:36:58.398Z",
       "issuer_id": "sb:issuer:GsAFpSRUAvaU"
     },
     "signature": {
       "alg": "EdDSA",
       "kid": "sb:issuer:GsAFpSRUAvaU",
-      "sig": "c1c4d8354fda3cd626f62333c3b54a00c22edeb3aadf7c8fb1d3265e77c4fde0b4acb4cff21c3ce46ff45512f59d582c0f8504e397972b7269e78fc30f2c7205"
+      "sig": "a195874abc389451993ac2ee5d5f02b54c24f9914b36395c2a5d7105d74ab84a5f5d85d7485f6ed1ece10453951d673e93221a6d91f3c0e62f4f0c698eab6701"
     }
   },
   {
@@ -34,26 +34,26 @@
       "decision": "deny",
       "reason": "cedar_deny: {\"reason\":[\"policy1\"],\"errors\":[]}",
       "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
-      "scope": "tu-1789110343425-lawe",
+      "scope": "tu-1789126620338-3jrr",
       "mode": "enforce",
-      "request_id": "tu-1789110343425-lawe",
+      "request_id": "tu-1789126620338-3jrr",
       "spec": "draft-farley-acta-signed-receipts-03",
       "issuer_certification": "self-signed",
       "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
       "issuer_name": "protect-mcp",
-      "previousReceiptHash": "sha256:f238ddd4f4c9db58327945a21677ebe61a15a6e5806f887a8d5785a344f1c3bc",
+      "previousReceiptHash": "sha256:e2cc0a225f5453fe376a5b61ec1da9792c81f159751413a4aaa869a67b14c835",
       "payload_digest": {
         "input_hash": "03bfe75237263895831211a53272c6e5d4dc68407b84db9f949278556385f449",
         "input_size": 91,
         "canonical": "jcs"
       },
-      "issued_at": "2026-09-11T07:05:43.425Z",
+      "issued_at": "2026-09-11T11:37:00.338Z",
       "issuer_id": "sb:issuer:GsAFpSRUAvaU"
     },
     "signature": {
       "alg": "EdDSA",
       "kid": "sb:issuer:GsAFpSRUAvaU",
-      "sig": "76f53a712e77d343453a32181271c20319bd9a05f872d66cc12d71b2763b05bcdb517d263770042fa11759b151c41b394e093681c1cf7bacdd3f895f0531dc05"
+      "sig": "cb55bb6ecdab4710317a3a2886f0916dc20d94b4706de3584f4f2fed147fcc5a8c1a9bc3c10a42fa78f3982bd170d7213f47a3a52be41d243358a609f9c0fc07"
     }
   },
   {
@@ -63,26 +63,26 @@
       "decision": "allow",
       "reason": "cedar_allow",
       "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
-      "scope": "tu-1789110349742-dyvq",
+      "scope": "tu-1789126624236-phgj",
       "mode": "enforce",
-      "request_id": "tu-1789110349742-dyvq",
+      "request_id": "tu-1789126624236-phgj",
       "spec": "draft-farley-acta-signed-receipts-03",
       "issuer_certification": "self-signed",
       "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
       "issuer_name": "protect-mcp",
-      "previousReceiptHash": "sha256:e2ccab98fafa676b32a73fcbf64cff7893a920c2cc8565e7c95e6102c9e4dc66",
+      "previousReceiptHash": "sha256:dd8830abc2f86598a1cee67787df8fa532840cd300117d8e82864f56fdb2bf1b",
       "payload_digest": {
         "input_hash": "ea79b7d381f6891407e491751657e14cc84a7f9bb29f49c9ffe24f924bfc0c5c",
         "input_size": 55,
         "canonical": "jcs"
       },
-      "issued_at": "2026-09-11T07:05:49.742Z",
+      "issued_at": "2026-09-11T11:37:04.236Z",
       "issuer_id": "sb:issuer:GsAFpSRUAvaU"
     },
     "signature": {
       "alg": "EdDSA",
       "kid": "sb:issuer:GsAFpSRUAvaU",
-      "sig": "48bc86065e135680b8e12aff99a38a2996426b68b22c4fa6f7e7db7b33797b2958b29ccbfe3143c4d2b251e60e4b3755fbc16d76b636ef3ddcfef1f53687ba04"
+      "sig": "c16a049b9f909ba330b11af83008524b95183416ac50147a59f6ea3805af538ac6058b6b722cf990cdc89bfce72a21e51a094eca48ba78254b11f92864b76f06"
     }
   },
   {
@@ -92,345 +92,26 @@
       "decision": "allow",
       "reason": "cedar_allow",
       "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
-      "scope": "tu-1789110369191-aty9",
+      "scope": "tu-1789126633997-pped",
       "mode": "enforce",
-      "request_id": "tu-1789110369191-aty9",
+      "request_id": "tu-1789126633997-pped",
       "spec": "draft-farley-acta-signed-receipts-03",
       "issuer_certification": "self-signed",
       "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
       "issuer_name": "protect-mcp",
-      "previousReceiptHash": "sha256:a22876d99df4e4351d081e91cebec162a5cc3fc678327bf64a335f101424edb8",
-      "payload_digest": {
-        "input_hash": "7bd176bfcad094d34fb03d84a3e61e28ba0f345da89bc11d645c52f646701adb",
-        "input_size": 898,
-        "canonical": "jcs"
-      },
-      "issued_at": "2026-09-11T07:06:09.191Z",
-      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
-    },
-    "signature": {
-      "alg": "EdDSA",
-      "kid": "sb:issuer:GsAFpSRUAvaU",
-      "sig": "1e2b17d6592517616c4e1cacdc14ae64ae811ea569b3fb86eb7e500c5ee18906112e9d1ea88447c72304134c96cc56978dec636058dfc4a5def0372fa8941a0c"
-    }
-  },
-  {
-    "payload": {
-      "type": "protectmcp:decision",
-      "tool_name": "Bash",
-      "decision": "allow",
-      "reason": "cedar_allow",
-      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
-      "scope": "tu-1789110372227-4d7x",
-      "mode": "enforce",
-      "request_id": "tu-1789110372227-4d7x",
-      "spec": "draft-farley-acta-signed-receipts-03",
-      "issuer_certification": "self-signed",
-      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
-      "issuer_name": "protect-mcp",
-      "previousReceiptHash": "sha256:87be427bb96e62090e29fd2c75c785c8aafcc8a410f9848424d408c37267ae43",
-      "payload_digest": {
-        "input_hash": "a161ba0b9f20ed4064f6767390d580c111c3ddcced86d9fa1188b8fba60c71a5",
-        "input_size": 82,
-        "canonical": "jcs"
-      },
-      "issued_at": "2026-09-11T07:06:12.227Z",
-      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
-    },
-    "signature": {
-      "alg": "EdDSA",
-      "kid": "sb:issuer:GsAFpSRUAvaU",
-      "sig": "26997e48acf9e6422ddb2a98a310c750742c28acaffb30e0bddfa7cb3b945d257a60dda97074ae9bad0ed51bfe6060ecfd093950b666565365724e35da1bfb01"
-    }
-  },
-  {
-    "payload": {
-      "type": "protectmcp:decision",
-      "tool_name": "Bash",
-      "decision": "allow",
-      "reason": "cedar_allow",
-      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
-      "scope": "tu-1789110385149-58qz",
-      "mode": "enforce",
-      "request_id": "tu-1789110385149-58qz",
-      "spec": "draft-farley-acta-signed-receipts-03",
-      "issuer_certification": "self-signed",
-      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
-      "issuer_name": "protect-mcp",
-      "previousReceiptHash": "sha256:c1c5801fc8e46c4839af7bc66a4e7e0edd230cd738b58e6a3b2e139e464db332",
-      "payload_digest": {
-        "input_hash": "76dc0b7002d1775be6af8f523d26897cfe5deb4c52bd11d106c7144ae6067bcb",
-        "input_size": 84,
-        "canonical": "jcs"
-      },
-      "issued_at": "2026-09-11T07:06:25.149Z",
-      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
-    },
-    "signature": {
-      "alg": "EdDSA",
-      "kid": "sb:issuer:GsAFpSRUAvaU",
-      "sig": "7570b07b86da8da646271d2df7efe5166125419c4ebac84e22781e82570b4770ebc99174e27e0c1ce91737744ac561748d09e16b62188211455b9ae7ef9b1f00"
-    }
-  },
-  {
-    "payload": {
-      "type": "protectmcp:decision",
-      "tool_name": "Bash",
-      "decision": "allow",
-      "reason": "cedar_allow",
-      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
-      "scope": "tu-1789110385292-84iw",
-      "mode": "enforce",
-      "request_id": "tu-1789110385292-84iw",
-      "spec": "draft-farley-acta-signed-receipts-03",
-      "issuer_certification": "self-signed",
-      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
-      "issuer_name": "protect-mcp",
-      "previousReceiptHash": "sha256:a85e9d946d6f7a8262e362d937818d50a5ea560a345f2ebfa8d14075122720b1",
-      "payload_digest": {
-        "input_hash": "c4c1db9f7218ba8b4ca5cd6930b57ea11fac157768d977b7a103b9c71a5cd97d",
-        "input_size": 50,
-        "canonical": "jcs"
-      },
-      "issued_at": "2026-09-11T07:06:25.292Z",
-      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
-    },
-    "signature": {
-      "alg": "EdDSA",
-      "kid": "sb:issuer:GsAFpSRUAvaU",
-      "sig": "b1de37c8b09f486d03e391456dce99c662b4854c14c44b2dd233370b8599d6d2de2b9b41dbf6c4c4f38ecf0e893e678658b2f5adebd2dc95070034d76ee6640c"
-    }
-  },
-  {
-    "payload": {
-      "type": "protectmcp:decision",
-      "tool_name": "Bash",
-      "decision": "allow",
-      "reason": "cedar_allow",
-      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
-      "scope": "tu-1789110393591-5yxq",
-      "mode": "enforce",
-      "request_id": "tu-1789110393591-5yxq",
-      "spec": "draft-farley-acta-signed-receipts-03",
-      "issuer_certification": "self-signed",
-      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
-      "issuer_name": "protect-mcp",
-      "previousReceiptHash": "sha256:b30b1c73626db99f418f1a8a97f345e13fb58268ecbc32b4da4403ac6def8e9a",
-      "payload_digest": {
-        "input_hash": "0132bdc38ca17081f5ccab9f4e6ad73b5b3a1f022ac639beeb3d00037e4a98f3",
-        "input_size": 105,
-        "canonical": "jcs"
-      },
-      "issued_at": "2026-09-11T07:06:33.591Z",
-      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
-    },
-    "signature": {
-      "alg": "EdDSA",
-      "kid": "sb:issuer:GsAFpSRUAvaU",
-      "sig": "803748df13789009267c20fa7bbf1e113cedced4068fbbe7c9521a73c3318eeb60647b05fe3f5c947822b982be1ec4d4e18047e742c70f233b98b831c982a00c"
-    }
-  },
-  {
-    "payload": {
-      "type": "protectmcp:decision",
-      "tool_name": "Bash",
-      "decision": "allow",
-      "reason": "cedar_allow",
-      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
-      "scope": "tu-1789110393730-8hox",
-      "mode": "enforce",
-      "request_id": "tu-1789110393730-8hox",
-      "spec": "draft-farley-acta-signed-receipts-03",
-      "issuer_certification": "self-signed",
-      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
-      "issuer_name": "protect-mcp",
-      "previousReceiptHash": "sha256:c2fa6ccb7ccad948349ed3ed74052ec96d296a15ff5b886595517ca00b807d36",
-      "payload_digest": {
-        "input_hash": "909041972cc49e0fd296983ff834087c01562247deb4e775321e3109de55fb9f",
-        "input_size": 111,
-        "canonical": "jcs"
-      },
-      "issued_at": "2026-09-11T07:06:33.730Z",
-      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
-    },
-    "signature": {
-      "alg": "EdDSA",
-      "kid": "sb:issuer:GsAFpSRUAvaU",
-      "sig": "98b0fa15c70d2ec960f6841168ff4ca91779eb97e57f5b35de17868c2f6c5b4c3fedb27d812b0ca9e56b8f3b991a1a9c1e6098b6235901a68cd05b9191861d01"
-    }
-  },
-  {
-    "payload": {
-      "type": "protectmcp:decision",
-      "tool_name": "Bash",
-      "decision": "allow",
-      "reason": "cedar_allow",
-      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
-      "scope": "tu-1789110401804-mezb",
-      "mode": "enforce",
-      "request_id": "tu-1789110401804-mezb",
-      "spec": "draft-farley-acta-signed-receipts-03",
-      "issuer_certification": "self-signed",
-      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
-      "issuer_name": "protect-mcp",
-      "previousReceiptHash": "sha256:22674cae58d4beeaaa11d034ca071171830d1716c80ad99b873d8c3fe2b5257f",
-      "payload_digest": {
-        "input_hash": "e020f337745a0d9a16f5c639efc2d7f0b3da4d0feaad2171edd0b4f831697143",
-        "input_size": 100,
-        "canonical": "jcs"
-      },
-      "issued_at": "2026-09-11T07:06:41.804Z",
-      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
-    },
-    "signature": {
-      "alg": "EdDSA",
-      "kid": "sb:issuer:GsAFpSRUAvaU",
-      "sig": "55542d38278d8c71750df5d2ba973746a898798b1fafcfd875abd7afd223eb32c83a3f0cb792dfb7d5023f8f9478de2ffbde7ff0f39a59a7cd45a381e082fa01"
-    }
-  },
-  {
-    "payload": {
-      "type": "protectmcp:decision",
-      "tool_name": "Bash",
-      "decision": "allow",
-      "reason": "cedar_allow",
-      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
-      "scope": "tu-1789110401944-w458",
-      "mode": "enforce",
-      "request_id": "tu-1789110401944-w458",
-      "spec": "draft-farley-acta-signed-receipts-03",
-      "issuer_certification": "self-signed",
-      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
-      "issuer_name": "protect-mcp",
-      "previousReceiptHash": "sha256:52520f4b203e2943c64b1f829c93aeda2f81a0223ad0bf40765d69336e31b4c0",
-      "payload_digest": {
-        "input_hash": "ed0ea465f5068528fefac594f19dcd2b8c29c4ee8ad785a66573c5cfc77f062e",
-        "input_size": 111,
-        "canonical": "jcs"
-      },
-      "issued_at": "2026-09-11T07:06:41.944Z",
-      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
-    },
-    "signature": {
-      "alg": "EdDSA",
-      "kid": "sb:issuer:GsAFpSRUAvaU",
-      "sig": "35db3ee439d2c8600a729315cdfe5478e874a4633060ce1c08518b7d9bee1a703835a9b2443225b994a366c60b362b9f3621fb0dacebbe3013bbff387eeeed04"
-    }
-  },
-  {
-    "payload": {
-      "type": "protectmcp:decision",
-      "tool_name": "Bash",
-      "decision": "allow",
-      "reason": "cedar_allow",
-      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
-      "scope": "tu-1789110413166-ovvz",
-      "mode": "enforce",
-      "request_id": "tu-1789110413166-ovvz",
-      "spec": "draft-farley-acta-signed-receipts-03",
-      "issuer_certification": "self-signed",
-      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
-      "issuer_name": "protect-mcp",
-      "previousReceiptHash": "sha256:ddc22ff487d8709cb62c48ad40311ff7a047ab9bbd152f44f9363ade2290695e",
-      "payload_digest": {
-        "input_hash": "46b831af5d500a6b288b89d23be4a11c3aa0fe2902a2986c487c3c629917ff2f",
-        "input_size": 1104,
-        "canonical": "jcs"
-      },
-      "issued_at": "2026-09-11T07:06:53.166Z",
-      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
-    },
-    "signature": {
-      "alg": "EdDSA",
-      "kid": "sb:issuer:GsAFpSRUAvaU",
-      "sig": "7600d3a3639fcc107efee5c60dd778d7f324d6afdea252553470f901507a1fe20d273589acffa6d996795f2fdac4885ead013d05af85cc53dfb059a1bd4e8403"
-    }
-  },
-  {
-    "payload": {
-      "type": "protectmcp:decision",
-      "tool_name": "Bash",
-      "decision": "allow",
-      "reason": "cedar_allow",
-      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
-      "scope": "tu-1789110419550-b2ca",
-      "mode": "enforce",
-      "request_id": "tu-1789110419550-b2ca",
-      "spec": "draft-farley-acta-signed-receipts-03",
-      "issuer_certification": "self-signed",
-      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
-      "issuer_name": "protect-mcp",
-      "previousReceiptHash": "sha256:f85dcd1490f019db97cb4b1fbcd8708a4f2d488fac620df8fbd99c7c93e23d75",
-      "payload_digest": {
-        "input_hash": "45e8c2ed149a645547711060161c54aec1a8e487d82cfc54826e695daaffeba9",
-        "input_size": 51,
-        "canonical": "jcs"
-      },
-      "issued_at": "2026-09-11T07:06:59.550Z",
-      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
-    },
-    "signature": {
-      "alg": "EdDSA",
-      "kid": "sb:issuer:GsAFpSRUAvaU",
-      "sig": "b0e7cb5ba08c88a6d53ab945c77ff99b4a312180343efcfcc5ff7c27d5dc3d2ad4b2a1645ff26a129cf3d669e2f1cf5fc492b9a885fa7f7370171ae893c7da0c"
-    }
-  },
-  {
-    "payload": {
-      "type": "protectmcp:decision",
-      "tool_name": "Bash",
-      "decision": "allow",
-      "reason": "cedar_allow",
-      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
-      "scope": "tu-1789110419710-ykpn",
-      "mode": "enforce",
-      "request_id": "tu-1789110419710-ykpn",
-      "spec": "draft-farley-acta-signed-receipts-03",
-      "issuer_certification": "self-signed",
-      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
-      "issuer_name": "protect-mcp",
-      "previousReceiptHash": "sha256:3fb4febc9ef0b7c9c1da4810b92fca0579e9b5dbb3345f5f7fe42a110fc3b7d6",
-      "payload_digest": {
-        "input_hash": "52eb4aab175f95f9e71b4ee20a5ba143e15732b21c2e89651cdf8b374297e1bf",
-        "input_size": 38,
-        "canonical": "jcs"
-      },
-      "issued_at": "2026-09-11T07:06:59.710Z",
-      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
-    },
-    "signature": {
-      "alg": "EdDSA",
-      "kid": "sb:issuer:GsAFpSRUAvaU",
-      "sig": "091faf4d99725adfa4a8843ede21c03ecd977d247735db8400e8048deb5510765ca6dfa30e24b56efca22e6bc2632d162c478e92b99ec148d382cda5f05c2707"
-    }
-  },
-  {
-    "payload": {
-      "type": "protectmcp:decision",
-      "tool_name": "Bash",
-      "decision": "allow",
-      "reason": "cedar_allow",
-      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
-      "scope": "tu-1789110432784-d3uf",
-      "mode": "enforce",
-      "request_id": "tu-1789110432784-d3uf",
-      "spec": "draft-farley-acta-signed-receipts-03",
-      "issuer_certification": "self-signed",
-      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
-      "issuer_name": "protect-mcp",
-      "previousReceiptHash": "sha256:d26ba40debe62b6f4f5a39a29cecc31b5e6cfc05c9712e3c249ad06b0a937cd9",
+      "previousReceiptHash": "sha256:0ad7ba877624d40f4d155ef3b939dda603f2aa9e3ebd273cf8fc26615bb07f60",
       "payload_digest": {
         "input_hash": "cae3af31638f90e4608822ae52751a8f0c8e475a3a021eca2bb86de26076b07c",
         "input_size": 31,
         "canonical": "jcs"
       },
-      "issued_at": "2026-09-11T07:07:12.784Z",
+      "issued_at": "2026-09-11T11:37:13.997Z",
       "issuer_id": "sb:issuer:GsAFpSRUAvaU"
     },
     "signature": {
       "alg": "EdDSA",
       "kid": "sb:issuer:GsAFpSRUAvaU",
-      "sig": "7796ee4fd699a31335ab655966bb57d7e6d26a87089f39a16acc7b16e0364b63ec263aa0bfd03a5af4073d915b67e2d77623b577392d397dd6df45feb6ea2200"
+      "sig": "c1bf0addcf1d59e91f38b09da24c5829eec40e2dabb3457a735f3f3e74d19e98ab5cff93271af7a325003aeb1e9e0c8c0d66e0b9f3c1ade6e2e771fb9b52290e"
     }
   },
   {
@@ -440,26 +121,26 @@
       "decision": "allow",
       "reason": "cedar_allow",
       "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
-      "scope": "tu-1789110432935-h4gn",
+      "scope": "tu-1789126643253-3ixx",
       "mode": "enforce",
-      "request_id": "tu-1789110432935-h4gn",
+      "request_id": "tu-1789126643253-3ixx",
       "spec": "draft-farley-acta-signed-receipts-03",
       "issuer_certification": "self-signed",
       "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
       "issuer_name": "protect-mcp",
-      "previousReceiptHash": "sha256:dc758622ab987d6009d3fdc98fab461685ca1b9f82f5f2750a2cba33ad322f8c",
+      "previousReceiptHash": "sha256:592637a4b726307e413c433f32fb2f5e4279a0be1c6f8c7d015a1a0a9b2ebdb1",
       "payload_digest": {
-        "input_hash": "5314f158e1038eb77b866e932221db3df439624047fb41772f71ba626241fef5",
-        "input_size": 47,
+        "input_hash": "d59cff6706c7e35392ce1fb3a45f76983451f8ad365e0134bfe11b3c7ba7cee3",
+        "input_size": 963,
         "canonical": "jcs"
       },
-      "issued_at": "2026-09-11T07:07:12.935Z",
+      "issued_at": "2026-09-11T11:37:23.253Z",
       "issuer_id": "sb:issuer:GsAFpSRUAvaU"
     },
     "signature": {
       "alg": "EdDSA",
       "kid": "sb:issuer:GsAFpSRUAvaU",
-      "sig": "83510275a1ea9faeca2850616ba97df2e4ef5ce505f6a1543050cd6d2ef313111ce17f5eb72b0fa2800058026032d6bfaad175a5498c86f68f9798c4698d5e01"
+      "sig": "6b491b5e7d12aeb5a9840b10118a836f6db49bbf4121ad564add04c3c2af6bc1cc6223d1f187ad739094abe323b165f47895399465b45b2ee8346c007dcc5804"
     }
   },
   {
@@ -469,258 +150,26 @@
       "decision": "allow",
       "reason": "cedar_allow",
       "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
-      "scope": "tu-1789110445330-41vt",
+      "scope": "tu-1789126646912-22zu",
       "mode": "enforce",
-      "request_id": "tu-1789110445330-41vt",
+      "request_id": "tu-1789126646912-22zu",
       "spec": "draft-farley-acta-signed-receipts-03",
       "issuer_certification": "self-signed",
       "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
       "issuer_name": "protect-mcp",
-      "previousReceiptHash": "sha256:1d06d966b431b3e202965b6ad65c0e808b616e8113093de2457cfbfe08d70570",
+      "previousReceiptHash": "sha256:b0f69ea335bdba9e9553e13f707e2c65250544fcf7358300ee7ee3ba2131a60e",
       "payload_digest": {
-        "input_hash": "cd3f441aa63d2a851cad94dcc177729154a7c472da1ae5f00d1cc53203831c74",
-        "input_size": 47,
+        "input_hash": "8870dec1ba822fdc77a44cd4c406f0dd6d8ec5e56650798285d381a153c5822b",
+        "input_size": 26,
         "canonical": "jcs"
       },
-      "issued_at": "2026-09-11T07:07:25.330Z",
+      "issued_at": "2026-09-11T11:37:26.912Z",
       "issuer_id": "sb:issuer:GsAFpSRUAvaU"
     },
     "signature": {
       "alg": "EdDSA",
       "kid": "sb:issuer:GsAFpSRUAvaU",
-      "sig": "131673ee5d82101ed95a23ee810d515d13a649468c770419f49814eb74e1e90a4fa4a7b3b132ea03b7d14972912a16e5c962a4b5820071afafcb2df8c5042c00"
-    }
-  },
-  {
-    "payload": {
-      "type": "protectmcp:decision",
-      "tool_name": "Bash",
-      "decision": "allow",
-      "reason": "cedar_allow",
-      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
-      "scope": "tu-1789110445477-u1ff",
-      "mode": "enforce",
-      "request_id": "tu-1789110445477-u1ff",
-      "spec": "draft-farley-acta-signed-receipts-03",
-      "issuer_certification": "self-signed",
-      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
-      "issuer_name": "protect-mcp",
-      "previousReceiptHash": "sha256:46734eb15bd2e77542a5ffb5925b4e2bd814f195a03b21574c7d78786f24e6c2",
-      "payload_digest": {
-        "input_hash": "369ad8222d2b9603bf878e678d0da06a1cc1ac84f0bf441b728f77a5e58b1c67",
-        "input_size": 48,
-        "canonical": "jcs"
-      },
-      "issued_at": "2026-09-11T07:07:25.477Z",
-      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
-    },
-    "signature": {
-      "alg": "EdDSA",
-      "kid": "sb:issuer:GsAFpSRUAvaU",
-      "sig": "bd68af959bf804ae57a168548b17ef8af9ff5eb500e2a2877a92ece228d680fd5d6ed280ab2f0b92dc00fe14a762d841e1d88c39e06f66e22972a84c3de49b0a"
-    }
-  },
-  {
-    "payload": {
-      "type": "protectmcp:decision",
-      "tool_name": "Bash",
-      "decision": "allow",
-      "reason": "cedar_allow",
-      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
-      "scope": "tu-1789110445632-svm6",
-      "mode": "enforce",
-      "request_id": "tu-1789110445632-svm6",
-      "spec": "draft-farley-acta-signed-receipts-03",
-      "issuer_certification": "self-signed",
-      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
-      "issuer_name": "protect-mcp",
-      "previousReceiptHash": "sha256:e28bd67bde4978749b44796907a05cbb652748700bc22037dc55fe0c992a3fa0",
-      "payload_digest": {
-        "input_hash": "1daf47e7c25571230c259847ee1724a695b01e24859d34540873fc5e36a9caa9",
-        "input_size": 54,
-        "canonical": "jcs"
-      },
-      "issued_at": "2026-09-11T07:07:25.632Z",
-      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
-    },
-    "signature": {
-      "alg": "EdDSA",
-      "kid": "sb:issuer:GsAFpSRUAvaU",
-      "sig": "01b471c4b9d7d5be59849bddf292e870174d6d37bd1c9e0df04a5a1915b5dee2ecc1f2733c6dc7db400b69b45e614c66195fe3fae31cfa3047af5f227f55f900"
-    }
-  },
-  {
-    "payload": {
-      "type": "protectmcp:decision",
-      "tool_name": "Bash",
-      "decision": "allow",
-      "reason": "cedar_allow",
-      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
-      "scope": "tu-1789110445778-2o4w",
-      "mode": "enforce",
-      "request_id": "tu-1789110445778-2o4w",
-      "spec": "draft-farley-acta-signed-receipts-03",
-      "issuer_certification": "self-signed",
-      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
-      "issuer_name": "protect-mcp",
-      "previousReceiptHash": "sha256:726f5f2c013a711090419e6224ee7f7857f7df6496395ea3626691581e3c3e38",
-      "payload_digest": {
-        "input_hash": "42d5b1534a3db9d897a42ec83818d710c2e18868f5b556bf01a9ee9aa0b024ca",
-        "input_size": 181,
-        "canonical": "jcs"
-      },
-      "issued_at": "2026-09-11T07:07:25.778Z",
-      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
-    },
-    "signature": {
-      "alg": "EdDSA",
-      "kid": "sb:issuer:GsAFpSRUAvaU",
-      "sig": "d6827fbafc5b321d1e08e369ac788a1f88bcd1144b883286e909826dd052e2da60a3b0e647e89bcb01177fa2113a81772e9c0f60a25aa4d41dc9e2d64e842f0b"
-    }
-  },
-  {
-    "payload": {
-      "type": "protectmcp:decision",
-      "tool_name": "Bash",
-      "decision": "allow",
-      "reason": "cedar_allow",
-      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
-      "scope": "tu-1789110445926-ydyr",
-      "mode": "enforce",
-      "request_id": "tu-1789110445926-ydyr",
-      "spec": "draft-farley-acta-signed-receipts-03",
-      "issuer_certification": "self-signed",
-      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
-      "issuer_name": "protect-mcp",
-      "previousReceiptHash": "sha256:0e80a869ed8712fa1326943a2fccebb7169da133229dfb601897086eb5a650fd",
-      "payload_digest": {
-        "input_hash": "566e1c6e6f0b8373c3cca0378472f60cb37c058400388b1cd7fba9a4ff9ff323",
-        "input_size": 62,
-        "canonical": "jcs"
-      },
-      "issued_at": "2026-09-11T07:07:25.926Z",
-      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
-    },
-    "signature": {
-      "alg": "EdDSA",
-      "kid": "sb:issuer:GsAFpSRUAvaU",
-      "sig": "afd7ff95ddbcaa5c3e57e9299668dd971ea7188008f8b678bb08864533e8ea72cfd0b50805c4f55b29b576e50ffeb26739f81ed77c52dcfb3359c5ab7198fb0f"
-    }
-  },
-  {
-    "payload": {
-      "type": "protectmcp:decision",
-      "tool_name": "Bash",
-      "decision": "allow",
-      "reason": "cedar_allow",
-      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
-      "scope": "tu-1789110453741-k0h0",
-      "mode": "enforce",
-      "request_id": "tu-1789110453741-k0h0",
-      "spec": "draft-farley-acta-signed-receipts-03",
-      "issuer_certification": "self-signed",
-      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
-      "issuer_name": "protect-mcp",
-      "previousReceiptHash": "sha256:369971da43a157b4f8397bb2d7a9ef3dea4fe8be585967424f800d048f0c42aa",
-      "payload_digest": {
-        "input_hash": "6b0d098bfb2001d6bc8613ffab5160e03b3de73348e0c409a39cbd51eacdc2a6",
-        "input_size": 51,
-        "canonical": "jcs"
-      },
-      "issued_at": "2026-09-11T07:07:33.741Z",
-      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
-    },
-    "signature": {
-      "alg": "EdDSA",
-      "kid": "sb:issuer:GsAFpSRUAvaU",
-      "sig": "5b8b1282ff4bbe8dca81f2d144e5df14804fcf675fd5ee3894022e06b8ce6f6cb5ecd32312d0b375c97333cc1de46336d6ab5e46381f74de11f4bc4994887d0c"
-    }
-  },
-  {
-    "payload": {
-      "type": "protectmcp:decision",
-      "tool_name": "Bash",
-      "decision": "allow",
-      "reason": "cedar_allow",
-      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
-      "scope": "tu-1789110453884-63xp",
-      "mode": "enforce",
-      "request_id": "tu-1789110453884-63xp",
-      "spec": "draft-farley-acta-signed-receipts-03",
-      "issuer_certification": "self-signed",
-      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
-      "issuer_name": "protect-mcp",
-      "previousReceiptHash": "sha256:9f981a60066d3c827ee31435ac7e060534ba44cbd2fe8dd3bc5f2c5f7cebf315",
-      "payload_digest": {
-        "input_hash": "84102eec0136262b7a7c6cfff76595124023b3f91909aad4acad40e48658364a",
-        "input_size": 33,
-        "canonical": "jcs"
-      },
-      "issued_at": "2026-09-11T07:07:33.884Z",
-      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
-    },
-    "signature": {
-      "alg": "EdDSA",
-      "kid": "sb:issuer:GsAFpSRUAvaU",
-      "sig": "64ec8e651041f805f885050cbf26a93e7cabf2c8e0e6fe908c225a551dae70add3d0a4b069c736fcfb76fe17f48c303bba86e345b54c79f24e48e7b2bc837400"
-    }
-  },
-  {
-    "payload": {
-      "type": "protectmcp:decision",
-      "tool_name": "Bash",
-      "decision": "allow",
-      "reason": "cedar_allow",
-      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
-      "scope": "tu-1789110454027-y8zm",
-      "mode": "enforce",
-      "request_id": "tu-1789110454027-y8zm",
-      "spec": "draft-farley-acta-signed-receipts-03",
-      "issuer_certification": "self-signed",
-      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
-      "issuer_name": "protect-mcp",
-      "previousReceiptHash": "sha256:d4c3d23a1f233a1272586a4b76eb9172d1b3947ec4d56f8e7e7d8f4820990731",
-      "payload_digest": {
-        "input_hash": "56541f390253f1e0f4c71e5934b1f5c61dce6681b4041dcae95298621a6fd86c",
-        "input_size": 49,
-        "canonical": "jcs"
-      },
-      "issued_at": "2026-09-11T07:07:34.027Z",
-      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
-    },
-    "signature": {
-      "alg": "EdDSA",
-      "kid": "sb:issuer:GsAFpSRUAvaU",
-      "sig": "8f6c8cc3313774087110526b4fd561c2d82fe243ae37c643c0825e6a6d2c5e93e0a6040b5fd3e7149cfd9d8a7a13a3ac14838c1bd3690bf2a479910c88002b0f"
-    }
-  },
-  {
-    "payload": {
-      "type": "protectmcp:decision",
-      "tool_name": "Bash",
-      "decision": "allow",
-      "reason": "cedar_allow",
-      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
-      "scope": "tu-1789110467799-ekga",
-      "mode": "enforce",
-      "request_id": "tu-1789110467799-ekga",
-      "spec": "draft-farley-acta-signed-receipts-03",
-      "issuer_certification": "self-signed",
-      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
-      "issuer_name": "protect-mcp",
-      "previousReceiptHash": "sha256:62e8fadffcb4c037ee92a9f3fcbecd0f87ae92024e03fe65aee1061a386dab9c",
-      "payload_digest": {
-        "input_hash": "ace68a761f5b173b53b9bf9a530a2598b6543628aca39a3e3c8dd0665227e9fd",
-        "input_size": 1207,
-        "canonical": "jcs"
-      },
-      "issued_at": "2026-09-11T07:07:47.799Z",
-      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
-    },
-    "signature": {
-      "alg": "EdDSA",
-      "kid": "sb:issuer:GsAFpSRUAvaU",
-      "sig": "59e2bbcc595f4a4f09697eaf0ab8a0b31cca24b6f69ddb9cad8dd4be782595011612efef9c412b9c85273a00fd53cd1111668b0465938736aab5fcc2d0e90706"
+      "sig": "1cfb335f2e368d06cf838ace8144c58d154d18d85ab61c8e8fc3386f92f2cfe956eff8a18e208662e830ca170923dc2541e3aec9d151f046af5905723747c10e"
     }
   },
   {
@@ -730,26 +179,26 @@
       "decision": "deny",
       "reason": "cedar_deny: {\"reason\":[\"policy1\"],\"errors\":[]}",
       "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
-      "scope": "tu-1789110471268-7h2n",
+      "scope": "tu-1789126649349-do4g",
       "mode": "enforce",
-      "request_id": "tu-1789110471268-7h2n",
+      "request_id": "tu-1789126649349-do4g",
       "spec": "draft-farley-acta-signed-receipts-03",
       "issuer_certification": "self-signed",
       "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
       "issuer_name": "protect-mcp",
-      "previousReceiptHash": "sha256:fc94f99493a646547f7a94a44929028dc033d9f574c78a78402ee81b5f90a5c7",
+      "previousReceiptHash": "sha256:34d8442a93f499fac1dffd53bc93c5fdee23613724fb765ba50685a844cac960",
       "payload_digest": {
-        "input_hash": "b036aba3ab3ac786ae58be2be9d2d03d6292fdceb9594a57cfadf6912a764c00",
-        "input_size": 105,
+        "input_hash": "58f03e1729fc5b7166c684c4eb2cc8c8439d0132e86ca79802bc17f2aca6f622",
+        "input_size": 114,
         "canonical": "jcs"
       },
-      "issued_at": "2026-09-11T07:07:51.268Z",
+      "issued_at": "2026-09-11T11:37:29.349Z",
       "issuer_id": "sb:issuer:GsAFpSRUAvaU"
     },
     "signature": {
       "alg": "EdDSA",
       "kid": "sb:issuer:GsAFpSRUAvaU",
-      "sig": "5cc876b6a29ae896914b105ddfcbe97669b8b22cf5c61ae07c00f9fd3a8cc5042b6e7df6f8df82625c3320af2183b46d931e9cf6826fd2dfb07300efcc91a004"
+      "sig": "d4a3e8c49dc4c26f5a733df941d4794ae317613d99ac8f84c8736c8199881f815fbf01eb1e927f839b8740e3acaf633ee9b62557dcd2c6929b8db6230981dd0f"
     }
   },
   {
@@ -759,26 +208,664 @@
       "decision": "allow",
       "reason": "cedar_allow",
       "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
-      "scope": "tu-1789110475535-4120",
+      "scope": "tu-1789126654368-ir2o",
       "mode": "enforce",
-      "request_id": "tu-1789110475535-4120",
+      "request_id": "tu-1789126654368-ir2o",
       "spec": "draft-farley-acta-signed-receipts-03",
       "issuer_certification": "self-signed",
       "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
       "issuer_name": "protect-mcp",
-      "previousReceiptHash": "sha256:deee9af171d80b437d9b3cf5440e8349491174700b05317c28ed19330714ae29",
+      "previousReceiptHash": "sha256:58ec764f8e4f0054346af5791ff7585c6bba4dc83216112d8b00516672e0b290",
       "payload_digest": {
-        "input_hash": "7da37e6f4792513bcf9c1e2a13fc150e4a9dd72027ffc0e8956b069a9e17145f",
-        "input_size": 101,
+        "input_hash": "df9f4f17093f903ef178d9ce1a0d0f514653be9edc6adf7f9f7beae381b6e827",
+        "input_size": 136,
         "canonical": "jcs"
       },
-      "issued_at": "2026-09-11T07:07:55.535Z",
+      "issued_at": "2026-09-11T11:37:34.368Z",
       "issuer_id": "sb:issuer:GsAFpSRUAvaU"
     },
     "signature": {
       "alg": "EdDSA",
       "kid": "sb:issuer:GsAFpSRUAvaU",
-      "sig": "4b91cc8f13559483c45d3ccaf074b32da613a1ce41283cc24f2b064b92a0eb67d102668aac4e703f23c0eb7de78f27db44c0918cc2355aff139e8fd55f04f80a"
+      "sig": "fc1a29d0d3ff31a96a9c66d5e89fe1f2078a3e289206452812f674e65a74f4100f4510d1649c284b3249287fd4b9be202b55e007324acf93fea9b71af9b3f704"
+    }
+  },
+  {
+    "payload": {
+      "type": "protectmcp:decision",
+      "tool_name": "Bash",
+      "decision": "allow",
+      "reason": "cedar_allow",
+      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
+      "scope": "tu-1789126668439-ogy6",
+      "mode": "enforce",
+      "request_id": "tu-1789126668439-ogy6",
+      "spec": "draft-farley-acta-signed-receipts-03",
+      "issuer_certification": "self-signed",
+      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
+      "issuer_name": "protect-mcp",
+      "previousReceiptHash": "sha256:9d318bbd63c113278c7ecae5e67c102ac1e6a06c507af20e9c43731f5692c099",
+      "payload_digest": {
+        "input_hash": "a0cf5f70b4da69614f1ecffbcd223e958e6fcf00364a1afdc88d2bd5c5cbc95a",
+        "input_size": 80,
+        "canonical": "jcs"
+      },
+      "issued_at": "2026-09-11T11:37:48.439Z",
+      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
+    },
+    "signature": {
+      "alg": "EdDSA",
+      "kid": "sb:issuer:GsAFpSRUAvaU",
+      "sig": "60c5892da239907eddf0842f05089c5cc35ea5595360c2eb1500a1957bdaf81080575079076b8f248028cd68b29de1f0772e7d38d666a6ebffd7808a0b769a01"
+    }
+  },
+  {
+    "payload": {
+      "type": "protectmcp:decision",
+      "tool_name": "Bash",
+      "decision": "allow",
+      "reason": "cedar_allow",
+      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
+      "scope": "tu-1789126668587-894p",
+      "mode": "enforce",
+      "request_id": "tu-1789126668587-894p",
+      "spec": "draft-farley-acta-signed-receipts-03",
+      "issuer_certification": "self-signed",
+      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
+      "issuer_name": "protect-mcp",
+      "previousReceiptHash": "sha256:85ed61ea4b57d52bfd751c448be703c2ebae2e53ea4bd040a7f60842df635a7b",
+      "payload_digest": {
+        "input_hash": "d3da214e36aca64ad422c9336957180563c57f9ad5d1896e34a65f87d25b8fd4",
+        "input_size": 59,
+        "canonical": "jcs"
+      },
+      "issued_at": "2026-09-11T11:37:48.587Z",
+      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
+    },
+    "signature": {
+      "alg": "EdDSA",
+      "kid": "sb:issuer:GsAFpSRUAvaU",
+      "sig": "11e2bf195defcb89140d26aaf3d42af26e0eb1fac4ba78bdeb34642eeb4ec29325583ffe15b67951b68a2954f72593f226886f2d4fad7c6c8d098ea853f2e405"
+    }
+  },
+  {
+    "payload": {
+      "type": "protectmcp:decision",
+      "tool_name": "Bash",
+      "decision": "allow",
+      "reason": "cedar_allow",
+      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
+      "scope": "tu-1789126674013-1dew",
+      "mode": "enforce",
+      "request_id": "tu-1789126674013-1dew",
+      "spec": "draft-farley-acta-signed-receipts-03",
+      "issuer_certification": "self-signed",
+      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
+      "issuer_name": "protect-mcp",
+      "previousReceiptHash": "sha256:e53870a1b3cc88b52e9937e4e883b984f2fdc781829f53bd164f688e7157a008",
+      "payload_digest": {
+        "input_hash": "2f60f98b75d1f8e675b09f9913a1111a7a8cc8b2967f463c77c370f4729b816f",
+        "input_size": 84,
+        "canonical": "jcs"
+      },
+      "issued_at": "2026-09-11T11:37:54.013Z",
+      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
+    },
+    "signature": {
+      "alg": "EdDSA",
+      "kid": "sb:issuer:GsAFpSRUAvaU",
+      "sig": "56056d22d28b9cfd15e7eb1828a73d57d39487eb01c5dc46dcf16bc281caa51c7f0ae865f4a6671a6956269c6160e077849c2d39c4b3583e0e2095d79e815c0e"
+    }
+  },
+  {
+    "payload": {
+      "type": "protectmcp:decision",
+      "tool_name": "Bash",
+      "decision": "allow",
+      "reason": "cedar_allow",
+      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
+      "scope": "tu-1789126682512-ra4t",
+      "mode": "enforce",
+      "request_id": "tu-1789126682512-ra4t",
+      "spec": "draft-farley-acta-signed-receipts-03",
+      "issuer_certification": "self-signed",
+      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
+      "issuer_name": "protect-mcp",
+      "previousReceiptHash": "sha256:ef5c9d871d1bb1df8e49bfc78700a1e6415cf567cd69946613e88fbebb92fe8b",
+      "payload_digest": {
+        "input_hash": "84a66988e36dafdaea79c27936411db3485f626d34749ad5d719ec61b889d045",
+        "input_size": 81,
+        "canonical": "jcs"
+      },
+      "issued_at": "2026-09-11T11:38:02.512Z",
+      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
+    },
+    "signature": {
+      "alg": "EdDSA",
+      "kid": "sb:issuer:GsAFpSRUAvaU",
+      "sig": "f6265392b6f9b14a1380a928e0704ce2813a6fd6eb2fde4e617c89e39914ad78c676c4c12d80256053f766741088e9b7ce13d6be329ca2bb313201b0c34f4f0f"
+    }
+  },
+  {
+    "payload": {
+      "type": "protectmcp:decision",
+      "tool_name": "Bash",
+      "decision": "allow",
+      "reason": "cedar_allow",
+      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
+      "scope": "tu-1789126682661-jb2z",
+      "mode": "enforce",
+      "request_id": "tu-1789126682661-jb2z",
+      "spec": "draft-farley-acta-signed-receipts-03",
+      "issuer_certification": "self-signed",
+      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
+      "issuer_name": "protect-mcp",
+      "previousReceiptHash": "sha256:cd9762f1739788401e7f496e4f97bee7ba89edaa96feb9802e3fd9bfcc7c932b",
+      "payload_digest": {
+        "input_hash": "abd9fa841a67fdcce1ca0ab0fbb57f522931c270b1af64c08ddaf56821f4e026",
+        "input_size": 123,
+        "canonical": "jcs"
+      },
+      "issued_at": "2026-09-11T11:38:02.661Z",
+      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
+    },
+    "signature": {
+      "alg": "EdDSA",
+      "kid": "sb:issuer:GsAFpSRUAvaU",
+      "sig": "7a09ff42a5153d49e0bd40ac15d55ac5ad1da75437c4eea7cd3092e026edf1359614d8f4651d4c6a801f8b705af188e33176b6423ceb9a98a370989402d85801"
+    }
+  },
+  {
+    "payload": {
+      "type": "protectmcp:decision",
+      "tool_name": "Bash",
+      "decision": "allow",
+      "reason": "cedar_allow",
+      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
+      "scope": "tu-1789126687138-epia",
+      "mode": "enforce",
+      "request_id": "tu-1789126687138-epia",
+      "spec": "draft-farley-acta-signed-receipts-03",
+      "issuer_certification": "self-signed",
+      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
+      "issuer_name": "protect-mcp",
+      "previousReceiptHash": "sha256:b92c9fcb53fc173e3106362295a31837d5b96880862069dd18b321b683ed29f7",
+      "payload_digest": {
+        "input_hash": "d1651214e72467ba2eeabbff2c453b2b386770a2f0c45cf39fa43261fb77f085",
+        "input_size": 77,
+        "canonical": "jcs"
+      },
+      "issued_at": "2026-09-11T11:38:07.138Z",
+      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
+    },
+    "signature": {
+      "alg": "EdDSA",
+      "kid": "sb:issuer:GsAFpSRUAvaU",
+      "sig": "aabc8bd90619f48103067c75b34f5ca617cc8329c36d0a3d4d949cb12864331d2b8eabe20e870c597943c1443c16fad408f337b750446713f56f9f01eae22305"
+    }
+  },
+  {
+    "payload": {
+      "type": "protectmcp:decision",
+      "tool_name": "Bash",
+      "decision": "allow",
+      "reason": "cedar_allow",
+      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
+      "scope": "tu-1789126699215-iu90",
+      "mode": "enforce",
+      "request_id": "tu-1789126699215-iu90",
+      "spec": "draft-farley-acta-signed-receipts-03",
+      "issuer_certification": "self-signed",
+      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
+      "issuer_name": "protect-mcp",
+      "previousReceiptHash": "sha256:04e128a5d7f463746dd8b8ba7f8af09e9e9f39a12be041faa4e5824882da27e6",
+      "payload_digest": {
+        "input_hash": "4415b1d74e9e0192285ddca1091cc8fe3513eb2c8f0a2780f5147c6a2991d7cc",
+        "input_size": 940,
+        "canonical": "jcs"
+      },
+      "issued_at": "2026-09-11T11:38:19.215Z",
+      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
+    },
+    "signature": {
+      "alg": "EdDSA",
+      "kid": "sb:issuer:GsAFpSRUAvaU",
+      "sig": "9beed0156d37d5ce305e7a205b93f81c615ae0dc36b0747f790fa4557995c70ccf7ab7dbfcb1e3ab6460318d1c3b8f8aeccb8181e8f93c1d9a00defdf9f0d20c"
+    }
+  },
+  {
+    "payload": {
+      "type": "protectmcp:decision",
+      "tool_name": "Bash",
+      "decision": "allow",
+      "reason": "cedar_allow",
+      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
+      "scope": "tu-1789126708539-szyn",
+      "mode": "enforce",
+      "request_id": "tu-1789126708539-szyn",
+      "spec": "draft-farley-acta-signed-receipts-03",
+      "issuer_certification": "self-signed",
+      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
+      "issuer_name": "protect-mcp",
+      "previousReceiptHash": "sha256:315908a89e440ae20c7c097f8392a014db5306cde8205c6b8338ec2e378f0f57",
+      "payload_digest": {
+        "input_hash": "01502b9ff4ff6fec589e25693090766ce425a2b88027ff72ee59d8b4f774c969",
+        "input_size": 50,
+        "canonical": "jcs"
+      },
+      "issued_at": "2026-09-11T11:38:28.539Z",
+      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
+    },
+    "signature": {
+      "alg": "EdDSA",
+      "kid": "sb:issuer:GsAFpSRUAvaU",
+      "sig": "dbec4120b49ed93619af8bab7fb73ac7551f8c05485c058b6f51443782b186190e6d027a0ef88fe2a04be52d334a9ca43c97899f15edab084928149a4a4b8e0e"
+    }
+  },
+  {
+    "payload": {
+      "type": "protectmcp:decision",
+      "tool_name": "Bash",
+      "decision": "allow",
+      "reason": "cedar_allow",
+      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
+      "scope": "tu-1789126708684-etzd",
+      "mode": "enforce",
+      "request_id": "tu-1789126708684-etzd",
+      "spec": "draft-farley-acta-signed-receipts-03",
+      "issuer_certification": "self-signed",
+      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
+      "issuer_name": "protect-mcp",
+      "previousReceiptHash": "sha256:aaa96cec6b7546096f41b05a7614984b07f9518bd69e968520ca2418f67ae1b5",
+      "payload_digest": {
+        "input_hash": "aa5073170100d62f7426ff416e1c63ba0376218914336ccb77a78d27d9c8ac79",
+        "input_size": 85,
+        "canonical": "jcs"
+      },
+      "issued_at": "2026-09-11T11:38:28.684Z",
+      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
+    },
+    "signature": {
+      "alg": "EdDSA",
+      "kid": "sb:issuer:GsAFpSRUAvaU",
+      "sig": "1ecd84d7bc8d0f93b21d4ef0311c5225157e3bc829394890e25f95ce40c6e1e42c5f5b274eedb590e399ef4e536f54adcdd5008205f3e3b6c4933ab95e28f60a"
+    }
+  },
+  {
+    "payload": {
+      "type": "protectmcp:decision",
+      "tool_name": "Bash",
+      "decision": "allow",
+      "reason": "cedar_allow",
+      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
+      "scope": "tu-1789126708836-r193",
+      "mode": "enforce",
+      "request_id": "tu-1789126708836-r193",
+      "spec": "draft-farley-acta-signed-receipts-03",
+      "issuer_certification": "self-signed",
+      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
+      "issuer_name": "protect-mcp",
+      "previousReceiptHash": "sha256:2ed693010cd434f45145a162e1b577641ed1e704667885a3b7ddaa894e123c81",
+      "payload_digest": {
+        "input_hash": "d2181317a96d2eea1ac8e0e1760d0ba38878bbe8ebebc343bebf54a684f2e11d",
+        "input_size": 468,
+        "canonical": "jcs"
+      },
+      "issued_at": "2026-09-11T11:38:28.836Z",
+      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
+    },
+    "signature": {
+      "alg": "EdDSA",
+      "kid": "sb:issuer:GsAFpSRUAvaU",
+      "sig": "32b51a26d353a09f2128145e3ff80e564d89b2a36c9a42f2c3fe6b0655327b519eb35c490df289dff325c37a5e2bd7b265a535b8b90cea177b5c975b16d7430a"
+    }
+  },
+  {
+    "payload": {
+      "type": "protectmcp:decision",
+      "tool_name": "Bash",
+      "decision": "allow",
+      "reason": "cedar_allow",
+      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
+      "scope": "tu-1789126721546-bwfk",
+      "mode": "enforce",
+      "request_id": "tu-1789126721546-bwfk",
+      "spec": "draft-farley-acta-signed-receipts-03",
+      "issuer_certification": "self-signed",
+      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
+      "issuer_name": "protect-mcp",
+      "previousReceiptHash": "sha256:a4cee9aaf83c4e2b92a063579c404ad2e4f75750c40ab5241af77bfe70ce5b7b",
+      "payload_digest": {
+        "input_hash": "cae3af31638f90e4608822ae52751a8f0c8e475a3a021eca2bb86de26076b07c",
+        "input_size": 31,
+        "canonical": "jcs"
+      },
+      "issued_at": "2026-09-11T11:38:41.546Z",
+      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
+    },
+    "signature": {
+      "alg": "EdDSA",
+      "kid": "sb:issuer:GsAFpSRUAvaU",
+      "sig": "7eca220b59834dd62f4e0dd2d0c01aeabc253b9879c20266502ef1284f2c6ef76b49ed8f4602421da12e8a165f92960f3756b0c6985ca15e4631ca4a4c235803"
+    }
+  },
+  {
+    "payload": {
+      "type": "protectmcp:decision",
+      "tool_name": "Bash",
+      "decision": "allow",
+      "reason": "cedar_allow",
+      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
+      "scope": "tu-1789126721675-2md8",
+      "mode": "enforce",
+      "request_id": "tu-1789126721675-2md8",
+      "spec": "draft-farley-acta-signed-receipts-03",
+      "issuer_certification": "self-signed",
+      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
+      "issuer_name": "protect-mcp",
+      "previousReceiptHash": "sha256:2d27296c4a3c986c08e957a3f16ece74d1ccbd9db1bd334b87fcb1d1fde5bd35",
+      "payload_digest": {
+        "input_hash": "8d039d63b23fb3bef8ad865b95a35ea8076ab8b25457ab5dba9e47f09eccba8e",
+        "input_size": 56,
+        "canonical": "jcs"
+      },
+      "issued_at": "2026-09-11T11:38:41.675Z",
+      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
+    },
+    "signature": {
+      "alg": "EdDSA",
+      "kid": "sb:issuer:GsAFpSRUAvaU",
+      "sig": "12f3a91a1dc90c3ce1d02b8120e0d0c5dcbea8632f108e732e508d1781f9f7e29bc57919043a09627400db358a7a8a63e8a73c945aceeeeb879d06e5e1efc60b"
+    }
+  },
+  {
+    "payload": {
+      "type": "protectmcp:decision",
+      "tool_name": "Bash",
+      "decision": "allow",
+      "reason": "cedar_allow",
+      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
+      "scope": "tu-1789126734708-mo1m",
+      "mode": "enforce",
+      "request_id": "tu-1789126734708-mo1m",
+      "spec": "draft-farley-acta-signed-receipts-03",
+      "issuer_certification": "self-signed",
+      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
+      "issuer_name": "protect-mcp",
+      "previousReceiptHash": "sha256:e9877c03d4a7eecf7b72589961f3be2aa92d2173e5acf0cf53ddbbaa6cd3a156",
+      "payload_digest": {
+        "input_hash": "cd3f441aa63d2a851cad94dcc177729154a7c472da1ae5f00d1cc53203831c74",
+        "input_size": 47,
+        "canonical": "jcs"
+      },
+      "issued_at": "2026-09-11T11:38:54.708Z",
+      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
+    },
+    "signature": {
+      "alg": "EdDSA",
+      "kid": "sb:issuer:GsAFpSRUAvaU",
+      "sig": "618d5df10109b5cb20a74c79fd83312bd154301c56228c74c89205000051731f7981b631ad7ebe75e23b2833f71863c36d4c8651210057162d41378af2c17802"
+    }
+  },
+  {
+    "payload": {
+      "type": "protectmcp:decision",
+      "tool_name": "Bash",
+      "decision": "allow",
+      "reason": "cedar_allow",
+      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
+      "scope": "tu-1789126734847-7q15",
+      "mode": "enforce",
+      "request_id": "tu-1789126734847-7q15",
+      "spec": "draft-farley-acta-signed-receipts-03",
+      "issuer_certification": "self-signed",
+      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
+      "issuer_name": "protect-mcp",
+      "previousReceiptHash": "sha256:2f1a40f44f94cf59036be42bfc2f832654a11ef8e56a1e61f0a83ffa5b290caf",
+      "payload_digest": {
+        "input_hash": "1daf47e7c25571230c259847ee1724a695b01e24859d34540873fc5e36a9caa9",
+        "input_size": 54,
+        "canonical": "jcs"
+      },
+      "issued_at": "2026-09-11T11:38:54.847Z",
+      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
+    },
+    "signature": {
+      "alg": "EdDSA",
+      "kid": "sb:issuer:GsAFpSRUAvaU",
+      "sig": "7ad9a81e39678040a754c9b24f1fd6b21392e292da5c989ff4b5f37f6b0593cdea6bcbe87c05b87528b8f9a30f9bd56b2e656bd78d0b4dcb4a78479c9841bc0f"
+    }
+  },
+  {
+    "payload": {
+      "type": "protectmcp:decision",
+      "tool_name": "Bash",
+      "decision": "allow",
+      "reason": "cedar_allow",
+      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
+      "scope": "tu-1789126734977-6zi2",
+      "mode": "enforce",
+      "request_id": "tu-1789126734977-6zi2",
+      "spec": "draft-farley-acta-signed-receipts-03",
+      "issuer_certification": "self-signed",
+      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
+      "issuer_name": "protect-mcp",
+      "previousReceiptHash": "sha256:e7c660d7bbce726f46738d7da99d67d36532799c6c3187047a033bbc3951110f",
+      "payload_digest": {
+        "input_hash": "566e1c6e6f0b8373c3cca0378472f60cb37c058400388b1cd7fba9a4ff9ff323",
+        "input_size": 62,
+        "canonical": "jcs"
+      },
+      "issued_at": "2026-09-11T11:38:54.977Z",
+      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
+    },
+    "signature": {
+      "alg": "EdDSA",
+      "kid": "sb:issuer:GsAFpSRUAvaU",
+      "sig": "ba9b42f7898e2b0678193233844613a446f8766ed559dfe69a520882bbd57c2f276b1e6057308761473e87686e46c2d4ed2bf2da7e91cafcab0fa09de71eae0d"
+    }
+  },
+  {
+    "payload": {
+      "type": "protectmcp:decision",
+      "tool_name": "Bash",
+      "decision": "allow",
+      "reason": "cedar_allow",
+      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
+      "scope": "tu-1789126735114-7wab",
+      "mode": "enforce",
+      "request_id": "tu-1789126735114-7wab",
+      "spec": "draft-farley-acta-signed-receipts-03",
+      "issuer_certification": "self-signed",
+      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
+      "issuer_name": "protect-mcp",
+      "previousReceiptHash": "sha256:b732187dcfd4bade904c37d55af4a51fe635328dc48d14ab79bd5405b62aa770",
+      "payload_digest": {
+        "input_hash": "42d5b1534a3db9d897a42ec83818d710c2e18868f5b556bf01a9ee9aa0b024ca",
+        "input_size": 181,
+        "canonical": "jcs"
+      },
+      "issued_at": "2026-09-11T11:38:55.114Z",
+      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
+    },
+    "signature": {
+      "alg": "EdDSA",
+      "kid": "sb:issuer:GsAFpSRUAvaU",
+      "sig": "58a3276ead41876ff246ff3262da0ca237ed979880b9140e370765ab84b2513b614fa7d7d7f9138184d116577434fe0881aafe292168ae9f1caac1ef10edc40f"
+    }
+  },
+  {
+    "payload": {
+      "type": "protectmcp:decision",
+      "tool_name": "Bash",
+      "decision": "allow",
+      "reason": "cedar_allow",
+      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
+      "scope": "tu-1789126735271-wjdj",
+      "mode": "enforce",
+      "request_id": "tu-1789126735271-wjdj",
+      "spec": "draft-farley-acta-signed-receipts-03",
+      "issuer_certification": "self-signed",
+      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
+      "issuer_name": "protect-mcp",
+      "previousReceiptHash": "sha256:8f327124405a3d4eb6171a37f523f045f327fef73d445d3b09d82c706f44e408",
+      "payload_digest": {
+        "input_hash": "369ad8222d2b9603bf878e678d0da06a1cc1ac84f0bf441b728f77a5e58b1c67",
+        "input_size": 48,
+        "canonical": "jcs"
+      },
+      "issued_at": "2026-09-11T11:38:55.271Z",
+      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
+    },
+    "signature": {
+      "alg": "EdDSA",
+      "kid": "sb:issuer:GsAFpSRUAvaU",
+      "sig": "a9cdb66d54e75b88c52f76fb2758e0c50ecd6616c5a59bf9bc0c608421f8afb5eb5f46f34193abfae27bf156ccccd1a87a2fc03ae29f667f6bfe2a1006217a08"
+    }
+  },
+  {
+    "payload": {
+      "type": "protectmcp:decision",
+      "tool_name": "Bash",
+      "decision": "allow",
+      "reason": "cedar_allow",
+      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
+      "scope": "tu-1789126741260-a7yc",
+      "mode": "enforce",
+      "request_id": "tu-1789126741260-a7yc",
+      "spec": "draft-farley-acta-signed-receipts-03",
+      "issuer_certification": "self-signed",
+      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
+      "issuer_name": "protect-mcp",
+      "previousReceiptHash": "sha256:92972702354f0b26a0a8757eacd84f50d3d95625696a0791a1f5f3e24c651d8c",
+      "payload_digest": {
+        "input_hash": "6b0d098bfb2001d6bc8613ffab5160e03b3de73348e0c409a39cbd51eacdc2a6",
+        "input_size": 51,
+        "canonical": "jcs"
+      },
+      "issued_at": "2026-09-11T11:39:01.260Z",
+      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
+    },
+    "signature": {
+      "alg": "EdDSA",
+      "kid": "sb:issuer:GsAFpSRUAvaU",
+      "sig": "5f916a84b07bdd6deea12ec11c91831c3ce7f613f8fe9616a12783d5f6f0bd5fa763aa984324fa33eb700637f0817eedb34d462cc29a320a92042597ebc41909"
+    }
+  },
+  {
+    "payload": {
+      "type": "protectmcp:decision",
+      "tool_name": "Bash",
+      "decision": "allow",
+      "reason": "cedar_allow",
+      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
+      "scope": "tu-1789126741418-4jca",
+      "mode": "enforce",
+      "request_id": "tu-1789126741418-4jca",
+      "spec": "draft-farley-acta-signed-receipts-03",
+      "issuer_certification": "self-signed",
+      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
+      "issuer_name": "protect-mcp",
+      "previousReceiptHash": "sha256:d928ad4a61dfe24a608d46ae820ba9f830f4e3c4373366ca93c8bc9304d7ea98",
+      "payload_digest": {
+        "input_hash": "84102eec0136262b7a7c6cfff76595124023b3f91909aad4acad40e48658364a",
+        "input_size": 33,
+        "canonical": "jcs"
+      },
+      "issued_at": "2026-09-11T11:39:01.418Z",
+      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
+    },
+    "signature": {
+      "alg": "EdDSA",
+      "kid": "sb:issuer:GsAFpSRUAvaU",
+      "sig": "06c82b78a6fb0848ce9b67dcbdaa43d85ac4f13ab1c927612ee5f6406d4924f929c073b316168f16ee6fa259b52c260c796535a4bcb7b152d5e629c3d2ee8b04"
+    }
+  },
+  {
+    "payload": {
+      "type": "protectmcp:decision",
+      "tool_name": "Bash",
+      "decision": "allow",
+      "reason": "cedar_allow",
+      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
+      "scope": "tu-1789126756282-03zh",
+      "mode": "enforce",
+      "request_id": "tu-1789126756282-03zh",
+      "spec": "draft-farley-acta-signed-receipts-03",
+      "issuer_certification": "self-signed",
+      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
+      "issuer_name": "protect-mcp",
+      "previousReceiptHash": "sha256:b210c01a64d24a930960be3e0222a9c4f09620ff522ae63a2f981a8dd533bc52",
+      "payload_digest": {
+        "input_hash": "73a4cad9739c42fde7957745d23b586a554fb592ead9ea39fb88b8cffd6dbed9",
+        "input_size": 1416,
+        "canonical": "jcs"
+      },
+      "issued_at": "2026-09-11T11:39:16.282Z",
+      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
+    },
+    "signature": {
+      "alg": "EdDSA",
+      "kid": "sb:issuer:GsAFpSRUAvaU",
+      "sig": "3542763a28f5392e4c40fad17004d945376d8beaed775f31ecf84f948874c29f3da510b2e68943524dd888a7599017a195606da3330b89aedd6b11f0df072103"
+    }
+  },
+  {
+    "payload": {
+      "type": "protectmcp:decision",
+      "tool_name": "apply_patch",
+      "decision": "deny",
+      "reason": "cedar_deny: {\"reason\":[\"policy1\"],\"errors\":[]}",
+      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
+      "scope": "tu-1789126759942-ne3m",
+      "mode": "enforce",
+      "request_id": "tu-1789126759942-ne3m",
+      "spec": "draft-farley-acta-signed-receipts-03",
+      "issuer_certification": "self-signed",
+      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
+      "issuer_name": "protect-mcp",
+      "previousReceiptHash": "sha256:6e6a8a69dcb44039663b3aba49266f643f28f8a1bc81d05fdb48f21f30714a6a",
+      "payload_digest": {
+        "input_hash": "b036aba3ab3ac786ae58be2be9d2d03d6292fdceb9594a57cfadf6912a764c00",
+        "input_size": 105,
+        "canonical": "jcs"
+      },
+      "issued_at": "2026-09-11T11:39:19.942Z",
+      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
+    },
+    "signature": {
+      "alg": "EdDSA",
+      "kid": "sb:issuer:GsAFpSRUAvaU",
+      "sig": "52a10ee41c1c2b1060818c784dbf4e622111e780ece4dbc67ba99372aebff7d7fd06a2e9e868e09dcc15305655163e6e7999ec57249cb51a59ea70a19fb1720e"
+    }
+  },
+  {
+    "payload": {
+      "type": "protectmcp:decision",
+      "tool_name": "Bash",
+      "decision": "allow",
+      "reason": "cedar_allow",
+      "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f",
+      "scope": "tu-1789126764254-douy",
+      "mode": "enforce",
+      "request_id": "tu-1789126764254-douy",
+      "spec": "draft-farley-acta-signed-receipts-03",
+      "issuer_certification": "self-signed",
+      "public_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
+      "issuer_name": "protect-mcp",
+      "previousReceiptHash": "sha256:b085d012a22a4fc0605ca0245e1fe874b88a6c79a176e63fc53975be7055f5f0",
+      "payload_digest": {
+        "input_hash": "7da37e6f4792513bcf9c1e2a13fc150e4a9dd72027ffc0e8956b069a9e17145f",
+        "input_size": 101,
+        "canonical": "jcs"
+      },
+      "issued_at": "2026-09-11T11:39:24.254Z",
+      "issuer_id": "sb:issuer:GsAFpSRUAvaU"
+    },
+    "signature": {
+      "alg": "EdDSA",
+      "kid": "sb:issuer:GsAFpSRUAvaU",
+      "sig": "736fff9091a9e0fb57b3869f8fbeb2b74e1048147ed0be7a4df8a446d5e618d82b6b6c2d730792ef98c3cca611d08c52bf123a85a639ad8bc449d766021e990b"
     }
   }
 ]

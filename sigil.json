@@ -1,15 +1,15 @@
 {
   "sigil_version": 1,
-  "fingerprint": "168d74da",
-  "name": "Fair Tide",
-  "sigil_hash": "168d74dac88705a3d8d15002cba44b06d133f609ee73495d3a15799f1541f279",
+  "fingerprint": "aec0c885",
+  "name": "Bright Anchor",
+  "sigil_hash": "aec0c8854b9911a946525e67f9e20c0a18d3396936e5e0f470544dff6c4048b0",
   "project_public_key": "fe665e861867cec7e171c0c13bbc873c3362079faef21f54df7804b7fb9ae8af",
   "commitment_authentication": "public_recomputable_integrity_only",
   "policy": {
     "version": 3,
     "package": "@veritasacta/verify",
-    "package_version": "0.10.1",
-    "source_hash": "7a83ee754d53c50bade183b6c12a90cd9bf188f1a87be820d14284071eb08377",
+    "package_version": "0.10.2",
+    "source_hash": "10c0f46756cd366259feb68a9fb467bcb8428a06d1f71c4357adda4ff0142e87",
     "monitored_files": [
       "README.md",
       "cli.js",
@@ -75,6 +75,6 @@
     ],
     "created_at": 1784267169966
   },
-  "policy_hash": "3beaa15acc5a46cc4416ae36aec8f6f76fb7f684c8592ad6dce466c98b57aa40",
+  "policy_hash": "c7a91c1a0f53aaca605473eda10143feac1ead5b17ad657bb8d37a43e6862e97",
   "derived_at": "2026-07-17T05:46:09.966Z"
 }

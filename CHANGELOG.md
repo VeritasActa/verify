@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.10.2 (2026-09-11)
+
+### Changed
+- Run manifests: the harness key that signed the manifest must be one the standard accepts as a readback source (`trust.accepted_readback_sources`), checked as `harness_key`. Without it a manifest re-signed under a fresh key verified as intact with nothing tying it to the maintainer. Manifests made before this cut fail the check against their standards until the standard names the harness key, which is the point.
+
 ## 0.10.1 (2026-09-11)
 
 ### Added

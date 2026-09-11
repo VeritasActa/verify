@@ -8357,13 +8357,16 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
       const timeOk = m.attempts.every((t) => (Date.parse(t.ended_at) - Date.parse(t.started_at)) / 1e3 <= run.time_limit_seconds);
       checks.push({ id: "time_limit", label: "Time limit", ok: timeOk, detail: timeOk ? `Every attempt finished within ${Math.round(run.time_limit_seconds / 60)} minutes, on the harness clock.` : "An attempt ran longer than the standard allows." });
       const egressOk = m.environment.egress.every((h) => run.egress_allowlist.includes(h));
-      checks.push({ id: "egress", label: "Network", ok: egressOk, detail: egressOk ? `The environment declares egress to ${m.environment.egress.join(", ") || "nothing"}, within the standard's allowlist. Declared by the harness; enforced by the sandbox, not by anything this page can check.` : "The environment declares egress the standard does not allow.", informational: !m.environment.attestation });
+      checks.push({ id: "egress", label: "Network", ok: egressOk, detail: egressOk ? `The environment declares egress to ${m.environment.egress.join(", ") || "nothing"}, within the standard's allowlist. Declared by the harness; enforced by the sandbox, not by anything this page can check.` : "The environment declares egress the standard does not allow.", informational: egressOk && !m.environment.attestation });
       const routeOk = m.agent.model_route === run.model_route;
       checks.push({ id: "model_route", label: "Model route", ok: routeOk, detail: routeOk ? `Model calls declared to ${m.agent.model_route}, as the standard requires. Declared, not observed: the gateway never sees model traffic.` : `The manifest declares model route ${m.agent.model_route}; the standard requires ${run.model_route}.`, informational: true });
       bound &&= dataOk && harnessOk && attemptsOk && timeOk && egressOk;
       const accepted = std.trust.accepted_gate_keys.map((k) => k.toLowerCase()).includes(m.gateway.verification_key.toLowerCase());
       checks.push({ id: "gate_key", label: "Gateway key", ok: accepted, detail: accepted ? "The gateway key the manifest names is one the standard accepts." : "The standard does not accept the gateway key the manifest names." });
       bound &&= accepted;
+      const harnessAccepted = std.trust.accepted_readback_sources.map((k) => k.toLowerCase()).includes(m.signer.verification_key.toLowerCase());
+      checks.push({ id: "harness_key", label: "Harness key", ok: harnessAccepted, detail: harnessAccepted ? "The harness key that signed this manifest is one the standard accepts as a readback source." : "The standard does not accept the harness key that signed this manifest; it may be intact, but it is not the maintainer's harness." });
+      bound &&= harnessAccepted;
     } else {
       checks.push({ id: "run_clause", label: "Run requirements", ok: false, detail: "The standard has no run requirements, so it says nothing about attempts, time, task set, or harness." });
       bound = false;
