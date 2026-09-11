@@ -1,0 +1,145 @@
+{
+  "type": "scopeblind.proof_request.v1",
+  "version": 1,
+  "request_id": "pr:1a2b3c4d5e6f7081",
+  "recipient": {
+    "name": "Pilot desk",
+    "organization": "Bank A (demo)",
+    "key_id": "recipient:af26a33470919e4c",
+    "verification_key": "5343a207bb947d96569fb617173b8e4dd39113cb84bc2be4ca70896cfdb07fb7"
+  },
+  "operator": {
+    "name": "Meridian Global Macro (demo operator)"
+  },
+  "decision": {
+    "kind": "dispatch_admission",
+    "owner": "Head of the pilot desk",
+    "statement": "Admit payment instructions from this agent, up to $250,000 each, during the pilot",
+    "purpose": "Limited pilot approval for one payables workflow"
+  },
+  "boundary": {
+    "workflow": "Supplier payments submitted by the payables agent",
+    "action_class": "payment",
+    "resources": [
+      "Operating account payment instructions"
+    ],
+    "destinations": [
+      "Beneficiaries already on file"
+    ],
+    "period": {
+      "starts_at": "2026-08-05T09:00:00.000Z",
+      "ends_at": "2036-01-01T00:00:00.000Z"
+    }
+  },
+  "requirements": {
+    "environment_class_min": "sandbox",
+    "approver_assurance_min": "platform_credential_user_verified",
+    "human_approval": {
+      "required_above": {
+        "amount": 50000,
+        "currency": "USD"
+      },
+      "distinct_approvers": 1
+    },
+    "authority_max_age_seconds": 900,
+    "coverage": "governed_route",
+    "effect_evidence": "authoritative_readback",
+    "anchoring": "self_attested",
+    "partial_settlement_permitted": true,
+    "action_limits": {
+      "amount_max": {
+        "amount": 250000,
+        "currency": "USD"
+      },
+      "per_instruction": true
+    }
+  },
+  "trust": {
+    "accepted_gate_keys": [
+      "f788830aa86c62bd96e7d3755b6ebc94d0704d63bc0b86b945f350a2cbdf2f8c",
+      "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225"
+    ],
+    "accepted_approver_keys": [
+      "e488351740d866a0bbde1c1f349c76b40013b7b10ac0ee8145c81409df394c26"
+    ],
+    "accepted_readback_sources": [
+      "b22ec7aa6d963c95148b6144fccfb1a2167c78ee06ec94300ef7dc025ce30a62"
+    ],
+    "accepted_anchor_witnesses": [
+      "686ff7d1e37293e03e78c460bbcf9260af723428db9117dacd909ba49bcc118f"
+    ]
+  },
+  "disclosure": {
+    "required_fields": [
+      "amount",
+      "destination",
+      "readback"
+    ],
+    "inspection": "on_request"
+  },
+  "limitations_permitted": [
+    "Sandbox environment accepted for the pilot period",
+    "Bank readback may come from the simulated ledger during the pilot",
+    "The gate clock is accepted as the dispatch time during the pilot",
+    "Partial settlement to the approved beneficiary is reported as partial completion"
+  ],
+  "rejection_criteria": [
+    "Any instruction whose approval does not bind to its exact terms",
+    "Any beneficiary not already on file",
+    "Any readback naming a destination other than the approved one"
+  ],
+  "hold_criteria": [
+    "Instructions above $50,000 without a named approver",
+    "Approval older than fifteen minutes at dispatch",
+    "Completion not read back from the ledger"
+  ],
+  "deadline": {
+    "respond_by": "2036-01-01T00:00:00.000Z",
+    "evidence_max_age_seconds": 259200
+  },
+  "consequence": {
+    "if_met": "Eligible for limited pilot approval: instructions up to $250,000 proceed without repeating controls 1 to 4, subject to the stated remaining reviews.",
+    "if_not_met": "Held for a person on the pilot desk. No instruction is dispatched on this evidence.",
+    "not_a_promise": true
+  },
+  "claim_contract_digest": null,
+  "enforcement": {
+    "compiler": "legate-standard-compiler.v1",
+    "policy_format": "cedar",
+    "construction": "acta-policy-digest-v1",
+    "file_name": "standard.cedar",
+    "policy": "// Compiled by legate-standard-compiler.v1 from the signed standard's structured requirements.\n// The standard carries this file's digest (acta-policy-digest-v1). Edit the standard, not this file.\n// Tool: submit_payment. Amounts are integer minor units of USD. The limit $250,000.00 is inclusive and per instruction.\n// Everything else in the standard (who approved, how fresh, what the bank read back) is checked on the signed records, not here.\n\npermit (\n  principal,\n  action == Action::\"MCP::Tool::call\",\n  resource == Tool::\"submit_payment\"\n) when {\n  context has input &&\n  context.input has amount_minor &&\n  context.input has currency &&\n  context.input.currency == \"USD\" &&\n  context.input.amount_minor <= 25000000\n};\n\nforbid (\n  principal,\n  action == Action::\"MCP::Tool::call\",\n  resource == Tool::\"submit_payment\"\n) unless {\n  context has input &&\n  context.input has amount_minor &&\n  context.input has currency &&\n  context.input.currency == \"USD\" &&\n  context.input.amount_minor <= 25000000\n};\n",
+    "policy_digest": "sha256:0eccae77cd7c1d76c1745799ef18463db1f0966fdf20a588a0f9264910ab179d",
+    "action_model": "mcp",
+    "tool": "submit_payment",
+    "gate_enforced": [
+      "limit_amount",
+      "limit_currency"
+    ],
+    "not_gate_enforced": [
+      "human_approval",
+      "authority_age",
+      "approver_assurance",
+      "environment",
+      "coverage",
+      "effect",
+      "anchoring",
+      "partial_settlement",
+      "disclosure",
+      "rejection_0_binding",
+      "rejection_1_beneficiary_on_file",
+      "rejection_2_readback_destination",
+      "hold_0_named_approver",
+      "hold_1_approval_age",
+      "hold_2_completion"
+    ]
+  },
+  "issued_at": "2026-09-04T09:00:00.000Z",
+  "expires_at": "2036-01-01T00:00:00.000Z",
+  "nonce": "c0ffee00c0ffee00c0ffee00c0ffee01",
+  "digest": "816da4c888f0da676c07042ae026c94c78b9be80bcfa0f78f5c88cae76f19a55",
+  "signature": {
+    "algorithm": "Ed25519",
+    "value": "96cd2581404e8b5a1e2efacd98f20b8f2cfdb9d5ba9d87b228df4f91bead23cbfa2771fccc04536e3f8a2cde6014f027dbc88b04429e65eee8bf8820efbe1f07"
+  }
+}

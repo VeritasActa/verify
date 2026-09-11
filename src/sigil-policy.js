@@ -17,6 +17,7 @@ export const SIGIL_MONITORED_FILES = Object.freeze([
   'src/engines/macro-snapshot.js',
   'src/engines/legate-governed-receipt.js',
   'src/engines/legate-proof-pack.js',
+  'src/engines/legate-standard.js',
   'src/engines/trusted-context-pack.js',
   'src/engines/commitment-mode.js',
   'src/engines/voprf-token.js',

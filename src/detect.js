@@ -12,6 +12,7 @@
  *   - 'gate-receipt-tuple'   — ScopeBlind Gate tuple ({ payload, digest, signature, verification_key })
  *   - 'gate-evidence-bundle' — ScopeBlind Gate evidence bundle (scopeblind.gate.evidence-bundle/2)
  *   - 'macro-track-record'   — ScopeBlind macro-engine track-record bundle (scopeblind.macro.track-record-bundle/1)
+ *   - 'legate-standard'      — Legate signed standard, recipient decision, or action assurance bundle
  *   - 'unknown'
  *
  * Detection is structural: checks for marker fields without trying to
@@ -73,6 +74,22 @@ export function detectFormat(input) {
   ) {
     signals.push(`type=${input.type}`);
     return { mode: 'scopeblind-claims-v2.1.1', signals, hasSelectiveDisclosure: false, isBundle: false };
+  }
+
+  // Legate standard files: type locked, ahead of the generic receipt fallbacks.
+  if (
+    typeof input.type === 'string'
+    && new Set([
+      'scopeblind.proof_request.v1',
+      'scopeblind.admission_decision.v1',
+      'scopeblind.action_assurance_bundle.v1',
+      'scopeblind.presentation.v1',
+      'scopeblind.effect_readback.v1',
+      'scopeblind.anchor_witness.v1',
+    ]).has(input.type)
+  ) {
+    signals.push(`type=${input.type}`);
+    return { mode: 'legate-standard', signals, hasSelectiveDisclosure: false, isBundle: input.type === 'scopeblind.action_assurance_bundle.v1' };
   }
 
   // Knowledge Unit bundle detection (has ku_id or consensus_level + models_used)

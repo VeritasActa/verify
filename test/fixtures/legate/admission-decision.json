@@ -1,0 +1,45 @@
+{
+  "type": "scopeblind.admission_decision.v1",
+  "version": 1,
+  "decision_id": "ad:0102030405060708",
+  "proof_request_digest": "816da4c888f0da676c07042ae026c94c78b9be80bcfa0f78f5c88cae76f19a55",
+  "proof_request_id": "pr:1a2b3c4d5e6f7081",
+  "presentation": {
+    "bundle_digest": "95a8c40c70bc13e2df62c784accf28d74a4f8367c0ea982e4ce28e2fa5c41a6e",
+    "request_digest": "635e6f186f51ea3f837ada7ba461fff7a52a2fa1d923245d1af24a89804a71df",
+    "decision_digest": "7f2a37bf94ca4378457a26850d645436fa2cae65e8c73d37cc28db45168895d3",
+    "receipt_digest": "efa5896d3d8b4fab6930f84aa78ccc80e96faa55cdf80ba14f69bbd3b67b8315",
+    "readback_digest": "280524f633197a499f47b2e294e9f5dd3b4fdb928683e048dfc8e1861442cf82",
+    "anchor_digest": "13b67dabfc935f43fbaf42a3e982751241153ba0862298e3cec4477051c1d059",
+    "disclosed": {
+      "amount": 185000,
+      "currency": "USD",
+      "destination": "Beneficiary on file, account ending 4471",
+      "reference": "Supplier invoice 20417",
+      "distinct_approvers": 1
+    }
+  },
+  "report_digest": "3a0619cf49bde67adddf088bc435e7a954d00a468f0369366e3d7ed666431da7",
+  "stage": "after_dispatch",
+  "acknowledged_verdict": "ALLOW",
+  "decision": "accept",
+  "reliance_purpose": "Limited pilot approval for one payables workflow",
+  "reliance_scope": "Supplier payments submitted by the payables agent",
+  "reason_code": "accept.after_dispatch",
+  "reason": "Fixture acceptance: every requirement met at the after-dispatch stage.",
+  "exceptions": [],
+  "requested_document_classes": [],
+  "recipient": {
+    "name": "Pilot desk",
+    "organization": "Bank A (demo)",
+    "key_id": "recipient:af26a33470919e4c",
+    "verification_key": "5343a207bb947d96569fb617173b8e4dd39113cb84bc2be4ca70896cfdb07fb7"
+  },
+  "decided_at": "2026-09-04T09:00:00.000Z",
+  "expires_at": "2036-01-01T00:00:00.000Z",
+  "digest": "6b1e40bc3d2b855e4168b1a8712fc5111d830c5dad87c472e388719bddee14a1",
+  "signature": {
+    "algorithm": "Ed25519",
+    "value": "2e0435722156ade802db4b713b8f9acdf1c10ed8a485839f61e8bc269f74a1fd13809497462aedb65c55d7b9930b746f0f41e29fd7fc5e8f4b3ea9b7c122d603"
+  }
+}

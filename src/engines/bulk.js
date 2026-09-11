@@ -44,9 +44,14 @@ export async function replayChain(filePath, opts = {}) {
 
   let previousPayloadHash = null;
   // draft-farley-acta-signed-receipts-03 section 6.7: the chain hash covers
-  // the ENTIRE previous receipt, signature included. Kept alongside the older
-  // payload-only convention so chains spanning the migration verify.
+  // the ENTIRE previous receipt, signature included. The older payload-only
+  // link is accepted ONLY when the predecessor cites -02 or earlier (or no
+  // spec at all): under -03 a payload-only link would let a re-signed receipt
+  // keep the original's link, which is the weakness 6.7 closes. Every legacy
+  // link taken is counted and reported.
   let previousEnvelopeHash = null;
+  let previousCitesPre03 = false;
+  results.legacyLinks = 0;
 
   for (let i = 0; i < lines.length; i++) {
     let receipt;
@@ -68,13 +73,15 @@ export async function replayChain(filePath, opts = {}) {
       const expectedPrevHex = expectedPrev.startsWith('sha256:')
         ? expectedPrev.slice(7)
         : expectedPrev;
-      // The section 6.7 whole-receipt hash is the current convention; the
-      // payload-only hash is accepted for chains written before it settled.
-      if (expectedPrevHex !== previousEnvelopeHash && expectedPrevHex !== previousPayloadHash) {
+      if (expectedPrevHex === previousEnvelopeHash) {
+        // A section 6.7 link.
+      } else if (previousCitesPre03 && expectedPrevHex === previousPayloadHash) {
+        results.legacyLinks++;
+      } else {
         results.failed++;
         results.chainBreaks++;
         results.errors.push(
-          `Line ${i + 1}: chain_break (expected prev ${String(previousEnvelopeHash).slice(0, 16)}... (6.7) or ${String(previousPayloadHash).slice(0, 16)}... (payload-only), got ${expectedPrev.slice(0, 24)}...)`,
+          `Line ${i + 1}: chain_break (expected prev ${String(previousEnvelopeHash).slice(0, 16)}... under section 6.7${previousCitesPre03 ? ` or ${String(previousPayloadHash).slice(0, 16)}... under the pre-03 payload-only rule` : ''}, got ${expectedPrev.slice(0, 24)}...)`,
         );
         results.valid = false;
       }
@@ -116,6 +123,8 @@ export async function replayChain(filePath, opts = {}) {
     } catch {
       previousPayloadHash = null;
     }
+    const spec = typeof payload.spec === 'string' ? payload.spec : null;
+    previousCitesPre03 = spec === null || /-0[12]$/.test(spec);
   }
 
   return results;

@@ -47,6 +47,7 @@ import { verifyGateTuple, verifyGateBundle } from './src/engines/gate-receipt.js
 import { verifyMacroTrackRecord } from './src/engines/macro-snapshot.js';
 import { verifyLegateGovernedReceipt } from './src/engines/legate-governed-receipt.js';
 import { verifyLegateProofPack } from './src/engines/legate-proof-pack.js';
+import { verifyLegateStandard } from './src/engines/legate-standard.js';
 import { verifyTrustedContextPack } from './src/engines/trusted-context-pack.js';
 import {
   CLAIMS_V211_TYPES,
@@ -126,6 +127,7 @@ const MODE_LABELS = {
   'legate-proof-pack': 'Legate adherence / restraint proof pack (Ed25519 over canonical bytes, position-blind)',
   'trusted-context-pack': 'ScopeBlind Trusted Context Pack (signed parsed-context attestation)',
   'scopeblind-claims-v2.1.1': 'ScopeBlind Verifiable Claims v2.1.1 point-in-time artifact',
+  'legate-standard': 'Legate signed standard, recipient decision, or action assurance bundle (the site\'s own verification core, offline)',
 };
 
 // ──────────────────────────────────────────────────────────────────
@@ -545,6 +547,7 @@ async function dispatch(input, opts) {
     else if (forced === 'governed') detected.mode = 'legate-governed-receipt';
     else if (forced === 'context' || forced === 'context-pack') detected.mode = 'trusted-context-pack';
     else if (forced === 'claims' || forced === 'claims-v2.1.1') detected.mode = 'scopeblind-claims-v2.1.1';
+    else if (forced === 'legate' || forced === 'standard') detected.mode = 'legate-standard';
   }
   if (opts.bundle) detected.mode = 'ed25519-bundle';
 
@@ -594,6 +597,10 @@ async function dispatch(input, opts) {
     case 'legate-proof-pack': {
       const r = verifyLegateProofPack(input, subOpts);
       return { ...r, modeLabel: MODE_LABELS['legate-proof-pack'] };
+    }
+    case 'legate-standard': {
+      const r = await verifyLegateStandard(input, subOpts);
+      return { ...r, modeLabel: MODE_LABELS['legate-standard'] };
     }
     case 'trusted-context-pack': {
       const r = verifyTrustedContextPack(input, subOpts);

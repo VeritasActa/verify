@@ -1,0 +1,116 @@
+{
+  "type": "scopeblind.action_assurance_bundle.v1",
+  "version": 1,
+  "request": {
+    "type": "scopeblind.approval_request.v2",
+    "version": 2,
+    "request_id": "approval:demo-payment-10148aa2",
+    "case_id": "case:admit-demo",
+    "environment_class": "sandbox",
+    "agent": {
+      "id": "agent:payables-2",
+      "label": "Payables agent (demo)"
+    },
+    "tool": {
+      "id": "payments.submit",
+      "label": "Submit payment instruction"
+    },
+    "action_class": "payment",
+    "resource": "Supplier invoice 20417",
+    "destination": "Beneficiary on file, account ending 4471",
+    "payload_commitment": "126b3da55a5dd72ff838e263a210b1a545e9dbcb6f538e6804c62070c5d45d58",
+    "readback": {
+      "text": "Action: Submit one payment instruction\nAmount: $185,000.00\nFor: Supplier invoice 20417\nDestination: Beneficiary on file, account ending 4471\nEffect: In this demonstration no money moves; the gateway simulates the bank response",
+      "digest": "6631116d0bbe894b08316144461c093d7434355c2a2bd8861d3631ce7100e923"
+    },
+    "policy_digest": "8b95794289523a65160031012b3c5accc26d87a3931ac9a0f80ae6a6c7506c40",
+    "rule_ids": [
+      "payment.beneficiary_on_file",
+      "payment.requires_named_approval"
+    ],
+    "authority": {
+      "scope": "approve this exact payment of $185,000.00 once",
+      "one_time": true,
+      "requested_assurance": "platform_credential_user_verified"
+    },
+    "issued_at": "2026-09-04T09:00:00.000Z",
+    "expires_at": "2026-09-04T09:09:00.000Z",
+    "nonce": "d959d35607cefd13cebe50beff100252",
+    "previous_action_commitment": null,
+    "failure_behavior": "hold",
+    "permitted_fallback": "none",
+    "transport_profile": "loopback_control",
+    "issuer": {
+      "key_id": "legate:demo-gate",
+      "verification_key": "f788830aa86c62bd96e7d3755b6ebc94d0704d63bc0b86b945f350a2cbdf2f8c"
+    },
+    "digest": "635e6f186f51ea3f837ada7ba461fff7a52a2fa1d923245d1af24a89804a71df",
+    "signature": {
+      "algorithm": "Ed25519",
+      "value": "af1e6c5ed84edd67c1a52a2dc8defbe4544199a998c588bd0d127aa25c093b0497b62a3f960f2922465129eaeea77f01a0d3a4cb3e834ed99a9a467e99f90c06"
+    }
+  },
+  "decision": {
+    "type": "scopeblind.approval_decision.v2",
+    "version": 2,
+    "request_digest": "635e6f186f51ea3f837ada7ba461fff7a52a2fa1d923245d1af24a89804a71df",
+    "decision": "approve",
+    "reason_digest": "b3602c8becbf9386ac10aff1f61c098890a4f638ec49cd97d20f86e8a0ff0f04",
+    "approver": {
+      "credential_id": "demo-treasurer-passkey",
+      "key_id": "demo:treasurer",
+      "organization_role": "Treasurer (demo); authority not independently verified",
+      "verification_key": "e488351740d866a0bbde1c1f349c76b40013b7b10ac0ee8145c81409df394c26"
+    },
+    "assurance": {
+      "request_binding": "exact_request_digest",
+      "user_verification": "platform_credential_verified",
+      "signing_device_separation": "same_workstation",
+      "human_separation": "not_established",
+      "organization_authority": "not_established",
+      "key_storage": "deterministic_test_only",
+      "transport_profile": "loopback_control",
+      "failure_domain": "test_process",
+      "fallback_used": false
+    },
+    "issued_at": "2026-09-04T09:00:00.000Z",
+    "expires_at": "2026-09-04T09:04:00.000Z",
+    "nonce": "cd4d38838e01a2af0c648d66899e25c1",
+    "digest": "7f2a37bf94ca4378457a26850d645436fa2cae65e8c73d37cc28db45168895d3",
+    "signature": {
+      "algorithm": "Ed25519",
+      "value": "808906474e22284a99e8759277c1d1e9861f3608d7dccf4e3afa25ec231be0232802b98102d6f8c95e04d0a3e6fe43bb56ffe2bae559beceed646c350c5ffd09"
+    }
+  },
+  "receipt": {
+    "type": "scopeblind.action_receipt.v2",
+    "version": 2,
+    "receipt_id": "receipt:demo-payment-927f4591",
+    "case_id": "case:admit-demo",
+    "request_digest": "635e6f186f51ea3f837ada7ba461fff7a52a2fa1d923245d1af24a89804a71df",
+    "decision_digest": "7f2a37bf94ca4378457a26850d645436fa2cae65e8c73d37cc28db45168895d3",
+    "result": "simulated_completed",
+    "route": {
+      "id": "payments.gateway",
+      "state": "governed_and_observed"
+    },
+    "coverage": {
+      "governed_route": true,
+      "possible_bypass_count": 0,
+      "unknown_route_count": 0,
+      "universally_complete": false
+    },
+    "external_effect": false,
+    "issued_at": "2026-09-04T09:00:00.000Z",
+    "issuer": {
+      "key_id": "legate:demo-gate",
+      "verification_key": "f788830aa86c62bd96e7d3755b6ebc94d0704d63bc0b86b945f350a2cbdf2f8c",
+      "key_storage": "deterministic_test_only"
+    },
+    "digest": "efa5896d3d8b4fab6930f84aa78ccc80e96faa55cdf80ba14f69bbd3b67b8315",
+    "signature": {
+      "algorithm": "Ed25519",
+      "value": "3a65318614e5a32de0cd3d8b260d0d3a5ddbd32215e058b9120d68d4955d13fca26d49fa6966fdb349dd232c916cf77618f827e5ccf67d9899915fbc23a06b05"
+    }
+  }
+}

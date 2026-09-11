@@ -39,6 +39,7 @@ Part of the [Veritas Acta](https://veritasacta.com) protocol for machine-decisio
 | Audit bundle | Multiple receipts with embedded signing keys | varies |
 | Gate receipt / bundle | ScopeBlind Gate receipt tuples (`scopeblind.gate.*`) and signed-manifest `scopeblind.gate.evidence-bundle/2` exports with semantic and exact chain checks | T1 |
 | Macro track record | Signed macro snapshots, append-only manifest sequence, and signed history checkpoints | T1 |
+| Legate standard files | A signed standard (`scopeblind.proof_request.v1`), a recipient decision (`scopeblind.admission_decision.v1`), or an action assurance bundle (`scopeblind.action_assurance_bundle.v1`), verified by the same core the Legate site runs, bundled here | T1 |
 
 ## Subcommands
 
@@ -105,7 +106,7 @@ integrity, not who controls that key. Pin the operator key and an independently
 retained anti-rollback head for identity and historical assurance:
 
 ```bash
-npx @veritasacta/verify@0.9.7 legate-macro-track-record.json \
+npx @veritasacta/verify@0.10.0 legate-macro-track-record.json \
   --key <operator-ed25519-public-key> \
   --history-head <expected-history-head> \
   --anchor-head <expected-anchor-digest>

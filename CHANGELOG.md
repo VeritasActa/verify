@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.10.0 (2026-09-11)
+
+### Added
+- Legate standard files verify with the one command: a signed standard (`scopeblind.proof_request.v1`), a recipient decision (`scopeblind.admission_decision.v1`), and an action assurance bundle (`scopeblind.action_assurance_bundle.v1`) are detected and verified by the same core the Legate site runs, bundled as `src/engines/legate-core.mjs` and synced from the web package. Force it with `--mode legate`. A green result names what it does not establish: who holds the key, and for a bundle without `--key`, that any signer is pinned.
+
+### Changed
+- `chain replay` accepts the pre-03 payload-only link only when the predecessor cites draft -02 or earlier, or no spec. Under -03 a payload-only link is a chain break, because accepting it would let a re-signed receipt keep the original's link, which is what section 6.7 closes. Legacy links taken are counted in `legacyLinks`.
+
 ## 0.9.7 (2026-09-10)
 
 ### Documentation says what exists
