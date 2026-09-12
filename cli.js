@@ -209,6 +209,7 @@ function parseArgs() {
       case '--receipts': opts.receiptsFile = next(); break;
       case '--calls': opts.callsFile = next(); break;
       case '--regrade': opts.regradeFile = next(); break;
+      case '--provenance': (opts.provenanceFiles ??= []).push(next()); break;
       case '--json': opts.json = true; break;
       case '--verbose':
       case '-v': opts.verbose = true; break;
@@ -345,6 +346,7 @@ ${bold('Options:')}
   --receipts <file>        Legate run manifest: the gateway's receipt log (JSONL or array) to check the chain against
   --calls <file>           Legate run manifest: the calls log (JSONL), one call per receipt, to open the input digests
   --regrade <file>         Legate run manifest: a second grading (scopeblind.run_regrade.v1) to reconcile with the manifest
+  --provenance <path>      Legate run manifest: Sigstore provenance bundle(s) (.sigstore.jsonl, or a directory of them), verified here against the pinned trust root; repeatable
   --stdin                  Read input from stdin
   --json                   Output JSON
   --verbose, -v            Detailed verification info
@@ -620,6 +622,19 @@ async function dispatch(input, opts) {
           subOpts.calls = (text.startsWith('[') ? JSON.parse(text) : text.split('\n').filter(Boolean).map((l) => JSON.parse(l))).map((c) => ({ tool: c.tool, input: c.input }));
         }
         if (opts.regradeFile) subOpts.regrade = JSON.parse(readFileSync(opts.regradeFile, 'utf8'));
+        // Provenance bundles name exact bytes, so the files as given on the command line are read again as bytes.
+        if (opts.provenanceFiles?.length) {
+          const { readdirSync, statSync } = await import('node:fs');
+          const { join } = await import('node:path');
+          const paths = opts.provenanceFiles.flatMap((p) => (statSync(p).isDirectory() ? readdirSync(p).filter((f) => /\.sigstore\.jsonl?$/.test(f)).sort().map((f) => join(p, f)) : [p]));
+          const bundles = paths.flatMap((p) => readFileSync(p, 'utf8').split('\n').filter((l) => l.trim()).map((l) => JSON.parse(l)));
+          const bytes = {};
+          if (opts.file) bytes.manifest = readFileSync(opts.file);
+          if (opts.standardFile) bytes.standard = readFileSync(opts.standardFile);
+          if (opts.receiptsFile) bytes.receipts = readFileSync(opts.receiptsFile);
+          if (opts.regradeFile) bytes.regrade = readFileSync(opts.regradeFile);
+          subOpts.provenance = { bundles, bytes };
+        }
       }
       const r = await verifyLegateStandard(input, subOpts);
       return { ...r, modeLabel: MODE_LABELS['legate-standard'] };

@@ -71,13 +71,39 @@ test('a receipt log with a receipt removed does not bind to the manifest', async
   assert.ok(r.checks.some((c) => c.id === 'chain_head' && !c.ok));
 });
 
-test('the CLI takes --standard and --receipts and reports the binding', () => {
+const provenanceFixture = () => ({ bundles: readFileSync(fixturePath('run-provenance.sigstore.jsonl'), 'utf8').trim().split('\n').map((l) => JSON.parse(l)), bytes: { manifest: readFileSync(fixturePath('run-manifest.json')), receipts: readFileSync(fixturePath('run-receipts.jsonl')), standard: readFileSync(fixturePath('run-standard.json')) } });
+
+test('with the provenance bundle beside it, the workflow, the commit, and the log entry are verified against the pinned Sigstore trust root', async () => {
+  const r = await verifyLegateStandard(fixture('run-manifest.json'), { now: NOW, standard: fixture('run-standard.json'), receipts: fixture('run-receipts.json'), calls: callsFixture(), regrade: fixture('run-regrade.json'), provenance: provenanceFixture() });
+  assert.equal(r.binding, 'bound', JSON.stringify(r.checks.filter((c) => !c.ok)));
+  assert.equal(r.provenance.verified, true);
+  for (const id of ['provenance_1_certificate', 'provenance_1_identity', 'provenance_1_signature', 'provenance_1_log', 'provenance_1_inclusion', 'provenance_1_sct', 'provenance_manifest', 'provenance_receipts', 'provenance_standard']) assert.ok(r.checks.some((c) => c.id === id && c.ok), id);
+  assert.match(r.provenance.identity.workflow, /\/\.github\/workflows\/verified-run\.yml@/);
+  assert.ok(r.establishes.some((s) => /Provenance verified here against the pinned Sigstore trust root/.test(s)));
+});
+
+test('a provenance bundle whose signature was altered does not verify, and the run no longer binds', async () => {
+  const p = provenanceFixture(); const sig = Buffer.from(p.bundles[0].dsseEnvelope.signatures[0].sig, 'base64'); sig[5] ^= 1; p.bundles[0].dsseEnvelope.signatures[0].sig = sig.toString('base64');
+  const r = await verifyLegateStandard(fixture('run-manifest.json'), { now: NOW, standard: fixture('run-standard.json'), receipts: fixture('run-receipts.json'), provenance: p });
+  assert.notEqual(r.binding, 'bound');
+  assert.ok(r.checks.some((c) => c.id === 'provenance_1_signature' && !c.ok));
+});
+
+test('a manifest edited after attestation is not the bytes the provenance names', async () => {
+  const p = provenanceFixture(); p.bytes.manifest = Buffer.concat([p.bytes.manifest, Buffer.from('\n')]);
+  const r = await verifyLegateStandard(fixture('run-manifest.json'), { now: NOW, provenance: p });
+  assert.ok(r.checks.some((c) => c.id === 'provenance_manifest' && !c.ok));
+  assert.equal(r.provenance.verified, false);
+});
+
+test('the CLI takes --standard, --receipts, and --provenance and reports the binding', () => {
   const cli = join(here, '..', '..', 'cli.js');
-  const r = spawnSync(process.execPath, [cli, fixturePath('run-manifest.json'), '--standard', fixturePath('run-standard.json'), '--receipts', fixturePath('run-receipts.json'), '--calls', fixturePath('run-calls.jsonl'), '--regrade', fixturePath('run-regrade.json'), '--json'], { encoding: 'utf8' });
+  const r = spawnSync(process.execPath, [cli, fixturePath('run-manifest.json'), '--standard', fixturePath('run-standard.json'), '--receipts', fixturePath('run-receipts.jsonl'), '--calls', fixturePath('run-calls.jsonl'), '--regrade', fixturePath('run-regrade.json'), '--provenance', fixturePath('run-provenance.sigstore.jsonl'), '--json'], { encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr);
   const out = JSON.parse(r.stdout);
   assert.equal(out.valid, true);
-  assert.equal(out.binding, 'bound');
+  assert.equal(out.binding, 'bound', JSON.stringify(out.checks.filter((c) => !c.ok)));
+  assert.equal(out.provenance.verified, true);
   const alone = spawnSync(process.execPath, [cli, fixturePath('run-manifest.json')], { encoding: 'utf8', env: { ...process.env, NO_COLOR: '1' } });
   assert.equal(alone.status, 0, alone.stderr);
   assert.match(alone.stdout, /Run manifest verifies: \d+ of \d+ passed, unbound/);

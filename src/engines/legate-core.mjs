@@ -22,6 +22,12 @@ function abytes(value, length, title = "") {
   }
   return value;
 }
+function ahash(h) {
+  if (typeof h !== "function" || typeof h.create !== "function")
+    throw new Error("Hash must wrapped by utils.createHasher");
+  anumber(h.outputLen);
+  anumber(h.blockLen);
+}
 function aexists(instance, checkFinished = true) {
   if (instance.destroyed)
     throw new Error("Hash instance has been destroyed");
@@ -42,6 +48,9 @@ function clean(...arrays) {
 }
 function createView(arr) {
   return new DataView(arr.buffer, arr.byteOffset, arr.byteLength);
+}
+function rotr(word, shift) {
+  return word << 32 - shift | word >>> shift;
 }
 var hasHexBuiltin = /* @__PURE__ */ (() => (
   // @ts-ignore
@@ -124,6 +133,12 @@ var oidNist = (suffix) => ({
 });
 
 // node_modules/@noble/curves/node_modules/@noble/hashes/_md.js
+function Chi(a, b, c) {
+  return a & b ^ ~a & c;
+}
+function Maj(a, b, c) {
+  return a & b ^ a & c ^ b & c;
+}
 var HashMD = class {
   blockLen;
   outputLen;
@@ -219,6 +234,34 @@ var HashMD = class {
     return this._cloneInto();
   }
 };
+var SHA256_IV = /* @__PURE__ */ Uint32Array.from([
+  1779033703,
+  3144134277,
+  1013904242,
+  2773480762,
+  1359893119,
+  2600822924,
+  528734635,
+  1541459225
+]);
+var SHA384_IV = /* @__PURE__ */ Uint32Array.from([
+  3418070365,
+  3238371032,
+  1654270250,
+  914150663,
+  2438529370,
+  812702999,
+  355462360,
+  4144912697,
+  1731405415,
+  4290775857,
+  2394180231,
+  1750603025,
+  3675008525,
+  1694076839,
+  1203062813,
+  3204075428
+]);
 var SHA512_IV = /* @__PURE__ */ Uint32Array.from([
   1779033703,
   4089235720,
@@ -274,6 +317,150 @@ var add5L = (Al, Bl, Cl, Dl, El) => (Al >>> 0) + (Bl >>> 0) + (Cl >>> 0) + (Dl >
 var add5H = (low, Ah, Bh, Ch, Dh, Eh) => Ah + Bh + Ch + Dh + Eh + (low / 2 ** 32 | 0) | 0;
 
 // node_modules/@noble/curves/node_modules/@noble/hashes/sha2.js
+var SHA256_K = /* @__PURE__ */ Uint32Array.from([
+  1116352408,
+  1899447441,
+  3049323471,
+  3921009573,
+  961987163,
+  1508970993,
+  2453635748,
+  2870763221,
+  3624381080,
+  310598401,
+  607225278,
+  1426881987,
+  1925078388,
+  2162078206,
+  2614888103,
+  3248222580,
+  3835390401,
+  4022224774,
+  264347078,
+  604807628,
+  770255983,
+  1249150122,
+  1555081692,
+  1996064986,
+  2554220882,
+  2821834349,
+  2952996808,
+  3210313671,
+  3336571891,
+  3584528711,
+  113926993,
+  338241895,
+  666307205,
+  773529912,
+  1294757372,
+  1396182291,
+  1695183700,
+  1986661051,
+  2177026350,
+  2456956037,
+  2730485921,
+  2820302411,
+  3259730800,
+  3345764771,
+  3516065817,
+  3600352804,
+  4094571909,
+  275423344,
+  430227734,
+  506948616,
+  659060556,
+  883997877,
+  958139571,
+  1322822218,
+  1537002063,
+  1747873779,
+  1955562222,
+  2024104815,
+  2227730452,
+  2361852424,
+  2428436474,
+  2756734187,
+  3204031479,
+  3329325298
+]);
+var SHA256_W = /* @__PURE__ */ new Uint32Array(64);
+var SHA2_32B = class extends HashMD {
+  constructor(outputLen) {
+    super(64, outputLen, 8, false);
+  }
+  get() {
+    const { A, B, C, D, E, F, G: G2, H: H2 } = this;
+    return [A, B, C, D, E, F, G2, H2];
+  }
+  // prettier-ignore
+  set(A, B, C, D, E, F, G2, H2) {
+    this.A = A | 0;
+    this.B = B | 0;
+    this.C = C | 0;
+    this.D = D | 0;
+    this.E = E | 0;
+    this.F = F | 0;
+    this.G = G2 | 0;
+    this.H = H2 | 0;
+  }
+  process(view, offset) {
+    for (let i = 0; i < 16; i++, offset += 4)
+      SHA256_W[i] = view.getUint32(offset, false);
+    for (let i = 16; i < 64; i++) {
+      const W15 = SHA256_W[i - 15];
+      const W2 = SHA256_W[i - 2];
+      const s0 = rotr(W15, 7) ^ rotr(W15, 18) ^ W15 >>> 3;
+      const s1 = rotr(W2, 17) ^ rotr(W2, 19) ^ W2 >>> 10;
+      SHA256_W[i] = s1 + SHA256_W[i - 7] + s0 + SHA256_W[i - 16] | 0;
+    }
+    let { A, B, C, D, E, F, G: G2, H: H2 } = this;
+    for (let i = 0; i < 64; i++) {
+      const sigma1 = rotr(E, 6) ^ rotr(E, 11) ^ rotr(E, 25);
+      const T1 = H2 + sigma1 + Chi(E, F, G2) + SHA256_K[i] + SHA256_W[i] | 0;
+      const sigma0 = rotr(A, 2) ^ rotr(A, 13) ^ rotr(A, 22);
+      const T2 = sigma0 + Maj(A, B, C) | 0;
+      H2 = G2;
+      G2 = F;
+      F = E;
+      E = D + T1 | 0;
+      D = C;
+      C = B;
+      B = A;
+      A = T1 + T2 | 0;
+    }
+    A = A + this.A | 0;
+    B = B + this.B | 0;
+    C = C + this.C | 0;
+    D = D + this.D | 0;
+    E = E + this.E | 0;
+    F = F + this.F | 0;
+    G2 = G2 + this.G | 0;
+    H2 = H2 + this.H | 0;
+    this.set(A, B, C, D, E, F, G2, H2);
+  }
+  roundClean() {
+    clean(SHA256_W);
+  }
+  destroy() {
+    this.set(0, 0, 0, 0, 0, 0, 0, 0);
+    clean(this.buffer);
+  }
+};
+var _SHA256 = class extends SHA2_32B {
+  // We cannot use array here since array allows indexing by variable
+  // which means optimizer/compiler cannot use registers.
+  A = SHA256_IV[0] | 0;
+  B = SHA256_IV[1] | 0;
+  C = SHA256_IV[2] | 0;
+  D = SHA256_IV[3] | 0;
+  E = SHA256_IV[4] | 0;
+  F = SHA256_IV[5] | 0;
+  G = SHA256_IV[6] | 0;
+  H = SHA256_IV[7] | 0;
+  constructor() {
+    super(32);
+  }
+};
 var K512 = /* @__PURE__ */ (() => split([
   "0x428a2f98d728ae22",
   "0x7137449123ef65cd",
@@ -476,9 +663,38 @@ var _SHA512 = class extends SHA2_64B {
     super(64);
   }
 };
+var _SHA384 = class extends SHA2_64B {
+  Ah = SHA384_IV[0] | 0;
+  Al = SHA384_IV[1] | 0;
+  Bh = SHA384_IV[2] | 0;
+  Bl = SHA384_IV[3] | 0;
+  Ch = SHA384_IV[4] | 0;
+  Cl = SHA384_IV[5] | 0;
+  Dh = SHA384_IV[6] | 0;
+  Dl = SHA384_IV[7] | 0;
+  Eh = SHA384_IV[8] | 0;
+  El = SHA384_IV[9] | 0;
+  Fh = SHA384_IV[10] | 0;
+  Fl = SHA384_IV[11] | 0;
+  Gh = SHA384_IV[12] | 0;
+  Gl = SHA384_IV[13] | 0;
+  Hh = SHA384_IV[14] | 0;
+  Hl = SHA384_IV[15] | 0;
+  constructor() {
+    super(48);
+  }
+};
+var sha256 = /* @__PURE__ */ createHasher(
+  () => new _SHA256(),
+  /* @__PURE__ */ oidNist(1)
+);
 var sha512 = /* @__PURE__ */ createHasher(
   () => new _SHA512(),
   /* @__PURE__ */ oidNist(3)
+);
+var sha384 = /* @__PURE__ */ createHasher(
+  () => new _SHA384(),
+  /* @__PURE__ */ oidNist(2)
 );
 
 // node_modules/@noble/curves/utils.js
@@ -504,6 +720,10 @@ function asafenumber(value, title = "") {
     const prefix = title && `"${title}" `;
     throw new Error(prefix + "expected safe integer, got type=" + typeof value);
   }
+}
+function numberToHexUnpadded(num) {
+  const hex = abignumber(num).toString(16);
+  return hex.length & 1 ? "0" + hex : hex;
 }
 function hexToNumber(hex) {
   if (typeof hex !== "string")
@@ -555,7 +775,64 @@ function aInRange(title, n, min, max) {
   if (!inRange(n, min, max))
     throw new Error("expected valid " + title + ": " + min + " <= n < " + max + ", got " + n);
 }
+function bitLen(n) {
+  let len;
+  for (len = 0; n > _0n; n >>= _1n, len += 1)
+    ;
+  return len;
+}
 var bitMask = (n) => (_1n << BigInt(n)) - _1n;
+function createHmacDrbg(hashLen, qByteLen, hmacFn) {
+  anumber(hashLen, "hashLen");
+  anumber(qByteLen, "qByteLen");
+  if (typeof hmacFn !== "function")
+    throw new Error("hmacFn must be a function");
+  const u8n = (len) => new Uint8Array(len);
+  const NULL = Uint8Array.of();
+  const byte0 = Uint8Array.of(0);
+  const byte1 = Uint8Array.of(1);
+  const _maxDrbgIters = 1e3;
+  let v = u8n(hashLen);
+  let k = u8n(hashLen);
+  let i = 0;
+  const reset = () => {
+    v.fill(1);
+    k.fill(0);
+    i = 0;
+  };
+  const h = (...msgs) => hmacFn(k, concatBytes(v, ...msgs));
+  const reseed = (seed = NULL) => {
+    k = h(byte0, seed);
+    v = h();
+    if (seed.length === 0)
+      return;
+    k = h(byte1, seed);
+    v = h();
+  };
+  const gen = () => {
+    if (i++ >= _maxDrbgIters)
+      throw new Error("drbg: tried max amount of iterations");
+    let len = 0;
+    const out = [];
+    while (len < qByteLen) {
+      v = h();
+      const sl = v.slice();
+      out.push(sl);
+      len += v.length;
+    }
+    return concatBytes(...out);
+  };
+  const genUntil = (seed, pred) => {
+    reset();
+    reseed(seed);
+    let res = void 0;
+    while (!(res = pred(gen())))
+      reseed();
+    reset();
+    return res;
+  };
+  return genUntil;
+}
 function validateObject(object, fields = {}, optFields = {}) {
   if (!object || typeof object !== "object")
     throw new Error("expected valid options object");
@@ -951,6 +1228,27 @@ var _Field = class {
 function Field(ORDER, opts = {}) {
   return new _Field(ORDER, opts);
 }
+function getFieldBytesLength(fieldOrder) {
+  if (typeof fieldOrder !== "bigint")
+    throw new Error("field order must be bigint");
+  const bitLength = fieldOrder.toString(2).length;
+  return Math.ceil(bitLength / 8);
+}
+function getMinHashLength(fieldOrder) {
+  const length = getFieldBytesLength(fieldOrder);
+  return length + Math.ceil(length / 2);
+}
+function mapHashToField(key, fieldOrder, isLE = false) {
+  abytes(key);
+  const len = key.length;
+  const fieldLen = getFieldBytesLength(fieldOrder);
+  const minLen = getMinHashLength(fieldOrder);
+  if (len < 16 || len < minLen || len > 1024)
+    throw new Error("expected " + minLen + "-1024 bytes of input, got " + len);
+  const num = isLE ? bytesToNumberLE(key) : bytesToNumberBE(key);
+  const reduced = mod(num, fieldOrder - _1n2) + _1n2;
+  return isLE ? numberToBytesLE(reduced, fieldLen) : numberToBytesBE(reduced, fieldLen);
+}
 
 // node_modules/@noble/curves/abstract/curve.js
 var _0n3 = /* @__PURE__ */ BigInt(0);
@@ -1132,6 +1430,21 @@ var wNAF = class {
     return getW(elm) !== 1;
   }
 };
+function mulEndoUnsafe(Point, point, k1, k2) {
+  let acc = point;
+  let p1 = Point.ZERO;
+  let p2 = Point.ZERO;
+  while (k1 > _0n3 || k2 > _0n3) {
+    if (k1 & _1n3)
+      p1 = p1.add(acc);
+    if (k2 & _1n3)
+      p2 = p2.add(acc);
+    acc = acc.double();
+    k1 >>= _1n3;
+    k2 >>= _1n3;
+  }
+  return { p1, p2 };
+}
 function createField(order, field, isLE) {
   if (field) {
     if (field.ORDER !== order)
@@ -2051,10 +2364,25 @@ function hexToBytes2(hex) {
   }
   return array;
 }
-function utf8ToBytes(str2) {
-  if (typeof str2 !== "string")
+function utf8ToBytes(str3) {
+  if (typeof str3 !== "string")
     throw new TypeError("string expected");
-  return new Uint8Array(new TextEncoder().encode(str2));
+  return new Uint8Array(new TextEncoder().encode(str3));
+}
+function concatBytes2(...arrays) {
+  let sum = 0;
+  for (let i = 0; i < arrays.length; i++) {
+    const a = arrays[i];
+    abytes2(a);
+    sum += a.length;
+  }
+  const res = new Uint8Array(sum);
+  for (let i = 0, pad = 0; i < arrays.length; i++) {
+    const a = arrays[i];
+    res.set(a, pad);
+    pad += a.length;
+  }
+  return res;
 }
 function createHasher3(hashCons, info = {}) {
   const hashC = (msg, opts) => hashCons(opts).update(msg).digest();
@@ -2185,6 +2513,24 @@ var SHA256_IV2 = /* @__PURE__ */ Uint32Array.from([
   528734635,
   1541459225
 ]);
+var SHA384_IV2 = /* @__PURE__ */ Uint32Array.from([
+  3418070365,
+  3238371032,
+  1654270250,
+  914150663,
+  2438529370,
+  812702999,
+  355462360,
+  4144912697,
+  1731405415,
+  4290775857,
+  2394180231,
+  1750603025,
+  3675008525,
+  1694076839,
+  1203062813,
+  3204075428
+]);
 var SHA512_IV2 = /* @__PURE__ */ Uint32Array.from([
   1779033703,
   4089235720,
@@ -2240,7 +2586,7 @@ var add5L2 = (Al, Bl, Cl, Dl, El) => (Al >>> 0) + (Bl >>> 0) + (Cl >>> 0) + (Dl 
 var add5H2 = (low, Ah, Bh, Ch, Dh, Eh) => Ah + Bh + Ch + Dh + Eh + (low / 2 ** 32 | 0) | 0;
 
 // node_modules/@noble/hashes/sha2.js
-var SHA256_K = /* @__PURE__ */ Uint32Array.from([
+var SHA256_K2 = /* @__PURE__ */ Uint32Array.from([
   1116352408,
   1899447441,
   3049323471,
@@ -2306,8 +2652,8 @@ var SHA256_K = /* @__PURE__ */ Uint32Array.from([
   3204031479,
   3329325298
 ]);
-var SHA256_W = /* @__PURE__ */ new Uint32Array(64);
-var SHA2_32B = class extends HashMD2 {
+var SHA256_W2 = /* @__PURE__ */ new Uint32Array(64);
+var SHA2_32B2 = class extends HashMD2 {
   constructor(outputLen) {
     super(64, outputLen, 8, false);
   }
@@ -2328,18 +2674,18 @@ var SHA2_32B = class extends HashMD2 {
   }
   process(view, offset) {
     for (let i = 0; i < 16; i++, offset += 4)
-      SHA256_W[i] = view.getUint32(offset, false);
+      SHA256_W2[i] = view.getUint32(offset, false);
     for (let i = 16; i < 64; i++) {
-      const W15 = SHA256_W[i - 15];
-      const W2 = SHA256_W[i - 2];
+      const W15 = SHA256_W2[i - 15];
+      const W2 = SHA256_W2[i - 2];
       const s0 = rotr2(W15, 7) ^ rotr2(W15, 18) ^ W15 >>> 3;
       const s1 = rotr2(W2, 17) ^ rotr2(W2, 19) ^ W2 >>> 10;
-      SHA256_W[i] = s1 + SHA256_W[i - 7] + s0 + SHA256_W[i - 16] | 0;
+      SHA256_W2[i] = s1 + SHA256_W2[i - 7] + s0 + SHA256_W2[i - 16] | 0;
     }
     let { A, B, C, D, E, F, G: G2, H: H2 } = this;
     for (let i = 0; i < 64; i++) {
       const sigma1 = rotr2(E, 6) ^ rotr2(E, 11) ^ rotr2(E, 25);
-      const T1 = H2 + sigma1 + Chi2(E, F, G2) + SHA256_K[i] + SHA256_W[i] | 0;
+      const T1 = H2 + sigma1 + Chi2(E, F, G2) + SHA256_K2[i] + SHA256_W2[i] | 0;
       const sigma0 = rotr2(A, 2) ^ rotr2(A, 13) ^ rotr2(A, 22);
       const T2 = sigma0 + Maj2(A, B, C) | 0;
       H2 = G2;
@@ -2362,7 +2708,7 @@ var SHA2_32B = class extends HashMD2 {
     this.set(A, B, C, D, E, F, G2, H2);
   }
   roundClean() {
-    clean2(SHA256_W);
+    clean2(SHA256_W2);
   }
   destroy() {
     this.destroyed = true;
@@ -2370,7 +2716,7 @@ var SHA2_32B = class extends HashMD2 {
     clean2(this.buffer);
   }
 };
-var _SHA256 = class extends SHA2_32B {
+var _SHA2562 = class extends SHA2_32B2 {
   // We cannot use array here since array allows indexing by variable
   // which means optimizer/compiler cannot use registers.
   A = SHA256_IV2[0] | 0;
@@ -2588,13 +2934,38 @@ var _SHA5122 = class extends SHA2_64B2 {
     super(64);
   }
 };
-var sha256 = /* @__PURE__ */ createHasher3(
-  () => new _SHA256(),
+var _SHA3842 = class extends SHA2_64B2 {
+  Ah = SHA384_IV2[0] | 0;
+  Al = SHA384_IV2[1] | 0;
+  Bh = SHA384_IV2[2] | 0;
+  Bl = SHA384_IV2[3] | 0;
+  Ch = SHA384_IV2[4] | 0;
+  Cl = SHA384_IV2[5] | 0;
+  Dh = SHA384_IV2[6] | 0;
+  Dl = SHA384_IV2[7] | 0;
+  Eh = SHA384_IV2[8] | 0;
+  El = SHA384_IV2[9] | 0;
+  Fh = SHA384_IV2[10] | 0;
+  Fl = SHA384_IV2[11] | 0;
+  Gh = SHA384_IV2[12] | 0;
+  Gl = SHA384_IV2[13] | 0;
+  Hh = SHA384_IV2[14] | 0;
+  Hl = SHA384_IV2[15] | 0;
+  constructor() {
+    super(48);
+  }
+};
+var sha2562 = /* @__PURE__ */ createHasher3(
+  () => new _SHA2562(),
   /* @__PURE__ */ oidNist2(1)
 );
 var sha5122 = /* @__PURE__ */ createHasher3(
   () => new _SHA5122(),
   /* @__PURE__ */ oidNist2(3)
+);
+var sha3842 = /* @__PURE__ */ createHasher3(
+  () => new _SHA3842(),
+  /* @__PURE__ */ oidNist2(2)
 );
 
 // src/covenant.ts
@@ -2691,7 +3062,7 @@ function lp(...parts) {
   }
   return flat;
 }
-var digestOf = (...parts) => bytesToHex2(sha256(lp(...parts)));
+var digestOf = (...parts) => bytesToHex2(sha2562(lp(...parts)));
 var TIER_RANK = { self_reported: 1, gate_receipted: 2, admin_attested: 3 };
 var TIER_LABEL = {
   self_reported: "Self-reported",
@@ -2970,12 +3341,12 @@ function verifyCosignedDiversification(cert) {
     if (cert.clean !== cert.shared_count <= cert.threshold) return { ok: false, signedBy: 0, of };
     const msg = cosignMsg(base);
     const sigById = new Map(signatures.map((s) => [s.id, s.signature]));
-    let signedBy = 0;
+    let signedBy2 = 0;
     for (const p of cert.participants) {
       const s = sigById.get(p.id);
-      if (s && ed25519.verify(hexToBytes2(s), msg, hexToBytes2(p.public_key))) signedBy++;
+      if (s && ed25519.verify(hexToBytes2(s), msg, hexToBytes2(p.public_key))) signedBy2++;
     }
-    return { ok: signedBy === of && of > 0, signedBy, of };
+    return { ok: signedBy2 === of && of > 0, signedBy: signedBy2, of };
   } catch {
     return { ok: false, signedBy: 0, of };
   }
@@ -2999,7 +3370,7 @@ function abytes3(b, ...lengths) {
   if (lengths.length > 0 && !lengths.includes(b.length))
     throw new Error("Uint8Array expected of length " + lengths + ", got length=" + b.length);
 }
-function ahash(h) {
+function ahash2(h) {
   if (typeof h !== "function" || typeof h.create !== "function")
     throw new Error("Hash should be wrapped by utils.createHasher");
   anumber2(h.outputLen);
@@ -3075,10 +3446,10 @@ function hexToBytes3(hex) {
   }
   return array;
 }
-function utf8ToBytes2(str2) {
-  if (typeof str2 !== "string")
+function utf8ToBytes2(str3) {
+  if (typeof str3 !== "string")
     throw new Error("string expected");
-  return new Uint8Array(new TextEncoder().encode(str2));
+  return new Uint8Array(new TextEncoder().encode(str3));
 }
 function toBytes(data) {
   if (typeof data === "string")
@@ -3086,7 +3457,7 @@ function toBytes(data) {
   abytes3(data);
   return data;
 }
-function concatBytes2(...arrays) {
+function concatBytes3(...arrays) {
   let sum = 0;
   for (let i = 0; i < arrays.length; i++) {
     const a = arrays[i];
@@ -3313,7 +3684,7 @@ var add5L3 = (Al, Bl, Cl, Dl, El) => (Al >>> 0) + (Bl >>> 0) + (Cl >>> 0) + (Dl 
 var add5H3 = (low, Ah, Bh, Ch, Dh, Eh) => Ah + Bh + Ch + Dh + Eh + (low / 2 ** 32 | 0) | 0;
 
 // ../node_modules/@noble/hashes/esm/sha2.js
-var SHA256_K2 = /* @__PURE__ */ Uint32Array.from([
+var SHA256_K3 = /* @__PURE__ */ Uint32Array.from([
   1116352408,
   1899447441,
   3049323471,
@@ -3379,7 +3750,7 @@ var SHA256_K2 = /* @__PURE__ */ Uint32Array.from([
   3204031479,
   3329325298
 ]);
-var SHA256_W2 = /* @__PURE__ */ new Uint32Array(64);
+var SHA256_W3 = /* @__PURE__ */ new Uint32Array(64);
 var SHA256 = class extends HashMD3 {
   constructor(outputLen = 32) {
     super(64, outputLen, 8, false);
@@ -3409,18 +3780,18 @@ var SHA256 = class extends HashMD3 {
   }
   process(view, offset) {
     for (let i = 0; i < 16; i++, offset += 4)
-      SHA256_W2[i] = view.getUint32(offset, false);
+      SHA256_W3[i] = view.getUint32(offset, false);
     for (let i = 16; i < 64; i++) {
-      const W15 = SHA256_W2[i - 15];
-      const W2 = SHA256_W2[i - 2];
+      const W15 = SHA256_W3[i - 15];
+      const W2 = SHA256_W3[i - 2];
       const s0 = rotr3(W15, 7) ^ rotr3(W15, 18) ^ W15 >>> 3;
       const s1 = rotr3(W2, 17) ^ rotr3(W2, 19) ^ W2 >>> 10;
-      SHA256_W2[i] = s1 + SHA256_W2[i - 7] + s0 + SHA256_W2[i - 16] | 0;
+      SHA256_W3[i] = s1 + SHA256_W3[i - 7] + s0 + SHA256_W3[i - 16] | 0;
     }
     let { A, B, C, D, E, F, G: G2, H: H2 } = this;
     for (let i = 0; i < 64; i++) {
       const sigma1 = rotr3(E, 6) ^ rotr3(E, 11) ^ rotr3(E, 25);
-      const T1 = H2 + sigma1 + Chi3(E, F, G2) + SHA256_K2[i] + SHA256_W2[i] | 0;
+      const T1 = H2 + sigma1 + Chi3(E, F, G2) + SHA256_K3[i] + SHA256_W3[i] | 0;
       const sigma0 = rotr3(A, 2) ^ rotr3(A, 13) ^ rotr3(A, 22);
       const T2 = sigma0 + Maj3(A, B, C) | 0;
       H2 = G2;
@@ -3443,7 +3814,7 @@ var SHA256 = class extends HashMD3 {
     this.set(A, B, C, D, E, F, G2, H2);
   }
   roundClean() {
-    clean3(SHA256_W2);
+    clean3(SHA256_W3);
   }
   destroy() {
     this.set(0, 0, 0, 0, 0, 0, 0, 0);
@@ -3668,9 +4039,9 @@ var SHA384 = class extends SHA512 {
     this.Hl = SHA384_IV3[15] | 0;
   }
 };
-var sha2562 = /* @__PURE__ */ createHasher4(() => new SHA256());
+var sha2563 = /* @__PURE__ */ createHasher4(() => new SHA256());
 var sha5123 = /* @__PURE__ */ createHasher4(() => new SHA512());
-var sha384 = /* @__PURE__ */ createHasher4(() => new SHA384());
+var sha3843 = /* @__PURE__ */ createHasher4(() => new SHA384());
 
 // ../node_modules/@noble/curves/esm/utils.js
 var _0n6 = /* @__PURE__ */ BigInt(0);
@@ -3694,7 +4065,7 @@ function _abytes2(value, length, title = "") {
   }
   return value;
 }
-function numberToHexUnpadded(num) {
+function numberToHexUnpadded2(num) {
   const hex = num.toString(16);
   return hex.length & 1 ? "0" + hex : hex;
 }
@@ -3760,7 +4131,7 @@ function bitLen2(n) {
   return len;
 }
 var bitMask2 = (n) => (_1n6 << BigInt(n)) - _1n6;
-function createHmacDrbg(hashLen, qByteLen, hmacFn) {
+function createHmacDrbg2(hashLen, qByteLen, hmacFn) {
   if (typeof hashLen !== "number" || hashLen < 2)
     throw new Error("hashLen must be a number");
   if (typeof qByteLen !== "number" || qByteLen < 2)
@@ -3797,7 +4168,7 @@ function createHmacDrbg(hashLen, qByteLen, hmacFn) {
       out.push(sl);
       len += v.length;
     }
-    return concatBytes2(...out);
+    return concatBytes3(...out);
   };
   const genUntil = (seed, pred) => {
     reset();
@@ -4164,20 +4535,20 @@ function Field2(ORDER, bitLenOrOpts, isLE = false, opts = {}) {
   });
   return Object.freeze(f);
 }
-function getFieldBytesLength(fieldOrder) {
+function getFieldBytesLength2(fieldOrder) {
   if (typeof fieldOrder !== "bigint")
     throw new Error("field order must be bigint");
   const bitLength = fieldOrder.toString(2).length;
   return Math.ceil(bitLength / 8);
 }
-function getMinHashLength(fieldOrder) {
-  const length = getFieldBytesLength(fieldOrder);
+function getMinHashLength2(fieldOrder) {
+  const length = getFieldBytesLength2(fieldOrder);
   return length + Math.ceil(length / 2);
 }
-function mapHashToField(key, fieldOrder, isLE = false) {
+function mapHashToField2(key, fieldOrder, isLE = false) {
   const len = key.length;
-  const fieldLen = getFieldBytesLength(fieldOrder);
-  const minLen = getMinHashLength(fieldOrder);
+  const fieldLen = getFieldBytesLength2(fieldOrder);
+  const minLen = getMinHashLength2(fieldOrder);
   if (len < 16 || len < minLen || len > 1024)
     throw new Error("expected " + minLen + "-1024 bytes of input, got " + len);
   const num = isLE ? bytesToNumberLE2(key) : bytesToNumberBE2(key);
@@ -4377,7 +4748,7 @@ var wNAF2 = class {
     return getW2(elm) !== 1;
   }
 };
-function mulEndoUnsafe(Point, point, k1, k2) {
+function mulEndoUnsafe2(Point, point, k1, k2) {
   let acc = point;
   let p1 = Point.ZERO;
   let p2 = Point.ZERO;
@@ -4860,7 +5231,7 @@ function eddsa2(Point, cHash, eddsaOpts = {}) {
     return getExtendedPublicKey(secretKey).pointBytes;
   }
   function hashDomainToScalar(context = Uint8Array.of(), ...msgs) {
-    const msg = concatBytes2(...msgs);
+    const msg = concatBytes3(...msgs);
     return modN_LE(cHash(domain(msg, ensureBytes("context", context), !!prehash)));
   }
   function sign(msg, secretKey, options = {}) {
@@ -4874,7 +5245,7 @@ function eddsa2(Point, cHash, eddsaOpts = {}) {
     const s = Fn3.create(r + k * scalar);
     if (!Fn3.isValid(s))
       throw new Error("sign failed: invalid s");
-    const rs = concatBytes2(R, Fn3.toBytes(s));
+    const rs = concatBytes3(R, Fn3.toBytes(s));
     return _abytes2(rs, lengths.signature, "result");
   }
   const verifyOpts = { zip215: true };
@@ -5243,7 +5614,7 @@ var HMAC = class extends Hash {
     super();
     this.finished = false;
     this.destroyed = false;
-    ahash(hash);
+    ahash2(hash);
     const key = toBytes(_key);
     this.iHash = hash.create();
     if (typeof this.iHash.update !== "function")
@@ -5358,11 +5729,11 @@ var DER = {
       if (data.length & 1)
         throw new E("tlv.encode: unpadded data");
       const dataLen = data.length / 2;
-      const len = numberToHexUnpadded(dataLen);
+      const len = numberToHexUnpadded2(dataLen);
       if (len.length / 2 & 128)
         throw new E("tlv.encode: long form length too big");
-      const lenLen = dataLen > 127 ? numberToHexUnpadded(len.length / 2 | 128) : "";
-      const t = numberToHexUnpadded(tag);
+      const lenLen = dataLen > 127 ? numberToHexUnpadded2(len.length / 2 | 128) : "";
+      const t = numberToHexUnpadded2(tag);
       return t + lenLen + len + data;
     },
     // v - value, l - left bytes (unparsed)
@@ -5410,7 +5781,7 @@ var DER = {
       const { Err: E } = DER;
       if (num < _0n11)
         throw new E("integer: negative integers are not allowed");
-      let hex = numberToHexUnpadded(num);
+      let hex = numberToHexUnpadded2(num);
       if (Number.parseInt(hex[0], 16) & 8)
         hex = "00" + hex;
       if (hex.length & 1)
@@ -5500,9 +5871,9 @@ function weierstrassN(params, extraOpts = {}) {
     if (isCompressed) {
       assertCompressionIsSupported();
       const hasEvenY = !Fp3.isOdd(y);
-      return concatBytes2(pprefix(hasEvenY), bx);
+      return concatBytes3(pprefix(hasEvenY), bx);
     } else {
-      return concatBytes2(Uint8Array.of(4), bx, Fp3.toBytes(y));
+      return concatBytes3(Uint8Array.of(4), bx, Fp3.toBytes(y));
     }
   }
   function pointFromBytes(bytes) {
@@ -5828,7 +6199,7 @@ function weierstrassN(params, extraOpts = {}) {
         return this.multiply(sc);
       if (endo2) {
         const { k1neg, k1, k2neg, k2 } = splitEndoScalarN(sc);
-        const { p1, p2 } = mulEndoUnsafe(Point, p, k1, k2);
+        const { p1, p2 } = mulEndoUnsafe2(Point, p, k1, k2);
         return finishEndo(endo2.beta, p1, p2, k1neg, k2neg);
       } else {
         return wnaf.unsafe(p, sc);
@@ -5929,7 +6300,7 @@ function getWLengths(Fp3, Fn3) {
 function ecdh(Point, ecdhOpts = {}) {
   const { Fn: Fn3 } = Point;
   const randomBytes_ = ecdhOpts.randomBytes || randomBytes2;
-  const lengths = Object.assign(getWLengths(Point.Fp, Fn3), { seed: getMinHashLength(Fn3.ORDER) });
+  const lengths = Object.assign(getWLengths(Point.Fp, Fn3), { seed: getMinHashLength2(Fn3.ORDER) });
   function isValidSecretKey(secretKey) {
     try {
       return !!_normFnElement(Fn3, secretKey);
@@ -5951,7 +6322,7 @@ function ecdh(Point, ecdhOpts = {}) {
     }
   }
   function randomSecretKey(seed = randomBytes_(lengths.seed)) {
-    return mapHashToField(_abytes2(seed, lengths.seed, "seed"), Fn3.ORDER);
+    return mapHashToField2(_abytes2(seed, lengths.seed, "seed"), Fn3.ORDER);
   }
   function getPublicKey(secretKey, isCompressed = true) {
     return Point.BASE.multiply(_normFnElement(Fn3, secretKey)).toBytes(isCompressed);
@@ -5995,7 +6366,7 @@ function ecdh(Point, ecdhOpts = {}) {
   return Object.freeze({ getPublicKey, getSharedSecret, keygen, Point, utils, lengths });
 }
 function ecdsa(Point, hash, ecdsaOpts = {}) {
-  ahash(hash);
+  ahash2(hash);
   _validateObject(ecdsaOpts, {}, {
     hmac: "function",
     lowS: "boolean",
@@ -6004,7 +6375,7 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
     bits2int_modN: "function"
   });
   const randomBytes3 = ecdsaOpts.randomBytes || randomBytes2;
-  const hmac2 = ecdsaOpts.hmac || ((key, ...msgs) => hmac(hash, key, concatBytes2(...msgs)));
+  const hmac3 = ecdsaOpts.hmac || ((key, ...msgs) => hmac(hash, key, concatBytes3(...msgs)));
   const { Fp: Fp3, Fn: Fn3 } = Point;
   const { ORDER: CURVE_ORDER, BITS: fnBits } = Fn3;
   const { keygen, getPublicKey, getSharedSecret, utils, lengths } = ecdh(Point, ecdsaOpts);
@@ -6074,7 +6445,7 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
       if (!Fp3.isValid(radj))
         throw new Error("recovery id 2 or 3 invalid");
       const x = Fp3.toBytes(radj);
-      const R = Point.fromBytes(concatBytes2(pprefix((rec & 1) === 0), x));
+      const R = Point.fromBytes(concatBytes3(pprefix((rec & 1) === 0), x));
       const ir = Fn3.inv(radj);
       const h = bits2int_modN(ensureBytes("msgHash", messageHash));
       const u1 = Fn3.create(-h * ir);
@@ -6098,9 +6469,9 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
       if (format === "recovered") {
         if (this.recovery == null)
           throw new Error("recovery bit must be present");
-        return concatBytes2(Uint8Array.of(this.recovery), r, s);
+        return concatBytes3(Uint8Array.of(this.recovery), r, s);
       }
-      return concatBytes2(r, s);
+      return concatBytes3(r, s);
     }
     toHex(format) {
       return bytesToHex3(this.toBytes(format));
@@ -6161,7 +6532,7 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
       const e = extraEntropy === true ? randomBytes3(lengths.secretKey) : extraEntropy;
       seedArgs.push(ensureBytes("extraEntropy", e));
     }
-    const seed = concatBytes2(...seedArgs);
+    const seed = concatBytes3(...seedArgs);
     const m = h1int;
     function k2sig(kBytes) {
       const k = bits2int(kBytes);
@@ -6188,7 +6559,7 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
   function sign(message, secretKey, opts = {}) {
     message = ensureBytes("message", message);
     const { seed, k2sig } = prepSig(message, secretKey, opts);
-    const drbg = createHmacDrbg(hash.outputLen, Fn3.BYTES, hmac2);
+    const drbg = createHmacDrbg2(hash.outputLen, Fn3.BYTES, hmac3);
     const sig = drbg(seed, k2sig);
     return sig;
   }
@@ -6356,15 +6727,15 @@ var p521_CURVE = {
 var Fp256 = Field2(p256_CURVE.p);
 var Fp384 = Field2(p384_CURVE.p);
 var Fp521 = Field2(p521_CURVE.p);
-var p256 = createCurve({ ...p256_CURVE, Fp: Fp256, lowS: false }, sha2562);
-var p384 = createCurve({ ...p384_CURVE, Fp: Fp384, lowS: false }, sha384);
+var p256 = createCurve({ ...p256_CURVE, Fp: Fp256, lowS: false }, sha2563);
+var p384 = createCurve({ ...p384_CURVE, Fp: Fp384, lowS: false }, sha3843);
 var p521 = createCurve({ ...p521_CURVE, Fp: Fp521, lowS: false, allowedPrivateKeyLengths: [130, 131, 132] }, sha5123);
 
 // ../node_modules/@noble/curves/esm/p256.js
 var p2562 = p256;
 
 // ../node_modules/@noble/hashes/esm/sha256.js
-var sha2563 = sha2562;
+var sha2564 = sha2563;
 
 // ../src/claim-v211-json.ts
 var CLAIMS_JSON_LIMITS = {
@@ -6794,7 +7165,7 @@ function canonicalIso(value, label) {
   return parsed;
 }
 function sha256HexBytes(value) {
-  return bytesToHex3(sha2563(value));
+  return bytesToHex3(sha2564(value));
 }
 function webAuthnCredentialReference(credentialId) {
   return `webauthn:${sha256HexBytes(utf8(`${WEBAUTHN_CREDENTIAL_DOMAIN}\0${credentialId}`))}`;
@@ -7200,7 +7571,7 @@ async function verifyWebAuthnEvidence(decision, preimage, pin, expectedOrigin, e
   if (clientDataBytes.length > 16384) throw new Error("clientDataJSON exceeds the verification limit");
   const clientData = record(parseClaimsJson(decodeUtf8(clientDataBytes, "clientDataJSON")), "clientDataJSON");
   if (clientData.type !== "webauthn.get") throw new Error("clientDataJSON type is not webauthn.get");
-  const expectedChallenge = base64UrlEncode(sha2563(utf8(preimage)));
+  const expectedChallenge = base64UrlEncode(sha2564(utf8(preimage)));
   if (clientData.challenge !== expectedChallenge) {
     throw new Error("WebAuthn challenge is not bound to the exact approval decision");
   }
@@ -7212,7 +7583,7 @@ async function verifyWebAuthnEvidence(decision, preimage, pin, expectedOrigin, e
   if (authenticatorData.length < 37 || authenticatorData.length > 16384) {
     throw new Error("authenticatorData length is invalid");
   }
-  if (!bytesEqual(authenticatorData.slice(0, 32), sha2563(utf8(rpId)))) {
+  if (!bytesEqual(authenticatorData.slice(0, 32), sha2564(utf8(rpId)))) {
     throw new Error("authenticatorData does not bind the recorded RP ID");
   }
   const flags = authenticatorData[32];
@@ -7223,7 +7594,7 @@ async function verifyWebAuthnEvidence(decision, preimage, pin, expectedOrigin, e
   if ((signature.counter_before > 0 || signature.counter_after > 0) && signature.counter_after <= signature.counter_before) {
     throw new Error("WebAuthn counter did not advance");
   }
-  const clientDataHash = sha2563(clientDataBytes);
+  const clientDataHash = sha2564(clientDataBytes);
   const signedBytes = new Uint8Array(authenticatorData.length + clientDataHash.length);
   signedBytes.set(authenticatorData, 0);
   signedBytes.set(clientDataHash, authenticatorData.length);
@@ -7233,7 +7604,7 @@ async function verifyWebAuthnEvidence(decision, preimage, pin, expectedOrigin, e
   if (cose.algorithm === -7 && cose.p256_public_key) {
     signatureValid = p2562.verify(
       p2562.Signature.fromDER(assertionSignature).toCompactRawBytes(),
-      sha2563(signedBytes),
+      sha2564(signedBytes),
       cose.p256_public_key
     );
   } else if (cose.algorithm === -257 && cose.rsa_jwk) {
@@ -7467,7 +7838,7 @@ function base58(bytes) {
 function sbIssuerKid(publicKeyHex) {
   return `sb:issuer:${base58(hexToBytes2(publicKeyHex)).slice(0, 12)}`;
 }
-var GATEWAY_DEMO_SEED = bytesToHex2(sha256(utf8ToBytes("scopeblind:legate:demo-gateway:2026")));
+var GATEWAY_DEMO_SEED = bytesToHex2(sha2562(utf8ToBytes("scopeblind:legate:demo-gateway:2026")));
 var GATEWAY_DEMO_PUBLIC_KEY = bytesToHex2(ed25519.getPublicKey(hexToBytes2(GATEWAY_DEMO_SEED)));
 var GATEWAY_DEMO_KID = sbIssuerKid(GATEWAY_DEMO_PUBLIC_KEY);
 
@@ -7546,7 +7917,7 @@ var REQUEST_UNSIGNED_KEYS2 = [
   "nonce"
 ];
 function shaHex(text) {
-  return bytesToHex2(sha256(encoder.encode(text)));
+  return bytesToHex2(sha2562(encoder.encode(text)));
 }
 function isRecord(v) {
   return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -7573,7 +7944,7 @@ function keyIdFor(verificationKey, prefix = "recipient") {
   return `${prefix}:${shaHex(verificationKey).slice(0, 16)}`;
 }
 function recipientKeyFromSeed(seed, name, organization) {
-  return recipientKeyFromPrivate(sha256(encoder.encode(`scopeblind.proof-request.demo.v1\0${seed}`)), name, organization);
+  return recipientKeyFromPrivate(sha2562(encoder.encode(`scopeblind.proof-request.demo.v1\0${seed}`)), name, organization);
 }
 function recipientKeyFromPrivate(priv, name, organization) {
   const verification_key = bytesToHex2(ed25519.getPublicKey(priv));
@@ -7585,7 +7956,7 @@ var demoTrustKeys = null;
 var demoRecipientKeys = null;
 function demoTrustKeySet() {
   if (!demoTrustKeys) {
-    demoTrustKeys = new Set(DEMO_TRUST_SEEDS.map((seed) => bytesToHex2(ed25519.getPublicKey(sha256(encoder.encode(`scopeblind.admit-demo.v1\0${seed}`))))));
+    demoTrustKeys = new Set(DEMO_TRUST_SEEDS.map((seed) => bytesToHex2(ed25519.getPublicKey(sha2562(encoder.encode(`scopeblind.admit-demo.v1\0${seed}`))))));
     demoTrustKeys.add(GATEWAY_DEMO_PUBLIC_KEY.toLowerCase());
   }
   return demoTrustKeys;
@@ -8121,7 +8492,7 @@ function canonicalize2(obj) {
   });
 }
 function sha256Hex(text) {
-  return bytesToHex2(sha256(utf8ToBytes(text)));
+  return bytesToHex2(sha2562(utf8ToBytes(text)));
 }
 function receiptHash(obj) {
   return sha256Hex(canonicalize2(obj));
@@ -8275,6 +8646,1592 @@ function verifyActaChain(receipts, options = {}) {
   };
 }
 
+// node_modules/@noble/curves/node_modules/@noble/hashes/hmac.js
+var _HMAC = class {
+  oHash;
+  iHash;
+  blockLen;
+  outputLen;
+  finished = false;
+  destroyed = false;
+  constructor(hash, key) {
+    ahash(hash);
+    abytes(key, void 0, "key");
+    this.iHash = hash.create();
+    if (typeof this.iHash.update !== "function")
+      throw new Error("Expected instance of class which extends utils.Hash");
+    this.blockLen = this.iHash.blockLen;
+    this.outputLen = this.iHash.outputLen;
+    const blockLen = this.blockLen;
+    const pad = new Uint8Array(blockLen);
+    pad.set(key.length > blockLen ? hash.create().update(key).digest() : key);
+    for (let i = 0; i < pad.length; i++)
+      pad[i] ^= 54;
+    this.iHash.update(pad);
+    this.oHash = hash.create();
+    for (let i = 0; i < pad.length; i++)
+      pad[i] ^= 54 ^ 92;
+    this.oHash.update(pad);
+    clean(pad);
+  }
+  update(buf) {
+    aexists(this);
+    this.iHash.update(buf);
+    return this;
+  }
+  digestInto(out) {
+    aexists(this);
+    abytes(out, this.outputLen, "output");
+    this.finished = true;
+    this.iHash.digestInto(out);
+    this.oHash.update(out);
+    this.oHash.digestInto(out);
+    this.destroy();
+  }
+  digest() {
+    const out = new Uint8Array(this.oHash.outputLen);
+    this.digestInto(out);
+    return out;
+  }
+  _cloneInto(to) {
+    to ||= Object.create(Object.getPrototypeOf(this), {});
+    const { oHash, iHash, finished, destroyed, blockLen, outputLen } = this;
+    to = to;
+    to.finished = finished;
+    to.destroyed = destroyed;
+    to.blockLen = blockLen;
+    to.outputLen = outputLen;
+    to.oHash = oHash._cloneInto(to.oHash);
+    to.iHash = iHash._cloneInto(to.iHash);
+    return to;
+  }
+  clone() {
+    return this._cloneInto();
+  }
+  destroy() {
+    this.destroyed = true;
+    this.oHash.destroy();
+    this.iHash.destroy();
+  }
+};
+var hmac2 = (hash, key, message) => new _HMAC(hash, key).update(message).digest();
+hmac2.create = (hash, key) => new _HMAC(hash, key);
+
+// node_modules/@noble/curves/abstract/weierstrass.js
+var divNearest2 = (num, den) => (num + (num >= 0 ? den : -den) / _2n8) / den;
+function _splitEndoScalar2(k, basis, n) {
+  const [[a1, b1], [a2, b2]] = basis;
+  const c1 = divNearest2(b2 * k, n);
+  const c2 = divNearest2(-b1 * k, n);
+  let k1 = k - c1 * a1 - c2 * a2;
+  let k2 = -c1 * b1 - c2 * b2;
+  const k1neg = k1 < _0n12;
+  const k2neg = k2 < _0n12;
+  if (k1neg)
+    k1 = -k1;
+  if (k2neg)
+    k2 = -k2;
+  const MAX_NUM = bitMask(Math.ceil(bitLen(n) / 2)) + _1n12;
+  if (k1 < _0n12 || k1 >= MAX_NUM || k2 < _0n12 || k2 >= MAX_NUM) {
+    throw new Error("splitScalar (endomorphism): failed, k=" + k);
+  }
+  return { k1neg, k1, k2neg, k2 };
+}
+function validateSigFormat2(format) {
+  if (!["compact", "recovered", "der"].includes(format))
+    throw new Error('Signature format must be "compact", "recovered", or "der"');
+  return format;
+}
+function validateSigOpts2(opts, def) {
+  const optsn = {};
+  for (let optName of Object.keys(def)) {
+    optsn[optName] = opts[optName] === void 0 ? def[optName] : opts[optName];
+  }
+  abool(optsn.lowS, "lowS");
+  abool(optsn.prehash, "prehash");
+  if (optsn.format !== void 0)
+    validateSigFormat2(optsn.format);
+  return optsn;
+}
+var DERErr2 = class extends Error {
+  constructor(m = "") {
+    super(m);
+  }
+};
+var DER2 = {
+  // asn.1 DER encoding utils
+  Err: DERErr2,
+  // Basic building block is TLV (Tag-Length-Value)
+  _tlv: {
+    encode: (tag, data) => {
+      const { Err: E } = DER2;
+      if (tag < 0 || tag > 256)
+        throw new E("tlv.encode: wrong tag");
+      if (data.length & 1)
+        throw new E("tlv.encode: unpadded data");
+      const dataLen = data.length / 2;
+      const len = numberToHexUnpadded(dataLen);
+      if (len.length / 2 & 128)
+        throw new E("tlv.encode: long form length too big");
+      const lenLen = dataLen > 127 ? numberToHexUnpadded(len.length / 2 | 128) : "";
+      const t = numberToHexUnpadded(tag);
+      return t + lenLen + len + data;
+    },
+    // v - value, l - left bytes (unparsed)
+    decode(tag, data) {
+      const { Err: E } = DER2;
+      let pos = 0;
+      if (tag < 0 || tag > 256)
+        throw new E("tlv.encode: wrong tag");
+      if (data.length < 2 || data[pos++] !== tag)
+        throw new E("tlv.decode: wrong tlv");
+      const first = data[pos++];
+      const isLong = !!(first & 128);
+      let length = 0;
+      if (!isLong)
+        length = first;
+      else {
+        const lenLen = first & 127;
+        if (!lenLen)
+          throw new E("tlv.decode(long): indefinite length not supported");
+        if (lenLen > 4)
+          throw new E("tlv.decode(long): byte length is too big");
+        const lengthBytes = data.subarray(pos, pos + lenLen);
+        if (lengthBytes.length !== lenLen)
+          throw new E("tlv.decode: length bytes not complete");
+        if (lengthBytes[0] === 0)
+          throw new E("tlv.decode(long): zero leftmost byte");
+        for (const b of lengthBytes)
+          length = length << 8 | b;
+        pos += lenLen;
+        if (length < 128)
+          throw new E("tlv.decode(long): not minimal encoding");
+      }
+      const v = data.subarray(pos, pos + length);
+      if (v.length !== length)
+        throw new E("tlv.decode: wrong value length");
+      return { v, l: data.subarray(pos + length) };
+    }
+  },
+  // https://crypto.stackexchange.com/a/57734 Leftmost bit of first byte is 'negative' flag,
+  // since we always use positive integers here. It must always be empty:
+  // - add zero byte if exists
+  // - if next byte doesn't have a flag, leading zero is not allowed (minimal encoding)
+  _int: {
+    encode(num) {
+      const { Err: E } = DER2;
+      if (num < _0n12)
+        throw new E("integer: negative integers are not allowed");
+      let hex = numberToHexUnpadded(num);
+      if (Number.parseInt(hex[0], 16) & 8)
+        hex = "00" + hex;
+      if (hex.length & 1)
+        throw new E("unexpected DER parsing assertion: unpadded hex");
+      return hex;
+    },
+    decode(data) {
+      const { Err: E } = DER2;
+      if (data[0] & 128)
+        throw new E("invalid signature integer: negative");
+      if (data[0] === 0 && !(data[1] & 128))
+        throw new E("invalid signature integer: unnecessary leading zero");
+      return bytesToNumberBE(data);
+    }
+  },
+  toSig(bytes) {
+    const { Err: E, _int: int, _tlv: tlv } = DER2;
+    const data = abytes(bytes, void 0, "signature");
+    const { v: seqBytes, l: seqLeftBytes } = tlv.decode(48, data);
+    if (seqLeftBytes.length)
+      throw new E("invalid signature: left bytes after parsing");
+    const { v: rBytes, l: rLeftBytes } = tlv.decode(2, seqBytes);
+    const { v: sBytes, l: sLeftBytes } = tlv.decode(2, rLeftBytes);
+    if (sLeftBytes.length)
+      throw new E("invalid signature: left bytes after parsing");
+    return { r: int.decode(rBytes), s: int.decode(sBytes) };
+  },
+  hexFromSig(sig) {
+    const { _tlv: tlv, _int: int } = DER2;
+    const rs = tlv.encode(2, int.encode(sig.r));
+    const ss = tlv.encode(2, int.encode(sig.s));
+    const seq = rs + ss;
+    return tlv.encode(48, seq);
+  }
+};
+var _0n12 = BigInt(0);
+var _1n12 = BigInt(1);
+var _2n8 = BigInt(2);
+var _3n5 = BigInt(3);
+var _4n4 = BigInt(4);
+function weierstrass2(params, extraOpts = {}) {
+  const validated = createCurveFields("weierstrass", params, extraOpts);
+  const { Fp: Fp3, Fn: Fn3 } = validated;
+  let CURVE = validated.CURVE;
+  const { h: cofactor, n: CURVE_ORDER } = CURVE;
+  validateObject(extraOpts, {}, {
+    allowInfinityPoint: "boolean",
+    clearCofactor: "function",
+    isTorsionFree: "function",
+    fromBytes: "function",
+    toBytes: "function",
+    endo: "object"
+  });
+  const { endo } = extraOpts;
+  if (endo) {
+    if (!Fp3.is0(CURVE.a) || typeof endo.beta !== "bigint" || !Array.isArray(endo.basises)) {
+      throw new Error('invalid endo: expected "beta": bigint and "basises": array');
+    }
+  }
+  const lengths = getWLengths2(Fp3, Fn3);
+  function assertCompressionIsSupported() {
+    if (!Fp3.isOdd)
+      throw new Error("compression is not supported: Field does not have .isOdd()");
+  }
+  function pointToBytes(_c, point, isCompressed) {
+    const { x, y } = point.toAffine();
+    const bx = Fp3.toBytes(x);
+    abool(isCompressed, "isCompressed");
+    if (isCompressed) {
+      assertCompressionIsSupported();
+      const hasEvenY = !Fp3.isOdd(y);
+      return concatBytes(pprefix2(hasEvenY), bx);
+    } else {
+      return concatBytes(Uint8Array.of(4), bx, Fp3.toBytes(y));
+    }
+  }
+  function pointFromBytes(bytes) {
+    abytes(bytes, void 0, "Point");
+    const { publicKey: comp, publicKeyUncompressed: uncomp } = lengths;
+    const length = bytes.length;
+    const head = bytes[0];
+    const tail = bytes.subarray(1);
+    if (length === comp && (head === 2 || head === 3)) {
+      const x = Fp3.fromBytes(tail);
+      if (!Fp3.isValid(x))
+        throw new Error("bad point: is not on curve, wrong x");
+      const y2 = weierstrassEquation(x);
+      let y;
+      try {
+        y = Fp3.sqrt(y2);
+      } catch (sqrtError) {
+        const err = sqrtError instanceof Error ? ": " + sqrtError.message : "";
+        throw new Error("bad point: is not on curve, sqrt error" + err);
+      }
+      assertCompressionIsSupported();
+      const evenY = Fp3.isOdd(y);
+      const evenH = (head & 1) === 1;
+      if (evenH !== evenY)
+        y = Fp3.neg(y);
+      return { x, y };
+    } else if (length === uncomp && head === 4) {
+      const L3 = Fp3.BYTES;
+      const x = Fp3.fromBytes(tail.subarray(0, L3));
+      const y = Fp3.fromBytes(tail.subarray(L3, L3 * 2));
+      if (!isValidXY(x, y))
+        throw new Error("bad point: is not on curve");
+      return { x, y };
+    } else {
+      throw new Error(`bad point: got length ${length}, expected compressed=${comp} or uncompressed=${uncomp}`);
+    }
+  }
+  const encodePoint = extraOpts.toBytes || pointToBytes;
+  const decodePoint = extraOpts.fromBytes || pointFromBytes;
+  function weierstrassEquation(x) {
+    const x2 = Fp3.sqr(x);
+    const x3 = Fp3.mul(x2, x);
+    return Fp3.add(Fp3.add(x3, Fp3.mul(x, CURVE.a)), CURVE.b);
+  }
+  function isValidXY(x, y) {
+    const left = Fp3.sqr(y);
+    const right = weierstrassEquation(x);
+    return Fp3.eql(left, right);
+  }
+  if (!isValidXY(CURVE.Gx, CURVE.Gy))
+    throw new Error("bad curve params: generator point");
+  const _4a3 = Fp3.mul(Fp3.pow(CURVE.a, _3n5), _4n4);
+  const _27b2 = Fp3.mul(Fp3.sqr(CURVE.b), BigInt(27));
+  if (Fp3.is0(Fp3.add(_4a3, _27b2)))
+    throw new Error("bad curve params: a or b");
+  function acoord(title, n, banZero = false) {
+    if (!Fp3.isValid(n) || banZero && Fp3.is0(n))
+      throw new Error(`bad point coordinate ${title}`);
+    return n;
+  }
+  function aprjpoint(other) {
+    if (!(other instanceof Point))
+      throw new Error("Weierstrass Point expected");
+  }
+  function splitEndoScalarN(k) {
+    if (!endo || !endo.basises)
+      throw new Error("no endo");
+    return _splitEndoScalar2(k, endo.basises, Fn3.ORDER);
+  }
+  const toAffineMemo = memoized((p, iz) => {
+    const { X, Y, Z } = p;
+    if (Fp3.eql(Z, Fp3.ONE))
+      return { x: X, y: Y };
+    const is0 = p.is0();
+    if (iz == null)
+      iz = is0 ? Fp3.ONE : Fp3.inv(Z);
+    const x = Fp3.mul(X, iz);
+    const y = Fp3.mul(Y, iz);
+    const zz = Fp3.mul(Z, iz);
+    if (is0)
+      return { x: Fp3.ZERO, y: Fp3.ZERO };
+    if (!Fp3.eql(zz, Fp3.ONE))
+      throw new Error("invZ was invalid");
+    return { x, y };
+  });
+  const assertValidMemo = memoized((p) => {
+    if (p.is0()) {
+      if (extraOpts.allowInfinityPoint && !Fp3.is0(p.Y))
+        return;
+      throw new Error("bad point: ZERO");
+    }
+    const { x, y } = p.toAffine();
+    if (!Fp3.isValid(x) || !Fp3.isValid(y))
+      throw new Error("bad point: x or y not field elements");
+    if (!isValidXY(x, y))
+      throw new Error("bad point: equation left != right");
+    if (!p.isTorsionFree())
+      throw new Error("bad point: not in prime-order subgroup");
+    return true;
+  });
+  function finishEndo(endoBeta, k1p, k2p, k1neg, k2neg) {
+    k2p = new Point(Fp3.mul(k2p.X, endoBeta), k2p.Y, k2p.Z);
+    k1p = negateCt(k1neg, k1p);
+    k2p = negateCt(k2neg, k2p);
+    return k1p.add(k2p);
+  }
+  class Point {
+    // base / generator point
+    static BASE = new Point(CURVE.Gx, CURVE.Gy, Fp3.ONE);
+    // zero / infinity / identity point
+    static ZERO = new Point(Fp3.ZERO, Fp3.ONE, Fp3.ZERO);
+    // 0, 1, 0
+    // math field
+    static Fp = Fp3;
+    // scalar field
+    static Fn = Fn3;
+    X;
+    Y;
+    Z;
+    /** Does NOT validate if the point is valid. Use `.assertValidity()`. */
+    constructor(X, Y, Z) {
+      this.X = acoord("x", X);
+      this.Y = acoord("y", Y, true);
+      this.Z = acoord("z", Z);
+      Object.freeze(this);
+    }
+    static CURVE() {
+      return CURVE;
+    }
+    /** Does NOT validate if the point is valid. Use `.assertValidity()`. */
+    static fromAffine(p) {
+      const { x, y } = p || {};
+      if (!p || !Fp3.isValid(x) || !Fp3.isValid(y))
+        throw new Error("invalid affine point");
+      if (p instanceof Point)
+        throw new Error("projective point not allowed");
+      if (Fp3.is0(x) && Fp3.is0(y))
+        return Point.ZERO;
+      return new Point(x, y, Fp3.ONE);
+    }
+    static fromBytes(bytes) {
+      const P = Point.fromAffine(decodePoint(abytes(bytes, void 0, "point")));
+      P.assertValidity();
+      return P;
+    }
+    static fromHex(hex) {
+      return Point.fromBytes(hexToBytes(hex));
+    }
+    get x() {
+      return this.toAffine().x;
+    }
+    get y() {
+      return this.toAffine().y;
+    }
+    /**
+     *
+     * @param windowSize
+     * @param isLazy true will defer table computation until the first multiplication
+     * @returns
+     */
+    precompute(windowSize = 8, isLazy = true) {
+      wnaf.createCache(this, windowSize);
+      if (!isLazy)
+        this.multiply(_3n5);
+      return this;
+    }
+    // TODO: return `this`
+    /** A point on curve is valid if it conforms to equation. */
+    assertValidity() {
+      assertValidMemo(this);
+    }
+    hasEvenY() {
+      const { y } = this.toAffine();
+      if (!Fp3.isOdd)
+        throw new Error("Field doesn't support isOdd");
+      return !Fp3.isOdd(y);
+    }
+    /** Compare one point to another. */
+    equals(other) {
+      aprjpoint(other);
+      const { X: X1, Y: Y1, Z: Z1 } = this;
+      const { X: X2, Y: Y2, Z: Z2 } = other;
+      const U1 = Fp3.eql(Fp3.mul(X1, Z2), Fp3.mul(X2, Z1));
+      const U2 = Fp3.eql(Fp3.mul(Y1, Z2), Fp3.mul(Y2, Z1));
+      return U1 && U2;
+    }
+    /** Flips point to one corresponding to (x, -y) in Affine coordinates. */
+    negate() {
+      return new Point(this.X, Fp3.neg(this.Y), this.Z);
+    }
+    // Renes-Costello-Batina exception-free doubling formula.
+    // There is 30% faster Jacobian formula, but it is not complete.
+    // https://eprint.iacr.org/2015/1060, algorithm 3
+    // Cost: 8M + 3S + 3*a + 2*b3 + 15add.
+    double() {
+      const { a, b } = CURVE;
+      const b3 = Fp3.mul(b, _3n5);
+      const { X: X1, Y: Y1, Z: Z1 } = this;
+      let X3 = Fp3.ZERO, Y3 = Fp3.ZERO, Z3 = Fp3.ZERO;
+      let t0 = Fp3.mul(X1, X1);
+      let t1 = Fp3.mul(Y1, Y1);
+      let t2 = Fp3.mul(Z1, Z1);
+      let t3 = Fp3.mul(X1, Y1);
+      t3 = Fp3.add(t3, t3);
+      Z3 = Fp3.mul(X1, Z1);
+      Z3 = Fp3.add(Z3, Z3);
+      X3 = Fp3.mul(a, Z3);
+      Y3 = Fp3.mul(b3, t2);
+      Y3 = Fp3.add(X3, Y3);
+      X3 = Fp3.sub(t1, Y3);
+      Y3 = Fp3.add(t1, Y3);
+      Y3 = Fp3.mul(X3, Y3);
+      X3 = Fp3.mul(t3, X3);
+      Z3 = Fp3.mul(b3, Z3);
+      t2 = Fp3.mul(a, t2);
+      t3 = Fp3.sub(t0, t2);
+      t3 = Fp3.mul(a, t3);
+      t3 = Fp3.add(t3, Z3);
+      Z3 = Fp3.add(t0, t0);
+      t0 = Fp3.add(Z3, t0);
+      t0 = Fp3.add(t0, t2);
+      t0 = Fp3.mul(t0, t3);
+      Y3 = Fp3.add(Y3, t0);
+      t2 = Fp3.mul(Y1, Z1);
+      t2 = Fp3.add(t2, t2);
+      t0 = Fp3.mul(t2, t3);
+      X3 = Fp3.sub(X3, t0);
+      Z3 = Fp3.mul(t2, t1);
+      Z3 = Fp3.add(Z3, Z3);
+      Z3 = Fp3.add(Z3, Z3);
+      return new Point(X3, Y3, Z3);
+    }
+    // Renes-Costello-Batina exception-free addition formula.
+    // There is 30% faster Jacobian formula, but it is not complete.
+    // https://eprint.iacr.org/2015/1060, algorithm 1
+    // Cost: 12M + 0S + 3*a + 3*b3 + 23add.
+    add(other) {
+      aprjpoint(other);
+      const { X: X1, Y: Y1, Z: Z1 } = this;
+      const { X: X2, Y: Y2, Z: Z2 } = other;
+      let X3 = Fp3.ZERO, Y3 = Fp3.ZERO, Z3 = Fp3.ZERO;
+      const a = CURVE.a;
+      const b3 = Fp3.mul(CURVE.b, _3n5);
+      let t0 = Fp3.mul(X1, X2);
+      let t1 = Fp3.mul(Y1, Y2);
+      let t2 = Fp3.mul(Z1, Z2);
+      let t3 = Fp3.add(X1, Y1);
+      let t4 = Fp3.add(X2, Y2);
+      t3 = Fp3.mul(t3, t4);
+      t4 = Fp3.add(t0, t1);
+      t3 = Fp3.sub(t3, t4);
+      t4 = Fp3.add(X1, Z1);
+      let t5 = Fp3.add(X2, Z2);
+      t4 = Fp3.mul(t4, t5);
+      t5 = Fp3.add(t0, t2);
+      t4 = Fp3.sub(t4, t5);
+      t5 = Fp3.add(Y1, Z1);
+      X3 = Fp3.add(Y2, Z2);
+      t5 = Fp3.mul(t5, X3);
+      X3 = Fp3.add(t1, t2);
+      t5 = Fp3.sub(t5, X3);
+      Z3 = Fp3.mul(a, t4);
+      X3 = Fp3.mul(b3, t2);
+      Z3 = Fp3.add(X3, Z3);
+      X3 = Fp3.sub(t1, Z3);
+      Z3 = Fp3.add(t1, Z3);
+      Y3 = Fp3.mul(X3, Z3);
+      t1 = Fp3.add(t0, t0);
+      t1 = Fp3.add(t1, t0);
+      t2 = Fp3.mul(a, t2);
+      t4 = Fp3.mul(b3, t4);
+      t1 = Fp3.add(t1, t2);
+      t2 = Fp3.sub(t0, t2);
+      t2 = Fp3.mul(a, t2);
+      t4 = Fp3.add(t4, t2);
+      t0 = Fp3.mul(t1, t4);
+      Y3 = Fp3.add(Y3, t0);
+      t0 = Fp3.mul(t5, t4);
+      X3 = Fp3.mul(t3, X3);
+      X3 = Fp3.sub(X3, t0);
+      t0 = Fp3.mul(t3, t1);
+      Z3 = Fp3.mul(t5, Z3);
+      Z3 = Fp3.add(Z3, t0);
+      return new Point(X3, Y3, Z3);
+    }
+    subtract(other) {
+      return this.add(other.negate());
+    }
+    is0() {
+      return this.equals(Point.ZERO);
+    }
+    /**
+     * Constant time multiplication.
+     * Uses wNAF method. Windowed method may be 10% faster,
+     * but takes 2x longer to generate and consumes 2x memory.
+     * Uses precomputes when available.
+     * Uses endomorphism for Koblitz curves.
+     * @param scalar by which the point would be multiplied
+     * @returns New point
+     */
+    multiply(scalar) {
+      const { endo: endo2 } = extraOpts;
+      if (!Fn3.isValidNot0(scalar))
+        throw new Error("invalid scalar: out of range");
+      let point, fake;
+      const mul = (n) => wnaf.cached(this, n, (p) => normalizeZ(Point, p));
+      if (endo2) {
+        const { k1neg, k1, k2neg, k2 } = splitEndoScalarN(scalar);
+        const { p: k1p, f: k1f } = mul(k1);
+        const { p: k2p, f: k2f } = mul(k2);
+        fake = k1f.add(k2f);
+        point = finishEndo(endo2.beta, k1p, k2p, k1neg, k2neg);
+      } else {
+        const { p, f } = mul(scalar);
+        point = p;
+        fake = f;
+      }
+      return normalizeZ(Point, [point, fake])[0];
+    }
+    /**
+     * Non-constant-time multiplication. Uses double-and-add algorithm.
+     * It's faster, but should only be used when you don't care about
+     * an exposed secret key e.g. sig verification, which works over *public* keys.
+     */
+    multiplyUnsafe(sc) {
+      const { endo: endo2 } = extraOpts;
+      const p = this;
+      if (!Fn3.isValid(sc))
+        throw new Error("invalid scalar: out of range");
+      if (sc === _0n12 || p.is0())
+        return Point.ZERO;
+      if (sc === _1n12)
+        return p;
+      if (wnaf.hasCache(this))
+        return this.multiply(sc);
+      if (endo2) {
+        const { k1neg, k1, k2neg, k2 } = splitEndoScalarN(sc);
+        const { p1, p2 } = mulEndoUnsafe(Point, p, k1, k2);
+        return finishEndo(endo2.beta, p1, p2, k1neg, k2neg);
+      } else {
+        return wnaf.unsafe(p, sc);
+      }
+    }
+    /**
+     * Converts Projective point to affine (x, y) coordinates.
+     * @param invertedZ Z^-1 (inverted zero) - optional, precomputation is useful for invertBatch
+     */
+    toAffine(invertedZ) {
+      return toAffineMemo(this, invertedZ);
+    }
+    /**
+     * Checks whether Point is free of torsion elements (is in prime subgroup).
+     * Always torsion-free for cofactor=1 curves.
+     */
+    isTorsionFree() {
+      const { isTorsionFree } = extraOpts;
+      if (cofactor === _1n12)
+        return true;
+      if (isTorsionFree)
+        return isTorsionFree(Point, this);
+      return wnaf.unsafe(this, CURVE_ORDER).is0();
+    }
+    clearCofactor() {
+      const { clearCofactor } = extraOpts;
+      if (cofactor === _1n12)
+        return this;
+      if (clearCofactor)
+        return clearCofactor(Point, this);
+      return this.multiplyUnsafe(cofactor);
+    }
+    isSmallOrder() {
+      return this.multiplyUnsafe(cofactor).is0();
+    }
+    toBytes(isCompressed = true) {
+      abool(isCompressed, "isCompressed");
+      this.assertValidity();
+      return encodePoint(Point, this, isCompressed);
+    }
+    toHex(isCompressed = true) {
+      return bytesToHex(this.toBytes(isCompressed));
+    }
+    toString() {
+      return `<Point ${this.is0() ? "ZERO" : this.toHex()}>`;
+    }
+  }
+  const bits = Fn3.BITS;
+  const wnaf = new wNAF(Point, extraOpts.endo ? Math.ceil(bits / 2) : bits);
+  Point.BASE.precompute(8);
+  return Point;
+}
+function pprefix2(hasEvenY) {
+  return Uint8Array.of(hasEvenY ? 2 : 3);
+}
+function getWLengths2(Fp3, Fn3) {
+  return {
+    secretKey: Fn3.BYTES,
+    publicKey: 1 + Fp3.BYTES,
+    publicKeyUncompressed: 1 + 2 * Fp3.BYTES,
+    publicKeyHasPrefix: true,
+    signature: 2 * Fn3.BYTES
+  };
+}
+function ecdh2(Point, ecdhOpts = {}) {
+  const { Fn: Fn3 } = Point;
+  const randomBytes_ = ecdhOpts.randomBytes || randomBytes;
+  const lengths = Object.assign(getWLengths2(Point.Fp, Fn3), { seed: getMinHashLength(Fn3.ORDER) });
+  function isValidSecretKey(secretKey) {
+    try {
+      const num = Fn3.fromBytes(secretKey);
+      return Fn3.isValidNot0(num);
+    } catch (error) {
+      return false;
+    }
+  }
+  function isValidPublicKey(publicKey, isCompressed) {
+    const { publicKey: comp, publicKeyUncompressed } = lengths;
+    try {
+      const l = publicKey.length;
+      if (isCompressed === true && l !== comp)
+        return false;
+      if (isCompressed === false && l !== publicKeyUncompressed)
+        return false;
+      return !!Point.fromBytes(publicKey);
+    } catch (error) {
+      return false;
+    }
+  }
+  function randomSecretKey(seed = randomBytes_(lengths.seed)) {
+    return mapHashToField(abytes(seed, lengths.seed, "seed"), Fn3.ORDER);
+  }
+  function getPublicKey(secretKey, isCompressed = true) {
+    return Point.BASE.multiply(Fn3.fromBytes(secretKey)).toBytes(isCompressed);
+  }
+  function isProbPub(item) {
+    const { secretKey, publicKey, publicKeyUncompressed } = lengths;
+    if (!isBytes(item))
+      return void 0;
+    if ("_lengths" in Fn3 && Fn3._lengths || secretKey === publicKey)
+      return void 0;
+    const l = abytes(item, void 0, "key").length;
+    return l === publicKey || l === publicKeyUncompressed;
+  }
+  function getSharedSecret(secretKeyA, publicKeyB, isCompressed = true) {
+    if (isProbPub(secretKeyA) === true)
+      throw new Error("first arg must be private key");
+    if (isProbPub(publicKeyB) === false)
+      throw new Error("second arg must be public key");
+    const s = Fn3.fromBytes(secretKeyA);
+    const b = Point.fromBytes(publicKeyB);
+    return b.multiply(s).toBytes(isCompressed);
+  }
+  const utils = {
+    isValidSecretKey,
+    isValidPublicKey,
+    randomSecretKey
+  };
+  const keygen = createKeygen(randomSecretKey, getPublicKey);
+  return Object.freeze({ getPublicKey, getSharedSecret, keygen, Point, utils, lengths });
+}
+function ecdsa2(Point, hash, ecdsaOpts = {}) {
+  ahash(hash);
+  validateObject(ecdsaOpts, {}, {
+    hmac: "function",
+    lowS: "boolean",
+    randomBytes: "function",
+    bits2int: "function",
+    bits2int_modN: "function"
+  });
+  ecdsaOpts = Object.assign({}, ecdsaOpts);
+  const randomBytes3 = ecdsaOpts.randomBytes || randomBytes;
+  const hmac3 = ecdsaOpts.hmac || ((key, msg) => hmac2(hash, key, msg));
+  const { Fp: Fp3, Fn: Fn3 } = Point;
+  const { ORDER: CURVE_ORDER, BITS: fnBits } = Fn3;
+  const { keygen, getPublicKey, getSharedSecret, utils, lengths } = ecdh2(Point, ecdsaOpts);
+  const defaultSigOpts = {
+    prehash: true,
+    lowS: typeof ecdsaOpts.lowS === "boolean" ? ecdsaOpts.lowS : true,
+    format: "compact",
+    extraEntropy: false
+  };
+  const hasLargeCofactor = CURVE_ORDER * _2n8 < Fp3.ORDER;
+  function isBiggerThanHalfOrder(number) {
+    const HALF = CURVE_ORDER >> _1n12;
+    return number > HALF;
+  }
+  function validateRS(title, num) {
+    if (!Fn3.isValidNot0(num))
+      throw new Error(`invalid signature ${title}: out of range 1..Point.Fn.ORDER`);
+    return num;
+  }
+  function assertSmallCofactor() {
+    if (hasLargeCofactor)
+      throw new Error('"recovered" sig type is not supported for cofactor >2 curves');
+  }
+  function validateSigLength(bytes, format) {
+    validateSigFormat2(format);
+    const size = lengths.signature;
+    const sizer = format === "compact" ? size : format === "recovered" ? size + 1 : void 0;
+    return abytes(bytes, sizer);
+  }
+  class Signature {
+    r;
+    s;
+    recovery;
+    constructor(r, s, recovery) {
+      this.r = validateRS("r", r);
+      this.s = validateRS("s", s);
+      if (recovery != null) {
+        assertSmallCofactor();
+        if (![0, 1, 2, 3].includes(recovery))
+          throw new Error("invalid recovery id");
+        this.recovery = recovery;
+      }
+      Object.freeze(this);
+    }
+    static fromBytes(bytes, format = defaultSigOpts.format) {
+      validateSigLength(bytes, format);
+      let recid;
+      if (format === "der") {
+        const { r: r2, s: s2 } = DER2.toSig(abytes(bytes));
+        return new Signature(r2, s2);
+      }
+      if (format === "recovered") {
+        recid = bytes[0];
+        format = "compact";
+        bytes = bytes.subarray(1);
+      }
+      const L3 = lengths.signature / 2;
+      const r = bytes.subarray(0, L3);
+      const s = bytes.subarray(L3, L3 * 2);
+      return new Signature(Fn3.fromBytes(r), Fn3.fromBytes(s), recid);
+    }
+    static fromHex(hex, format) {
+      return this.fromBytes(hexToBytes(hex), format);
+    }
+    assertRecovery() {
+      const { recovery } = this;
+      if (recovery == null)
+        throw new Error("invalid recovery id: must be present");
+      return recovery;
+    }
+    addRecoveryBit(recovery) {
+      return new Signature(this.r, this.s, recovery);
+    }
+    recoverPublicKey(messageHash) {
+      const { r, s } = this;
+      const recovery = this.assertRecovery();
+      const radj = recovery === 2 || recovery === 3 ? r + CURVE_ORDER : r;
+      if (!Fp3.isValid(radj))
+        throw new Error("invalid recovery id: sig.r+curve.n != R.x");
+      const x = Fp3.toBytes(radj);
+      const R = Point.fromBytes(concatBytes(pprefix2((recovery & 1) === 0), x));
+      const ir = Fn3.inv(radj);
+      const h = bits2int_modN(abytes(messageHash, void 0, "msgHash"));
+      const u1 = Fn3.create(-h * ir);
+      const u2 = Fn3.create(s * ir);
+      const Q = Point.BASE.multiplyUnsafe(u1).add(R.multiplyUnsafe(u2));
+      if (Q.is0())
+        throw new Error("invalid recovery: point at infinify");
+      Q.assertValidity();
+      return Q;
+    }
+    // Signatures should be low-s, to prevent malleability.
+    hasHighS() {
+      return isBiggerThanHalfOrder(this.s);
+    }
+    toBytes(format = defaultSigOpts.format) {
+      validateSigFormat2(format);
+      if (format === "der")
+        return hexToBytes(DER2.hexFromSig(this));
+      const { r, s } = this;
+      const rb = Fn3.toBytes(r);
+      const sb = Fn3.toBytes(s);
+      if (format === "recovered") {
+        assertSmallCofactor();
+        return concatBytes(Uint8Array.of(this.assertRecovery()), rb, sb);
+      }
+      return concatBytes(rb, sb);
+    }
+    toHex(format) {
+      return bytesToHex(this.toBytes(format));
+    }
+  }
+  const bits2int = ecdsaOpts.bits2int || function bits2int_def(bytes) {
+    if (bytes.length > 8192)
+      throw new Error("input is too large");
+    const num = bytesToNumberBE(bytes);
+    const delta = bytes.length * 8 - fnBits;
+    return delta > 0 ? num >> BigInt(delta) : num;
+  };
+  const bits2int_modN = ecdsaOpts.bits2int_modN || function bits2int_modN_def(bytes) {
+    return Fn3.create(bits2int(bytes));
+  };
+  const ORDER_MASK = bitMask(fnBits);
+  function int2octets(num) {
+    aInRange("num < 2^" + fnBits, num, _0n12, ORDER_MASK);
+    return Fn3.toBytes(num);
+  }
+  function validateMsgAndHash(message, prehash) {
+    abytes(message, void 0, "message");
+    return prehash ? abytes(hash(message), void 0, "prehashed message") : message;
+  }
+  function prepSig(message, secretKey, opts) {
+    const { lowS, prehash, extraEntropy } = validateSigOpts2(opts, defaultSigOpts);
+    message = validateMsgAndHash(message, prehash);
+    const h1int = bits2int_modN(message);
+    const d = Fn3.fromBytes(secretKey);
+    if (!Fn3.isValidNot0(d))
+      throw new Error("invalid private key");
+    const seedArgs = [int2octets(d), int2octets(h1int)];
+    if (extraEntropy != null && extraEntropy !== false) {
+      const e = extraEntropy === true ? randomBytes3(lengths.secretKey) : extraEntropy;
+      seedArgs.push(abytes(e, void 0, "extraEntropy"));
+    }
+    const seed = concatBytes(...seedArgs);
+    const m = h1int;
+    function k2sig(kBytes) {
+      const k = bits2int(kBytes);
+      if (!Fn3.isValidNot0(k))
+        return;
+      const ik = Fn3.inv(k);
+      const q = Point.BASE.multiply(k).toAffine();
+      const r = Fn3.create(q.x);
+      if (r === _0n12)
+        return;
+      const s = Fn3.create(ik * Fn3.create(m + r * d));
+      if (s === _0n12)
+        return;
+      let recovery = (q.x === r ? 0 : 2) | Number(q.y & _1n12);
+      let normS = s;
+      if (lowS && isBiggerThanHalfOrder(s)) {
+        normS = Fn3.neg(s);
+        recovery ^= 1;
+      }
+      return new Signature(r, normS, hasLargeCofactor ? void 0 : recovery);
+    }
+    return { seed, k2sig };
+  }
+  function sign(message, secretKey, opts = {}) {
+    const { seed, k2sig } = prepSig(message, secretKey, opts);
+    const drbg = createHmacDrbg(hash.outputLen, Fn3.BYTES, hmac3);
+    const sig = drbg(seed, k2sig);
+    return sig.toBytes(opts.format);
+  }
+  function verify(signature, message, publicKey, opts = {}) {
+    const { lowS, prehash, format } = validateSigOpts2(opts, defaultSigOpts);
+    publicKey = abytes(publicKey, void 0, "publicKey");
+    message = validateMsgAndHash(message, prehash);
+    if (!isBytes(signature)) {
+      const end = signature instanceof Signature ? ", use sig.toBytes()" : "";
+      throw new Error("verify expects Uint8Array signature" + end);
+    }
+    validateSigLength(signature, format);
+    try {
+      const sig = Signature.fromBytes(signature, format);
+      const P = Point.fromBytes(publicKey);
+      if (lowS && sig.hasHighS())
+        return false;
+      const { r, s } = sig;
+      const h = bits2int_modN(message);
+      const is = Fn3.inv(s);
+      const u1 = Fn3.create(h * is);
+      const u2 = Fn3.create(r * is);
+      const R = Point.BASE.multiplyUnsafe(u1).add(P.multiplyUnsafe(u2));
+      if (R.is0())
+        return false;
+      const v = Fn3.create(R.x);
+      return v === r;
+    } catch (e) {
+      return false;
+    }
+  }
+  function recoverPublicKey(signature, message, opts = {}) {
+    const { prehash } = validateSigOpts2(opts, defaultSigOpts);
+    message = validateMsgAndHash(message, prehash);
+    return Signature.fromBytes(signature, "recovered").recoverPublicKey(message).toBytes();
+  }
+  return Object.freeze({
+    keygen,
+    getPublicKey,
+    getSharedSecret,
+    utils,
+    lengths,
+    Point,
+    sign,
+    verify,
+    recoverPublicKey,
+    Signature,
+    hash
+  });
+}
+
+// node_modules/@noble/curves/nist.js
+var p256_CURVE2 = /* @__PURE__ */ (() => ({
+  p: BigInt("0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff"),
+  n: BigInt("0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551"),
+  h: BigInt(1),
+  a: BigInt("0xffffffff00000001000000000000000000000000fffffffffffffffffffffffc"),
+  b: BigInt("0x5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b"),
+  Gx: BigInt("0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296"),
+  Gy: BigInt("0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5")
+}))();
+var p384_CURVE2 = /* @__PURE__ */ (() => ({
+  p: BigInt("0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff"),
+  n: BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973"),
+  h: BigInt(1),
+  a: BigInt("0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000fffffffc"),
+  b: BigInt("0xb3312fa7e23ee7e4988e056be3f82d19181d9c6efe8141120314088f5013875ac656398d8a2ed19d2a85c8edd3ec2aef"),
+  Gx: BigInt("0xaa87ca22be8b05378eb1c71ef320ad746e1d3b628ba79b9859f741e082542a385502f25dbf55296c3a545e3872760ab7"),
+  Gy: BigInt("0x3617de4a96262c6f5d9e98bf9292dc29f8f41dbd289a147ce9da3113b5f0b8c00a60b1ce1d7e819d7a431d7c90ea0e5f")
+}))();
+var p256_Point = /* @__PURE__ */ weierstrass2(p256_CURVE2);
+var p2563 = /* @__PURE__ */ ecdsa2(p256_Point, sha256);
+var p384_Point = /* @__PURE__ */ weierstrass2(p384_CURVE2);
+var p3842 = /* @__PURE__ */ ecdsa2(p384_Point, sha384);
+
+// src/sigstore-trust-root.ts
+var SIGSTORE_PUBLIC_GOOD = {
+  "source": "gh attestation trusted-root, 2026-09-12, public-good instance",
+  "certificate_authorities": [
+    {
+      "uri": "https://fulcio.sigstore.dev",
+      "subject": "sigstore.dev / sigstore",
+      "valid_from": "2021-03-07T03:20:29Z",
+      "valid_to": "2022-12-31T23:59:59.999Z",
+      "chain": [
+        "MIIB+DCCAX6gAwIBAgITNVkDZoCiofPDsy7dfm6geLbuhzAKBggqhkjOPQQDAzAqMRUwEwYDVQQKEwxzaWdzdG9yZS5kZXYxETAPBgNVBAMTCHNpZ3N0b3JlMB4XDTIxMDMwNzAzMjAyOVoXDTMxMDIyMzAzMjAyOVowKjEVMBMGA1UEChMMc2lnc3RvcmUuZGV2MREwDwYDVQQDEwhzaWdzdG9yZTB2MBAGByqGSM49AgEGBSuBBAAiA2IABLSyA7Ii5k+pNO8ZEWY0ylemWDowOkNa3kL+GZE5Z5GWehL9/A9bRNA3RbrsZ5i0JcastaRL7Sp5fp/jD5dxqc/UdTVnlvS16an+2Yfswe/QuLolRUCrcOE2+2iA5+tzd6NmMGQwDgYDVR0PAQH/BAQDAgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwHQYDVR0OBBYEFMjFHQBBmiQpMlEk6w2uSu1KBtPsMB8GA1UdIwQYMBaAFMjFHQBBmiQpMlEk6w2uSu1KBtPsMAoGCCqGSM49BAMDA2gAMGUCMH8liWJfMui6vXXBhjDgY4MwslmN/TJxVe/83WrFomwmNf056y1X48F9c4m3a3ozXAIxAKjRay5/aj/jsKKGIkmQatjI8uupHr/+CxFvaJWmpYqNkLDGRU+9orzh5hI2RrcuaQ=="
+      ]
+    },
+    {
+      "uri": "https://fulcio.sigstore.dev",
+      "subject": "sigstore.dev / sigstore",
+      "valid_from": "2022-04-13T20:06:15Z",
+      "valid_to": null,
+      "chain": [
+        "MIICGjCCAaGgAwIBAgIUALnViVfnU0brJasmRkHrn/UnfaQwCgYIKoZIzj0EAwMwKjEVMBMGA1UEChMMc2lnc3RvcmUuZGV2MREwDwYDVQQDEwhzaWdzdG9yZTAeFw0yMjA0MTMyMDA2MTVaFw0zMTEwMDUxMzU2NThaMDcxFTATBgNVBAoTDHNpZ3N0b3JlLmRldjEeMBwGA1UEAxMVc2lnc3RvcmUtaW50ZXJtZWRpYXRlMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE8RVS/ysH+NOvuDZyPIZtilgUF9NlarYpAd9HP1vBBH1U5CV77LSS7s0ZiH4nE7Hv7ptS6LvvR/STk798LVgMzLlJ4HeIfF3tHSaexLcYpSASr1kS0N/RgBJz/9jWCiXno3sweTAOBgNVHQ8BAf8EBAMCAQYwEwYDVR0lBAwwCgYIKwYBBQUHAwMwEgYDVR0TAQH/BAgwBgEB/wIBADAdBgNVHQ4EFgQU39Ppz1YkEZb5qNjpKFWixi4YZD8wHwYDVR0jBBgwFoAUWMAeX5FFpWapesyQoZMi0CrFxfowCgYIKoZIzj0EAwMDZwAwZAIwPCsQK4DYiZYDPIaDi5HFKnfxXx6ASSVmERfsynYBiX2X6SJRnZU84/9DZdnFvvxmAjBOt6QpBlc4J/0DxvkTCqpclvziL6BCCPnjdlIB3Pu3BxsPmygUY7Ii2zbdCdliiow=",
+        "MIIB9zCCAXygAwIBAgIUALZNAPFdxHPwjeDloDwyYChAO/4wCgYIKoZIzj0EAwMwKjEVMBMGA1UEChMMc2lnc3RvcmUuZGV2MREwDwYDVQQDEwhzaWdzdG9yZTAeFw0yMTEwMDcxMzU2NTlaFw0zMTEwMDUxMzU2NThaMCoxFTATBgNVBAoTDHNpZ3N0b3JlLmRldjERMA8GA1UEAxMIc2lnc3RvcmUwdjAQBgcqhkjOPQIBBgUrgQQAIgNiAAT7XeFT4rb3PQGwS4IajtLk3/OlnpgangaBclYpsYBr5i+4ynB07ceb3LP0OIOZdxexX69c5iVuyJRQ+Hz05yi+UF3uBWAlHpiS5sh0+H2GHE7SXrk1EC5m1Tr19L9gg92jYzBhMA4GA1UdDwEB/wQEAwIBBjAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBRYwB5fkUWlZql6zJChkyLQKsXF+jAfBgNVHSMEGDAWgBRYwB5fkUWlZql6zJChkyLQKsXF+jAKBggqhkjOPQQDAwNpADBmAjEAj1nHeXZp+13NWBNa+EDsDP8G1WWg1tCMWP/WHPqpaVo0jhsweNFZgSs0eE7wYI4qAjEA2WB9ot98sIkoF3vZYdd3/VtWB5b9TNMea7Ix/stJ5TfcLLeABLE4BNJOsQ4vnBHJ"
+      ]
+    }
+  ],
+  "transparency_logs": [
+    {
+      "base_url": "https://rekor.sigstore.dev",
+      "key_details": "PKIX_ECDSA_P256_SHA_256",
+      "public_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE2G2Y+2tabdTV5BcGiBIx0a9fAFwrkBbmLSGtks4L3qX6yYY0zufBnhC8Ur/iy55GhWP/9A/bY2LhC30M9+RYtw==",
+      "valid_from": "2021-01-12T11:53:27Z",
+      "valid_to": null,
+      "log_id": "wNI9atQGlz+VWfO6LRygH4QUfY/8W4RFwiT5i5WRgB0="
+    },
+    {
+      "base_url": "https://log2025-1.rekor.sigstore.dev",
+      "key_details": "PKIX_ED25519",
+      "public_key": "MCowBQYDK2VwAyEAt8rlp1knGwjfbcXAYPYAkn0XiLz1x8O4t0YkEhie244=",
+      "valid_from": "2025-09-23T00:00:00Z",
+      "valid_to": null,
+      "log_id": "zxGZFVvd0FEmjR8WrFwMdcAJ9vtaY/QXf44Y1wUeP6A="
+    }
+  ],
+  "certificate_transparency_logs": [
+    {
+      "base_url": "https://ctfe.sigstore.dev/test",
+      "key_details": "PKIX_ECDSA_P256_SHA_256",
+      "public_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEbfwR+RJudXscgRBRpKX1XFDy3PyudDxz/SfnRi1fT8ekpfBd2O1uoz7jr3Z8nKzxA69EUQ+eFCFI3zeubPWU7w==",
+      "valid_from": "2021-03-14T00:00:00Z",
+      "valid_to": "2022-10-31T23:59:59.999Z",
+      "log_id": "CGCS8ChS/2hF0dFrJ4ScRWcYrBY9wzjSbea8IgY2b3I="
+    },
+    {
+      "base_url": "https://ctfe.sigstore.dev/2022",
+      "key_details": "PKIX_ECDSA_P256_SHA_256",
+      "public_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEiPSlFi0CmFTfEjCUqF9HuCEcYXNKAaYalIJmBZ8yyezPjTqhxrKBpMnaocVtLJBI1eM3uXnQzQGAJdJ4gs9Fyw==",
+      "valid_from": "2022-10-20T00:00:00Z",
+      "valid_to": null,
+      "log_id": "3T0wasbHETJjGR4cmWc3AqJKXrjePK3/h4pygC8p7o4="
+    }
+  ]
+};
+
+// src/sigstore-bundle.ts
+var textEncoder2 = new TextEncoder();
+var textDecoder2 = new TextDecoder();
+var utf82 = (s) => textEncoder2.encode(s);
+function fromBase64(s) {
+  const clean4 = s.replace(/[\r\n\s]/g, "");
+  if (!/^[A-Za-z0-9+/]*={0,2}$/.test(clean4)) throw new Error("not base64");
+  const bin = atob(clean4);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+var toBase64 = (b) => btoa(Array.from(b, (x) => String.fromCharCode(x)).join(""));
+var bytesEqual2 = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
+var toBytes2 = (x) => typeof x === "string" ? utf82(x) : x;
+function readTlv(b, off) {
+  if (off + 2 > b.length) throw new Error("DER: truncated");
+  const tag = b[off];
+  let len = b[off + 1];
+  let p = off + 2;
+  if (len & 128) {
+    const n = len & 127;
+    if (n === 0 || n > 4 || p + n > b.length) throw new Error("DER: bad length");
+    len = 0;
+    for (let i = 0; i < n; i++) len = len * 256 + b[p++];
+  }
+  if (p + len > b.length) throw new Error("DER: truncated");
+  return { tag, hdr: off, start: p, end: p + len };
+}
+function children(b, t) {
+  const out = [];
+  let p = t.start;
+  while (p < t.end) {
+    const c = readTlv(b, p);
+    out.push(c);
+    p = c.end;
+  }
+  return out;
+}
+var raw = (b, t) => b.subarray(t.hdr, t.end);
+var content = (b, t) => b.subarray(t.start, t.end);
+function encodeLength(n) {
+  if (n < 128) return new Uint8Array([n]);
+  const bytes = [];
+  let v = n;
+  while (v > 0) {
+    bytes.unshift(v & 255);
+    v = Math.floor(v / 256);
+  }
+  return new Uint8Array([128 | bytes.length, ...bytes]);
+}
+var encodeTlv = (tag, body) => concatBytes2(new Uint8Array([tag]), encodeLength(body.length), body);
+function oidOf(b, t) {
+  if (t.tag !== 6) throw new Error("DER: expected OID");
+  const c = content(b, t);
+  const parts = [];
+  let v = 0;
+  for (let i = 0; i < c.length; i++) {
+    v = v * 128 + (c[i] & 127);
+    if (!(c[i] & 128)) {
+      if (parts.length === 0) parts.push(Math.floor(v / 40), v % 40);
+      else parts.push(v);
+      v = 0;
+    }
+  }
+  return parts.join(".");
+}
+function timeOf(b, t) {
+  const s = textDecoder2.decode(content(b, t));
+  let iso;
+  if (t.tag === 23) {
+    const yy = Number(s.slice(0, 2));
+    iso = `${yy >= 50 ? 1900 + yy : 2e3 + yy}-${s.slice(2, 4)}-${s.slice(4, 6)}T${s.slice(6, 8)}:${s.slice(8, 10)}:${s.slice(10, 12)}Z`;
+  } else if (t.tag === 24) {
+    iso = `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}T${s.slice(8, 10)}:${s.slice(10, 12)}:${s.slice(12, 14)}Z`;
+  } else throw new Error("DER: expected a time");
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) throw new Error("DER: bad time");
+  return d;
+}
+function nameText(b, t) {
+  return children(b, t).map((rdn) => children(b, rdn).map((av) => {
+    const [oid, val] = children(b, av);
+    return `${oidOf(b, oid)}=${textDecoder2.decode(content(b, val))}`;
+  }).join("+")).join(", ");
+}
+var OID = {
+  ecPublicKey: "1.2.840.10045.2.1",
+  p256: "1.2.840.10045.3.1.7",
+  p384: "1.3.132.0.34",
+  ed25519: "1.3.101.112",
+  ecdsaSha256: "1.2.840.10045.4.3.2",
+  ecdsaSha384: "1.2.840.10045.4.3.3",
+  san: "2.5.29.17",
+  extKeyUsage: "2.5.29.37",
+  sctList: "1.3.6.1.4.1.11129.2.4.2",
+  codeSigning: "1.3.6.1.5.5.7.3.3",
+  fulcio: "1.3.6.1.4.1.57264.1."
+};
+function parseSpki(der) {
+  const spki = readTlv(der, 0);
+  const [algTlv, keyTlv] = children(der, spki);
+  const algParts = children(der, algTlv);
+  const alg = oidOf(der, algParts[0]);
+  const key = content(der, keyTlv).subarray(1);
+  if (alg === OID.ecPublicKey) {
+    const curve = oidOf(der, algParts[1]);
+    if (curve === OID.p256) return { alg: "p256", bytes: key, spki: raw(der, spki) };
+    if (curve === OID.p384) return { alg: "p384", bytes: key, spki: raw(der, spki) };
+    throw new Error(`unsupported curve ${curve}`);
+  }
+  if (alg === OID.ed25519) return { alg: "ed25519", bytes: key, spki: raw(der, spki) };
+  throw new Error(`unsupported key algorithm ${alg}`);
+}
+function ecdsaCompact(sig, width) {
+  const seq = readTlv(sig, 0);
+  const [r, s] = children(sig, seq);
+  const fix = (t) => {
+    let v = content(sig, t);
+    while (v.length > width && v[0] === 0) v = v.subarray(1);
+    if (v.length > width) throw new Error("signature integer too long");
+    const out = new Uint8Array(width);
+    out.set(v, width - v.length);
+    return out;
+  };
+  return concatBytes2(fix(r), fix(s));
+}
+function verifySignature(key, signature, data, hash) {
+  try {
+    if (key.alg === "ed25519") return ed25519.verify(signature, data, key.bytes);
+    const digest = hash === "sha384" ? sha3842(data) : sha2562(data);
+    const curve = key.alg === "p384" ? p3842 : p2563;
+    return curve.verify(ecdsaCompact(signature, key.alg === "p384" ? 48 : 32), digest, key.bytes, { prehash: false, lowS: false });
+  } catch {
+    return false;
+  }
+}
+function parseCertificate(der) {
+  const cert = readTlv(der, 0);
+  const [tbs, sigAlg, sigVal] = children(der, cert);
+  const fields = children(der, tbs);
+  let i = 0;
+  if (fields[0].tag === 160) i = 1;
+  const issuerTlv = fields[i + 2], validity = fields[i + 3], subjectTlv = fields[i + 4], spkiTlv = fields[i + 5];
+  const [nb, na] = children(der, validity);
+  const extensions = [];
+  let precertTbs = null;
+  const extWrapper = fields.find((f) => f.tag === 163);
+  if (extWrapper) {
+    const extSeq = children(der, extWrapper)[0];
+    const kept = [];
+    for (const ext of children(der, extSeq)) {
+      const parts = children(der, ext);
+      const oid = oidOf(der, parts[0]);
+      const critical = parts.length === 3 && parts[1].tag === 1 && content(der, parts[1])[0] !== 0;
+      const value = content(der, parts[parts.length - 1]);
+      extensions.push({ oid, critical, value });
+      if (oid !== OID.sctList) kept.push(raw(der, ext));
+    }
+    if (kept.length !== extensions.length) {
+      const others = fields.filter((f) => f !== extWrapper).map((f) => raw(der, f));
+      precertTbs = encodeTlv(48, concatBytes2(...others, encodeTlv(163, encodeTlv(48, concatBytes2(...kept)))));
+    }
+  }
+  return {
+    der,
+    tbs: raw(der, tbs),
+    signatureAlgorithm: oidOf(der, children(der, sigAlg)[0]),
+    signature: content(der, sigVal).subarray(1),
+    issuer: nameText(der, issuerTlv),
+    subject: nameText(der, subjectTlv),
+    notBefore: timeOf(der, nb),
+    notAfter: timeOf(der, na),
+    key: parseSpki(raw(der, spkiTlv)),
+    extensions,
+    precertTbs
+  };
+}
+var hashFor = (sigAlg) => sigAlg === OID.ecdsaSha256 ? "sha256" : sigAlg === OID.ecdsaSha384 ? "sha384" : sigAlg === OID.ed25519 ? "sha256" : null;
+function signedBy(cert, issuer) {
+  const hash = hashFor(cert.signatureAlgorithm);
+  return hash !== null && verifySignature(issuer.key, cert.signature, cert.tbs, hash);
+}
+function fulcioString(value) {
+  if (value.length >= 2 && value[0] === 12) {
+    try {
+      const t = readTlv(value, 0);
+      if (t.end === value.length) return textDecoder2.decode(content(value, t));
+    } catch {
+    }
+  }
+  return textDecoder2.decode(value);
+}
+function sanUris(cert) {
+  const ext = cert.extensions.find((e) => e.oid === OID.san);
+  if (!ext) return [];
+  try {
+    const names = children(ext.value, readTlv(ext.value, 0));
+    return names.filter((n) => n.tag === 134).map((n) => textDecoder2.decode(content(ext.value, n)));
+  } catch {
+    return [];
+  }
+}
+function certificateIdentity(cert) {
+  const ext = (n) => {
+    const e = cert.extensions.find((x) => x.oid === `${OID.fulcio}${n}`);
+    return e ? fulcioString(e.value) : null;
+  };
+  const sans = sanUris(cert);
+  return {
+    issuer: ext(8) ?? ext(1),
+    workflow: ext(9) ?? sans[0] ?? null,
+    repository: ext(12),
+    ref: ext(14),
+    commit: ext(13) ?? ext(19),
+    run: ext(21),
+    trigger: ext(20) ?? ext(2),
+    runner: ext(11),
+    visibility: ext(22),
+    sans
+  };
+}
+var leafHash = (data) => sha2562(concatBytes2(new Uint8Array([0]), data));
+var nodeHash = (l, r) => sha2562(concatBytes2(new Uint8Array([1]), l, r));
+function rootFromInclusionProof(leaf, index, treeSize, path) {
+  if (index < 0n || index >= treeSize) return null;
+  let fn = index, sn = treeSize - 1n, r = leaf;
+  for (const p of path) {
+    if (sn === 0n) return null;
+    if ((fn & 1n) === 1n || fn === sn) {
+      r = nodeHash(p, r);
+      while ((fn & 1n) === 0n && fn !== 0n) {
+        fn >>= 1n;
+        sn >>= 1n;
+      }
+    } else {
+      r = nodeHash(r, p);
+    }
+    fn >>= 1n;
+    sn >>= 1n;
+  }
+  return sn === 0n ? r : null;
+}
+var isRecord3 = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
+var str2 = (v) => typeof v === "string" ? v : null;
+function parseSigstoreBundle(value) {
+  if (!isRecord3(value)) throw new Error("not an object");
+  const mediaType = str2(value.mediaType) ?? "";
+  if (!/^application\/vnd\.dev\.sigstore\.bundle(\.v0\.[23]\+json|\+json;version=0\.[23])$/.test(mediaType)) throw new Error(`unsupported media type ${mediaType || "(none)"}`);
+  const vm = value.verificationMaterial;
+  if (!isRecord3(vm)) throw new Error("no verification material");
+  const certField = isRecord3(vm.certificate) ? vm.certificate : isRecord3(vm.x509CertificateChain) && Array.isArray(vm.x509CertificateChain.certificates) ? vm.x509CertificateChain.certificates[0] : null;
+  if (!isRecord3(certField) || typeof certField.rawBytes !== "string") throw new Error("no certificate");
+  const certificate = fromBase64(certField.rawBytes);
+  const env = value.dsseEnvelope;
+  if (!isRecord3(env) || typeof env.payload !== "string" || typeof env.payloadType !== "string" || !Array.isArray(env.signatures) || env.signatures.length !== 1) throw new Error("no DSSE envelope with one signature");
+  const sig0 = env.signatures[0];
+  if (!isRecord3(sig0) || typeof sig0.sig !== "string") throw new Error("malformed signature");
+  let tlog = null;
+  const entries = Array.isArray(vm.tlogEntries) ? vm.tlogEntries : [];
+  if (entries.length > 0) {
+    const e = entries[0];
+    if (!isRecord3(e) || !isRecord3(e.logId) || typeof e.logId.keyId !== "string" || !isRecord3(e.kindVersion) || typeof e.canonicalizedBody !== "string") throw new Error("malformed log entry");
+    const proof = isRecord3(e.inclusionProof) && isRecord3(e.inclusionProof.checkpoint) && typeof e.inclusionProof.checkpoint.envelope === "string" && Array.isArray(e.inclusionProof.hashes) ? { logIndex: BigInt(String(e.inclusionProof.logIndex)), rootHash: fromBase64(String(e.inclusionProof.rootHash)), treeSize: BigInt(String(e.inclusionProof.treeSize)), hashes: e.inclusionProof.hashes.map((h) => fromBase64(String(h))), checkpoint: e.inclusionProof.checkpoint.envelope } : null;
+    tlog = {
+      logIndex: BigInt(String(e.logIndex)),
+      logId: fromBase64(e.logId.keyId),
+      kind: String(e.kindVersion.kind),
+      version: String(e.kindVersion.version),
+      integratedTime: Number(e.integratedTime),
+      set: isRecord3(e.inclusionPromise) && typeof e.inclusionPromise.signedEntryTimestamp === "string" ? fromBase64(e.inclusionPromise.signedEntryTimestamp) : null,
+      proof,
+      body: fromBase64(e.canonicalizedBody)
+    };
+  }
+  return { mediaType, certificate, tlog, payloadType: env.payloadType, payload: fromBase64(env.payload), signature: fromBase64(sig0.sig) };
+}
+function dssePae(payloadType, payload) {
+  const type = utf82(payloadType);
+  return concatBytes2(utf82(`DSSEv1 ${type.length} `), type, utf82(` ${payload.length} `), payload);
+}
+function parseStatement(payload) {
+  const s = JSON.parse(textDecoder2.decode(payload));
+  if (!isRecord3(s) || s._type !== "https://in-toto.io/Statement/v1" || !Array.isArray(s.subject) || s.subject.length === 0) throw new Error("not an in-toto v1 statement");
+  const subjects = s.subject.map((x) => {
+    if (!isRecord3(x) || typeof x.name !== "string" || !isRecord3(x.digest) || typeof x.digest.sha256 !== "string" || !/^[0-9a-f]{64}$/.test(x.digest.sha256)) throw new Error("subject without a SHA-256 digest");
+    return { name: x.name, sha256: x.digest.sha256 };
+  });
+  const predicate_type = str2(s.predicateType) ?? "";
+  const p = isRecord3(s.predicate) ? s.predicate : {};
+  const bd = isRecord3(p.buildDefinition) ? p.buildDefinition : {};
+  const ep = isRecord3(bd.externalParameters) ? bd.externalParameters : {};
+  const wf = isRecord3(ep.workflow) ? ep.workflow : {};
+  const deps = Array.isArray(bd.resolvedDependencies) ? bd.resolvedDependencies : [];
+  const dep0 = isRecord3(deps[0]) ? deps[0] : {};
+  const rd = isRecord3(p.runDetails) ? p.runDetails : {};
+  const md = isRecord3(rd.metadata) ? rd.metadata : {};
+  const builder = isRecord3(rd.builder) ? rd.builder : {};
+  return {
+    subjects,
+    predicate_type,
+    build_type: str2(bd.buildType),
+    workflow_path: str2(wf.path),
+    repository: str2(wf.repository),
+    ref: str2(wf.ref),
+    commit: isRecord3(dep0.digest) ? str2(dep0.digest.gitCommit) : null,
+    invocation: str2(md.invocationId),
+    builder: str2(builder.id)
+  };
+}
+var GITHUB_OIDC = "https://token.actions.githubusercontent.com";
+function verifySigstoreBundle(value, expect = {}, trust = SIGSTORE_PUBLIC_GOOD) {
+  const checks = [];
+  const result = (extra = {}) => ({ valid: checks.every((c) => c.ok), checks, statement: null, identity: null, certificate: null, log: null, ...extra });
+  let bundle;
+  try {
+    bundle = parseSigstoreBundle(value);
+  } catch (e) {
+    checks.push({ id: "bundle", label: "Bundle", ok: false, detail: `Not a Sigstore bundle this verifier reads: ${e.message}.` });
+    return result();
+  }
+  checks.push({ id: "bundle", label: "Bundle", ok: true, detail: `${bundle.mediaType}: one certificate, a DSSE envelope with one signature${bundle.tlog ? ", a transparency-log entry" : ", no transparency-log entry"}.` });
+  let statement = null;
+  try {
+    if (bundle.payloadType !== "application/vnd.in-toto+json") throw new Error(`payload type ${bundle.payloadType}`);
+    statement = parseStatement(bundle.payload);
+    const slsa = statement.predicate_type === "https://slsa.dev/provenance/v1";
+    checks.push({ id: "statement", label: "Statement", ok: slsa, detail: slsa ? `in-toto statement over ${statement.subjects.map((s) => s.name).join(", ")} with a SLSA provenance predicate${statement.invocation ? ` for ${statement.invocation}` : ""}.` : `The predicate is ${statement.predicate_type || "missing"}, not SLSA provenance.` });
+  } catch (e) {
+    checks.push({ id: "statement", label: "Statement", ok: false, detail: `The envelope does not carry an in-toto provenance statement: ${e.message}.` });
+  }
+  let leaf = null;
+  let issuerCert = null;
+  let authority = null;
+  try {
+    leaf = parseCertificate(bundle.certificate);
+    let chainOk = false;
+    for (const ca of trust.certificate_authorities) {
+      const chain = ca.chain.map((c) => parseCertificate(fromBase64(c)));
+      let current = leaf;
+      let steps = 0;
+      const seen = /* @__PURE__ */ new Set();
+      while (steps++ < 8) {
+        const parent = chain.find((c) => c.subject === current.issuer && !seen.has(c));
+        if (!parent) break;
+        if (!signedBy(current, parent)) break;
+        seen.add(parent);
+        if (current === leaf) issuerCert = parent;
+        if (parent.subject === parent.issuer) {
+          chainOk = signedBy(parent, parent);
+          break;
+        }
+        current = parent;
+      }
+      if (chainOk) {
+        authority = `${ca.uri} (${ca.subject})`;
+        break;
+      }
+      issuerCert = null;
+    }
+    const eku = leaf.extensions.find((e) => e.oid === OID.extKeyUsage);
+    const codeSigning = !!eku && (() => {
+      try {
+        return children(eku.value, readTlv(eku.value, 0)).some((t) => oidOf(eku.value, t) === OID.codeSigning);
+      } catch {
+        return false;
+      }
+    })();
+    const detail = chainOk ? `Issued by ${leaf.issuer} under ${authority}, chain verified to the pinned root; valid ${leaf.notBefore.toISOString()} to ${leaf.notAfter.toISOString()}${codeSigning ? "; code signing" : ""}.` : `The certificate (issuer ${leaf.issuer}) does not chain to a pinned certificate authority.`;
+    checks.push({ id: "certificate", label: "Certificate", ok: chainOk && codeSigning, detail: chainOk && !codeSigning ? "The certificate chains to a pinned authority but is not a code-signing certificate." : detail });
+  } catch (e) {
+    checks.push({ id: "certificate", label: "Certificate", ok: false, detail: `The certificate does not parse: ${e.message}.` });
+  }
+  let identity = null;
+  if (leaf) {
+    identity = certificateIdentity(leaf);
+    const problems = [];
+    if (identity.issuer !== GITHUB_OIDC) problems.push(`the OIDC issuer is ${identity.issuer ?? "missing"}, not GitHub Actions`);
+    if (!identity.workflow) problems.push("no workflow identity (build signer) in the certificate");
+    if (expect.repository && identity.repository !== expect.repository) problems.push(`the repository is ${identity.repository ?? "missing"}, not ${expect.repository}`);
+    if (expect.run && !(identity.run ?? "").startsWith(`${expect.run.replace(/\/$/, "")}/`) && identity.run !== expect.run) problems.push(`the run is ${identity.run ?? "missing"}, not ${expect.run}`);
+    if (expect.workflow && identity.workflow !== `https://github.com/${expect.workflow}`) problems.push(`the workflow is ${identity.workflow ?? "missing"}, not ${expect.workflow}`);
+    if (expect.commit && identity.commit !== expect.commit) problems.push(`the commit is ${identity.commit ?? "missing"}, not ${expect.commit}`);
+    if (statement) {
+      if (statement.invocation && identity.run && statement.invocation !== identity.run) problems.push("the statement names a different run than the certificate");
+      if (statement.commit && identity.commit && statement.commit !== identity.commit) problems.push("the statement names a different commit than the certificate");
+      if (statement.repository && identity.repository && statement.repository !== identity.repository) problems.push("the statement names a different repository than the certificate");
+    }
+    checks.push({ id: "identity", label: "Identity", ok: problems.length === 0, detail: problems.length === 0 ? `GitHub Actions workflow ${identity.workflow} at ${identity.repository}${identity.commit ? ` commit ${identity.commit}` : ""}${identity.run ? `, run ${identity.run}` : ""}${identity.trigger ? ` (${identity.trigger}` : ""}${identity.runner ? `, ${identity.runner})` : identity.trigger ? ")" : ""}.` : `${problems.join("; ")}.` });
+  }
+  if (leaf) {
+    const ok = verifySignature(leaf.key, bundle.signature, dssePae(bundle.payloadType, bundle.payload), "sha256");
+    checks.push({ id: "signature", label: "Signature", ok, detail: ok ? "The envelope signature verifies under the certificate's key." : "The envelope signature does not verify under the certificate's key." });
+  }
+  let logInfo = null;
+  const tlog = bundle.tlog;
+  if (!tlog) {
+    checks.push({ id: "log", label: "Transparency log", ok: false, detail: "The bundle carries no transparency-log entry, so nothing fixes when the signature was made." });
+  } else {
+    const log = trust.transparency_logs.find((l) => bytesEqual2(fromBase64(l.log_id), tlog.logId)) ?? null;
+    const problems = [];
+    let logKey = null;
+    if (!log) problems.push(`the log key ${toBase64(tlog.logId)} is not pinned`);
+    else {
+      try {
+        logKey = parseSpki(fromBase64(log.public_key));
+      } catch {
+        problems.push("the pinned log key does not parse");
+      }
+    }
+    if (tlog.kind !== "dsse" || tlog.version !== "0.0.1") problems.push(`entry kind ${tlog.kind} ${tlog.version} is not dsse 0.0.1`);
+    else {
+      try {
+        const body = JSON.parse(textDecoder2.decode(tlog.body));
+        const spec = isRecord3(body) && isRecord3(body.spec) ? body.spec : {};
+        const ph = isRecord3(spec.payloadHash) ? spec.payloadHash : {};
+        if (ph.algorithm !== "sha256" || ph.value !== bytesToHex2(sha2562(bundle.payload))) problems.push("the entry's payload hash is not this payload");
+        const sigs = Array.isArray(spec.signatures) ? spec.signatures : [];
+        const s0 = isRecord3(sigs[0]) ? sigs[0] : {};
+        if (sigs.length !== 1 || typeof s0.signature !== "string" || !bytesEqual2(fromBase64(s0.signature), bundle.signature)) problems.push("the entry's signature is not this signature");
+        if (typeof s0.verifier === "string") {
+          const pem = textDecoder2.decode(fromBase64(s0.verifier));
+          const der = fromBase64(pem.replace(/-----[A-Z ]+-----/g, ""));
+          if (!bytesEqual2(der, bundle.certificate)) problems.push("the entry's verifier is not this certificate");
+        }
+      } catch {
+        problems.push("the entry body does not parse");
+      }
+    }
+    const integrated = new Date(tlog.integratedTime * 1e3);
+    if (!tlog.set) problems.push("no signed entry timestamp");
+    else if (logKey) {
+      const data = utf82(canonicalize2({ body: toBase64(tlog.body), integratedTime: tlog.integratedTime, logID: bytesToHex2(tlog.logId), logIndex: Number(tlog.logIndex) }));
+      if (!verifySignature(logKey, tlog.set, data, "sha256")) problems.push("the signed entry timestamp does not verify under the log key");
+    }
+    if (log && (integrated < new Date(log.valid_from) || log.valid_to && integrated > new Date(log.valid_to))) problems.push("the entry was integrated outside the log key's validity");
+    if (leaf && (integrated < leaf.notBefore || integrated > leaf.notAfter)) problems.push(`the entry was integrated at ${integrated.toISOString()}, outside the certificate's validity`);
+    logInfo = { base_url: log?.base_url ?? "(unknown)", index: String(tlog.logIndex), integrated_time: integrated.toISOString(), tree_size: tlog.proof ? String(tlog.proof.treeSize) : null, origin: tlog.proof ? tlog.proof.checkpoint.split("\n")[0] ?? null : null };
+    checks.push({ id: "log", label: "Transparency log", ok: problems.length === 0, detail: problems.length === 0 ? `Entry ${tlog.logIndex} in ${log.base_url}, integrated ${integrated.toISOString()}, inside the certificate's validity; the entry is this envelope and the log signed it.` : `${problems.join("; ")}.` });
+    if (!tlog.proof) {
+      checks.push({ id: "inclusion", label: "Inclusion", ok: false, detail: "The entry carries no inclusion proof." });
+    } else {
+      const problems2 = [];
+      const root = rootFromInclusionProof(leafHash(tlog.body), tlog.proof.logIndex, tlog.proof.treeSize, tlog.proof.hashes);
+      if (!root || !bytesEqual2(root, tlog.proof.rootHash)) problems2.push("the inclusion proof does not reach the stated root");
+      const sep = tlog.proof.checkpoint.indexOf("\n\n");
+      if (sep < 0) problems2.push("the checkpoint is not a signed note");
+      else {
+        const note = tlog.proof.checkpoint.slice(0, sep + 1);
+        const lines = note.split("\n");
+        if (lines[1] !== String(tlog.proof.treeSize)) problems2.push("the checkpoint tree size is not the proof's");
+        let cpRoot = null;
+        try {
+          cpRoot = fromBase64(lines[2] ?? "");
+        } catch {
+        }
+        if (!cpRoot || !bytesEqual2(cpRoot, tlog.proof.rootHash)) problems2.push("the checkpoint root is not the proof's root");
+        const sigLines = tlog.proof.checkpoint.slice(sep + 2).split("\n").filter((l) => l.startsWith("\u2014 "));
+        let signed2 = false;
+        for (const line of sigLines) {
+          const parts = line.split(" ");
+          try {
+            const sig = fromBase64(parts[parts.length - 1]);
+            if (!bytesEqual2(sig.subarray(0, 4), tlog.logId.subarray(0, 4))) continue;
+            if (logKey && verifySignature(logKey, sig.subarray(4), utf82(note), "sha256")) {
+              signed2 = true;
+              break;
+            }
+          } catch {
+          }
+        }
+        if (!signed2) problems2.push("the checkpoint is not signed by the pinned log key");
+      }
+      checks.push({ id: "inclusion", label: "Inclusion", ok: problems2.length === 0, detail: problems2.length === 0 ? `The entry's leaf hash reaches the checkpoint root through ${tlog.proof.hashes.length} proof hashes at tree size ${tlog.proof.treeSize}; the checkpoint is signed by the log.` : `${problems2.join("; ")}.` });
+    }
+  }
+  if (leaf) {
+    const sctExt = leaf.extensions.find((e) => e.oid === OID.sctList);
+    if (!sctExt || !leaf.precertTbs) {
+      checks.push({ id: "sct", label: "Certificate transparency", ok: false, detail: "The certificate carries no signed certificate timestamp." });
+    } else if (!issuerCert) {
+      checks.push({ id: "sct", label: "Certificate transparency", ok: false, detail: "The SCT cannot be checked without the issuing certificate." });
+    } else {
+      const problems3 = [];
+      let verified = 0;
+      try {
+        const v = sctExt.value;
+        const list = readTlv(v, 0);
+        const data = content(v, list);
+        const u16 = (o) => data[o] << 8 | data[o + 1];
+        const total = u16(0);
+        let p = 2;
+        const issuerKeyHash = sha2562(issuerCert.key.spki);
+        while (p < 2 + total) {
+          const len = u16(p);
+          p += 2;
+          const sct = data.subarray(p, p + len);
+          p += len;
+          if (sct[0] !== 0) {
+            problems3.push(`SCT version ${sct[0]} unsupported`);
+            continue;
+          }
+          const logId = sct.subarray(1, 33);
+          const timestamp = Number(BigInt(sct[33]) << 56n | BigInt(sct[34]) << 48n | BigInt(sct[35]) << 40n | BigInt(sct[36]) << 32n | BigInt(sct[37]) << 24n | BigInt(sct[38]) << 16n | BigInt(sct[39]) << 8n | BigInt(sct[40]));
+          const extLen = sct[41] << 8 | sct[42];
+          const ext = sct.subarray(43, 43 + extLen);
+          let q = 43 + extLen;
+          const hashAlg = sct[q], sigAlg = sct[q + 1];
+          const sigLen = sct[q + 2] << 8 | sct[q + 3];
+          const sig = sct.subarray(q + 4, q + 4 + sigLen);
+          if (hashAlg !== 4 || sigAlg !== 3) {
+            problems3.push("SCT signature algorithm is not ECDSA/SHA-256");
+            continue;
+          }
+          const ctlog = trust.certificate_transparency_logs.find((l) => bytesEqual2(fromBase64(l.log_id), logId));
+          if (!ctlog) {
+            problems3.push(`SCT from an unpinned log ${toBase64(logId)}`);
+            continue;
+          }
+          const when = new Date(timestamp);
+          if (when < new Date(ctlog.valid_from) || ctlog.valid_to && when > new Date(ctlog.valid_to)) {
+            problems3.push("SCT timestamp outside the CT log key's validity");
+            continue;
+          }
+          const tbs = leaf.precertTbs;
+          const signedData = concatBytes2(
+            new Uint8Array([0, 0]),
+            // v1, certificate_timestamp
+            new Uint8Array(Array.from({ length: 8 }, (_, i) => Number(BigInt(timestamp) >> BigInt(8 * (7 - i)) & 0xffn))),
+            new Uint8Array([0, 1]),
+            // precert_entry
+            issuerKeyHash,
+            new Uint8Array([tbs.length >> 16 & 255, tbs.length >> 8 & 255, tbs.length & 255]),
+            tbs,
+            new Uint8Array([ext.length >> 8 & 255, ext.length & 255]),
+            ext
+          );
+          const key = parseSpki(fromBase64(ctlog.public_key));
+          if (verifySignature(key, sig, signedData, "sha256")) verified++;
+          else problems3.push(`the SCT from ${ctlog.base_url} does not verify`);
+        }
+      } catch (e) {
+        problems3.push(`the SCT list does not parse: ${e.message}`);
+      }
+      const ok = verified > 0 && problems3.length === 0;
+      checks.push({ id: "sct", label: "Certificate transparency", ok, detail: ok ? `${verified} signed certificate timestamp${verified === 1 ? "" : "s"} verified under the pinned CT log key: the certificate was logged before it was used.` : `${problems3.join("; ") || "no SCT verified"}.` });
+    }
+  }
+  return result({
+    statement,
+    identity,
+    certificate: leaf ? { subject: leaf.subject, issuer: leaf.issuer, not_before: leaf.notBefore.toISOString(), not_after: leaf.notAfter.toISOString(), authority } : null,
+    log: logInfo
+  });
+}
+var subjectDigest = (bytes) => bytesToHex2(sha2562(toBytes2(bytes)));
+
 // src/run-manifest.ts
 var RUN_MANIFEST_V1 = "scopeblind.run_manifest.v1";
 var RUN_MANIFEST_DOMAIN = "scopeblind.run-manifest.v1";
@@ -8284,14 +10241,14 @@ var RUN_REGRADE_V1 = "scopeblind.run_regrade.v1";
 var RUN_REGRADE_DOMAIN = "scopeblind.run-regrade.v1";
 var REGRADE_UNSIGNED_KEYS = ["type", "version", "run_id", "manifest_digest", "grader", "environment", "results", "regraded_at", "nonce"];
 function verifyRunRegrade(value) {
-  if (!isRecord3(value) || value.type !== RUN_REGRADE_V1 || value.version !== 1) return { valid: false, detail: "not a run regrade" };
+  if (!isRecord4(value) || value.type !== RUN_REGRADE_V1 || value.version !== 1) return { valid: false, detail: "not a run regrade" };
   const v = value;
-  if (typeof v.run_id !== "string" || !isHex64(v.manifest_digest) || !isRecord3(v.grader) || !isHex64(v.grader.verification_key) || !Array.isArray(v.results) || !isIso2(v.regraded_at) || !v.results.every((r) => isRecord3(r) && typeof r.task_id === "string" && Number.isSafeInteger(r.attempt) && ["pass", "fail", "error"].includes(r.verdict) && isRecord3(r.tests) && isDigest(r.tests.output_digest) && isDigest(r.workspace_digest))) return { valid: false, detail: "regrade malformed" };
+  if (typeof v.run_id !== "string" || !isHex64(v.manifest_digest) || !isRecord4(v.grader) || !isHex64(v.grader.verification_key) || !Array.isArray(v.results) || !isIso2(v.regraded_at) || !v.results.every((r) => isRecord4(r) && typeof r.task_id === "string" && Number.isSafeInteger(r.attempt) && ["pass", "fail", "error"].includes(r.verdict) && isRecord4(r.tests) && isDigest(r.tests.output_digest) && isDigest(r.workspace_digest))) return { valid: false, detail: "regrade malformed" };
   const { digest_valid, signature_valid } = checkEnvelope(RUN_REGRADE_DOMAIN, v, REGRADE_UNSIGNED_KEYS, v.grader.verification_key);
   return { valid: digest_valid && signature_valid, detail: !digest_valid ? "regrade altered after signing" : !signature_valid ? "regrade signature does not verify" : "regrade verifies" };
 }
 function runSignerFromSeed(seed, name) {
-  return runSignerFromPrivate(sha256(encoder2.encode(`scopeblind.run-manifest.demo.v1\0${seed}`)), name);
+  return runSignerFromPrivate(sha2562(encoder2.encode(`scopeblind.run-manifest.demo.v1\0${seed}`)), name);
 }
 function runSignerFromPrivate(priv, name) {
   const verification_key = bytesToHex2(ed25519.getPublicKey(priv));
@@ -8303,36 +10260,37 @@ function isDemoRunSignerKey(verificationKey) {
   if (!demoSignerKeys) demoSignerKeys = new Set(DEMO_SIGNER_SEEDS.map((s) => runSignerFromSeed(s, "").verification_key));
   return demoSignerKeys.has(verificationKey.toLowerCase());
 }
-var isRecord3 = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
+var isRecord4 = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
 var isIso2 = (v) => typeof v === "string" && !Number.isNaN(Date.parse(v));
 var isDigest = (v) => typeof v === "string" && /^sha256:[0-9a-f]{64}$/.test(v);
 var isHex64 = (v) => typeof v === "string" && /^[0-9a-f]{64}$/.test(v);
 function shapeErrors2(value) {
   const errors = [];
-  if (!isRecord3(value)) return ["not an object"];
+  if (!isRecord4(value)) return ["not an object"];
   const m = value;
   if (m.type !== RUN_MANIFEST_V1 || m.version !== 1) errors.push("not a scopeblind.run_manifest.v1");
   if (typeof m.run_id !== "string" || !m.run_id.trim()) errors.push("run_id missing");
   const s = m.standard;
-  if (!isRecord3(s) || typeof s.request_id !== "string" || !isHex64(s.digest) || !isHex64(s.recipient_key) || !isDigest(s.policy_digest)) errors.push("standard binding malformed");
+  if (!isRecord4(s) || typeof s.request_id !== "string" || !isHex64(s.digest) || !isHex64(s.recipient_key) || !isDigest(s.policy_digest)) errors.push("standard binding malformed");
   const a = m.agent;
-  if (!isRecord3(a) || ["name", "version", "model", "model_route"].some((k) => typeof a[k] !== "string")) errors.push("agent malformed");
+  if (!isRecord4(a) || ["name", "version", "model", "model_route"].some((k) => typeof a[k] !== "string")) errors.push("agent malformed");
   const h = m.harness;
-  if (!isRecord3(h) || typeof h.name !== "string" || !isDigest(h.digest) || typeof h.gateway !== "string") errors.push("harness malformed");
+  if (!isRecord4(h) || typeof h.name !== "string" || !isDigest(h.digest) || typeof h.gateway !== "string") errors.push("harness malformed");
   const d = m.dataset;
-  if (!isRecord3(d) || typeof d.name !== "string" || !isDigest(d.digest) || !Number.isSafeInteger(d.task_count) || d.revision !== void 0 && typeof d.revision !== "string") errors.push("dataset malformed");
+  if (!isRecord4(d) || typeof d.name !== "string" || !isDigest(d.digest) || !Number.isSafeInteger(d.task_count) || d.revision !== void 0 && typeof d.revision !== "string") errors.push("dataset malformed");
   const e = m.environment;
-  if (!isRecord3(e) || typeof e.sandbox !== "string" || !Array.isArray(e.egress) || !e.egress.every((x) => typeof x === "string") || !(e.attestation === null || isRecord3(e.attestation) && typeof e.attestation.kind === "string" && typeof e.attestation.reference === "string" && isDigest(e.attestation.digest))) errors.push("environment malformed");
+  if (!isRecord4(e) || typeof e.sandbox !== "string" || !Array.isArray(e.egress) || !e.egress.every((x) => typeof x === "string") || !(e.attestation === null || isRecord4(e.attestation) && typeof e.attestation.kind === "string" && typeof e.attestation.reference === "string" && isDigest(e.attestation.digest) && (e.attestation.commit === void 0 || typeof e.attestation.commit === "string") && (e.attestation.workflow === void 0 || typeof e.attestation.workflow === "string"))) errors.push("environment malformed");
   const g = m.gateway;
-  if (!isRecord3(g) || typeof g.key_id !== "string" || !isHex64(g.verification_key) || !Number.isSafeInteger(g.receipt_count) || !(g.chain_head === null || isDigest(g.chain_head)) || !isDigest(g.log_digest) || g.calls_digest !== void 0 && !isDigest(g.calls_digest) || g.calls_disclosed !== void 0 && typeof g.calls_disclosed !== "boolean") errors.push("gateway malformed");
-  if (!Array.isArray(m.attempts) || !m.attempts.every((t) => isRecord3(t) && typeof t.task_id === "string" && Number.isSafeInteger(t.attempt) && isIso2(t.started_at) && isIso2(t.ended_at) && isRecord3(t.receipts) && Number.isSafeInteger(t.receipts.from) && Number.isSafeInteger(t.receipts.to) && t.receipts.from <= t.receipts.to && Number.isSafeInteger(t.calls) && Number.isSafeInteger(t.refused) && ["pass", "fail", "error"].includes(t.verdict) && isRecord3(t.tests) && typeof t.tests.runner === "string" && Number.isSafeInteger(t.tests.passed) && Number.isSafeInteger(t.tests.failed) && isDigest(t.tests.output_digest) && isRecord3(t.agent) && (t.agent.exit_code === null || Number.isSafeInteger(t.agent.exit_code)) && typeof t.agent.timed_out === "boolean" && (t.workspace === void 0 || isRecord3(t.workspace) && isDigest(t.workspace.digest) && Number.isSafeInteger(t.workspace.file_count) && typeof t.workspace.disclosed === "boolean"))) errors.push("attempts malformed");
+  if (!isRecord4(g) || typeof g.key_id !== "string" || !isHex64(g.verification_key) || !Number.isSafeInteger(g.receipt_count) || !(g.chain_head === null || isDigest(g.chain_head)) || !isDigest(g.log_digest) || g.calls_digest !== void 0 && !isDigest(g.calls_digest) || g.calls_disclosed !== void 0 && typeof g.calls_disclosed !== "boolean") errors.push("gateway malformed");
+  if (!Array.isArray(m.attempts) || !m.attempts.every((t) => isRecord4(t) && typeof t.task_id === "string" && Number.isSafeInteger(t.attempt) && isIso2(t.started_at) && isIso2(t.ended_at) && isRecord4(t.receipts) && Number.isSafeInteger(t.receipts.from) && Number.isSafeInteger(t.receipts.to) && t.receipts.from <= t.receipts.to && Number.isSafeInteger(t.calls) && Number.isSafeInteger(t.refused) && ["pass", "fail", "error"].includes(t.verdict) && isRecord4(t.tests) && typeof t.tests.runner === "string" && Number.isSafeInteger(t.tests.passed) && Number.isSafeInteger(t.tests.failed) && isDigest(t.tests.output_digest) && isRecord4(t.agent) && (t.agent.exit_code === null || Number.isSafeInteger(t.agent.exit_code)) && typeof t.agent.timed_out === "boolean" && (t.workspace === void 0 || isRecord4(t.workspace) && isDigest(t.workspace.digest) && Number.isSafeInteger(t.workspace.file_count) && typeof t.workspace.disclosed === "boolean"))) errors.push("attempts malformed");
   const u = m.summary;
-  if (!isRecord3(u) || ["tasks", "passed", "failed", "errored", "calls", "refused"].some((k) => !Number.isSafeInteger(u[k]))) errors.push("summary malformed");
+  if (!isRecord4(u) || ["tasks", "passed", "failed", "errored", "calls", "refused"].some((k) => !Number.isSafeInteger(u[k]))) errors.push("summary malformed");
   const sg = m.signer;
-  if (!isRecord3(sg) || typeof sg.name !== "string" || typeof sg.key_id !== "string" || !isHex64(sg.verification_key)) errors.push("signer malformed");
-  if (!isIso2(m.issued_at) || typeof m.nonce !== "string" || typeof m.digest !== "string" || !isRecord3(m.signature) || m.signature.algorithm !== "Ed25519" || typeof m.signature.value !== "string") errors.push("envelope malformed");
+  if (!isRecord4(sg) || typeof sg.name !== "string" || typeof sg.key_id !== "string" || !isHex64(sg.verification_key)) errors.push("signer malformed");
+  if (!isIso2(m.issued_at) || typeof m.nonce !== "string" || typeof m.digest !== "string" || !isRecord4(m.signature) || m.signature.algorithm !== "Ed25519" || typeof m.signature.value !== "string") errors.push("envelope malformed");
   return errors;
 }
+var PROVENANCE_FILES = { manifest: "manifest.json", receipts: "receipts.jsonl", standard: "standard.json", regrade: "regrade.json" };
 function workspaceDigest(files) {
   return `sha256:${sha256Hex(canonicalize2({ files: [...files].map((f) => ({ path: f.path, sha256: f.sha256 })).sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0) }))}`;
 }
@@ -8341,7 +10299,7 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
   const errors = shapeErrors2(value);
   const shape_valid = errors.length === 0;
   checks.push({ id: "shape", label: "Shape", ok: shape_valid, detail: shape_valid ? "Every required field is present and well formed." : errors.join("; ") });
-  const fail = (title2) => ({ shape_valid, digest_valid: false, signature_valid: false, cryptographically_valid: false, binding: "unbound", checks, chain: null, title: title2, establishes: [], not_established: ["Nothing rests on a manifest that does not verify."] });
+  const fail = (title2) => ({ shape_valid, digest_valid: false, signature_valid: false, cryptographically_valid: false, binding: "unbound", checks, chain: null, title: title2, establishes: [], not_established: ["Nothing rests on a manifest that does not verify."], provenance: null });
   if (!shape_valid) return fail("Not a run manifest, or malformed");
   const m = value;
   const { digest_valid, signature_valid } = checkEnvelope(RUN_MANIFEST_DOMAIN, m, MANIFEST_UNSIGNED_KEYS, m.signer.verification_key);
@@ -8489,6 +10447,54 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
       checks.push({ id: "verdict_evidence", label: "Verdict evidence", ok: true, detail: `The standard accepts the harness's own test run as the verdict evidence (${level}). The verdicts are the harness's word; the archived workspace lets anyone re-grade.`, informational: true });
     }
   }
+  const att = m.environment.attestation;
+  const prov = context.provenance ?? null;
+  let provenance = null;
+  if (prov && prov.bundles.length > 0) {
+    anythingGiven = true;
+    const repository = att ? /^https:\/\/github\.com\/[^/]+\/[^/]+/.exec(att.reference)?.[0] ?? null : null;
+    const expect = att ? { repository, run: att.reference, commit: att.commit ?? null, workflow: att.workflow ?? null } : {};
+    const seen = /* @__PURE__ */ new Set();
+    const results = [];
+    for (const b of prov.bundles) {
+      let key;
+      try {
+        key = canonicalize2(b);
+      } catch {
+        key = `#${results.length}`;
+      }
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const r = verifySigstoreBundle(b, expect);
+      const n = results.push(r);
+      for (const c of r.checks) checks.push({ id: `provenance_${n}_${c.id}`, label: `Provenance ${n}: ${c.label}`, ok: c.ok, detail: c.detail });
+    }
+    let allOk = results.every((r) => r.valid);
+    const covered = [];
+    for (const role of Object.keys(PROVENANCE_FILES)) {
+      const bytes = prov.bytes?.[role];
+      const file = PROVENANCE_FILES[role];
+      if (bytes === void 0) {
+        if (role === "manifest") checks.push({ id: "provenance_manifest", label: "Provenance: manifest", ok: true, detail: "The manifest bytes were not supplied, so no bundle can be tied to this manifest; the bundles are verified on their own.", informational: true });
+        continue;
+      }
+      const digest = subjectDigest(bytes);
+      const idx = results.findIndex((r) => r.statement?.subjects.some((s) => s.sha256 === digest));
+      const found = idx >= 0;
+      const ok = found && results[idx].valid;
+      if (ok) covered.push(role);
+      const required = role !== "regrade" && att !== null;
+      if (!found && !required) {
+        checks.push({ id: `provenance_${role}`, label: `Provenance: ${role}`, ok: true, detail: `No supplied bundle names ${file}; ${role === "regrade" ? "a second grading made outside the workflow carries no attestation" : "the manifest claims none"}.`, informational: true });
+        continue;
+      }
+      checks.push({ id: `provenance_${role}`, label: `Provenance: ${role}`, ok, detail: ok ? `${file} as supplied (sha256:${digest.slice(0, 16)}...) is a subject of verified bundle ${idx + 1}.` : found ? `${file} is a subject of bundle ${idx + 1}, which does not verify.` : `No supplied bundle names ${file} as supplied (sha256:${digest.slice(0, 16)}...).` });
+      if (!ok) allOk = false;
+    }
+    bound &&= allOk;
+    const first = results.find((r) => r.valid) ?? results[0] ?? null;
+    provenance = { verified: allOk && covered.includes("manifest"), bundles: results.length, covered, identity: first?.identity ?? null, log: first?.log ?? null };
+  }
   const binding = !anythingGiven ? "manifest_only" : bound && partition && summaryOk ? "bound" : "partial";
   establishes.push(`A harness holding key ${m.signer.key_id} signed this account of run ${m.run_id}: ${m.summary.tasks} task${m.summary.tasks === 1 ? "" : "s"} of ${m.dataset.name}, ${m.summary.passed} passed, ${m.summary.failed} failed, ${m.summary.calls} governed call${m.summary.calls === 1 ? "" : "s"}, ${m.summary.refused} refused.`);
   if (binding === "bound") {
@@ -8496,15 +10502,17 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
     if (receipts && chain) establishes.push(`The ${chain.count} receipts are the ones the manifest names, every one under that policy, every allowed call on the tool list, and the refusals counted match.`);
   }
   not_established.push("Who holds the harness key or the gateway key: pin them through a channel you already trust.");
-  if (!m.environment.attestation) not_established.push("That the sandbox enforced the declared network rule: this run carries no environment attestation, so egress and model route are the harness's declaration.");
-  else establishes.push(`An environment attestation (${m.environment.attestation.kind}, ${m.environment.attestation.reference}) is carried; check it with its own verifier.`);
+  if (!att) not_established.push("That the sandbox enforced the declared network rule: this run carries no environment attestation, so egress and model route are the harness's declaration.");
+  else if (provenance?.verified && provenance.identity) establishes.push(`Provenance verified here against the pinned Sigstore trust root: ${provenance.covered.map((r) => PROVENANCE_FILES[r]).join(", ")} came out of GitHub Actions workflow ${provenance.identity.workflow} at ${provenance.identity.repository}${provenance.identity.commit ? ` commit ${provenance.identity.commit}` : ""}, run ${provenance.identity.run ?? att.reference}; the signing certificate chains to Fulcio and the signature was logged in ${provenance.log?.base_url ?? "the transparency log"} at index ${provenance.log?.index ?? "?"} (${provenance.log?.integrated_time ?? "time unknown"}). What that workflow configured, the sandbox and the network rule, is in the repository at that commit.`);
+  else if (prov && prov.bundles.length > 0) not_established.push(`That the run was made in the workflow it names (${att.reference}): the provenance supplied does not verify, or does not name these bytes.`);
+  else not_established.push(`That the run was made in the workflow it names: the attestation is referenced (${att.reference}) but its bundle was not supplied. Supply provenance/*.sigstore.jsonl to verify it here, or run gh attestation verify.`);
   if (!reconciled) not_established.push(regrade ? "That the verdicts are more than the harness's word: the second grading supplied does not reconcile." : "That the verdicts are more than the harness's word: no second grading is supplied. The archived workspace and the pinned tests let anyone make one.");
   if (!calls) not_established.push("What any allowed call did: the receipts carry the digest of each input, not the input. Supply the calls log to open them.");
   not_established.push("What the agent said or reasoned: the receipts record tool calls and the harness records test verdicts, not the transcript.");
   if (!std) not_established.push("Which standard the run was under: supply the signed standard to check the pins and the policy.");
   if (!receipts) not_established.push("That the receipts the manifest names exist and verify: supply the gateway's receipt log.");
   const title = binding === "bound" ? `Verified run: ${m.summary.passed} of ${m.summary.tasks} passed under ${std?.recipient.organization ?? "the standard"}` : binding === "manifest_only" ? `Run manifest verifies: ${m.summary.passed} of ${m.summary.tasks} passed, unbound` : "Run manifest verifies, but does not bind to what was supplied";
-  return { shape_valid, digest_valid, signature_valid, cryptographically_valid: true, binding, checks, chain, title, establishes, not_established };
+  return { shape_valid, digest_valid, signature_valid, cryptographically_valid: true, binding, checks, chain, title, establishes, not_established, provenance };
 }
 function runManifestReadback(m) {
   const lines = [];
@@ -8529,6 +10537,7 @@ export {
   PROOF_REQUEST_V1,
   RUN_MANIFEST_V1,
   RUN_REGRADE_V1,
+  SIGSTORE_PUBLIC_GOOD,
   charterDigest,
   covenantState,
   isActionAssuranceBundleV1,
@@ -8536,9 +10545,11 @@ export {
   isDemoRunSignerKey,
   isDemoTrustKey,
   parseClaimsJson,
+  parseSigstoreBundle,
   proofRequestReadback,
   recomputeAdmissionDecision,
   runManifestReadback,
+  subjectDigest,
   taskSetDigest,
   trustProvenance,
   verifyActionAssuranceBundleV1,
@@ -8548,5 +10559,6 @@ export {
   verifyProofRequest,
   verifyRunManifest,
   verifyRunRegrade,
+  verifySigstoreBundle,
   workspaceDigest
 };

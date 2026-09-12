@@ -88,7 +88,8 @@ export async function verifyLegateStandard(input, opts = {}) {
     const receipts = Array.isArray(opts.receipts) ? opts.receipts : null;
     const calls = Array.isArray(opts.calls) ? opts.calls : null;
     const regrade = opts.regrade ?? null;
-    const v = m.verifyRunManifest(input, { standard, receipts, calls, regrade }, now);
+    const provenance = opts.provenance ?? null;
+    const v = m.verifyRunManifest(input, { standard, receipts, calls, regrade, provenance }, now);
     return {
       valid: v.cryptographically_valid,
       ...base,
@@ -103,6 +104,7 @@ export async function verifyLegateStandard(input, opts = {}) {
       in_plain_words: v.cryptographically_valid ? m.runManifestReadback(input) : undefined,
       establishes: v.establishes,
       not_established: v.not_established,
+      provenance: v.provenance ?? undefined,
     };
   }
 
