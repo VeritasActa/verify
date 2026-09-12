@@ -54,7 +54,7 @@ function core() {
   return corePromise;
 }
 
-const checksOf = (list) => list.map((c) => ({ id: c.id, label: c.label, ok: c.ok, detail: c.detail }));
+const checksOf = (list) => list.map((c) => ({ id: c.id, label: c.label, ok: c.ok, detail: c.detail, ...(c.informational ? { informational: true } : {}) }));
 
 /**
  * @param {Record<string, unknown>} input parsed JSON

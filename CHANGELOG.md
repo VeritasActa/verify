@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.6 (2026-09-12)
+
+- `--provenance`: a bundle made in another run verifies on its own terms but does not count for this manifest, and unbinds nothing; it contradicts the manifest only when it names the manifest's own bytes. A deterministic standard is attested by every run that used it, so `gh attestation download standard.json` returns every run's bundle, and a reader may well hold bundles from other runs.
+
 ## 0.10.5 (2026-09-12)
 
 - `--provenance <path>` for Legate run manifests: the Sigstore provenance bundles beside a run (`provenance/*.sigstore.jsonl`, a file or a directory, repeatable) are verified here, offline, against the pinned Sigstore public-good trust root: the certificate chain to Fulcio, the workflow identity in the certificate (issuer, workflow, repository, commit, run) against what the manifest names, the DSSE signature, the Rekor entry (log key, entry body, signed entry timestamp, integration time inside the certificate's validity), the inclusion proof and signed checkpoint, and the certificate-transparency SCT. Each file given on the command line must be a subject of a verified bundle, by its exact bytes. `gh attestation verify` remains an independent path.

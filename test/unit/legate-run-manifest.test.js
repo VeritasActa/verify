@@ -82,6 +82,14 @@ test('with the provenance bundle beside it, the workflow, the commit, and the lo
   assert.ok(r.establishes.some((s) => /Provenance verified here against the pinned Sigstore trust root/.test(s)));
 });
 
+test('a valid bundle from another run beside this run\'s counts for nothing and unbinds nothing', async () => {
+  const p = provenanceFixture(); p.bundles.push(JSON.parse(readFileSync(fixturePath('run-provenance-other.sigstore.jsonl'), 'utf8').trim().split('\n')[0]));
+  const r = await verifyLegateStandard(fixture('run-manifest.json'), { now: NOW, standard: fixture('run-standard.json'), receipts: fixture('run-receipts.json'), calls: callsFixture(), regrade: fixture('run-regrade.json'), provenance: p });
+  assert.equal(r.binding, 'bound', JSON.stringify(r.checks.filter((c) => !c.ok)));
+  assert.equal(r.provenance.verified, true);
+  assert.ok(r.checks.some((c) => c.id === 'provenance_2_identity' && c.ok && c.informational && /another run/.test(c.detail)));
+});
+
 test('a provenance bundle whose signature was altered does not verify, and the run no longer binds', async () => {
   const p = provenanceFixture(); const sig = Buffer.from(p.bundles[0].dsseEnvelope.signatures[0].sig, 'base64'); sig[5] ^= 1; p.bundles[0].dsseEnvelope.signatures[0].sig = sig.toString('base64');
   const r = await verifyLegateStandard(fixture('run-manifest.json'), { now: NOW, standard: fixture('run-standard.json'), receipts: fixture('run-receipts.json'), provenance: p });

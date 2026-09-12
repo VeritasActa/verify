@@ -1,15 +1,15 @@
 {
   "sigil_version": 1,
-  "fingerprint": "0ae857d8",
-  "name": "Clear Ember",
-  "sigil_hash": "0ae857d807ff1602f0da3fe24759f77a0bc0bf19d8b5df984faff02df6269055",
+  "fingerprint": "ff59232c",
+  "name": "Woven River",
+  "sigil_hash": "ff59232c8522274339f32e1fcf296edcf1218c980d063ce2fb6358c7e0362037",
   "project_public_key": "fe665e861867cec7e171c0c13bbc873c3362079faef21f54df7804b7fb9ae8af",
   "commitment_authentication": "public_recomputable_integrity_only",
   "policy": {
     "version": 3,
     "package": "@veritasacta/verify",
-    "package_version": "0.10.5",
-    "source_hash": "479e258c118a2022f1ee2daab853583e0eea1ab4d827819204bc851d6d0329e4",
+    "package_version": "0.10.6",
+    "source_hash": "7e54fd7c7d4e3a0d8c900ef05c6f665a42803e89f7f6e4da852a74207c089db8",
     "monitored_files": [
       "README.md",
       "cli.js",
@@ -75,6 +75,6 @@
     ],
     "created_at": 1784267169966
   },
-  "policy_hash": "2ed84ccc95404bd65bfe3f5dc7b07342b8877bc2cb306296da7cd7a05b4b738c",
+  "policy_hash": "5e7a0bbb4d0e8a833f190f4bc633767b3231e006c477be134d90e1a173c201b3",
   "derived_at": "2026-07-17T05:46:09.966Z"
 }

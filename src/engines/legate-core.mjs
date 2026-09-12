@@ -10455,7 +10455,9 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
     const repository = att ? /^https:\/\/github\.com\/[^/]+\/[^/]+/.exec(att.reference)?.[0] ?? null : null;
     const expect = att ? { repository, run: att.reference, commit: att.commit ?? null, workflow: att.workflow ?? null } : {};
     const seen = /* @__PURE__ */ new Set();
+    const manifestDigest = prov.bytes?.manifest !== void 0 ? subjectDigest(prov.bytes.manifest) : null;
     const results = [];
+    let allOk = true;
     for (const b of prov.bundles) {
       let key;
       try {
@@ -10466,10 +10468,19 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
       if (seen.has(key)) continue;
       seen.add(key);
       const r = verifySigstoreBundle(b, expect);
-      const n = results.push(r);
-      for (const c of r.checks) checks.push({ id: `provenance_${n}_${c.id}`, label: `Provenance ${n}: ${c.label}`, ok: c.ok, detail: c.detail });
+      const n = results.length + 1;
+      const identity = r.checks.find((c) => c.id === "identity") ?? null;
+      const cryptoOk = r.checks.filter((c) => c.id !== "identity").every((c) => c.ok);
+      const namesManifest = manifestDigest !== null && (r.statement?.subjects.some((s) => s.sha256 === manifestDigest) ?? false);
+      const foreign = cryptoOk && identity !== null && !identity.ok && !namesManifest;
+      for (const c of r.checks) {
+        if (c.id === "identity" && foreign) checks.push({ id: `provenance_${n}_identity`, label: `Provenance ${n}: Identity`, ok: true, informational: true, detail: `Made in another run, so it does not count for this manifest (${c.detail})` });
+        else checks.push({ id: `provenance_${n}_${c.id}`, label: `Provenance ${n}: ${c.label}`, ok: c.ok, detail: c.detail });
+      }
+      const counts = cryptoOk && (identity?.ok ?? true);
+      results.push({ r, counts });
+      if (!cryptoOk || !foreign && identity !== null && !identity.ok) allOk = false;
     }
-    let allOk = results.every((r) => r.valid);
     const covered = [];
     for (const role of Object.keys(PROVENANCE_FILES)) {
       const bytes = prov.bytes?.[role];
@@ -10479,20 +10490,21 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
         continue;
       }
       const digest = subjectDigest(bytes);
-      const idx = results.findIndex((r) => r.statement?.subjects.some((s) => s.sha256 === digest));
+      const names = (x) => x.r.statement?.subjects.some((s) => s.sha256 === digest) ?? false;
+      const idx = results.findIndex((x) => x.counts && names(x));
       const found = idx >= 0;
-      const ok = found && results[idx].valid;
-      if (ok) covered.push(role);
+      const foreignOnly = !found && results.some((x) => !x.counts && names(x));
+      if (found) covered.push(role);
       const required = role !== "regrade" && att !== null;
       if (!found && !required) {
-        checks.push({ id: `provenance_${role}`, label: `Provenance: ${role}`, ok: true, detail: `No supplied bundle names ${file}; ${role === "regrade" ? "a second grading made outside the workflow carries no attestation" : "the manifest claims none"}.`, informational: true });
+        checks.push({ id: `provenance_${role}`, label: `Provenance: ${role}`, ok: true, detail: `No bundle from this run names ${file}; ${role === "regrade" ? "a second grading made outside the workflow carries no attestation" : "the manifest claims none"}.`, informational: true });
         continue;
       }
-      checks.push({ id: `provenance_${role}`, label: `Provenance: ${role}`, ok, detail: ok ? `${file} as supplied (sha256:${digest.slice(0, 16)}...) is a subject of verified bundle ${idx + 1}.` : found ? `${file} is a subject of bundle ${idx + 1}, which does not verify.` : `No supplied bundle names ${file} as supplied (sha256:${digest.slice(0, 16)}...).` });
-      if (!ok) allOk = false;
+      checks.push({ id: `provenance_${role}`, label: `Provenance: ${role}`, ok: found, detail: found ? `${file} as supplied (sha256:${digest.slice(0, 16)}...) is a subject of verified bundle ${idx + 1}.` : `No verified bundle from this run names ${file} as supplied (sha256:${digest.slice(0, 16)}...)${foreignOnly ? "; a bundle made in another run does" : ""}.` });
+      if (!found) allOk = false;
     }
     bound &&= allOk;
-    const first = results.find((r) => r.valid) ?? results[0] ?? null;
+    const first = results.find((x) => x.counts)?.r ?? results[0]?.r ?? null;
     provenance = { verified: allOk && covered.includes("manifest"), bundles: results.length, covered, identity: first?.identity ?? null, log: first?.log ?? null };
   }
   const binding = !anythingGiven ? "manifest_only" : bound && partition && summaryOk ? "bound" : "partial";
