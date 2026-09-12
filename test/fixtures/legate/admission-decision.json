@@ -2,15 +2,15 @@
   "type": "scopeblind.admission_decision.v1",
   "version": 1,
   "decision_id": "ad:0102030405060708",
-  "proof_request_digest": "816da4c888f0da676c07042ae026c94c78b9be80bcfa0f78f5c88cae76f19a55",
+  "proof_request_digest": "bb1a77fb0955b115db2856040adedf5a1f9457bf8a42d6294dd589b175d6c32b",
   "proof_request_id": "pr:1a2b3c4d5e6f7081",
   "presentation": {
     "bundle_digest": "95a8c40c70bc13e2df62c784accf28d74a4f8367c0ea982e4ce28e2fa5c41a6e",
     "request_digest": "635e6f186f51ea3f837ada7ba461fff7a52a2fa1d923245d1af24a89804a71df",
     "decision_digest": "7f2a37bf94ca4378457a26850d645436fa2cae65e8c73d37cc28db45168895d3",
     "receipt_digest": "efa5896d3d8b4fab6930f84aa78ccc80e96faa55cdf80ba14f69bbd3b67b8315",
-    "readback_digest": "280524f633197a499f47b2e294e9f5dd3b4fdb928683e048dfc8e1861442cf82",
-    "anchor_digest": "13b67dabfc935f43fbaf42a3e982751241153ba0862298e3cec4477051c1d059",
+    "readback_digest": "9f658859f4be4bd11d5c75bbcf68430ad4922128c26921a6f8da3455a7ad126a",
+    "anchor_digest": "b759aa92469332070f30d55586c514104c96e0d9e28cb8c2ec177f6b37283fdd",
     "disclosed": {
       "amount": 185000,
       "currency": "USD",
@@ -19,7 +19,7 @@
       "distinct_approvers": 1
     }
   },
-  "report_digest": "3a0619cf49bde67adddf088bc435e7a954d00a468f0369366e3d7ed666431da7",
+  "report_digest": "c5ff6beb9463afeab582d92aa270b2a7538ea39ae0364ea6aff6c5bd830eaa6b",
   "stage": "after_dispatch",
   "acknowledged_verdict": "ALLOW",
   "decision": "accept",
@@ -37,9 +37,9 @@
   },
   "decided_at": "2026-09-04T09:00:00.000Z",
   "expires_at": "2036-01-01T00:00:00.000Z",
-  "digest": "6b1e40bc3d2b855e4168b1a8712fc5111d830c5dad87c472e388719bddee14a1",
+  "digest": "47e8b4ea65e8f726d68c0132c868ea89bdd3d62f3d045b10eb67c9cf9eea1289",
   "signature": {
     "algorithm": "Ed25519",
-    "value": "2e0435722156ade802db4b713b8f9acdf1c10ed8a485839f61e8bc269f74a1fd13809497462aedb65c55d7b9930b746f0f41e29fd7fc5e8f4b3ea9b7c122d603"
+    "value": "82ecd6947213cde5ae24944a646badf3995337146951c62f5c48fec963b7489a5b99ab12e8f7ac551c21bf7fa0d7617f91ab77c72948a310d0917d9003dee204"
   }
 }

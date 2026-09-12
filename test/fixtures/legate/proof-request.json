@@ -52,7 +52,8 @@
         "currency": "USD"
       },
       "per_instruction": true
-    }
+    },
+    "receiver_consumes_authorization": true
   },
   "trust": {
     "accepted_gate_keys": [
@@ -122,6 +123,7 @@
       "approver_assurance",
       "environment",
       "coverage",
+      "consumption",
       "effect",
       "anchoring",
       "partial_settlement",
@@ -137,9 +139,9 @@
   "issued_at": "2026-09-04T09:00:00.000Z",
   "expires_at": "2036-01-01T00:00:00.000Z",
   "nonce": "c0ffee00c0ffee00c0ffee00c0ffee01",
-  "digest": "816da4c888f0da676c07042ae026c94c78b9be80bcfa0f78f5c88cae76f19a55",
+  "digest": "bb1a77fb0955b115db2856040adedf5a1f9457bf8a42d6294dd589b175d6c32b",
   "signature": {
     "algorithm": "Ed25519",
-    "value": "96cd2581404e8b5a1e2efacd98f20b8f2cfdb9d5ba9d87b228df4f91bead23cbfa2771fccc04536e3f8a2cde6014f027dbc88b04429e65eee8bf8820efbe1f07"
+    "value": "5e6dbb7f36c6fcfd101dc0739750db3feb73049d8f32833132b6a3dedcd431486a6ce5ec52bdb77582478f8044425e5b01e2b6f5bf797587db1b2fbb65fe0108"
   }
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.3 (2026-09-11)
+
+### Added
+- Consumed authority. An effect readback may carry a signed `authorization` block: the destination consumed the gate's receipt as a single-use authorization for exactly these terms before it committed (kind, receipt digest, request id, consumed at, spend index). A standard that sets `requirements.receiver_consumes_authorization` is evaluated with a `consumption` check: a readback without a cited authorization is held, not accepted. Readbacks made before the block existed verify byte for byte; a readback that carries the block needs this version or later, because the block is under the signature.
+- `requirements.credentials_held_by_gate`: the credentials the gateway holds and injects. The gateway receipt report checks that every allowed call to the tool records the label (`credential_ref`), never the value.
+
 ## 0.10.2 (2026-09-11)
 
 ### Changed

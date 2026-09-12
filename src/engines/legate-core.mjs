@@ -7623,6 +7623,8 @@ function shapeErrors(v) {
     const al = q.action_limits;
     if (!isRecord(al) || !isRecord(al.amount_max) || typeof al.amount_max.amount !== "number" || !(al.amount_max.amount > 0) || typeof al.amount_max.currency !== "string" || !/^[A-Z]{3}$/.test(al.amount_max.currency) || al.per_instruction !== true) errors.push("action_limits malformed");
   }
+  if (isRecord(q) && q.receiver_consumes_authorization !== void 0 && typeof q.receiver_consumes_authorization !== "boolean") errors.push("receiver_consumes_authorization must be a boolean");
+  if (isRecord(q) && q.credentials_held_by_gate !== void 0 && !(Array.isArray(q.credentials_held_by_gate) && q.credentials_held_by_gate.every((c2) => isRecord(c2) && typeof c2.tool === "string" && c2.tool.trim() && typeof c2.label === "string" && c2.label.trim()))) errors.push("credentials_held_by_gate malformed");
   if (isRecord(q) && q.run !== void 0 && q.run !== null) {
     const r2 = q.run;
     const strs = (x) => Array.isArray(x) && x.every((s) => typeof s === "string" && s.trim());
@@ -7681,6 +7683,8 @@ function proofRequestReadback(r) {
   lines.push(`Environment: ${q.environment_class_min} or stronger`);
   lines.push(`Approval: ${APPROVER_ASSURANCE_LABELS[q.approver_assurance_min]}${q.human_approval.required_above ? `; a named person must approve above ${money(q.human_approval.required_above.amount, q.human_approval.required_above.currency)}` : ""}${q.human_approval.distinct_approvers === 2 ? "; two distinct approvers" : ""}`);
   if (q.action_limits) lines.push(`Limit: each instruction at most ${money(q.action_limits.amount_max.amount, q.action_limits.amount_max.currency)}, enforced by the gateway before the call runs`);
+  if (q.receiver_consumes_authorization) lines.push("Consumption: the destination checks and consumes a single-use authorization bound to the exact terms before it commits; its readback cites what it consumed");
+  if (q.credentials_held_by_gate?.length) lines.push(`Credentials: ${q.credentials_held_by_gate.map((c) => `${c.label} for ${c.tool}`).join(", ")} held by the gateway and injected; the agent never sees them`);
   if (q.run) {
     lines.push(`Run: tools ${q.run.allowed_tools.join(", ")} only, enforced by the gateway before each call; network to ${q.run.egress_allowlist.join(", ") || "nothing"} only, enforced by the environment; ${q.run.attempts_per_task} attempt${q.run.attempts_per_task === 1 ? "" : "s"} per task; ${Math.round(q.run.time_limit_seconds / 60)} minutes per task`);
     lines.push(`Run pins: task set ${q.run.dataset.name}${q.run.dataset.revision ? ` @ ${q.run.dataset.revision}` : ""} (${q.run.dataset.digest.slice(0, 19)}); harness ${q.run.harness.name} (${q.run.harness.digest.slice(0, 19)}); model route ${q.run.model_route}`);
@@ -7702,13 +7706,18 @@ function proofRequestReadback(r) {
   lines.push("This request states a decision path. It is not a promise to allocate, contract, or approve unconditionally.");
   return lines.join("\n");
 }
-var READBACK_UNSIGNED_KEYS = ["type", "version", "receipt_digest", "request_digest", "source", "observed", "observed_state", "status", "observed_at", "nonce"];
+var READBACK_UNSIGNED_KEYS = ["type", "version", "receipt_digest", "request_digest", "source", "observed", "observed_state", "status", "observed_at", "authorization", "nonce"];
 function verifyEffectReadback(value, expected) {
   const fail = (detail) => ({ shape_valid: false, digest_valid: false, signature_valid: false, bound: false, cryptographically_valid: false, detail });
   if (!isRecord(value) || value.type !== EFFECT_READBACK_V1 || value.version !== 1) return fail("not an effect readback");
   const v = value;
   if (!isRecord(v.source) || !HEX_64.test(String(v.source.verification_key)) || !isRecord(v.observed_state) || !HEX_64.test(String(v.observed_state.digest)) || !isRecord(v.observed) || typeof v.observed.amount !== "number" || typeof v.observed.currency !== "string" || typeof v.observed.destination !== "string" || typeof v.observed.reference !== "string" || !["authoritative_readback", "independently_reconciled"].includes(v.status) || !isIso(v.observed_at) || !HEX_64.test(String(v.digest)) || !isRecord(v.signature) || !HEX_128.test(String(v.signature.value))) return fail("readback malformed");
   if (shaHex(v.observed_state.description) !== v.observed_state.digest) return fail("observed state text does not match its digest");
+  if (v.authorization !== void 0) {
+    const a = v.authorization;
+    if (!isRecord(a) || a.kind !== "gate_receipt" || !HEX_64.test(String(a.receipt_digest)) || typeof a.request_id !== "string" || !isIso(a.consumed_at) || !Number.isSafeInteger(a.spent_index) || a.spent_index < 1) return fail("consumed authorization malformed");
+    if (a.receipt_digest !== v.receipt_digest) return fail("the readback cites a consumed authorization other than the receipt it is bound to");
+  }
   const { digest_valid, signature_valid } = checkEnvelope(EFFECT_READBACK_DOMAIN, v, READBACK_UNSIGNED_KEYS, v.source.verification_key);
   const bound = v.receipt_digest === expected.receipt_digest && v.request_digest === expected.request_digest;
   const cryptographically_valid = digest_valid && signature_valid && bound;
@@ -7865,6 +7874,15 @@ function evaluateAdmission(input) {
     answer: stage === "before_dispatch" ? "Not due at this stage" : refused ? "None: refused" : effectLevel === "contradicted" ? "Required outcome not achieved" : effectLevel === "partial" ? "Partial completion; obligation outstanding" : effectLevel === "response_observed" ? "Dispatched, completion not established" : effectLevel === "authoritative_readback" ? "Confirmed by readback" : "Independently reconciled",
     detail: effectDetail
   });
+  let consumptionOk = true;
+  if (q.receiver_consumes_authorization) {
+    const auth = readback?.authorization ?? null;
+    const due = stage === "after_dispatch" && !refused;
+    consumptionOk = !due || !!auth && auth.receipt_digest === rec.digest && auth.request_id === req.request_id;
+    const consumptionDetail = !due ? stage === "before_dispatch" ? "Not due before dispatch." : "Nothing to consume: the dispatch was refused." : !readback ? "No readback, so no record that the destination consumed an authorization before it moved." : !auth ? "The readback does not cite a consumed authorization. The destination may have moved without one; this standard requires that it could not." : consumptionOk ? `The destination consumed this receipt as a single-use authorization for exactly these terms (spend #${auth.spent_index} at ${auth.consumed_at.slice(11, 19)}Z).` : "The readback cites an authorization other than this action's receipt.";
+    push("consumption", "Authorization consumed", consumptionOk, consumptionDetail);
+    axes.push({ id: "consumption", label: "Consumption", state: !due ? "not-evaluable" : consumptionOk ? "satisfied" : "held", answer: !due ? "Not due at this stage" : consumptionOk ? "Consumed once, for these terms" : "Not evidenced", detail: consumptionDetail });
+  }
   const present = { amount: Number.isFinite(action.amount), destination: !!req.destination, readback: !!req.readback.text, policy_digest: !!req.policy_digest, route: !!rec.route.id };
   const missing = request.disclosure.required_fields.filter((f) => !present[f]);
   const disclosureOk = missing.length === 0;
@@ -7898,7 +7916,7 @@ function evaluateAdmission(input) {
     verdict = "REVIEW";
     title = "Not evaluable";
     reason = "The Proof Request names no accepted keys. Name the gate and approver keys you trust, then evaluate again.";
-  } else if (!authorityOk || !coverageOk || !effectOk || !disclosureOk) {
+  } else if (!authorityOk || !coverageOk || !effectOk || !disclosureOk || !consumptionOk) {
     verdict = "APPROVAL_REQUIRED";
     title = stage === "before_dispatch" ? "Held before dispatch" : "Human review required";
     reason = gaps;
@@ -8209,6 +8227,7 @@ function verifyActaChain(receipts, options = {}) {
       decision: str(payload.decision),
       reason: str(payload.reason) ?? str(payload.reason_code),
       policy_digest: str(payload.policy_digest),
+      credential_ref: str(payload.credential_ref),
       issued_at: str(payload.issued_at),
       spec: str(payload.spec),
       request_id: str(payload.request_id),

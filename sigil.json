@@ -1,15 +1,15 @@
 {
   "sigil_version": 1,
-  "fingerprint": "aec0c885",
-  "name": "Bright Anchor",
-  "sigil_hash": "aec0c8854b9911a946525e67f9e20c0a18d3396936e5e0f470544dff6c4048b0",
+  "fingerprint": "a49c9c9a",
+  "name": "Lone Tide",
+  "sigil_hash": "a49c9c9a440bcacb231dbf848380b79332387f1684a4811703954e0131a6e8be",
   "project_public_key": "fe665e861867cec7e171c0c13bbc873c3362079faef21f54df7804b7fb9ae8af",
   "commitment_authentication": "public_recomputable_integrity_only",
   "policy": {
     "version": 3,
     "package": "@veritasacta/verify",
-    "package_version": "0.10.2",
-    "source_hash": "10c0f46756cd366259feb68a9fb467bcb8428a06d1f71c4357adda4ff0142e87",
+    "package_version": "0.10.3",
+    "source_hash": "842ec00103bee1b8d6c2c533495c4ec4c1899e4354254fd8d06ab238ffa40453",
     "monitored_files": [
       "README.md",
       "cli.js",
@@ -75,6 +75,6 @@
     ],
     "created_at": 1784267169966
   },
-  "policy_hash": "c7a91c1a0f53aaca605473eda10143feac1ead5b17ad657bb8d37a43e6862e97",
+  "policy_hash": "fc54cc510a044a8f54b7e3fb780c9e46079249d2b7337a2f52b8412b51587679",
   "derived_at": "2026-07-17T05:46:09.966Z"
 }
