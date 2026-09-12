@@ -10774,6 +10774,10 @@ function parseModelAttestationReport(value) {
     raw: value
   };
 }
+function attestationEntries(value) {
+  if (isRecord4(value) && Array.isArray(value.model_attestations)) return value.model_attestations.map((e) => isRecord4(e) && value.nonce !== void 0 && e.nonce === void 0 ? { ...e, nonce: value.nonce } : e);
+  return [value];
+}
 var attestationReportDigest = (value) => `sha256:${sha256Hex(canonicalize2(value))}`;
 function verifyModelAttestation(value, expect = {}, now = /* @__PURE__ */ new Date()) {
   const checks = [];
@@ -10854,7 +10858,7 @@ function verifyAttestedCalls(calls, attestations, expectModel = null) {
 var RUN_MANIFEST_V1 = "scopeblind.run_manifest.v1";
 var RUN_MANIFEST_DOMAIN = "scopeblind.run-manifest.v1";
 var encoder2 = new TextEncoder();
-var MANIFEST_UNSIGNED_KEYS = ["type", "version", "run_id", "standard", "agent", "harness", "dataset", "environment", "gateway", "attempts", "summary", "signer", "issued_at", "nonce"];
+var MANIFEST_UNSIGNED_KEYS = ["type", "version", "run_id", "standard", "agent", "harness", "dataset", "environment", "gateway", "model_calls", "attempts", "summary", "signer", "issued_at", "nonce"];
 var RUN_REGRADE_V1 = "scopeblind.run_regrade.v1";
 var RUN_REGRADE_DOMAIN = "scopeblind.run-regrade.v1";
 var REGRADE_UNSIGNED_KEYS = ["type", "version", "run_id", "manifest_digest", "grader", "environment", "results", "regraded_at", "nonce"];
@@ -11039,9 +11043,10 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
   if (matt && context.modelAttestations && context.modelAttestations.length > 0) {
     anythingGiven = true;
     const expectModel = std?.requirements.run?.model_attestation?.model ?? matt.model;
-    modelAttestations = context.modelAttestations.map((r) => verifyModelAttestation(r, { model: expectModel }, now));
-    const digests = context.modelAttestations.map((r) => attestationReportDigest(r));
-    const pinned = matt.reports.every((p) => digests.includes(p.digest)) && matt.reports.length === context.modelAttestations.length;
+    const supplied = context.modelAttestations.flatMap((r) => attestationEntries(r));
+    modelAttestations = supplied.map((r) => verifyModelAttestation(r, { model: expectModel }, now));
+    const digests = supplied.map((r) => attestationReportDigest(r));
+    const pinned = matt.reports.every((p) => digests.includes(p.digest)) && matt.reports.length === supplied.length;
     const addressesOk = modelAttestations.every((v, i) => v.signing_address !== null && matt.reports.some((p) => p.digest === digests[i] && p.signing_address.toLowerCase() === v.signing_address.toLowerCase()));
     const allValid = modelAttestations.every((v) => v.valid);
     for (const [i, v] of modelAttestations.entries()) for (const c of v.checks) checks.push({ id: `model_attestation_${i + 1}_${c.id}`, label: `Model attestation ${i + 1}: ${c.label}`, ok: c.ok, detail: c.detail, ...c.informational ? { informational: true } : {} });
@@ -11231,6 +11236,7 @@ export {
   RUN_MANIFEST_V1,
   RUN_REGRADE_V1,
   SIGSTORE_PUBLIC_GOOD,
+  attestationEntries,
   attestationReportDigest,
   charterDigest,
   covenantState,

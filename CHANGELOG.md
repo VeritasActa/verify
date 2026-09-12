@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.10.8 (2026-09-12)
+
+- A run manifest's `model_calls` pin (the digest and count of the signed model-calls log) is part of the signed body. 0.10.7 computed the manifest digest without it and refused every attested manifest as altered; this release verifies them. A manifest without the field is unchanged.
+- Attestation reports from a gateway (`model_attestations[]`, one per model node) are expanded to their entries.
+
 ## 0.10.7 (2026-09-12)
 
 - Attested model route. `--model-calls model-calls.jsonl` and `--model-attestation model-attestation.json` verify, offline, that every model call of a run was signed inside the inference provider's TEE (NEAR AI Cloud's shape: a secp256k1 signature over `{model}:{sha256(request)}:{sha256(response)}`), that each signing key is bound in an attestation report whose Intel TDX quote chains to the pinned Intel SGX Root CA (quote signature, quoting-enclave binding and signature, PCK chain, validity), and that the attested model is the one the standard names. The report's GPU evidence and the platform's TCB status are carried and named, not verified here. Adds `verifyTdxQuote` to the engine.
