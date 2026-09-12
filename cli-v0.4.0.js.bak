@@ -1,0 +1,805 @@
+#!/usr/bin/env node
+
+/**
+ * @veritasacta/verify — CLI artifact verification tool
+ *
+ * Verify signed artifacts (receipts, manifests, tickets) offline.
+ * Supports both v1 (flat) and v2 (structured envelope) formats.
+ *
+ * Usage:
+ *   npx @veritasacta/verify receipt.json
+ *   npx @veritasacta/verify receipt.json --key <public-key-hex>
+ *   npx @veritasacta/verify receipt.json --jwks <url>
+ *   npx @veritasacta/verify bundle.json --bundle
+ *   cat receipt.json | npx @veritasacta/verify --stdin
+ *
+ * Exit codes:
+ *   0 = signature valid (proven authentic)
+ *   1 = signature invalid (proven tampered)
+ *   2 = verifier error (malformed input, missing key, parse failure — undecidable)
+ */
+
+import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import {
+  verifyArtifact,
+  canonicalize,
+  canonicalHash,
+  computeKid,
+  publicKeyToJWK,
+  TRUST_TIERS,
+} from '@veritasacta/artifacts';
+
+// ── Color helpers (ANSI) ────────────────────────────────────────
+
+const isCI = process.env.CI || process.env.NO_COLOR;
+const green = (s) => isCI ? s : `\x1b[32m${s}\x1b[0m`;
+const red = (s) => isCI ? s : `\x1b[31m${s}\x1b[0m`;
+const yellow = (s) => isCI ? s : `\x1b[33m${s}\x1b[0m`;
+const dim = (s) => isCI ? s : `\x1b[2m${s}\x1b[0m`;
+const bold = (s) => isCI ? s : `\x1b[1m${s}\x1b[0m`;
+const teal = (s) => isCI ? s : `\x1b[36m${s}\x1b[0m`;
+const peach = (s) => isCI ? s : `\x1b[38;5;216m${s}\x1b[0m`;
+const bgTeal = (s) => isCI ? s : `\x1b[46m${s}\x1b[0m`;
+const bgPeach = (s) => isCI ? s : `\x1b[48;5;216m${s}\x1b[0m`;
+
+// ── Sigil: Terminal Renderer ────────────────────────────────────
+// Same algorithm as @scopeblind/passport sigil.ts — deterministic
+// visual identity derived from Ed25519 public key via SHA-256.
+// Rendered as 11×11 Unicode block art for terminal display.
+
+const SIGIL_DOMAIN = 'scopeblind:sigil:v1';
+const SIGIL_SEGMENTS = 6;
+
+function sigilHashFromKey(publicKeyHex) {
+  return createHash('sha256')
+    .update(SIGIL_DOMAIN)
+    .update(Buffer.from(publicKeyHex, 'hex'))
+    .digest();
+}
+
+function deriveSigilGrid(hash) {
+  const extHash = createHash('sha256').update('ext:').update(hash).digest();
+  const b = (i) => i < 32 ? hash[i] : extHash[i - 32];
+  let idx = 0;
+
+  const diamond = {
+    top: b(idx++) % 3, right: b(idx++) % 3,
+    bottom: b(idx++) % 3, left: b(idx++) % 3,
+  };
+  const surround = [];
+  for (let i = 0; i < 4; i++) surround.push(b(idx++) % 3);
+  const innerRing = [];
+  for (let i = 0; i < SIGIL_SEGMENTS; i++) innerRing.push(b(idx++) % 3);
+  const midRing = [];
+  for (let i = 0; i < SIGIL_SEGMENTS; i++) midRing.push(b(idx++) % 3);
+  const outerRing = [];
+  for (let i = 0; i < SIGIL_SEGMENTS; i++) outerRing.push(b(idx++) % 3);
+  const corners = [];
+  for (let i = 0; i < 8; i++) corners.push(b(idx++) % 3);
+
+  return { diamond, surround, innerRing, midRing, outerRing, corners };
+}
+
+function sigilPassesFilter(g) {
+  const all = [
+    g.diamond.top, g.diamond.right, g.diamond.bottom, g.diamond.left,
+    ...g.surround, ...g.innerRing, ...g.midRing, ...g.outerRing, ...g.corners,
+  ];
+  let p = 0, s = 0;
+  for (const v of all) { if (v === 1) p++; if (v === 2) s++; }
+  const filled = p + s;
+  return p >= 4 && s >= 4 && filled >= 10 && filled <= 28;
+}
+
+function deriveFilteredSigilGrid(publicKeyHex) {
+  let nonce = 0;
+  const keyBuf = Buffer.from(publicKeyHex, 'hex');
+  while (nonce < 256) {
+    const hash = nonce === 0
+      ? sigilHashFromKey(publicKeyHex)
+      : createHash('sha256').update(SIGIL_DOMAIN).update(keyBuf).update(Buffer.from([nonce])).digest();
+    const grid = deriveSigilGrid(hash);
+    if (sigilPassesFilter(grid)) {
+      return { grid, fingerprint: hash.toString('hex').slice(0, 8) };
+    }
+    nonce++;
+  }
+  const hash = sigilHashFromKey(publicKeyHex);
+  return { grid: deriveSigilGrid(hash), fingerprint: hash.toString('hex').slice(0, 8) };
+}
+
+/**
+ * Render sigil as 11×11 terminal block art.
+ *
+ * Grid layout (11×11):
+ *   Cells [0-1, 9-10] rows/cols = corners (4 quadrants, 2 splits each)
+ *   Cells [2, 8] ring = outer ring (6 segments)
+ *   Cells [3, 7] ring = mid ring (6 segments)
+ *   Cells [4, 6] ring = inner ring (6 segments)
+ *   Cell 5 ring = surround + diamond center
+ *
+ * Each pixel maps to an angular sector and radial band.
+ * States: 0=background, 1=primary (teal ●), 2=secondary (peach ○)
+ */
+function renderTerminalSigil(publicKeyHex) {
+  const { grid, fingerprint } = deriveFilteredSigilGrid(publicKeyHex);
+  const SIZE = 11;
+  const cx = 5, cy = 5;
+  const R = 5.5; // outer radius (flush with 11×11)
+
+  // Radial bands (same proportions as SVG renderer)
+  const outerR  = R;
+  const midR    = R * 0.72;
+  const innerR  = R * 0.44;
+  const surroundR = innerR * 0.65;
+  const diamondR  = surroundR * 0.6;
+
+  const lines = [];
+
+  for (let y = 0; y < SIZE; y++) {
+    let row = '  ';
+    for (let x = 0; x < SIZE; x++) {
+      const dx = x - cx;
+      const dy = y - cy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const angle = Math.atan2(dy, dx);
+      // Normalize angle to [0, 2π)
+      const normAngle = angle < 0 ? angle + 2 * Math.PI : angle;
+      const segIdx = Math.floor((normAngle / (2 * Math.PI)) * SIGIL_SEGMENTS) % SIGIL_SEGMENTS;
+
+      let state = 0; // background
+
+      if (dist <= diamondR) {
+        // Diamond center — determine quadrant
+        // Top: angle ∈ [-π, -π/2], Right: [-π/2, 0], Bottom: [0, π/2], Left: [π/2, π]
+        if (angle >= -Math.PI && angle < -Math.PI / 2) state = grid.diamond.left;
+        else if (angle >= -Math.PI / 2 && angle < 0) state = grid.diamond.top;
+        else if (angle >= 0 && angle < Math.PI / 2) state = grid.diamond.right;
+        else state = grid.diamond.bottom;
+      } else if (dist <= surroundR) {
+        // Surround — 4 wedges
+        const sIdx = Math.floor(((normAngle + Math.PI / 4) % (2 * Math.PI)) / (Math.PI / 2)) % 4;
+        state = grid.surround[sIdx];
+      } else if (dist <= innerR) {
+        state = grid.innerRing[segIdx];
+      } else if (dist <= midR) {
+        state = grid.midRing[segIdx];
+      } else if (dist <= outerR) {
+        state = grid.outerRing[segIdx];
+      } else {
+        // Corner region — outside the circle, inside the square
+        const cIdx = (y < cy ? 0 : 2) + (x < cx ? 0 : 1); // TL=0, TR=1, BL=2, BR=3
+        // Split: which half of the corner?
+        const cornerAngle = Math.atan2(y - cy, x - cx);
+        const cornerMidAngles = [
+          -3 * Math.PI / 4, // TL
+          -Math.PI / 4,     // TR
+          3 * Math.PI / 4,  // BL
+          Math.PI / 4,      // BR
+        ];
+        const half = ((cIdx === 0 || cIdx === 1)
+          ? (cornerAngle < cornerMidAngles[cIdx] ? 0 : 1)
+          : (cornerAngle > cornerMidAngles[cIdx] ? 0 : 1));
+        state = grid.corners[cIdx * 2 + half];
+      }
+
+      if (state === 1) row += teal('█');
+      else if (state === 2) row += peach('▓');
+      else row += dim('·');
+    }
+    lines.push(row);
+  }
+
+  lines.push(`  ${dim('sigil:')} ${teal(fingerprint)}`);
+  return lines.join('\n');
+}
+
+// ── CLI Argument Parsing ────────────────────────────────────────
+
+function parseArgs() {
+  const args = process.argv.slice(2);
+  const opts = {
+    file: null,
+    publicKey: null,
+    jwksUrl: null,
+    stdin: false,
+    bundle: false,
+    json: false,
+    help: false,
+    verbose: false,
+    selfTest: false,
+    selfCheck: false,
+    allowEmbeddedKey: false,
+  };
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === '--help' || arg === '-h') {
+      opts.help = true;
+    } else if (arg === '--key' || arg === '-k') {
+      opts.publicKey = args[++i];
+    } else if (arg === '--jwks') {
+      opts.jwksUrl = args[++i];
+    } else if (arg === '--stdin') {
+      opts.stdin = true;
+    } else if (arg === '--bundle') {
+      opts.bundle = true;
+    } else if (arg === '--json') {
+      opts.json = true;
+    } else if (arg === '--verbose' || arg === '-v') {
+      opts.verbose = true;
+    } else if (arg === '--self-test') {
+      opts.selfTest = true;
+    } else if (arg === '--self-check') {
+      opts.selfCheck = true;
+    } else if (arg === '--allow-embedded-key') {
+      opts.allowEmbeddedKey = true;
+    } else if (!arg.startsWith('-')) {
+      opts.file = arg;
+    }
+  }
+
+  return opts;
+}
+
+function printHelp() {
+  console.log(`
+${bold('@veritasacta/verify')} — Verify signed artifacts offline
+
+${bold('Usage:')}
+  npx @veritasacta/verify <file.json>                       Verify with embedded/fetched key
+  npx @veritasacta/verify <file.json> --key <hex>           Verify with explicit public key
+  npx @veritasacta/verify <file.json> --jwks <url>          Fetch key from JWKS endpoint
+  npx @veritasacta/verify <bundle.json> --bundle            Verify entire audit bundle
+  cat receipt.json | npx @veritasacta/verify --stdin         Read from stdin
+  npx @veritasacta/verify <file.json> --json                Machine-readable JSON output
+
+${bold('Options:')}
+  --key, -k <hex>          Ed25519 public key (64 hex chars)
+  --jwks <url>             JWKS endpoint URL to fetch signing key
+  --bundle                 Verify an audit bundle (multiple receipts + keys)
+  --stdin                  Read artifact from stdin
+  --json                   Output result as JSON
+  --verbose, -v            Show detailed verification info
+  --self-test              Verify bundled sample artifacts (proves the verifier works)
+  --self-check             Verify this verifier is the canonical, unmodified release
+  --allow-embedded-key     Accept keys embedded in receipt payloads (DEPRECATED,
+                           removed in 0.5.0; see draft-farley-acta-signed-receipts -02
+                           Security Considerations for rationale)
+  --help, -h               Show this help
+
+${bold('Supported Formats:')}
+  v1 artifacts       Flat envelope: { v: 1, type, timestamp, ..., signature }
+  v2 artifacts       Structured: { v: 2, type, algorithm, kid, issuer, issued_at, payload, signature }
+  Passport envelopes { payload: {...}, signature: { alg, kid, sig } }
+  Audit bundles      { receipts: [...], verification: { signing_keys: [...] } }
+
+${bold('Exit Codes:')}
+  0  Signature valid — proven authentic
+  1  Signature invalid — proven tampered
+  2  Verifier error — malformed input, missing key, or parse failure
+`);
+}
+
+// ── JWKS Fetching ───────────────────────────────────────────────
+
+async function fetchPublicKeyFromJWKS(jwksUrl, kid) {
+  try {
+    const response = await fetch(jwksUrl);
+    if (!response.ok) {
+      return { key: null, error: `JWKS fetch failed: HTTP ${response.status}` };
+    }
+
+    const jwks = await response.json();
+    const keys = jwks.keys || [];
+
+    // If kid specified, find matching key
+    let jwk;
+    if (kid) {
+      jwk = keys.find(k => k.kid === kid);
+      if (!jwk) {
+        return { key: null, error: `No key with kid "${kid}" found in JWKS` };
+      }
+    } else {
+      // Use first Ed25519 key
+      jwk = keys.find(k => k.kty === 'OKP' && k.crv === 'Ed25519');
+      if (!jwk) {
+        return { key: null, error: 'No Ed25519 key found in JWKS' };
+      }
+    }
+
+    // Convert base64url x to hex
+    const { base64urlToBytes, bytesToHex } = await import('@veritasacta/artifacts');
+    const pubBytes = base64urlToBytes(jwk.x);
+    return { key: bytesToHex(pubBytes), error: null };
+  } catch (err) {
+    return { key: null, error: `JWKS fetch error: ${err.message}` };
+  }
+}
+
+// ── Passport Envelope Detection ─────────────────────────────────
+
+function isPassportEnvelope(obj) {
+  return obj && typeof obj === 'object'
+    && obj.payload && typeof obj.payload === 'object'
+    && obj.signature && typeof obj.signature === 'object'
+    && typeof obj.signature.sig === 'string';
+}
+
+function convertPassportToV1(envelope) {
+  // Convert passport SignedEnvelope format to flat artifact for verification
+  const payload = envelope.payload;
+  const sig = envelope.signature.sig;
+
+  return {
+    artifact: { ...payload, signature: sig },
+    kid: envelope.signature.kid,
+    alg: envelope.signature.alg,
+    format: 'passport',
+  };
+}
+
+// ── Single Artifact Verification ────────────────────────────────
+
+async function verifySingleArtifact(artifact, publicKey, opts) {
+  let format = 'v1';
+  let kid = null;
+  let issuer = null;
+  let artifactToVerify = artifact;
+
+  // Detect format
+  if (isPassportEnvelope(artifact)) {
+    const converted = convertPassportToV1(artifact);
+    artifactToVerify = converted.artifact;
+    kid = converted.kid;
+    format = 'passport';
+  } else if (artifact.v === 2) {
+    format = 'v2';
+    kid = artifact.kid;
+    issuer = artifact.issuer;
+  }
+
+  // If no public key, try JWKS
+  let keySource = 'provided';
+  if (!publicKey && opts.jwksUrl) {
+    const fetched = await fetchPublicKeyFromJWKS(opts.jwksUrl, kid);
+    if (fetched.error) {
+      return {
+        valid: false,
+        error: fetched.error,
+        format,
+        type: artifact.type || artifactToVerify.type,
+      };
+    }
+    publicKey = fetched.key;
+    keySource = 'jwks';
+  }
+
+  // 0.4.0: embedded-key rejection.
+  // A verification key transported inside the receipt payload does not
+  // provide authenticity against tampering — a tampering party can swap
+  // both the payload and the key to produce a receipt that verifies but
+  // against an attacker-chosen key. This violates the issuer-blind
+  // property of draft-farley-acta-signed-receipts. The verifier MUST NOT
+  // accept a key embedded in the receipt body unless that key is
+  // independently anchored (trust anchor, JWKS, DID document, etc.).
+  //
+  // For backward compatibility with receipts that relied on the pre-0.4.0
+  // fallback, callers can pass --allow-embedded-key to restore the old
+  // behaviour. This flag is deprecated and will be removed in 0.5.0.
+  if (!publicKey) {
+    const payload = artifact.payload || artifact;
+    const hasEmbeddedKey = payload.public_key && typeof payload.public_key === 'string' && payload.public_key.length === 64;
+
+    if (hasEmbeddedKey && opts.allowEmbeddedKey) {
+      publicKey = payload.public_key;
+      keySource = 'embedded-deprecated';
+    } else if (hasEmbeddedKey) {
+      return {
+        valid: false,
+        error: 'embedded_key_rejected',
+        hint: 'Receipt contains verification_key/public_key in payload, but embedded keys are not trusted (MUST NOT per draft-farley-acta-signed-receipts -02 Security Considerations). Provide --key <hex>, --jwks <url>, or --trust-anchor <file>. Pass --allow-embedded-key (deprecated, to be removed in 0.5.0) to restore pre-0.4.0 behaviour.',
+        format,
+        type: artifact.type || artifactToVerify.type,
+      };
+    }
+  }
+
+  if (!publicKey) {
+    return {
+      valid: false,
+      error: 'no_public_key',
+      hint: 'Provide --key <hex>, --jwks <url>, or --trust-anchor <file>',
+      format,
+      type: artifact.type || artifactToVerify.type,
+    };
+  }
+
+  const result = verifyArtifact(artifactToVerify, publicKey);
+
+  return {
+    ...result,
+    format,
+    type: artifact.type || artifactToVerify.type || 'unknown',
+    kid,
+    issuer,
+    keySource,
+    publicKey,
+  };
+}
+
+// ── Bundle Verification ─────────────────────────────────────────
+
+async function verifyBundle(bundle, opts) {
+  const results = {
+    valid: true,
+    total: 0,
+    passed: 0,
+    failed: 0,
+    errors: [],
+    receipts: [],
+  };
+
+  if (!bundle.receipts || !Array.isArray(bundle.receipts)) {
+    return { valid: false, error: 'Invalid bundle: missing receipts array' };
+  }
+
+  // Build key lookup from bundle verification section
+  const keyMap = new Map();
+  if (bundle.verification?.signing_keys) {
+    for (const jwk of bundle.verification.signing_keys) {
+      if (jwk.kty === 'OKP' && jwk.crv === 'Ed25519') {
+        const { base64urlToBytes, bytesToHex } = await import('@veritasacta/artifacts');
+        const hex = bytesToHex(base64urlToBytes(jwk.x));
+        keyMap.set(jwk.kid, hex);
+        if (!keyMap.has('default')) keyMap.set('default', hex);
+      }
+    }
+  }
+
+  for (const receipt of bundle.receipts) {
+    results.total++;
+
+    // Determine which key to use
+    let key = opts.publicKey;
+    if (!key) {
+      const receiptKid = receipt.kid || receipt.signature?.kid;
+      key = keyMap.get(receiptKid) || keyMap.get('default');
+    }
+
+    const result = await verifySingleArtifact(receipt, key, { ...opts, jwksUrl: null });
+    results.receipts.push(result);
+
+    if (result.valid) {
+      results.passed++;
+    } else {
+      results.failed++;
+      results.valid = false;
+      results.errors.push(`Receipt ${results.total}: ${result.error}`);
+    }
+  }
+
+  // Verify anchors if present
+  if (bundle.anchors && Array.isArray(bundle.anchors)) {
+    for (const anchor of bundle.anchors) {
+      results.total++;
+      let key = opts.publicKey || keyMap.get(anchor.kid) || keyMap.get('default');
+      const result = await verifySingleArtifact(anchor, key, { ...opts, jwksUrl: null });
+      results.receipts.push(result);
+
+      if (result.valid) {
+        results.passed++;
+      } else {
+        results.failed++;
+        results.valid = false;
+        results.errors.push(`Anchor: ${result.error}`);
+      }
+    }
+  }
+
+  return results;
+}
+
+// ── Output Formatting ───────────────────────────────────────────
+
+function printResult(result, opts) {
+  if (opts.json) {
+    // Include sigil fingerprint in JSON output
+    if (result.valid && result.publicKey && result.publicKey.length === 64) {
+      const { fingerprint } = deriveFilteredSigilGrid(result.publicKey);
+      result.sigil_fingerprint = fingerprint;
+    }
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+
+  const icon = result.valid ? green('✓') : red('✗');
+  const status = result.valid ? green('VALID') : red('INVALID');
+
+  // Show sigil for valid verifications
+  if (result.valid && result.publicKey && result.publicKey.length === 64 && !isCI) {
+    console.log('');
+    console.log(renderTerminalSigil(result.publicKey));
+  }
+
+  console.log(`\n${icon} Signature: ${status}`);
+  console.log(`  Format:   ${result.format || 'unknown'}`);
+  console.log(`  Type:     ${result.type || 'unknown'}`);
+
+  if (result.kid) console.log(`  Kid:      ${result.kid}`);
+  if (result.issuer) console.log(`  Issuer:   ${result.issuer}`);
+  if (result.hash) console.log(`  Hash:     ${dim(result.hash)}`);
+  if (result.keySource) console.log(`  Key:      ${result.keySource}`);
+
+  if (result.error && !result.valid) {
+    console.log(`  Error:    ${red(result.error)}`);
+  }
+  if (result.hint) {
+    console.log(`  Hint:     ${yellow(result.hint)}`);
+  }
+
+  console.log('');
+}
+
+function printBundleResult(result, opts) {
+  if (opts.json) {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+
+  const icon = result.valid ? green('✓') : red('✗');
+  const status = result.valid ? green('VALID') : red('INVALID');
+
+  console.log(`\n${icon} Bundle: ${status}`);
+  console.log(`  Total:    ${result.total}`);
+  console.log(`  Passed:   ${green(String(result.passed))}`);
+  console.log(`  Failed:   ${result.failed > 0 ? red(String(result.failed)) : '0'}`);
+
+  if (result.errors.length > 0) {
+    console.log(`\n  Errors:`);
+    for (const err of result.errors) {
+      console.log(`    ${red('•')} ${err}`);
+    }
+  }
+
+  console.log('');
+}
+
+// ── Main ────────────────────────────────────────────────────────
+
+async function main() {
+  const opts = parseArgs();
+
+  if (opts.help) {
+    printHelp();
+    process.exit(0);
+  }
+
+  // Self-test mode: verify bundled samples
+  if (opts.selfTest) {
+    const __dirname = dirname(fileURLToPath(import.meta.url));
+    const samplesDir = join(__dirname, 'samples');
+    const testKey = 'd75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a';
+    let allPassed = true;
+
+    console.log(`\n${bold('@veritasacta/verify — self-test')}\n`);
+
+    // Show sigil of the test key — visual proof of which key is being tested
+    if (!isCI) {
+      console.log(renderTerminalSigil(testKey));
+      console.log('');
+    }
+
+    // Test sample receipt
+    try {
+      const receipt = JSON.parse(readFileSync(join(samplesDir, 'sample-receipt.json'), 'utf-8'));
+      const result = await verifySingleArtifact(receipt, testKey, opts);
+      if (result.valid) {
+        console.log(`  ${green('✓')} Sample receipt: ${green('VALID')}  (${result.type}, kid: ${result.kid || 'n/a'})`);
+      } else {
+        console.log(`  ${red('✗')} Sample receipt: ${red('INVALID')}  (${result.error})`);
+        allPassed = false;
+      }
+    } catch (err) {
+      console.log(`  ${red('✗')} Sample receipt: ${red(err.message)}`);
+      allPassed = false;
+    }
+
+    // Test sample bundle
+    try {
+      const bundle = JSON.parse(readFileSync(join(samplesDir, 'sample-bundle.json'), 'utf-8'));
+      const result = await verifyBundle(bundle, { ...opts, publicKey: testKey });
+      if (result.valid) {
+        console.log(`  ${green('✓')} Sample bundle:  ${green('VALID')}  (${result.passed}/${result.total} receipts)`);
+      } else {
+        console.log(`  ${red('✗')} Sample bundle:  ${red('INVALID')}  (${result.failed} failed)`);
+        allPassed = false;
+      }
+    } catch (err) {
+      console.log(`  ${red('✗')} Sample bundle: ${red(err.message)}`);
+      allPassed = false;
+    }
+
+    console.log('');
+    if (allPassed) {
+      console.log(`  ${green('All self-tests passed.')} The verifier is working correctly.`);
+      console.log(`  ${dim('No ScopeBlind servers were contacted. No accounts required.')}`);
+    } else {
+      console.log(`  ${red('Some self-tests failed.')} Check the output above.`);
+    }
+    console.log('');
+    process.exit(allPassed ? 0 : 1);  // self-test: 0=pass, 1=fail (not a verification result)
+  }
+
+  // ── Self-check: verify the verifier itself ──────────────────────
+  // Computes SHA-256 of the installed cli.js, compares to the Sigil
+  // commitment that was generated at release time. If they match,
+  // this is the canonical, unmodified verifier. If not, the code
+  // has been modified since release.
+  if (opts.selfCheck) {
+    const __dirname = dirname(fileURLToPath(import.meta.url));
+    const sigilPath = join(__dirname, 'sigil.json');
+
+    console.log(`\n${bold('@veritasacta/verify — self-check')}\n`);
+
+    // Load the Sigil commitment
+    let sigil;
+    try {
+      sigil = JSON.parse(readFileSync(sigilPath, 'utf-8'));
+    } catch {
+      console.log(`  ${red('✗')} No sigil.json found — this verifier has no Sigil commitment.`);
+      console.log(`    This may be a development build or a fork.`);
+      console.log('');
+      process.exit(2);
+    }
+
+    // Compute the hash of the installed cli.js
+    const cliPath = join(__dirname, 'cli.js');
+    const cliContent = readFileSync(cliPath);
+    const installedHash = createHash('sha256').update(cliContent).digest('hex');
+
+    // Compare to the committed hash
+    const committedHash = sigil.policy?.source_hash;
+    const hashMatch = installedHash === committedHash;
+
+    // Re-derive the Sigil from the project key + policy
+    const policyJson = JSON.stringify(sigil.policy);
+    const policyHash = createHash('sha256').update(policyJson).digest('hex');
+    const policyMatch = policyHash === sigil.policy_hash;
+
+    // Re-derive the Sigil hash
+    const domain = Buffer.from('scopeblind:sigil:v2');
+    const pubKey = Buffer.from(sigil.project_public_key, 'hex');
+    const policyBuf = Buffer.from(policyHash, 'hex');
+    const input = Buffer.concat([domain, pubKey, policyBuf, Buffer.from([0])]);
+    const rederived = createHash('sha256').update(input).digest('hex');
+    const sigilMatch = rederived === sigil.sigil_hash;
+
+    const allGood = hashMatch && policyMatch && sigilMatch;
+
+    if (allGood) {
+      // Show the Sigil visual of the project key
+      if (!isCI) {
+        console.log(renderTerminalSigil(sigil.project_public_key));
+        console.log('');
+      }
+
+      console.log(`  ${green('✓')} Canonical verifier — ${green(sigil.name)}`);
+      console.log(`    Sigil:    ${teal(sigil.fingerprint)}`);
+      console.log(`    Version:  ${sigil.policy.package_version}`);
+      console.log(`    Package:  ${sigil.policy.package}`);
+      console.log(`    Source:   ${dim(installedHash.slice(0, 16) + '...')} ${green('matches commitment')}`);
+      console.log(`    Policy:   ${dim(policyHash.slice(0, 16) + '...')} ${green('matches commitment')}`);
+      console.log(`    Sigil:    ${dim(rederived.slice(0, 16) + '...')} ${green('matches commitment')}`);
+      console.log('');
+      console.log(`  ${dim('This verifier is the unmodified canonical release.')}`);
+      console.log(`  ${dim('The source code has not been changed since it was published.')}`);
+    } else {
+      console.log(`  ${red('✗')} Modified verifier — NOT the canonical release\n`);
+      if (!hashMatch) {
+        console.log(`    Source:   ${red('MISMATCH')}`);
+        console.log(`      Installed: ${installedHash.slice(0, 32)}...`);
+        console.log(`      Expected:  ${committedHash?.slice(0, 32) || 'n/a'}...`);
+      }
+      if (!policyMatch) {
+        console.log(`    Policy:   ${red('MISMATCH')} — sigil.json may have been tampered with`);
+      }
+      if (!sigilMatch) {
+        console.log(`    Sigil:    ${red('MISMATCH')} — the commitment chain is broken`);
+      }
+      console.log('');
+      console.log(`  ${yellow('This verifier has been modified since the canonical release.')}`);
+      console.log(`  ${yellow('It may be a fork, a development build, or a tampered copy.')}`);
+      console.log(`  ${dim('Get the canonical verifier: npm install @veritasacta/verify')}`);
+    }
+    console.log('');
+    process.exit(allGood ? 0 : 1);
+  }
+
+  // Read input
+  let input;
+  try {
+    if (opts.stdin) {
+      const chunks = [];
+      for await (const chunk of process.stdin) {
+        chunks.push(chunk);
+      }
+      input = Buffer.concat(chunks).toString('utf-8');
+    } else if (opts.file) {
+      input = readFileSync(opts.file, 'utf-8');
+    } else {
+      console.error(red('Error: No input file specified.'));
+      console.error('Usage: npx @veritasacta/verify <file.json> [--key <hex>]');
+      process.exit(2);
+    }
+  } catch (err) {
+    console.error(red(`Error reading input: ${err.message}`));
+    process.exit(2);
+  }
+
+  let artifact;
+  try {
+    artifact = JSON.parse(input);
+  } catch (err) {
+    console.error(red(`Error: Invalid JSON: ${err.message}`));
+    process.exit(2);
+  }
+
+  // Bundle mode
+  if (opts.bundle || (artifact.receipts && artifact.verification)) {
+    const result = await verifyBundle(artifact, opts);
+    printBundleResult(result, opts);
+    process.exit(exitCodeForResult(result));
+  }
+
+  // Single artifact
+  const result = await verifySingleArtifact(artifact, opts.publicKey, opts);
+  printResult(result, opts);
+  process.exit(exitCodeForResult(result));
+}
+
+/**
+ * Derive exit code from a verification result.
+ *
+ * 0 = signature valid (proven authentic)
+ * 1 = signature invalid (proven tampered — the math confirms modification)
+ * 2 = verifier error (undecidable — missing key, malformed input, etc.)
+ *
+ * The distinction matters: exit 1 is a security event (evidence of tampering).
+ * Exit 2 is an operational error (the check could not be performed).
+ */
+function exitCodeForResult(result) {
+  if (result.valid) return 0;
+
+  // These errors mean the verifier could not perform the check at all.
+  // The signature was not tested — the result is undecidable.
+  const undecidableErrors = [
+    'no_public_key',
+    'missing_signature',
+    'missing_payload',
+    'unsupported_algorithm',
+    'embedded_key_rejected',
+  ];
+
+  if (result.error && undecidableErrors.includes(result.error)) return 2;
+  if (result.error && result.error.startsWith('JWKS')) return 2;
+
+  // For bundles: if any receipt had an undecidable error, the bundle is undecidable
+  if (result.errors && Array.isArray(result.errors)) {
+    const hasUndecidable = result.errors.some(e =>
+      undecidableErrors.some(u => e.includes(u))
+    );
+    if (hasUndecidable) return 2;
+  }
+
+  // Default: the signature was tested and failed. This is proven tampering.
+  return 1;
+}
+
+main().catch((err) => {
+  console.error(red(`Fatal error: ${err.message}`));
+  process.exit(2);
+});

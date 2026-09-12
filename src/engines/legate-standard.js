@@ -86,7 +86,9 @@ export async function verifyLegateStandard(input, opts = {}) {
   if (type === 'scopeblind.run_manifest.v1') {
     const standard = opts.standard ?? null;
     const receipts = Array.isArray(opts.receipts) ? opts.receipts : null;
-    const v = m.verifyRunManifest(input, { standard, receipts }, now);
+    const calls = Array.isArray(opts.calls) ? opts.calls : null;
+    const regrade = opts.regrade ?? null;
+    const v = m.verifyRunManifest(input, { standard, receipts, calls, regrade }, now);
     return {
       valid: v.cryptographically_valid,
       ...base,

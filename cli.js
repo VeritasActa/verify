@@ -207,6 +207,8 @@ function parseArgs() {
       case '--bundle': opts.bundle = true; break;
       case '--standard': opts.standardFile = next(); break;
       case '--receipts': opts.receiptsFile = next(); break;
+      case '--calls': opts.callsFile = next(); break;
+      case '--regrade': opts.regradeFile = next(); break;
       case '--json': opts.json = true; break;
       case '--verbose':
       case '-v': opts.verbose = true; break;
@@ -341,6 +343,8 @@ ${bold('Options:')}
   --bundle                 Verify as audit bundle
   --standard <file>        Legate run manifest: the signed standard to check the pins and policy against
   --receipts <file>        Legate run manifest: the gateway's receipt log (JSONL or array) to check the chain against
+  --calls <file>           Legate run manifest: the calls log (JSONL), one call per receipt, to open the input digests
+  --regrade <file>         Legate run manifest: a second grading (scopeblind.run_regrade.v1) to reconcile with the manifest
   --stdin                  Read input from stdin
   --json                   Output JSON
   --verbose, -v            Detailed verification info
@@ -611,6 +615,11 @@ async function dispatch(input, opts) {
           const text = readFileSync(opts.receiptsFile, 'utf8').trim();
           subOpts.receipts = text.startsWith('[') ? JSON.parse(text) : text.split('\n').filter(Boolean).map((l) => JSON.parse(l));
         }
+        if (opts.callsFile) {
+          const text = readFileSync(opts.callsFile, 'utf8').trim();
+          subOpts.calls = (text.startsWith('[') ? JSON.parse(text) : text.split('\n').filter(Boolean).map((l) => JSON.parse(l))).map((c) => ({ tool: c.tool, input: c.input }));
+        }
+        if (opts.regradeFile) subOpts.regrade = JSON.parse(readFileSync(opts.regradeFile, 'utf8'));
       }
       const r = await verifyLegateStandard(input, subOpts);
       return { ...r, modeLabel: MODE_LABELS['legate-standard'] };

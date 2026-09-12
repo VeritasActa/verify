@@ -1,15 +1,15 @@
 {
   "sigil_version": 1,
-  "fingerprint": "a49c9c9a",
-  "name": "Lone Tide",
-  "sigil_hash": "a49c9c9a440bcacb231dbf848380b79332387f1684a4811703954e0131a6e8be",
+  "fingerprint": "280052da",
+  "name": "Gilded Orchard",
+  "sigil_hash": "280052da51da57b9330e86c753219ddaada2c3438c8aba4690a8afbb3667a5fa",
   "project_public_key": "fe665e861867cec7e171c0c13bbc873c3362079faef21f54df7804b7fb9ae8af",
   "commitment_authentication": "public_recomputable_integrity_only",
   "policy": {
     "version": 3,
     "package": "@veritasacta/verify",
-    "package_version": "0.10.3",
-    "source_hash": "842ec00103bee1b8d6c2c533495c4ec4c1899e4354254fd8d06ab238ffa40453",
+    "package_version": "0.10.4",
+    "source_hash": "17ba3d1ee4a0fca66489f5a78298ea0ba142c05a171995fedf169c69b30cd17d",
     "monitored_files": [
       "README.md",
       "cli.js",
@@ -75,6 +75,6 @@
     ],
     "created_at": 1784267169966
   },
-  "policy_hash": "fc54cc510a044a8f54b7e3fb780c9e46079249d2b7337a2f52b8412b51587679",
+  "policy_hash": "1eda7113bac622bc89cb3b75b51cf386b0189d9341132c83f9ca429658e2b93f",
   "derived_at": "2026-07-17T05:46:09.966Z"
 }

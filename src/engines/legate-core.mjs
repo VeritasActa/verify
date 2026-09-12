@@ -8280,6 +8280,16 @@ var RUN_MANIFEST_V1 = "scopeblind.run_manifest.v1";
 var RUN_MANIFEST_DOMAIN = "scopeblind.run-manifest.v1";
 var encoder2 = new TextEncoder();
 var MANIFEST_UNSIGNED_KEYS = ["type", "version", "run_id", "standard", "agent", "harness", "dataset", "environment", "gateway", "attempts", "summary", "signer", "issued_at", "nonce"];
+var RUN_REGRADE_V1 = "scopeblind.run_regrade.v1";
+var RUN_REGRADE_DOMAIN = "scopeblind.run-regrade.v1";
+var REGRADE_UNSIGNED_KEYS = ["type", "version", "run_id", "manifest_digest", "grader", "environment", "results", "regraded_at", "nonce"];
+function verifyRunRegrade(value) {
+  if (!isRecord3(value) || value.type !== RUN_REGRADE_V1 || value.version !== 1) return { valid: false, detail: "not a run regrade" };
+  const v = value;
+  if (typeof v.run_id !== "string" || !isHex64(v.manifest_digest) || !isRecord3(v.grader) || !isHex64(v.grader.verification_key) || !Array.isArray(v.results) || !isIso2(v.regraded_at) || !v.results.every((r) => isRecord3(r) && typeof r.task_id === "string" && Number.isSafeInteger(r.attempt) && ["pass", "fail", "error"].includes(r.verdict) && isRecord3(r.tests) && isDigest(r.tests.output_digest) && isDigest(r.workspace_digest))) return { valid: false, detail: "regrade malformed" };
+  const { digest_valid, signature_valid } = checkEnvelope(RUN_REGRADE_DOMAIN, v, REGRADE_UNSIGNED_KEYS, v.grader.verification_key);
+  return { valid: digest_valid && signature_valid, detail: !digest_valid ? "regrade altered after signing" : !signature_valid ? "regrade signature does not verify" : "regrade verifies" };
+}
 function runSignerFromSeed(seed, name) {
   return runSignerFromPrivate(sha256(encoder2.encode(`scopeblind.run-manifest.demo.v1\0${seed}`)), name);
 }
@@ -8314,14 +8324,17 @@ function shapeErrors2(value) {
   const e = m.environment;
   if (!isRecord3(e) || typeof e.sandbox !== "string" || !Array.isArray(e.egress) || !e.egress.every((x) => typeof x === "string") || !(e.attestation === null || isRecord3(e.attestation) && typeof e.attestation.kind === "string" && typeof e.attestation.reference === "string" && isDigest(e.attestation.digest))) errors.push("environment malformed");
   const g = m.gateway;
-  if (!isRecord3(g) || typeof g.key_id !== "string" || !isHex64(g.verification_key) || !Number.isSafeInteger(g.receipt_count) || !(g.chain_head === null || isDigest(g.chain_head)) || !isDigest(g.log_digest)) errors.push("gateway malformed");
-  if (!Array.isArray(m.attempts) || !m.attempts.every((t) => isRecord3(t) && typeof t.task_id === "string" && Number.isSafeInteger(t.attempt) && isIso2(t.started_at) && isIso2(t.ended_at) && isRecord3(t.receipts) && Number.isSafeInteger(t.receipts.from) && Number.isSafeInteger(t.receipts.to) && t.receipts.from <= t.receipts.to && Number.isSafeInteger(t.calls) && Number.isSafeInteger(t.refused) && ["pass", "fail", "error"].includes(t.verdict) && isRecord3(t.tests) && typeof t.tests.runner === "string" && Number.isSafeInteger(t.tests.passed) && Number.isSafeInteger(t.tests.failed) && isDigest(t.tests.output_digest) && isRecord3(t.agent) && (t.agent.exit_code === null || Number.isSafeInteger(t.agent.exit_code)) && typeof t.agent.timed_out === "boolean")) errors.push("attempts malformed");
+  if (!isRecord3(g) || typeof g.key_id !== "string" || !isHex64(g.verification_key) || !Number.isSafeInteger(g.receipt_count) || !(g.chain_head === null || isDigest(g.chain_head)) || !isDigest(g.log_digest) || g.calls_digest !== void 0 && !isDigest(g.calls_digest) || g.calls_disclosed !== void 0 && typeof g.calls_disclosed !== "boolean") errors.push("gateway malformed");
+  if (!Array.isArray(m.attempts) || !m.attempts.every((t) => isRecord3(t) && typeof t.task_id === "string" && Number.isSafeInteger(t.attempt) && isIso2(t.started_at) && isIso2(t.ended_at) && isRecord3(t.receipts) && Number.isSafeInteger(t.receipts.from) && Number.isSafeInteger(t.receipts.to) && t.receipts.from <= t.receipts.to && Number.isSafeInteger(t.calls) && Number.isSafeInteger(t.refused) && ["pass", "fail", "error"].includes(t.verdict) && isRecord3(t.tests) && typeof t.tests.runner === "string" && Number.isSafeInteger(t.tests.passed) && Number.isSafeInteger(t.tests.failed) && isDigest(t.tests.output_digest) && isRecord3(t.agent) && (t.agent.exit_code === null || Number.isSafeInteger(t.agent.exit_code)) && typeof t.agent.timed_out === "boolean" && (t.workspace === void 0 || isRecord3(t.workspace) && isDigest(t.workspace.digest) && Number.isSafeInteger(t.workspace.file_count) && typeof t.workspace.disclosed === "boolean"))) errors.push("attempts malformed");
   const u = m.summary;
   if (!isRecord3(u) || ["tasks", "passed", "failed", "errored", "calls", "refused"].some((k) => !Number.isSafeInteger(u[k]))) errors.push("summary malformed");
   const sg = m.signer;
   if (!isRecord3(sg) || typeof sg.name !== "string" || typeof sg.key_id !== "string" || !isHex64(sg.verification_key)) errors.push("signer malformed");
   if (!isIso2(m.issued_at) || typeof m.nonce !== "string" || typeof m.digest !== "string" || !isRecord3(m.signature) || m.signature.algorithm !== "Ed25519" || typeof m.signature.value !== "string") errors.push("envelope malformed");
   return errors;
+}
+function workspaceDigest(files) {
+  return `sha256:${sha256Hex(canonicalize2({ files: [...files].map((f) => ({ path: f.path, sha256: f.sha256 })).sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0) }))}`;
 }
 function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()) {
   const checks = [];
@@ -8425,6 +8438,57 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
       }
     }
   }
+  const calls = context.calls ?? null;
+  if (calls && chain) {
+    anythingGiven = true;
+    const n = Math.min(calls.length, chain.receipts.length);
+    const boundCalls = chain.receipts.slice(0, n).filter((r, i) => r.tool === calls[i].tool && r.input_hash === sha256Hex(canonicalize2(calls[i].input))).length;
+    const callsOk = calls.length === chain.receipts.length && boundCalls === chain.receipts.length;
+    checks.push({ id: "calls_bind", label: "Calls", ok: callsOk, detail: callsOk ? `All ${calls.length} calls in the log bind to their receipts: the input digest in each receipt is the digest of the call recorded.` : `${boundCalls} of ${chain.receipts.length} receipts bind to the calls log (${calls.length} entries); the rest were not the calls recorded.` });
+    if (m.gateway.calls_digest) {
+    }
+    bound &&= callsOk;
+  } else if (calls && !chain) {
+    checks.push({ id: "calls_bind", label: "Calls", ok: false, detail: "A calls log was supplied without the receipt log it binds to." });
+    bound = false;
+  }
+  const workspaces = context.workspaces ?? null;
+  if (workspaces) {
+    anythingGiven = true;
+    for (const t of m.attempts) {
+      if (!t.workspace) continue;
+      const files = workspaces[t.task_id];
+      const ok = Boolean(files) && workspaceDigest(files) === t.workspace.digest && files.length === t.workspace.file_count;
+      checks.push({ id: `workspace_${t.task_id}_${t.attempt}`, label: `Workspace, ${t.task_id}`, ok, detail: ok ? `The archived workspace (${t.workspace.file_count} file${t.workspace.file_count === 1 ? "" : "s"}) is the one the manifest pins.` : !files ? "No archive supplied for this task." : "The archive supplied is not the one the manifest pins." });
+      bound &&= ok;
+    }
+  }
+  const regrade = context.regrade ?? null;
+  let reconciled = false;
+  if (regrade) {
+    anythingGiven = true;
+    const rv = verifyRunRegrade(regrade);
+    const rg = regrade;
+    const sameRun = rv.valid && rg.manifest_digest === m.digest && rg.run_id === m.run_id;
+    const graderAccepted = Boolean(std) && sameRun && std.trust.accepted_readback_sources.map((k) => k.toLowerCase()).includes(rg.grader.verification_key.toLowerCase());
+    const distinct = sameRun && rg.grader.verification_key.toLowerCase() !== m.signer.verification_key.toLowerCase();
+    const agrees = sameRun && m.attempts.every((t) => {
+      const r = rg.results.find((x) => x.task_id === t.task_id && x.attempt === t.attempt);
+      return Boolean(r) && r.verdict === t.verdict && (!t.workspace || r.workspace_digest === t.workspace.digest);
+    });
+    reconciled = sameRun && graderAccepted && distinct && agrees;
+    checks.push({ id: "regrade", label: "Second grading", ok: reconciled, detail: !rv.valid ? rv.detail : !sameRun ? "The regrade is for a different manifest." : !std ? "Supply the standard to check the grader key." : !graderAccepted ? "The grader key is not one the standard accepts." : !distinct ? "The regrade was signed by the same key as the manifest; that is not a second party." : !agrees ? "The second grading disagrees with the manifest on at least one verdict or workspace." : `A second grading under key ${rg.grader.key_id}, from the archived workspaces with the pinned tests, agrees with every verdict.` });
+    bound &&= reconciled;
+  }
+  if (std) {
+    const level = std.requirements.effect_evidence;
+    if (level === "independently_reconciled") {
+      checks.push({ id: "verdict_evidence", label: "Verdict evidence", ok: reconciled, detail: reconciled ? "The standard asks for an independent reconciliation of the verdicts and a second grading provides it." : "The standard asks for an independent reconciliation of the verdicts; without a second grading, the verdicts are the harness's word." });
+      bound &&= reconciled;
+    } else {
+      checks.push({ id: "verdict_evidence", label: "Verdict evidence", ok: true, detail: `The standard accepts the harness's own test run as the verdict evidence (${level}). The verdicts are the harness's word; the archived workspace lets anyone re-grade.`, informational: true });
+    }
+  }
   const binding = !anythingGiven ? "manifest_only" : bound && partition && summaryOk ? "bound" : "partial";
   establishes.push(`A harness holding key ${m.signer.key_id} signed this account of run ${m.run_id}: ${m.summary.tasks} task${m.summary.tasks === 1 ? "" : "s"} of ${m.dataset.name}, ${m.summary.passed} passed, ${m.summary.failed} failed, ${m.summary.calls} governed call${m.summary.calls === 1 ? "" : "s"}, ${m.summary.refused} refused.`);
   if (binding === "bound") {
@@ -8434,6 +8498,8 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
   not_established.push("Who holds the harness key or the gateway key: pin them through a channel you already trust.");
   if (!m.environment.attestation) not_established.push("That the sandbox enforced the declared network rule: this run carries no environment attestation, so egress and model route are the harness's declaration.");
   else establishes.push(`An environment attestation (${m.environment.attestation.kind}, ${m.environment.attestation.reference}) is carried; check it with its own verifier.`);
+  if (!reconciled) not_established.push(regrade ? "That the verdicts are more than the harness's word: the second grading supplied does not reconcile." : "That the verdicts are more than the harness's word: no second grading is supplied. The archived workspace and the pinned tests let anyone make one.");
+  if (!calls) not_established.push("What any allowed call did: the receipts carry the digest of each input, not the input. Supply the calls log to open them.");
   not_established.push("What the agent said or reasoned: the receipts record tool calls and the harness records test verdicts, not the transcript.");
   if (!std) not_established.push("Which standard the run was under: supply the signed standard to check the pins and the policy.");
   if (!receipts) not_established.push("That the receipts the manifest names exist and verify: supply the gateway's receipt log.");
@@ -8448,8 +8514,8 @@ function runManifestReadback(m) {
   lines.push(`Harness: ${m.harness.name} (${m.harness.digest.slice(0, 19)}), gateway ${m.harness.gateway}`);
   lines.push(`Environment: ${m.environment.sandbox}; egress to ${m.environment.egress.join(", ") || "nothing"}; attestation ${m.environment.attestation ? `${m.environment.attestation.kind} ${m.environment.attestation.reference}` : "none carried"}`);
   lines.push(`Standard: ${m.standard.request_id}, digest ${m.standard.digest.slice(0, 16)}, gate policy ${m.standard.policy_digest.slice(0, 19)}`);
-  lines.push(`Receipts: ${m.gateway.receipt_count} signed by ${m.gateway.key_id}, chain head ${m.gateway.chain_head ? m.gateway.chain_head.slice(0, 19) : "none"}`);
-  for (const t of m.attempts) lines.push(`${t.task_id} attempt ${t.attempt}: ${t.verdict} (${t.tests.passed} passed, ${t.tests.failed} failed, ${t.tests.runner}); ${t.calls} call${t.calls === 1 ? "" : "s"}, ${t.refused} refused; ${Math.round((Date.parse(t.ended_at) - Date.parse(t.started_at)) / 1e3)} s${t.agent.timed_out ? ", stopped at the time limit" : ""}`);
+  lines.push(`Receipts: ${m.gateway.receipt_count} signed by ${m.gateway.key_id}, chain head ${m.gateway.chain_head ? m.gateway.chain_head.slice(0, 19) : "none"}${m.gateway.calls_digest ? `; calls log ${m.gateway.calls_digest.slice(0, 19)} (${m.gateway.calls_disclosed ? "published" : "held"})` : ""}`);
+  for (const t of m.attempts) lines.push(`${t.task_id} attempt ${t.attempt}: ${t.verdict} (${t.tests.passed} passed, ${t.tests.failed} failed, ${t.tests.runner}); ${t.calls} call${t.calls === 1 ? "" : "s"}, ${t.refused} refused; ${Math.round((Date.parse(t.ended_at) - Date.parse(t.started_at)) / 1e3)} s${t.agent.timed_out ? ", stopped at the time limit" : ""}${t.workspace ? `; workspace ${t.workspace.file_count} file${t.workspace.file_count === 1 ? "" : "s"} ${t.workspace.digest.slice(0, 19)} (${t.workspace.disclosed ? "published" : "held"})` : ""}`);
   lines.push(`Result: ${m.summary.passed} of ${m.summary.tasks} passed; ${m.summary.calls} governed calls, ${m.summary.refused} refused`);
   return lines.join("\n");
 }
@@ -8462,6 +8528,7 @@ export {
   ADMISSION_DECISION_V1,
   PROOF_REQUEST_V1,
   RUN_MANIFEST_V1,
+  RUN_REGRADE_V1,
   charterDigest,
   covenantState,
   isActionAssuranceBundleV1,
@@ -8479,5 +8546,7 @@ export {
   verifyCosignedDiversification,
   verifyEpochBundle,
   verifyProofRequest,
-  verifyRunManifest
+  verifyRunManifest,
+  verifyRunRegrade,
+  workspaceDigest
 };

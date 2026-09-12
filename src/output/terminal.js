@@ -226,7 +226,7 @@ export function formatRunManifestResult(result, opts = {}) {
   lines.push(`\n${icon} ${bold(result.title || (result.valid ? 'Run manifest verifies' : 'Run manifest does not verify'))}`);
   if (result.modeLabel) lines.push(`  Mode:       ${result.modeLabel}`);
   if (result.artifact_id) lines.push(`  Run:        ${result.artifact_id}`);
-  if (result.binding) lines.push(`  Binding:    ${result.binding === 'bound' ? green('bound to the standard and the receipts supplied') : result.binding === 'manifest_only' ? yellow('manifest only (add --standard and --receipts to bind)') : red('does not bind to what was supplied')}`);
+  if (result.binding) lines.push(`  Binding:    ${result.binding === 'bound' ? green('bound to everything supplied') : result.binding === 'manifest_only' ? yellow('manifest only (add --standard, --receipts, --calls, --regrade to bind)') : red('does not bind to what was supplied')}`);
   if (result.signer) lines.push(`  Signer:     ${result.signer.name} (${result.signer.key_id})${result.signer.demo ? dim(' demonstration key') : ''}`);
   if (result.summary) lines.push(`  Result:     ${result.summary.passed} of ${result.summary.tasks} passed; ${result.summary.calls} governed call(s), ${result.summary.refused} refused`);
   if (result.chain) lines.push(`  Receipts:   ${result.chain.count} (${result.chain.allow} allowed, ${result.chain.deny} refused), ${result.chain.all_signatures_valid && result.chain.chain_unbroken ? green('chain intact') : red('chain not intact')}`);

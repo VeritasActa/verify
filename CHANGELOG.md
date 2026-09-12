@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.10.4 (2026-09-11)
+
+### Added
+- Run manifests bind two more things. `--calls <file>` takes the calls log (one call per receipt: tool and input) and checks that every receipt's input digest opens to the call recorded, so an allowed shell receipt is no longer a digest a reader cannot look behind. `--regrade <file>` takes a second grading (`scopeblind.run_regrade.v1`): the pinned tests re-run on the archived workspace, signed under a grader key the standard accepts and distinct from the harness key; the verifier reconciles it with the manifest, and a standard that asks for independent reconciliation is held until a second grading agrees. Manifests may pin each attempt's workspace and the calls log by digest. These answer the first outside review of a verified run (arian-gogani, nobulex): the verdicts were the harness's word, and an input digest could not tell a listing from an egress.
+
 ## 0.10.3 (2026-09-11)
 
 ### Added

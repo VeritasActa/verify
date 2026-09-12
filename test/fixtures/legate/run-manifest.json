@@ -1,22 +1,22 @@
 {
   "type": "scopeblind.run_manifest.v1",
   "version": 1,
-  "run_id": "run:1c3d2cc199a86f2a",
+  "run_id": "run:acdc37bdee606700",
   "standard": {
     "request_id": "pr:7a1e5b9c3d2f4e60",
-    "digest": "139fb512e846baa08a654c6d3aaaf5c207b96da624aaf092433e15c73256a96f",
+    "digest": "5ff55109646142ce98a962b802fd4ba9100aebbe744f0438161d1ebeaa1d6dce",
     "recipient_key": "6c360b0c2def60adf93e97019f61df31d2670bbc3bfad933859dc1663c1d9eac",
     "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f"
   },
   "agent": {
     "name": "codex-cli",
-    "version": "0.145.0",
+    "version": "0.154.0",
     "model": "gpt-5.5",
     "model_route": "chatgpt.com (Codex)"
   },
   "harness": {
     "name": "legate-verified-run",
-    "digest": "sha256:63092e4125ab179a17f793bcca3bcb847b9abd0efe282da3cf19b29ad79db201",
+    "digest": "sha256:f870a5d5f86cb8dc8a57a233c92dbde127161d2b4fd8fb196a5b0d5ff4a1f4d8",
     "gateway": "protect-mcp 0.13.3"
   },
   "dataset": {
@@ -26,24 +26,30 @@
     "task_count": 4
   },
   "environment": {
-    "sandbox": "Codex CLI sandbox, workspace-write, network disabled (macOS Seatbelt)",
+    "sandbox": "Codex CLI sandbox, workspace-write, network disabled (Linux Landlock and seccomp)",
     "egress": [],
-    "attestation": null,
-    "note": "Demonstration run on a developer machine: the host's own sandbox stood in for the benchmark's Docker image; task paths were rebased from /app to a workspace and the tests were run with the same rebase."
+    "attestation": {
+      "kind": "github-actions-provenance",
+      "reference": "https://github.com/ScopeBlind/verified-runs/actions/runs/34664927913",
+      "digest": "sha256:ef16b85fcb359441eb7094de9c69e83bff2d5f5269d045dee8b567749511b758"
+    },
+    "note": "Run in GitHub Actions (https://github.com/ScopeBlind/verified-runs/actions/runs/34664927913); the provenance attestation for manifest.json, receipts.jsonl, and standard.json is on that run. Task paths were rebased from /app to a workspace and the tests were run with the same rebase."
   },
   "gateway": {
     "key_id": "sb:issuer:GsAFpSRUAvaU",
     "verification_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
-    "receipt_count": 30,
-    "chain_head": "sha256:7c6993ec34663bf9cc431c278e8432705853c14b1f12701ec7c3fd32d6a75df8",
-    "log_digest": "sha256:6736488b0e5886fbeec15e6ab29ddf328b1253ba5b206f5522f185036ff61f44"
+    "receipt_count": 22,
+    "chain_head": "sha256:9a3773b6fabd7055bbd01f1a03b4b7bf8e05b19e6b30a978c96b867d8cd57f32",
+    "log_digest": "sha256:baf8dc4dac6482892a9ad8994f83a4673b341287bf6b17348469eb9c8825a302",
+    "calls_digest": "sha256:9c882a86ca1be8e4ce89551be24ff48f63155d59f48008a00d5c0f1930406c1a",
+    "calls_disclosed": true
   },
   "attempts": [
     {
       "task_id": "hello-world",
       "attempt": 1,
-      "started_at": "2026-09-11T11:36:52.426Z",
-      "ended_at": "2026-09-11T11:37:06.590Z",
+      "started_at": "2026-09-12T01:28:54.276Z",
+      "ended_at": "2026-09-12T01:29:03.529Z",
       "receipts": {
         "from": 0,
         "to": 3
@@ -52,92 +58,112 @@
       "refused": 1,
       "verdict": "pass",
       "tests": {
-        "runner": "pytest 9.0.2, run by the harness",
+        "runner": "pytest 8.4.1, run by the harness",
         "passed": 2,
         "failed": 0,
-        "output_digest": "sha256:0b5e134bd7f1b055eaca6f667751b06c0314e911d3a4b677d10b9f2461a5f514"
+        "output_digest": "sha256:1e5e5286d813863f4572b2e16a3c3fc402f08c9155f1b1062cb6518e7eebeb67"
       },
       "agent": {
         "exit_code": 0,
         "timed_out": false
+      },
+      "workspace": {
+        "digest": "sha256:213ef636d20e8bfa623b85f88e0e037e14ffae0dff2f2269da549a2bf5c710d1",
+        "file_count": 1,
+        "disclosed": true
       }
     },
     {
       "task_id": "countdown-game",
       "attempt": 1,
-      "started_at": "2026-09-11T11:37:07.203Z",
-      "ended_at": "2026-09-11T11:37:37.963Z",
+      "started_at": "2026-09-12T01:29:04.510Z",
+      "ended_at": "2026-09-12T01:29:12.736Z",
       "receipts": {
         "from": 3,
-        "to": 8
+        "to": 5
       },
-      "calls": 5,
+      "calls": 2,
       "refused": 1,
       "verdict": "pass",
       "tests": {
-        "runner": "pytest 9.0.2, run by the harness",
+        "runner": "pytest 8.4.1, run by the harness",
         "passed": 2,
         "failed": 0,
-        "output_digest": "sha256:6867f2b02a119181aebd081f99246176bfea4d3253e305a24481ac89b89a1341"
+        "output_digest": "sha256:36e52675f028ee34bf3bcda3e5e6f71cbd79e4747ec567f5fc0da3fd6aa8cf00"
       },
       "agent": {
         "exit_code": 0,
         "timed_out": false
+      },
+      "workspace": {
+        "digest": "sha256:150d31509fdac1f5770c96486577f61d7f396ab8726a8eecdfc6c0b5f88bb2ce",
+        "file_count": 1,
+        "disclosed": true
       }
     },
     {
       "task_id": "bank-trans-filter",
       "attempt": 1,
-      "started_at": "2026-09-11T11:37:38.643Z",
-      "ended_at": "2026-09-11T11:38:32.996Z",
+      "started_at": "2026-09-12T01:29:13.052Z",
+      "ended_at": "2026-09-12T01:29:35.900Z",
       "receipts": {
-        "from": 8,
-        "to": 18
+        "from": 5,
+        "to": 12
       },
-      "calls": 10,
+      "calls": 7,
       "refused": 0,
-      "verdict": "pass",
+      "verdict": "fail",
       "tests": {
-        "runner": "pytest 9.0.2, run by the harness",
-        "passed": 1,
-        "failed": 0,
-        "output_digest": "sha256:44047f58f39859b539ba471232e29881c17c93cfd0a449058ae1bf46274cfa28"
+        "runner": "pytest 8.4.1, run by the harness",
+        "passed": 0,
+        "failed": 1,
+        "output_digest": "sha256:3dc1b09962714cb7340c249286f68f43609584bda12d436aadd40b034900175e"
       },
       "agent": {
         "exit_code": 0,
         "timed_out": false
+      },
+      "workspace": {
+        "digest": "sha256:3612b115651ed094b8d5007ec86e4234617b9cb9d841b1890d05ed6f05ce1dde",
+        "file_count": 1,
+        "disclosed": true
       }
     },
     {
       "task_id": "assign-seats",
       "attempt": 1,
-      "started_at": "2026-09-11T11:38:33.676Z",
-      "ended_at": "2026-09-11T11:39:26.454Z",
+      "started_at": "2026-09-12T01:29:36.236Z",
+      "ended_at": "2026-09-12T01:30:00.748Z",
       "receipts": {
-        "from": 18,
-        "to": 30
+        "from": 12,
+        "to": 22
       },
-      "calls": 12,
+      "calls": 10,
       "refused": 1,
       "verdict": "pass",
       "tests": {
-        "runner": "pytest 9.0.2, run by the harness",
+        "runner": "pytest 8.4.1, run by the harness",
         "passed": 2,
         "failed": 0,
-        "output_digest": "sha256:d8b5992425f9c0756c2a08faaf5deb75524e8134109ef6ccd882b484286e481b"
+        "output_digest": "sha256:62719df620c8aaede9983b47ea2845593599945369194d6bf05b5344ef1ffa64"
       },
       "agent": {
         "exit_code": 0,
         "timed_out": false
+      },
+      "workspace": {
+        "digest": "sha256:e2cacc100990df513198f6ebe756674c16a2d0742bcb64dd102aee651755037d",
+        "file_count": 1,
+        "disclosed": true
       }
     }
   ],
   "summary": {
     "tasks": 4,
-    "passed": 4,
-    "failed": 0,
+    "passed": 3,
+    "failed": 1,
     "errored": 0,
-    "calls": 30,
+    "calls": 22,
     "refused": 3
   },
   "signer": {
@@ -145,11 +171,11 @@
     "key_id": "harness:faef67591c23b631",
     "verification_key": "33d3c584cbbb91063446ee05591b4226d15c464cefe7fb9e075cfc9db0910727"
   },
-  "issued_at": "2026-09-11T11:39:27.229Z",
-  "nonce": "6b691ef25c74097697f299ab7feac810",
-  "digest": "d9afa3bf0241b89edbe36b27edb4320fde5ddab31a7196d5922cc1c86f3bf40f",
+  "issued_at": "2026-09-12T01:30:01.120Z",
+  "nonce": "6ae7a96fc21655b4d2c7df313229faec",
+  "digest": "5ff06d2d7d338226286ac5bc92d28d95707c59e6e7c7b22a97a3ec43bad854f9",
   "signature": {
     "algorithm": "Ed25519",
-    "value": "88d9a529371b86c1ffcc79b00a7b61037c3ac1bd5719329607d3b58677bf1af0084d4fb93bc5b6c604f4c01a22ff86f4164a11f317281de07b08891e5d652c0a"
+    "value": "f28e76da6417890542c8c157d9866d7a3bb7d9488e979cc73bc8eb57bf4c785bd87036885b7087367279da4b81a170cad0282d11f7a915cbb500be740b936403"
   }
 }

@@ -25,10 +25,14 @@ test('a run manifest is detected and verifies alone as intact but unbound', asyn
   assert.ok(r.not_established.some((s) => /supply the signed standard/.test(s)));
 });
 
-test('with the standard and the receipts beside it, the run manifest is bound and every check passes', async () => {
-  const r = await verifyLegateStandard(fixture('run-manifest.json'), { now: NOW, standard: fixture('run-standard.json'), receipts: fixture('run-receipts.json') });
+const callsFixture = () => readFileSync(fixturePath('run-calls.jsonl'), 'utf8').trim().split('\n').map((l) => { const c = JSON.parse(l); return { tool: c.tool, input: c.input }; });
+
+test('with the standard, the receipts, the calls, and the second grading beside it, the run manifest is bound and every check passes', async () => {
+  const r = await verifyLegateStandard(fixture('run-manifest.json'), { now: NOW, standard: fixture('run-standard.json'), receipts: fixture('run-receipts.json'), calls: callsFixture(), regrade: fixture('run-regrade.json') });
   assert.equal(r.valid, true);
   assert.equal(r.binding, 'bound', JSON.stringify(r.checks.filter((c) => !c.ok)));
+  assert.ok(r.checks.some((c) => c.id === 'calls_bind' && c.ok));
+  assert.ok(r.checks.some((c) => c.id === 'regrade' && c.ok));
   const manifest = fixture('run-manifest.json');
   assert.equal(r.chain.count, manifest.gateway.receipt_count);
   assert.equal(r.chain.deny, manifest.summary.refused);
@@ -45,6 +49,20 @@ test('a manifest whose score was raised fails on its digest', async () => {
   assert.equal(r.error, 'digest_mismatch');
 });
 
+test('without the second grading, a standard that asks for independent reconciliation holds the verdicts as the harness\'s word', async () => {
+  const r = await verifyLegateStandard(fixture('run-manifest.json'), { now: NOW, standard: fixture('run-standard.json'), receipts: fixture('run-receipts.json') });
+  assert.equal(r.valid, true);
+  assert.notEqual(r.binding, 'bound');
+  assert.ok(r.checks.some((c) => c.id === 'verdict_evidence' && !c.ok));
+  assert.ok(r.not_established.some((s) => /harness's word/.test(s)));
+});
+
+test('a rewritten call in the calls log does not bind to its receipt', async () => {
+  const calls = callsFixture(); const i = calls.findIndex((c) => c.tool === 'Bash'); calls[i >= 0 ? i : 0] = { tool: 'Bash', input: { command: 'ls -la' } };
+  const r = await verifyLegateStandard(fixture('run-manifest.json'), { now: NOW, standard: fixture('run-standard.json'), receipts: fixture('run-receipts.json'), calls, regrade: fixture('run-regrade.json') });
+  assert.ok(r.checks.some((c) => c.id === 'calls_bind' && !c.ok));
+});
+
 test('a receipt log with a receipt removed does not bind to the manifest', async () => {
   const receipts = fixture('run-receipts.json').slice(0, -1);
   const r = await verifyLegateStandard(fixture('run-manifest.json'), { now: NOW, standard: fixture('run-standard.json'), receipts });
@@ -55,7 +73,7 @@ test('a receipt log with a receipt removed does not bind to the manifest', async
 
 test('the CLI takes --standard and --receipts and reports the binding', () => {
   const cli = join(here, '..', '..', 'cli.js');
-  const r = spawnSync(process.execPath, [cli, fixturePath('run-manifest.json'), '--standard', fixturePath('run-standard.json'), '--receipts', fixturePath('run-receipts.json'), '--json'], { encoding: 'utf8' });
+  const r = spawnSync(process.execPath, [cli, fixturePath('run-manifest.json'), '--standard', fixturePath('run-standard.json'), '--receipts', fixturePath('run-receipts.json'), '--calls', fixturePath('run-calls.jsonl'), '--regrade', fixturePath('run-regrade.json'), '--json'], { encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr);
   const out = JSON.parse(r.stdout);
   assert.equal(out.valid, true);
@@ -63,5 +81,5 @@ test('the CLI takes --standard and --receipts and reports the binding', () => {
   const alone = spawnSync(process.execPath, [cli, fixturePath('run-manifest.json')], { encoding: 'utf8', env: { ...process.env, NO_COLOR: '1' } });
   assert.equal(alone.status, 0, alone.stderr);
   assert.match(alone.stdout, /Run manifest verifies: \d+ of \d+ passed, unbound/);
-  assert.match(alone.stdout, /manifest only \(add --standard and --receipts to bind\)/);
+  assert.match(alone.stdout, /manifest only \(add --standard, --receipts, --calls, --regrade to bind\)/);
 });

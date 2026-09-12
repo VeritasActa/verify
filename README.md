@@ -107,7 +107,7 @@ integrity, not who controls that key. Pin the operator key and an independently
 retained anti-rollback head for identity and historical assurance:
 
 ```bash
-npx @veritasacta/verify@0.10.3 legate-macro-track-record.json \
+npx @veritasacta/verify@0.10.4 legate-macro-track-record.json \
   --key <operator-ed25519-public-key> \
   --history-head <expected-history-head> \
   --anchor-head <expected-anchor-digest>

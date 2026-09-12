@@ -54,7 +54,7 @@
       },
       "harness": {
         "name": "legate-verified-run",
-        "digest": "sha256:63092e4125ab179a17f793bcca3bcb847b9abd0efe282da3cf19b29ad79db201"
+        "digest": "sha256:f870a5d5f86cb8dc8a57a233c92dbde127161d2b4fd8fb196a5b0d5ff4a1f4d8"
       },
       "time_limit_seconds": 900,
       "model_route": "chatgpt.com (Codex)"
@@ -66,7 +66,8 @@
     ],
     "accepted_approver_keys": [],
     "accepted_readback_sources": [
-      "33d3c584cbbb91063446ee05591b4226d15c464cefe7fb9e075cfc9db0910727"
+      "33d3c584cbbb91063446ee05591b4226d15c464cefe7fb9e075cfc9db0910727",
+      "5b3b5acb5f282cec3e78533160fb5a3666ca7ee7f144add59d91e4991761c75c"
     ],
     "accepted_anchor_witnesses": []
   },
@@ -82,13 +83,14 @@
     "The agent's own sandbox stands in for the benchmark's Docker image; task paths are rebased from /app to the workspace and the tests are run with the same rebase",
     "The gate clock is accepted as the dispatch time",
     "No environment attestation is required for a demonstration run",
-    "Demonstration keys sign the standard, the receipts, and the manifest; they prove the mechanism, not identity"
+    "Demonstration keys sign the standard, the receipts, the manifest, and the regrade; they prove the mechanism, not identity",
+    "The second grading may run in the same continuous-integration account as the first, under a distinct key and job; a grading by a third party is stronger and the archived workspace makes it possible"
   ],
   "rejection_criteria": [
-    "Any tool call not on the allowed list",
+    "Any tool call not on the allowed list that the gate allowed",
     "Any gap in the receipt chain",
     "More than one attempt per task",
-    "Any self-reported pass"
+    "Any pass the agent reports that the harness's tests do not reproduce"
   ],
   "hold_criteria": [
     "A harness other than the pinned one",
@@ -141,9 +143,9 @@
   "issued_at": "2026-09-11T00:00:00.000Z",
   "expires_at": "2027-12-31T00:00:00.000Z",
   "nonce": "c0ffee00c0ffee00c0ffee00c0ffee02",
-  "digest": "139fb512e846baa08a654c6d3aaaf5c207b96da624aaf092433e15c73256a96f",
+  "digest": "5ff55109646142ce98a962b802fd4ba9100aebbe744f0438161d1ebeaa1d6dce",
   "signature": {
     "algorithm": "Ed25519",
-    "value": "ab6a3f233615fab4d5faa9ef778ddd8cfebd530b9cf15d143533b12538d6740c86c1cb0107b9b14dc154b5732150fb03feafc089898b3d22be8437b23a592703"
+    "value": "51da8c23e7f8dd297467b8059ddf736e42dc792a7686abdc656faf148999cbd58e5fb4fd836f979b54bc30f0e9a2521a35270ce94d7c1e10eee11f099d7e4e0b"
   }
 }
