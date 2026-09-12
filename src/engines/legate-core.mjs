@@ -9785,10 +9785,12 @@ function timeOf(b, t) {
   if (Number.isNaN(d.getTime())) throw new Error("DER: bad time");
   return d;
 }
+var NAME_ATTRIBUTES = { "2.5.4.3": "CN", "2.5.4.10": "O", "2.5.4.11": "OU", "2.5.4.7": "L", "2.5.4.8": "ST", "2.5.4.6": "C", "2.5.4.5": "serialNumber", "1.2.840.113549.1.9.1": "emailAddress", "0.9.2342.19200300.100.1.25": "DC" };
 function nameText(b, t) {
   return children(b, t).map((rdn) => children(b, rdn).map((av) => {
     const [oid, val] = children(b, av);
-    return `${oidOf(b, oid)}=${textDecoder2.decode(content(b, val))}`;
+    const type = oidOf(b, oid);
+    return `${NAME_ATTRIBUTES[type] ?? type}=${textDecoder2.decode(content(b, val))}`;
   }).join("+")).join(", ");
 }
 var OID = {
@@ -11119,6 +11121,7 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
     ...context.regrades ?? []
   ];
   let reconciled = false;
+  const gradingLines = [];
   const acceptedGraderRepos = (std?.trust.accepted_grader_provenance ?? []).filter((g) => g.kind === "github-actions-provenance").map((g) => g.repository.toLowerCase());
   const runRepo = m.environment.attestation ? /^https:\/\/github\.com\/[^/]+\/[^/]+/.exec(m.environment.attestation.reference)?.[0] ?? null : null;
   regradeEntries.forEach((entry, i) => {
@@ -11143,7 +11146,8 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
     bound &&= ok;
     if (ok) {
       reconciled = true;
-      establishes.push(`The verdicts were graded again${madeBy || " by a second grader under a distinct key"}; the gradings agree on every verdict and workspace.`);
+      const repoShort = (regradeIdentity?.repository ?? "").replace(/^https:\/\/github\.com\//, "");
+      gradingLines.push(`Graded again ${regradeIdentity ? otherIdentity ? `from outside the run's repository (${repoShort})` : `by the run's own repository in a separate job (${repoShort})` : "by a second grader under a distinct key"}: every verdict and workspace agrees.`);
     }
   });
   if (std) {
@@ -11223,13 +11227,10 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
     if (std) establishes.push(`The run was under ${std.recipient.organization}'s standard ${std.request_id}: the pinned task set and harness, the compiled gate policy, at most ${std.requirements.run?.attempts_per_task ?? "?"} attempt(s) and ${Math.round((std.requirements.run?.time_limit_seconds ?? 0) / 60)} minutes per task.`);
     if (receipts && chain) establishes.push(`The ${chain.count} receipts are the ones the manifest names, every one under that policy, every allowed call on the tool list, and the refusals counted match.`);
   }
-  const demoKeys = isDemoRunSignerKey(m.signer.verification_key) || isDemoGatewayKey(m.gateway.verification_key);
-  if (demoKeys) not_established.push("Who holds the harness key or the gateway key: demonstration keys with public seeds signed this run; they prove the mechanism, not identity.");
-  else if (provenance?.verified && provenance.identity) establishes.push(`The gateway key ${m.gateway.key_id} and the harness key ${m.signer.key_id} are not the demonstration keys: the manifest naming them came out of the attested workflow run, whose code at that commit generates both inside the run and discards them with it.`);
-  else not_established.push("Who holds the harness key or the gateway key: they are not the demonstration keys; pin them through a channel you already trust, or supply the run's provenance.");
+  establishes.push(...gradingLines);
   not_established.push(`Who holds the maintainer key that signed the standard${std ? ` (${std.recipient.organization}, ${std.recipient.key_id})` : ""}: pin its verification key through a channel you already trust.`);
   if (!att) not_established.push("That the sandbox enforced the declared network rule: this run carries no environment attestation, so egress and model route are the harness's declaration.");
-  else if (provenance?.verified && provenance.identity) establishes.push(`Provenance verified here against the pinned Sigstore trust root: ${provenance.covered.map((r) => PROVENANCE_FILES[r]).join(", ")} came out of GitHub Actions workflow ${provenance.identity.workflow} at ${provenance.identity.repository}${provenance.identity.commit ? ` commit ${provenance.identity.commit}` : ""}, run ${provenance.identity.run ?? att.reference}; the signing certificate chains to Fulcio and the signature was logged in ${provenance.log?.base_url ?? "the transparency log"} at index ${provenance.log?.index ?? "?"} (${provenance.log?.integrated_time ?? "time unknown"}). What that workflow configured, the sandbox and the network rule, is in the repository at that commit.`);
+  else if (provenance?.verified && provenance.identity) establishes.push(`Provenance verified here against the pinned Sigstore trust root: ${provenance.covered.map((r) => PROVENANCE_FILES[r]).join(", ")} came out of GitHub Actions workflow ${(provenance.identity.workflow ?? "").replace(/^https:\/\/github\.com\/[^/]+\/[^/]+\//, "").replace(/@.*$/, "")} at ${(provenance.identity.repository ?? "").replace(/^https:\/\/github\.com\//, "")}${provenance.identity.commit ? `, commit ${provenance.identity.commit.slice(0, 12)}` : ""}, run ${(provenance.identity.run ?? att.reference).replace(/^.*\/actions\/runs\//, "").replace(/\/attempts\/\d+$/, "")}; the certificate chains to Fulcio and the signature is logged in ${(provenance.log?.base_url ?? "the transparency log").replace(/^https:\/\//, "")} at index ${provenance.log?.index ?? "?"} (${provenance.log?.integrated_time ?? "time unknown"}). What that workflow configured, the sandbox and the network rule, is in the repository at that commit.`);
   else if (prov && prov.bundles.length > 0) not_established.push(`That the run was made in the workflow it names (${att.reference}): the provenance supplied does not verify, or does not name these bytes.`);
   else not_established.push(`That the run was made in the workflow it names: the attestation is referenced (${att.reference}) but its bundle was not supplied. Supply provenance/*.sigstore.jsonl to verify it here, or run gh attestation verify.`);
   if (!reconciled) not_established.push(regradeEntries.length ? "That the verdicts are more than the harness's word: the second grading supplied does not reconcile." : "That the verdicts are more than the harness's word: no second grading is supplied. The archived workspace and the pinned tests let anyone make one.");
@@ -11237,6 +11238,10 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
   if (attestedModel) establishes.push(`Every model call (${attestedModel.calls}) was answered by ${attestedModel.model} inside a TDX confidential machine: the model's TEE signed each request and response digest with a key bound into an Intel-signed quote${attestedModel.mr_td ? ` (MRTD ${attestedModel.mr_td.slice(0, 16)}...)` : ""}, verified offline against the pinned Intel root. Not established: the platform's current TCB status, the GPU verdict, and what the model did with the bytes beyond signing them.`);
   else if (matt) not_established.push(`That the model calls were answered inside ${matt.provider}'s TEE: the manifest names the attestation; supply model-calls.jsonl and model-attestation.json to verify it here.`);
   else not_established.push("Which model answered: the model route is the harness's declaration; an attested route would let the model's own TEE sign each call.");
+  const demoKeys = isDemoRunSignerKey(m.signer.verification_key) || isDemoGatewayKey(m.gateway.verification_key);
+  if (demoKeys) not_established.push("Who holds the harness key or the gateway key: demonstration keys with public seeds signed this run; they prove the mechanism, not identity.");
+  else if (provenance?.verified && provenance.identity) establishes.push(`The gateway key ${m.gateway.key_id} and the harness key ${m.signer.key_id} are not the demonstration keys: the attested workflow run generated both inside the run and discarded them with it.`);
+  else not_established.push("Who holds the harness key or the gateway key: they are not the demonstration keys; pin them through a channel you already trust, or supply the run's provenance.");
   not_established.push("What the agent said or reasoned: the receipts record tool calls and the harness records test verdicts, not the transcript.");
   if (!std) not_established.push("Which standard the run was under: supply the signed standard to check the pins and the policy.");
   if (!receipts) not_established.push("That the receipts the manifest names exist and verify: supply the gateway's receipt log.");

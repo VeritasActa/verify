@@ -113,6 +113,17 @@ import { formatAsJson } from './src/output/json.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PKG = JSON.parse(readFileSync(join(__dirname, 'package.json'), 'utf-8'));
 
+/** The mode line names the Legate artifact that was checked, not the list of what could have been. */
+function legateModeLabel(r) {
+  const t = r && r.artifact_type;
+  if (t === 'scopeblind.run_manifest.v1') return 'Legate verified run (run manifest), checked offline';
+  if (t === 'scopeblind.proof_request.v1') return 'Legate signed standard (proof request), checked offline';
+  if (t === 'scopeblind.admission_decision.v1') return 'Legate recipient decision, checked offline';
+  if (t === 'scopeblind.action_assurance_bundle.v1') return 'Legate action assurance bundle, checked offline';
+  if (t === 'scopeblind.run_regrade.v1') return 'Legate second grading (run regrade), checked offline';
+  return MODE_LABELS['legate-standard'];
+}
+
 const MODE_LABELS = {
   'ed25519-receipt-v1': 'Ed25519 receipt v1 (RFC 8032)',
   'ed25519-receipt-v2': 'Ed25519 receipt v2 (RFC 8032 + draft-farley-acta-signed-receipts)',
@@ -644,7 +655,7 @@ async function dispatch(input, opts) {
         if (opts.modelAttestationFile) { const v = JSON.parse(readFileSync(opts.modelAttestationFile, 'utf8')); subOpts.modelAttestations = Array.isArray(v) ? v : [v]; }
       }
       const r = await verifyLegateStandard(input, subOpts);
-      return { ...r, modeLabel: MODE_LABELS['legate-standard'] };
+      return { ...r, modeLabel: legateModeLabel(r) };
     }
     case 'trusted-context-pack': {
       const r = verifyTrustedContextPack(input, subOpts);

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.10 (2026-09-12)
+
+- Readable names. Certificate subjects and issuers print as `CN=..., O=...` instead of raw attribute OIDs, in the Sigstore and Intel TDX chains alike.
+- The mode line names the artifact: a run manifest reads `Legate verified run (run manifest), checked offline`, a standard, a decision, and an action bundle each their own, instead of one line listing all four.
+- What a run establishes reads in the order a reader asks: the signed account, the standard, the receipts, the gradings, the provenance, the model route, then the keys; each line shorter, repositories and workflows by name.
+
 ## 0.10.9 (2026-09-12)
 
 - `--regrade` is repeatable. The first is the run's own second grading; each further one is a grading made elsewhere (`regrade_2`, `regrade_3`, ...), verified the same way: under its grader key, for this manifest, accepted by the standard (a listed key, or the provenance identity of a bundle given with `--provenance` that names the grading's exact bytes), distinct from the harness key, and agreeing with every verdict and workspace. One accepted, agreeing grading reconciles the verdicts; every grading supplied must hold for the run to bind. The first such grader is VeritasActa/verified-runs-grader.
