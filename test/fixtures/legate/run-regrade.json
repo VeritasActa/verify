@@ -1,8 +1,8 @@
 {
   "type": "scopeblind.run_regrade.v1",
   "version": 1,
-  "run_id": "run:acdc37bdee606700",
-  "manifest_digest": "5ff06d2d7d338226286ac5bc92d28d95707c59e6e7c7b22a97a3ec43bad854f9",
+  "run_id": "run:00856fa42e6ae290",
+  "manifest_digest": "10db0609ed329a0a9a2c90aed3ff3dd45bf02720b746b9664c4211481964a8f1",
   "grader": {
     "name": "Legate regrader (demo)",
     "key_id": "harness:1ba764519e311840",
@@ -10,7 +10,7 @@
   },
   "environment": {
     "sandbox": "GitHub Actions runner (linux), separate job",
-    "note": "Second grading in https://github.com/ScopeBlind/verified-runs/actions/runs/34664927913; the tests were obtained from the sealed archive and checked against the pin."
+    "note": "Second grading in https://github.com/ScopeBlind/verified-runs/actions/runs/34678858933; the tests were obtained from the benchmark repository at the pinned commit and checked against the pin."
   },
   "results": [
     {
@@ -21,52 +21,52 @@
         "runner": "pytest 8.4.1, regrade",
         "passed": 2,
         "failed": 0,
-        "output_digest": "sha256:1e5e5286d813863f4572b2e16a3c3fc402f08c9155f1b1062cb6518e7eebeb67"
+        "output_digest": "sha256:036fa4e3e3fbd16d4b3ef3456f3dcc456ef305c1e1fa673c484301559c2a52a7"
       },
       "workspace_digest": "sha256:213ef636d20e8bfa623b85f88e0e037e14ffae0dff2f2269da549a2bf5c710d1"
     },
     {
       "task_id": "countdown-game",
       "attempt": 1,
-      "verdict": "pass",
+      "verdict": "fail",
       "tests": {
         "runner": "pytest 8.4.1, regrade",
-        "passed": 2,
-        "failed": 0,
-        "output_digest": "sha256:36e52675f028ee34bf3bcda3e5e6f71cbd79e4747ec567f5fc0da3fd6aa8cf00"
+        "passed": 0,
+        "failed": 2,
+        "output_digest": "sha256:01fb40376b7c647163bcd67a267a54e890fbe07dd0f6b8ff0b4cfd56c5242414"
       },
-      "workspace_digest": "sha256:150d31509fdac1f5770c96486577f61d7f396ab8726a8eecdfc6c0b5f88bb2ce"
+      "workspace_digest": "sha256:602e35a92eec4bc0a2ec6ae113f07bfc6933322fb69fe8dee416e5a67217e2a2"
     },
     {
       "task_id": "bank-trans-filter",
+      "attempt": 1,
+      "verdict": "pass",
+      "tests": {
+        "runner": "pytest 8.4.1, regrade",
+        "passed": 1,
+        "failed": 0,
+        "output_digest": "sha256:1cc378716bd0babd26a16e3936eb986604bc46a592dc8de9f55884fb37e0986e"
+      },
+      "workspace_digest": "sha256:bb533ad5960730aa22819c66ede0159465d329caad3c9d139951116971721bad"
+    },
+    {
+      "task_id": "assign-seats",
       "attempt": 1,
       "verdict": "fail",
       "tests": {
         "runner": "pytest 8.4.1, regrade",
         "passed": 0,
-        "failed": 1,
-        "output_digest": "sha256:18f2011bff181f07b423421bba36433206cbdb6ac1c3dd949609b5f6e28e88c6"
+        "failed": 2,
+        "output_digest": "sha256:d7e5ca0f843ce30a9c700a7918acdcb32707c952423a7fbe3e992f7edd4d13dc"
       },
-      "workspace_digest": "sha256:3612b115651ed094b8d5007ec86e4234617b9cb9d841b1890d05ed6f05ce1dde"
-    },
-    {
-      "task_id": "assign-seats",
-      "attempt": 1,
-      "verdict": "pass",
-      "tests": {
-        "runner": "pytest 8.4.1, regrade",
-        "passed": 2,
-        "failed": 0,
-        "output_digest": "sha256:62719df620c8aaede9983b47ea2845593599945369194d6bf05b5344ef1ffa64"
-      },
-      "workspace_digest": "sha256:e2cacc100990df513198f6ebe756674c16a2d0742bcb64dd102aee651755037d"
+      "workspace_digest": "sha256:602e35a92eec4bc0a2ec6ae113f07bfc6933322fb69fe8dee416e5a67217e2a2"
     }
   ],
-  "regraded_at": "2026-09-12T01:30:25.598Z",
-  "nonce": "cf524b4106b158b8f528adf88da7ada3",
-  "digest": "6ca374152f7bcbab32466a9eb4a9483f41ff67cbc25be6c8f9c298ce935892ef",
+  "regraded_at": "2026-09-12T06:49:44.752Z",
+  "nonce": "05daec50940da53effb4d5981b162d2d",
+  "digest": "661e41b07105849cd9a53d4b668e773d390f9d1c33fa4f735b8f135d6fa13109",
   "signature": {
     "algorithm": "Ed25519",
-    "value": "dd19bf82837ae4edf09cf4c21b384b1ca0fef4519ddadbe07ada9d921c87bca8233a50ea9dbfbd0be01c752511b8adebe00c78bc2eb27091ac57036a5c3b8608"
+    "value": "82c06ff811b14b54a164886e3ba7ab3fec792f2e1480d0e2b537b0ffa03d43fc50fcb947fd179e8082b2469b308f840f60bc858cdba178073d642bb8ff23f708"
   }
 }

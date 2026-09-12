@@ -89,9 +89,10 @@ export async function verifyLegateStandard(input, opts = {}) {
     const calls = Array.isArray(opts.calls) ? opts.calls : null;
     const regrade = opts.regrade ?? null;
     const provenance = opts.provenance ?? null;
+    const regrades = Array.isArray(opts.regrades) ? opts.regrades : null;
     const modelCalls = typeof opts.modelCalls === 'string' ? opts.modelCalls : null;
     const modelAttestations = Array.isArray(opts.modelAttestations) ? opts.modelAttestations : null;
-    const v = m.verifyRunManifest(input, { standard, receipts, calls, regrade, provenance, modelCalls, modelAttestations }, now);
+    const v = m.verifyRunManifest(input, { standard, receipts, calls, regrade, regrades, provenance, modelCalls, modelAttestations }, now);
     return {
       valid: v.cryptographically_valid,
       ...base,

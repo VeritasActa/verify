@@ -208,7 +208,7 @@ function parseArgs() {
       case '--standard': opts.standardFile = next(); break;
       case '--receipts': opts.receiptsFile = next(); break;
       case '--calls': opts.callsFile = next(); break;
-      case '--regrade': opts.regradeFile = next(); break;
+      case '--regrade': (opts.regradeFiles ??= []).push(next()); break;
       case '--provenance': (opts.provenanceFiles ??= []).push(next()); break;
       case '--model-calls': opts.modelCallsFile = next(); break;
       case '--model-attestation': opts.modelAttestationFile = next(); break;
@@ -347,7 +347,7 @@ ${bold('Options:')}
   --standard <file>        Legate run manifest: the signed standard to check the pins and policy against
   --receipts <file>        Legate run manifest: the gateway's receipt log (JSONL or array) to check the chain against
   --calls <file>           Legate run manifest: the calls log (JSONL), one call per receipt, to open the input digests
-  --regrade <file>         Legate run manifest: a second grading (scopeblind.run_regrade.v1) to reconcile with the manifest
+  --regrade <file>         Legate run manifest: a second grading (scopeblind.run_regrade.v1) to reconcile with the manifest; repeatable: the first is the run's own, any further one a grading made elsewhere
   --provenance <path>      Legate run manifest: Sigstore provenance bundle(s) (.sigstore.jsonl, or a directory of them), verified here against the pinned trust root; repeatable
   --model-calls <file>     Legate run manifest: the model-calls log (model-calls.jsonl), each call signed inside the model's TEE
   --model-attestation <f>  Legate run manifest: the attestation report(s) (model-attestation.json) whose Intel TDX quotes bind the signing keys; verified offline
@@ -625,7 +625,7 @@ async function dispatch(input, opts) {
           const text = readFileSync(opts.callsFile, 'utf8').trim();
           subOpts.calls = (text.startsWith('[') ? JSON.parse(text) : text.split('\n').filter(Boolean).map((l) => JSON.parse(l))).map((c) => ({ tool: c.tool, input: c.input }));
         }
-        if (opts.regradeFile) subOpts.regrade = JSON.parse(readFileSync(opts.regradeFile, 'utf8'));
+        if (opts.regradeFiles?.length) { subOpts.regrade = JSON.parse(readFileSync(opts.regradeFiles[0], 'utf8')); subOpts.regrades = opts.regradeFiles.slice(1).map((f) => ({ regrade: JSON.parse(readFileSync(f, 'utf8')), bytes: readFileSync(f) })); }
         // Provenance bundles name exact bytes, so the files as given on the command line are read again as bytes.
         if (opts.provenanceFiles?.length) {
           const { readdirSync, statSync } = await import('node:fs');
@@ -636,8 +636,9 @@ async function dispatch(input, opts) {
           if (opts.file) bytes.manifest = readFileSync(opts.file);
           if (opts.standardFile) bytes.standard = readFileSync(opts.standardFile);
           if (opts.receiptsFile) bytes.receipts = readFileSync(opts.receiptsFile);
-          if (opts.regradeFile) bytes.regrade = readFileSync(opts.regradeFile);
+          if (opts.regradeFiles?.[0]) bytes.regrade = readFileSync(opts.regradeFiles[0]);
           subOpts.provenance = { bundles, bytes };
+          if (Array.isArray(subOpts.regrades)) for (const r of subOpts.regrades) r.bundles = bundles;
         }
         if (opts.modelCallsFile) subOpts.modelCalls = readFileSync(opts.modelCallsFile, 'utf8');
         if (opts.modelAttestationFile) { const v = JSON.parse(readFileSync(opts.modelAttestationFile, 'utf8')); subOpts.modelAttestations = Array.isArray(v) ? v : [v]; }

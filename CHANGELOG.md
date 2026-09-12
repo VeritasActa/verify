@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.9 (2026-09-12)
+
+- `--regrade` is repeatable. The first is the run's own second grading; each further one is a grading made elsewhere (`regrade_2`, `regrade_3`, ...), verified the same way: under its grader key, for this manifest, accepted by the standard (a listed key, or the provenance identity of a bundle given with `--provenance` that names the grading's exact bytes), distinct from the harness key, and agreeing with every verdict and workspace. One accepted, agreeing grading reconciles the verdicts; every grading supplied must hold for the run to bind. The first such grader is VeritasActa/verified-runs-grader.
+- A second grading is accepted by the key the standard names, or by the provenance identity the standard names (`trust.accepted_grader_provenance`) when the regrade's own bytes carry a verified bundle from that identity: a grader elsewhere needs no key listed in advance. The report says which repository made the regrade and whether it is the run's own or another.
+- Keys by provenance. When a run's manifest and receipts carry verified provenance and its gateway and harness keys are not the demonstration keys, the verifier reports them as generated inside the attested workflow run; otherwise it says which keys are demonstration keys, and always says the maintainer key must be pinned through a channel of the reader's own.
+
 ## 0.10.8 (2026-09-12)
 
 - A run manifest's `model_calls` pin (the digest and count of the signed model-calls log) is part of the signed body. 0.10.7 computed the manifest digest without it and refused every attested manifest as altered; this release verifies them. A manifest without the field is unchanged.

@@ -72,6 +72,23 @@ test('a receipt log with a receipt removed does not bind to the manifest', async
 });
 
 const provenanceFixture = () => ({ bundles: readFileSync(fixturePath('run-provenance.sigstore.jsonl'), 'utf8').trim().split('\n').map((l) => JSON.parse(l)), bytes: { manifest: readFileSync(fixturePath('run-manifest.json')), receipts: readFileSync(fixturePath('run-receipts.jsonl')), standard: readFileSync(fixturePath('run-standard.json')) } });
+const attestedFixture = () => ({ modelCalls: readFileSync(fixturePath('run-model-calls.jsonl'), 'utf8'), modelAttestations: JSON.parse(readFileSync(fixturePath('run-model-attestation.json'), 'utf8')) });
+
+test('with the signed model calls and the attestation report beside it, the model route is observed, not declared', async () => {
+  const r = await verifyLegateStandard(fixture('run-manifest.json'), { now: NOW, standard: fixture('run-standard.json'), receipts: fixture('run-receipts.json'), calls: callsFixture(), regrade: fixture('run-regrade.json'), provenance: provenanceFixture(), ...attestedFixture() });
+  assert.equal(r.binding, 'bound', JSON.stringify(r.checks.filter((c) => !c.ok)));
+  for (const id of ['model_attestation', 'model_attestation_pin', 'model_calls_digest', 'model_calls_bind', 'model_attestation_1_quote_pck_chain', 'model_attestation_1_report_data', 'model_attestation_1_compose']) assert.ok(r.checks.some((c) => c.id === id && c.ok && !c.informational), id);
+  assert.match(r.checks.find((c) => c.id === 'model_route').detail, /observed, not declared/);
+  assert.equal(r.model_attestation.verified, true);
+  assert.ok(r.establishes.some((s) => /inside a TDX confidential machine/.test(s)));
+});
+
+test('a model call whose signature no longer recovers unbinds the run', async () => {
+  const a = attestedFixture(); const lines = a.modelCalls.split('\n').filter(Boolean); const first = JSON.parse(lines[0]); first.response_sha256 = 'a'.repeat(64); lines[0] = JSON.stringify(first); a.modelCalls = lines.join('\n') + '\n';
+  const r = await verifyLegateStandard(fixture('run-manifest.json'), { now: NOW, standard: fixture('run-standard.json'), receipts: fixture('run-receipts.json'), ...a });
+  assert.notEqual(r.binding, 'bound');
+  assert.ok(r.checks.some((c) => c.id === 'model_calls_digest' && !c.ok));
+});
 
 test('with the provenance bundle beside it, the workflow, the commit, and the log entry are verified against the pinned Sigstore trust root', async () => {
   const r = await verifyLegateStandard(fixture('run-manifest.json'), { now: NOW, standard: fixture('run-standard.json'), receipts: fixture('run-receipts.json'), calls: callsFixture(), regrade: fixture('run-regrade.json'), provenance: provenanceFixture() });
@@ -106,14 +123,45 @@ test('a manifest edited after attestation is not the bytes the provenance names'
 
 test('the CLI takes --standard, --receipts, and --provenance and reports the binding', () => {
   const cli = join(here, '..', '..', 'cli.js');
-  const r = spawnSync(process.execPath, [cli, fixturePath('run-manifest.json'), '--standard', fixturePath('run-standard.json'), '--receipts', fixturePath('run-receipts.jsonl'), '--calls', fixturePath('run-calls.jsonl'), '--regrade', fixturePath('run-regrade.json'), '--provenance', fixturePath('run-provenance.sigstore.jsonl'), '--json'], { encoding: 'utf8' });
+  const r = spawnSync(process.execPath, [cli, fixturePath('run-manifest.json'), '--standard', fixturePath('run-standard.json'), '--receipts', fixturePath('run-receipts.jsonl'), '--calls', fixturePath('run-calls.jsonl'), '--regrade', fixturePath('run-regrade.json'), '--provenance', fixturePath('run-provenance.sigstore.jsonl'), '--model-calls', fixturePath('run-model-calls.jsonl'), '--model-attestation', fixturePath('run-model-attestation.json'), '--json'], { encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr);
   const out = JSON.parse(r.stdout);
   assert.equal(out.valid, true);
   assert.equal(out.binding, 'bound', JSON.stringify(out.checks.filter((c) => !c.ok)));
   assert.equal(out.provenance.verified, true);
+  assert.equal(out.model_attestation.verified, true);
   const alone = spawnSync(process.execPath, [cli, fixturePath('run-manifest.json')], { encoding: 'utf8', env: { ...process.env, NO_COLOR: '1' } });
   assert.equal(alone.status, 0, alone.stderr);
   assert.match(alone.stdout, /Run manifest verifies: \d+ of \d+ passed, unbound/);
   assert.match(alone.stdout, /manifest only \(add --standard, --receipts, --calls, --regrade to bind\)/);
+});
+
+const regradeBytes = () => readFileSync(fixturePath('run-regrade.json'));
+
+test('a grading made elsewhere, given as a further regrade, is checked like the first and reconciles when it agrees', async () => {
+  const r = await verifyLegateStandard(fixture('run-manifest.json'), { now: NOW, standard: fixture('run-standard.json'), receipts: fixture('run-receipts.json'), calls: callsFixture(), regrade: fixture('run-regrade.json'), regrades: [{ regrade: fixture('run-regrade.json'), bytes: regradeBytes() }] });
+  assert.equal(r.binding, 'bound', JSON.stringify(r.checks.filter((c) => !c.ok)));
+  const second = r.checks.find((c) => c.id === 'regrade_2');
+  assert.ok(second && second.ok, JSON.stringify(second));
+  assert.equal(second.label, 'Grading 3');
+  assert.ok(r.checks.some((c) => c.id === 'regrade' && c.ok));
+});
+
+test('a grading made elsewhere whose verdict was changed after signing fails its own check and unbinds the run, while the run\'s own grading still holds', async () => {
+  const manifest = fixture('run-manifest.json');
+  const own = fixture('run-regrade.json');
+  const other = fixture('run-regrade.json');
+  other.results[0].verdict = other.results[0].verdict === 'pass' ? 'fail' : 'pass';
+  const r = await verifyLegateStandard(manifest, { now: NOW, standard: fixture('run-standard.json'), receipts: fixture('run-receipts.json'), calls: callsFixture(), regrade: own, regrades: [{ regrade: other, bytes: JSON.stringify(other) }] });
+  assert.notEqual(r.binding, 'bound');
+  assert.ok(r.checks.some((c) => c.id === 'regrade' && c.ok));
+  const second = r.checks.find((c) => c.id === 'regrade_2');
+  assert.ok(second && !second.ok && /altered after signing/.test(second.detail), JSON.stringify(second));
+});
+
+test('--regrade may be given more than once: the first is the run\'s own, the rest gradings made elsewhere', () => {
+  const cli = join(here, '..', '..', 'cli.js');
+  const r = spawnSync(process.execPath, [cli, fixturePath('run-manifest.json'), '--standard', fixturePath('run-standard.json'), '--receipts', fixturePath('run-receipts.jsonl'), '--calls', fixturePath('run-calls.jsonl'), '--regrade', fixturePath('run-regrade.json'), '--regrade', fixturePath('run-regrade.json'), '--json'], { encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr || r.stdout);
+  assert.match(r.stdout, /"id":\s*"regrade_2",\s*"label":\s*"Grading 3",\s*"ok":\s*true/);
 });

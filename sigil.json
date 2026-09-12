@@ -1,15 +1,15 @@
 {
   "sigil_version": 1,
-  "fingerprint": "de22046a",
-  "name": "First Field",
-  "sigil_hash": "de22046a5ff0e53c8d935df39d8729c0edfd31dfb994c9c6ac562e1aadc34426",
+  "fingerprint": "04a94479",
+  "name": "Woven Wind",
+  "sigil_hash": "04a944793e82c22828a77f801f65d9c55266380bf45db6ba3f77ed001f1ed025",
   "project_public_key": "fe665e861867cec7e171c0c13bbc873c3362079faef21f54df7804b7fb9ae8af",
   "commitment_authentication": "public_recomputable_integrity_only",
   "policy": {
     "version": 3,
     "package": "@veritasacta/verify",
-    "package_version": "0.10.8",
-    "source_hash": "3553322552c9f00ea6d4b6654aabbf874b301591d6d4a3e76e20b48a579275c0",
+    "package_version": "0.10.9",
+    "source_hash": "6c18b6bfb277ceb277ef1e1fcaeb8b2183af2574e5af10e3dbe0c1c6b3d4382b",
     "monitored_files": [
       "README.md",
       "cli.js",
@@ -75,6 +75,6 @@
     ],
     "created_at": 1784267169966
   },
-  "policy_hash": "13f6c296b0a3603f9e3d62974da6b0a7bf0bfa5de6eaaf2730728eaa3f571129",
+  "policy_hash": "b249c75fa0e3bbe6b0b45fa2ca3a6f1ce2aaee0506f7602f3ea4a9f4a223b313",
   "derived_at": "2026-07-17T05:46:09.966Z"
 }

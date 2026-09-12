@@ -45,7 +45,9 @@
       "allowed_tools": [
         "Bash"
       ],
-      "egress_allowlist": [],
+      "egress_allowlist": [
+        "cloud-api.near.ai"
+      ],
       "attempts_per_task": 1,
       "dataset": {
         "name": "terminal-bench/original-tasks",
@@ -54,10 +56,14 @@
       },
       "harness": {
         "name": "legate-verified-run",
-        "digest": "sha256:f870a5d5f86cb8dc8a57a233c92dbde127161d2b4fd8fb196a5b0d5ff4a1f4d8"
+        "digest": "sha256:fc332366a7336517e7925e3a3ad7aafc85ac0bc6ff129afd2ed1c36e771118ba"
       },
       "time_limit_seconds": 900,
-      "model_route": "chatgpt.com (Codex)"
+      "model_route": "cloud-api.near.ai (attested TDX inference)",
+      "model_attestation": {
+        "provider": "near-ai-cloud",
+        "model": "Qwen/Qwen3.8-27B"
+      }
     }
   },
   "trust": {
@@ -121,6 +127,7 @@
     "not_gate_enforced": [
       "run_egress",
       "run_model_route",
+      "run_model_attestation",
       "run_attempts",
       "run_time_limit",
       "run_dataset",
@@ -143,9 +150,9 @@
   "issued_at": "2026-09-11T00:00:00.000Z",
   "expires_at": "2027-12-31T00:00:00.000Z",
   "nonce": "c0ffee00c0ffee00c0ffee00c0ffee02",
-  "digest": "5ff55109646142ce98a962b802fd4ba9100aebbe744f0438161d1ebeaa1d6dce",
+  "digest": "916cad30b3c2db2acba73cfec4704d0d9e75d87ba3878553dbaf5190504c766c",
   "signature": {
     "algorithm": "Ed25519",
-    "value": "51da8c23e7f8dd297467b8059ddf736e42dc792a7686abdc656faf148999cbd58e5fb4fd836f979b54bc30f0e9a2521a35270ce94d7c1e10eee11f099d7e4e0b"
+    "value": "6ac539ee0beabd6ab3965e80a511176eab65727048755ea42df4a5083fe7ed418d84bfa4380f276f64631f23a7d9ea9d8e1f2e57136a5244bc26f17e1f63fe09"
   }
 }

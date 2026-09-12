@@ -1,22 +1,22 @@
 {
   "type": "scopeblind.run_manifest.v1",
   "version": 1,
-  "run_id": "run:acdc37bdee606700",
+  "run_id": "run:00856fa42e6ae290",
   "standard": {
     "request_id": "pr:7a1e5b9c3d2f4e60",
-    "digest": "5ff55109646142ce98a962b802fd4ba9100aebbe744f0438161d1ebeaa1d6dce",
+    "digest": "916cad30b3c2db2acba73cfec4704d0d9e75d87ba3878553dbaf5190504c766c",
     "recipient_key": "6c360b0c2def60adf93e97019f61df31d2670bbc3bfad933859dc1663c1d9eac",
     "policy_digest": "sha256:b88a9487c62dbb63db713fecd6b39ceeddba3e54b05dbfb332de26394688374f"
   },
   "agent": {
-    "name": "codex-cli",
-    "version": "0.154.0",
-    "model": "gpt-5.5",
-    "model_route": "chatgpt.com (Codex)"
+    "name": "legate-attested-loop",
+    "version": "legate-attested-loop 1.0",
+    "model": "Qwen/Qwen3.8-27B",
+    "model_route": "cloud-api.near.ai (attested TDX inference)"
   },
   "harness": {
     "name": "legate-verified-run",
-    "digest": "sha256:f870a5d5f86cb8dc8a57a233c92dbde127161d2b4fd8fb196a5b0d5ff4a1f4d8",
+    "digest": "sha256:fc332366a7336517e7925e3a3ad7aafc85ac0bc6ff129afd2ed1c36e771118ba",
     "gateway": "protect-mcp 0.13.3"
   },
   "dataset": {
@@ -26,42 +26,65 @@
     "task_count": 4
   },
   "environment": {
-    "sandbox": "Codex CLI sandbox, workspace-write, network disabled (Linux Landlock and seccomp)",
-    "egress": [],
+    "sandbox": "Linux bubblewrap for tool commands (network disabled); the harness makes the model calls over TLS to the attested provider",
+    "egress": [
+      "cloud-api.near.ai"
+    ],
+    "model_attestation": {
+      "provider": "near-ai-cloud",
+      "model": "Qwen/Qwen3.8-27B",
+      "reports": [
+        {
+          "digest": "sha256:9fafa444ec720cd93640d46338b4801bdf21fb956f70254d0182d4230df1422f",
+          "signing_address": "0xdae35b28350786f88afe07019aee6cef513886a8"
+        }
+      ]
+    },
     "attestation": {
       "kind": "github-actions-provenance",
-      "reference": "https://github.com/ScopeBlind/verified-runs/actions/runs/34664927913",
-      "digest": "sha256:ef16b85fcb359441eb7094de9c69e83bff2d5f5269d045dee8b567749511b758"
+      "reference": "https://github.com/ScopeBlind/verified-runs/actions/runs/34678858933",
+      "digest": "sha256:2743674befd06caf113c50cf364abea07037862e491ce4ed3e3fb8e38d302017",
+      "commit": "963a9bd61abbe32c8c98238c758cedc9aecd6fee",
+      "workflow": "ScopeBlind/verified-runs/.github/workflows/verified-run.yml@refs/heads/main"
     },
-    "note": "Run in GitHub Actions (https://github.com/ScopeBlind/verified-runs/actions/runs/34664927913); the provenance attestation for manifest.json, receipts.jsonl, and standard.json is on that run. Task paths were rebased from /app to a workspace and the tests were run with the same rebase."
+    "note": "Run in GitHub Actions (https://github.com/ScopeBlind/verified-runs/actions/runs/34678858933); the provenance attestations for manifest.json, receipts.jsonl, standard.json, and the second grading are on that run and kept beside it under provenance/, where the verifier consumes them. Task paths were rebased from /app to a workspace and the tests were run with the same rebase."
   },
   "gateway": {
     "key_id": "sb:issuer:GsAFpSRUAvaU",
     "verification_key": "ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225",
     "receipt_count": 22,
-    "chain_head": "sha256:9a3773b6fabd7055bbd01f1a03b4b7bf8e05b19e6b30a978c96b867d8cd57f32",
-    "log_digest": "sha256:baf8dc4dac6482892a9ad8994f83a4673b341287bf6b17348469eb9c8825a302",
-    "calls_digest": "sha256:9c882a86ca1be8e4ce89551be24ff48f63155d59f48008a00d5c0f1930406c1a",
+    "chain_head": "sha256:a3da3f29095814ac739895aa16e5f6b5f86b942cd435adc75f9ce86a1f07efaf",
+    "log_digest": "sha256:23c8d4ced5a8b904f0010f7282c3349ef1542a65dac83e2f586585013d076242",
+    "calls_digest": "sha256:252ac1d8ece8a5b13bf991b3410fd90348bced593d84dc7c35bc8b10ffb5cf25",
     "calls_disclosed": true
+  },
+  "model_calls": {
+    "digest": "sha256:6fa72d858e41fe63e56ced88ef2d20fbdedf889f6ae224bb1b4621d4b85f66e2",
+    "count": 17,
+    "disclosed": true
   },
   "attempts": [
     {
+      "model_calls": {
+        "from": 0,
+        "to": 2
+      },
       "task_id": "hello-world",
       "attempt": 1,
-      "started_at": "2026-09-12T01:28:54.276Z",
-      "ended_at": "2026-09-12T01:29:03.529Z",
+      "started_at": "2026-09-12T06:43:53.937Z",
+      "ended_at": "2026-09-12T06:44:03.991Z",
       "receipts": {
         "from": 0,
-        "to": 3
+        "to": 1
       },
-      "calls": 3,
-      "refused": 1,
+      "calls": 1,
+      "refused": 0,
       "verdict": "pass",
       "tests": {
         "runner": "pytest 8.4.1, run by the harness",
         "passed": 2,
         "failed": 0,
-        "output_digest": "sha256:1e5e5286d813863f4572b2e16a3c3fc402f08c9155f1b1062cb6518e7eebeb67"
+        "output_digest": "sha256:036fa4e3e3fbd16d4b3ef3456f3dcc456ef305c1e1fa673c484301559c2a52a7"
       },
       "agent": {
         "exit_code": 0,
@@ -74,108 +97,120 @@
       }
     },
     {
+      "model_calls": {
+        "from": 2,
+        "to": 4
+      },
       "task_id": "countdown-game",
       "attempt": 1,
-      "started_at": "2026-09-12T01:29:04.510Z",
-      "ended_at": "2026-09-12T01:29:12.736Z",
+      "started_at": "2026-09-12T06:44:04.391Z",
+      "ended_at": "2026-09-12T06:45:29.334Z",
       "receipts": {
-        "from": 3,
-        "to": 5
+        "from": 1,
+        "to": 2
       },
-      "calls": 2,
-      "refused": 1,
-      "verdict": "pass",
-      "tests": {
-        "runner": "pytest 8.4.1, run by the harness",
-        "passed": 2,
-        "failed": 0,
-        "output_digest": "sha256:36e52675f028ee34bf3bcda3e5e6f71cbd79e4747ec567f5fc0da3fd6aa8cf00"
-      },
-      "agent": {
-        "exit_code": 0,
-        "timed_out": false
-      },
-      "workspace": {
-        "digest": "sha256:150d31509fdac1f5770c96486577f61d7f396ab8726a8eecdfc6c0b5f88bb2ce",
-        "file_count": 1,
-        "disclosed": true
-      }
-    },
-    {
-      "task_id": "bank-trans-filter",
-      "attempt": 1,
-      "started_at": "2026-09-12T01:29:13.052Z",
-      "ended_at": "2026-09-12T01:29:35.900Z",
-      "receipts": {
-        "from": 5,
-        "to": 12
-      },
-      "calls": 7,
+      "calls": 1,
       "refused": 0,
       "verdict": "fail",
       "tests": {
         "runner": "pytest 8.4.1, run by the harness",
         "passed": 0,
-        "failed": 1,
-        "output_digest": "sha256:3dc1b09962714cb7340c249286f68f43609584bda12d436aadd40b034900175e"
+        "failed": 2,
+        "output_digest": "sha256:c6ba9e4b9e957164239db3716f5f9d46fd5f12527e044be3482ae8e322d75a70"
       },
       "agent": {
         "exit_code": 0,
         "timed_out": false
       },
       "workspace": {
-        "digest": "sha256:3612b115651ed094b8d5007ec86e4234617b9cb9d841b1890d05ed6f05ce1dde",
+        "digest": "sha256:602e35a92eec4bc0a2ec6ae113f07bfc6933322fb69fe8dee416e5a67217e2a2",
+        "file_count": 0,
+        "disclosed": true
+      }
+    },
+    {
+      "model_calls": {
+        "from": 4,
+        "to": 13
+      },
+      "task_id": "bank-trans-filter",
+      "attempt": 1,
+      "started_at": "2026-09-12T06:45:29.652Z",
+      "ended_at": "2026-09-12T06:47:55.236Z",
+      "receipts": {
+        "from": 2,
+        "to": 18
+      },
+      "calls": 16,
+      "refused": 0,
+      "verdict": "pass",
+      "tests": {
+        "runner": "pytest 8.4.1, run by the harness",
+        "passed": 1,
+        "failed": 0,
+        "output_digest": "sha256:1cc378716bd0babd26a16e3936eb986604bc46a592dc8de9f55884fb37e0986e"
+      },
+      "agent": {
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "workspace": {
+        "digest": "sha256:bb533ad5960730aa22819c66ede0159465d329caad3c9d139951116971721bad",
         "file_count": 1,
         "disclosed": true
       }
     },
     {
+      "model_calls": {
+        "from": 13,
+        "to": 17
+      },
       "task_id": "assign-seats",
       "attempt": 1,
-      "started_at": "2026-09-12T01:29:36.236Z",
-      "ended_at": "2026-09-12T01:30:00.748Z",
+      "started_at": "2026-09-12T06:47:55.501Z",
+      "ended_at": "2026-09-12T06:49:14.950Z",
       "receipts": {
-        "from": 12,
+        "from": 18,
         "to": 22
       },
-      "calls": 10,
-      "refused": 1,
-      "verdict": "pass",
+      "calls": 4,
+      "refused": 0,
+      "verdict": "fail",
       "tests": {
         "runner": "pytest 8.4.1, run by the harness",
-        "passed": 2,
-        "failed": 0,
-        "output_digest": "sha256:62719df620c8aaede9983b47ea2845593599945369194d6bf05b5344ef1ffa64"
+        "passed": 0,
+        "failed": 2,
+        "output_digest": "sha256:4eb0a91cd34e3b4f18c4876a21f063f076b8b4ddde9c17e99bbd5fde7696be5c"
       },
       "agent": {
         "exit_code": 0,
         "timed_out": false
       },
       "workspace": {
-        "digest": "sha256:e2cacc100990df513198f6ebe756674c16a2d0742bcb64dd102aee651755037d",
-        "file_count": 1,
+        "digest": "sha256:602e35a92eec4bc0a2ec6ae113f07bfc6933322fb69fe8dee416e5a67217e2a2",
+        "file_count": 0,
         "disclosed": true
       }
     }
   ],
   "summary": {
     "tasks": 4,
-    "passed": 3,
-    "failed": 1,
+    "passed": 2,
+    "failed": 2,
     "errored": 0,
     "calls": 22,
-    "refused": 3
+    "refused": 0
   },
   "signer": {
     "name": "Legate verified-run harness (demo)",
     "key_id": "harness:faef67591c23b631",
     "verification_key": "33d3c584cbbb91063446ee05591b4226d15c464cefe7fb9e075cfc9db0910727"
   },
-  "issued_at": "2026-09-12T01:30:01.120Z",
-  "nonce": "6ae7a96fc21655b4d2c7df313229faec",
-  "digest": "5ff06d2d7d338226286ac5bc92d28d95707c59e6e7c7b22a97a3ec43bad854f9",
+  "issued_at": "2026-09-12T06:49:15.240Z",
+  "nonce": "02d81d40d2246d2de8127db760da9aa8",
+  "digest": "10db0609ed329a0a9a2c90aed3ff3dd45bf02720b746b9664c4211481964a8f1",
   "signature": {
     "algorithm": "Ed25519",
-    "value": "f28e76da6417890542c8c157d9866d7a3bb7d9488e979cc73bc8eb57bf4c785bd87036885b7087367279da4b81a170cad0282d11f7a915cbb500be740b936403"
+    "value": "b5f406917db982c4c5d1dcdbed5f373aa62854017d445c00885444ac1aff03da7b916fddfedaff0d14d097c4a603f6eede53d456e7edc704a13897fbe5dd0e0d"
   }
 }
