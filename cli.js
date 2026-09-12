@@ -210,6 +210,8 @@ function parseArgs() {
       case '--calls': opts.callsFile = next(); break;
       case '--regrade': opts.regradeFile = next(); break;
       case '--provenance': (opts.provenanceFiles ??= []).push(next()); break;
+      case '--model-calls': opts.modelCallsFile = next(); break;
+      case '--model-attestation': opts.modelAttestationFile = next(); break;
       case '--json': opts.json = true; break;
       case '--verbose':
       case '-v': opts.verbose = true; break;
@@ -347,6 +349,8 @@ ${bold('Options:')}
   --calls <file>           Legate run manifest: the calls log (JSONL), one call per receipt, to open the input digests
   --regrade <file>         Legate run manifest: a second grading (scopeblind.run_regrade.v1) to reconcile with the manifest
   --provenance <path>      Legate run manifest: Sigstore provenance bundle(s) (.sigstore.jsonl, or a directory of them), verified here against the pinned trust root; repeatable
+  --model-calls <file>     Legate run manifest: the model-calls log (model-calls.jsonl), each call signed inside the model's TEE
+  --model-attestation <f>  Legate run manifest: the attestation report(s) (model-attestation.json) whose Intel TDX quotes bind the signing keys; verified offline
   --stdin                  Read input from stdin
   --json                   Output JSON
   --verbose, -v            Detailed verification info
@@ -635,6 +639,8 @@ async function dispatch(input, opts) {
           if (opts.regradeFile) bytes.regrade = readFileSync(opts.regradeFile);
           subOpts.provenance = { bundles, bytes };
         }
+        if (opts.modelCallsFile) subOpts.modelCalls = readFileSync(opts.modelCallsFile, 'utf8');
+        if (opts.modelAttestationFile) { const v = JSON.parse(readFileSync(opts.modelAttestationFile, 'utf8')); subOpts.modelAttestations = Array.isArray(v) ? v : [v]; }
       }
       const r = await verifyLegateStandard(input, subOpts);
       return { ...r, modeLabel: MODE_LABELS['legate-standard'] };

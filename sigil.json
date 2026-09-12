@@ -1,15 +1,15 @@
 {
   "sigil_version": 1,
-  "fingerprint": "ff59232c",
-  "name": "Woven River",
-  "sigil_hash": "ff59232c8522274339f32e1fcf296edcf1218c980d063ce2fb6358c7e0362037",
+  "fingerprint": "7c74a1d6",
+  "name": "Slow Arrow",
+  "sigil_hash": "7c74a1d6b51add4d4597add25fecf7e2a6fe32e482aecb67f1b74d52c0c08de1",
   "project_public_key": "fe665e861867cec7e171c0c13bbc873c3362079faef21f54df7804b7fb9ae8af",
   "commitment_authentication": "public_recomputable_integrity_only",
   "policy": {
     "version": 3,
     "package": "@veritasacta/verify",
-    "package_version": "0.10.6",
-    "source_hash": "7e54fd7c7d4e3a0d8c900ef05c6f665a42803e89f7f6e4da852a74207c089db8",
+    "package_version": "0.10.7",
+    "source_hash": "3553322552c9f00ea6d4b6654aabbf874b301591d6d4a3e76e20b48a579275c0",
     "monitored_files": [
       "README.md",
       "cli.js",
@@ -75,6 +75,6 @@
     ],
     "created_at": 1784267169966
   },
-  "policy_hash": "5e7a0bbb4d0e8a833f190f4bc633767b3231e006c477be134d90e1a173c201b3",
+  "policy_hash": "9c241144d6fff0506ccaa0c41c996243f1ab502f510c02653f0b2b072b66669c",
   "derived_at": "2026-07-17T05:46:09.966Z"
 }

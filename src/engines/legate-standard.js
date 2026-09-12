@@ -89,7 +89,9 @@ export async function verifyLegateStandard(input, opts = {}) {
     const calls = Array.isArray(opts.calls) ? opts.calls : null;
     const regrade = opts.regrade ?? null;
     const provenance = opts.provenance ?? null;
-    const v = m.verifyRunManifest(input, { standard, receipts, calls, regrade, provenance }, now);
+    const modelCalls = typeof opts.modelCalls === 'string' ? opts.modelCalls : null;
+    const modelAttestations = Array.isArray(opts.modelAttestations) ? opts.modelAttestations : null;
+    const v = m.verifyRunManifest(input, { standard, receipts, calls, regrade, provenance, modelCalls, modelAttestations }, now);
     return {
       valid: v.cryptographically_valid,
       ...base,
@@ -105,6 +107,7 @@ export async function verifyLegateStandard(input, opts = {}) {
       establishes: v.establishes,
       not_established: v.not_established,
       provenance: v.provenance ?? undefined,
+      model_attestation: input.environment?.model_attestation ? { provider: input.environment.model_attestation.provider, model: input.environment.model_attestation.model, reports: input.environment.model_attestation.reports.length, calls: input.model_calls?.count ?? 0, verified: v.checks.some((c) => c.id === 'model_calls_bind' && c.ok && !c.informational) && v.checks.some((c) => c.id === 'model_attestation' && c.ok && !c.informational) } : undefined,
     };
   }
 

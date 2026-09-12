@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.7 (2026-09-12)
+
+- Attested model route. `--model-calls model-calls.jsonl` and `--model-attestation model-attestation.json` verify, offline, that every model call of a run was signed inside the inference provider's TEE (NEAR AI Cloud's shape: a secp256k1 signature over `{model}:{sha256(request)}:{sha256(response)}`), that each signing key is bound in an attestation report whose Intel TDX quote chains to the pinned Intel SGX Root CA (quote signature, quoting-enclave binding and signature, PCK chain, validity), and that the attested model is the one the standard names. The report's GPU evidence and the platform's TCB status are carried and named, not verified here. Adds `verifyTdxQuote` to the engine.
+
 ## 0.10.6 (2026-09-12)
 
 - `--provenance`: a bundle made in another run verifies on its own terms but does not count for this manifest, and unbinds nothing; it contradicts the manifest only when it names the manifest's own bytes. A deterministic standard is attested by every run that used it, so `gh attestation download standard.json` returns every run's bundle, and a reader may well hold bundles from other runs.

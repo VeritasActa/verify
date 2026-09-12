@@ -61,11 +61,11 @@ function bytesToHex(bytes) {
   abytes(bytes);
   if (hasHexBuiltin)
     return bytes.toHex();
-  let hex = "";
+  let hex2 = "";
   for (let i = 0; i < bytes.length; i++) {
-    hex += hexes[bytes[i]];
+    hex2 += hexes[bytes[i]];
   }
-  return hex;
+  return hex2;
 }
 var asciis = { _0: 48, _9: 57, A: 65, F: 70, a: 97, f: 102 };
 function asciiToBase16(ch) {
@@ -77,21 +77,21 @@ function asciiToBase16(ch) {
     return ch - (asciis.a - 10);
   return;
 }
-function hexToBytes(hex) {
-  if (typeof hex !== "string")
-    throw new Error("hex string expected, got " + typeof hex);
+function hexToBytes(hex2) {
+  if (typeof hex2 !== "string")
+    throw new Error("hex string expected, got " + typeof hex2);
   if (hasHexBuiltin)
-    return Uint8Array.fromHex(hex);
-  const hl = hex.length;
+    return Uint8Array.fromHex(hex2);
+  const hl = hex2.length;
   const al = hl / 2;
   if (hl % 2)
     throw new Error("hex string expected, got unpadded hex of length " + hl);
   const array = new Uint8Array(al);
   for (let ai = 0, hi = 0; ai < al; ai++, hi += 2) {
-    const n1 = asciiToBase16(hex.charCodeAt(hi));
-    const n2 = asciiToBase16(hex.charCodeAt(hi + 1));
+    const n1 = asciiToBase16(hex2.charCodeAt(hi));
+    const n2 = asciiToBase16(hex2.charCodeAt(hi + 1));
     if (n1 === void 0 || n2 === void 0) {
-      const char = hex[hi] + hex[hi + 1];
+      const char = hex2[hi] + hex2[hi + 1];
       throw new Error('hex string expected, got non-hex character "' + char + '" at index ' + hi);
     }
     array[ai] = n1 * 16 + n2;
@@ -151,11 +151,11 @@ var HashMD = class {
   length = 0;
   pos = 0;
   destroyed = false;
-  constructor(blockLen, outputLen, padOffset, isLE) {
+  constructor(blockLen, outputLen, padOffset, isLE2) {
     this.blockLen = blockLen;
     this.outputLen = outputLen;
     this.padOffset = padOffset;
-    this.isLE = isLE;
+    this.isLE = isLE2;
     this.buffer = new Uint8Array(blockLen);
     this.view = createView(this.buffer);
   }
@@ -188,7 +188,7 @@ var HashMD = class {
     aexists(this);
     aoutput(out, this);
     this.finished = true;
-    const { buffer, view, blockLen, isLE } = this;
+    const { buffer, view, blockLen, isLE: isLE2 } = this;
     let { pos } = this;
     buffer[pos++] = 128;
     clean(this.buffer.subarray(pos));
@@ -198,7 +198,7 @@ var HashMD = class {
     }
     for (let i = pos; i < blockLen; i++)
       buffer[i] = 0;
-    view.setBigUint64(blockLen - 8, BigInt(this.length * 8), isLE);
+    view.setBigUint64(blockLen - 8, BigInt(this.length * 8), isLE2);
     this.process(view, 0);
     const oview = createView(out);
     const len = this.outputLen;
@@ -209,7 +209,7 @@ var HashMD = class {
     if (outLen > state.length)
       throw new Error("_sha2: outputLen bigger than state");
     for (let i = 0; i < outLen; i++)
-      oview.setUint32(4 * i, state[i], isLE);
+      oview.setUint32(4 * i, state[i], isLE2);
   }
   digest() {
     const { buffer, outputLen } = this;
@@ -722,13 +722,13 @@ function asafenumber(value, title = "") {
   }
 }
 function numberToHexUnpadded(num) {
-  const hex = abignumber(num).toString(16);
-  return hex.length & 1 ? "0" + hex : hex;
+  const hex2 = abignumber(num).toString(16);
+  return hex2.length & 1 ? "0" + hex2 : hex2;
 }
-function hexToNumber(hex) {
-  if (typeof hex !== "string")
-    throw new Error("hex string expected, got " + typeof hex);
-  return hex === "" ? _0n : BigInt("0x" + hex);
+function hexToNumber(hex2) {
+  if (typeof hex2 !== "string")
+    throw new Error("hex string expected, got " + typeof hex2);
+  return hex2 === "" ? _0n : BigInt("0x" + hex2);
 }
 function bytesToNumberBE(bytes) {
   return hexToNumber(bytesToHex(bytes));
@@ -1195,18 +1195,18 @@ var _Field = class {
   }
   fromBytes(bytes, skipValidation = false) {
     abytes(bytes);
-    const { _lengths: allowedLengths, BYTES, isLE, ORDER, _mod: modFromBytes } = this;
+    const { _lengths: allowedLengths, BYTES, isLE: isLE2, ORDER, _mod: modFromBytes } = this;
     if (allowedLengths) {
       if (!allowedLengths.includes(bytes.length) || bytes.length > BYTES) {
         throw new Error("Field.fromBytes: expected " + allowedLengths + " bytes, got " + bytes.length);
       }
       const padded = new Uint8Array(BYTES);
-      padded.set(bytes, isLE ? 0 : padded.length - bytes.length);
+      padded.set(bytes, isLE2 ? 0 : padded.length - bytes.length);
       bytes = padded;
     }
     if (bytes.length !== BYTES)
       throw new Error("Field.fromBytes: expected " + BYTES + " bytes, got " + bytes.length);
-    let scalar = isLE ? bytesToNumberLE(bytes) : bytesToNumberBE(bytes);
+    let scalar = isLE2 ? bytesToNumberLE(bytes) : bytesToNumberBE(bytes);
     if (modFromBytes)
       scalar = mod(scalar, ORDER);
     if (!skipValidation) {
@@ -1238,16 +1238,16 @@ function getMinHashLength(fieldOrder) {
   const length = getFieldBytesLength(fieldOrder);
   return length + Math.ceil(length / 2);
 }
-function mapHashToField(key, fieldOrder, isLE = false) {
+function mapHashToField(key, fieldOrder, isLE2 = false) {
   abytes(key);
   const len = key.length;
   const fieldLen = getFieldBytesLength(fieldOrder);
   const minLen = getMinHashLength(fieldOrder);
   if (len < 16 || len < minLen || len > 1024)
     throw new Error("expected " + minLen + "-1024 bytes of input, got " + len);
-  const num = isLE ? bytesToNumberLE(key) : bytesToNumberBE(key);
+  const num = isLE2 ? bytesToNumberLE(key) : bytesToNumberBE(key);
   const reduced = mod(num, fieldOrder - _1n2) + _1n2;
-  return isLE ? numberToBytesLE(reduced, fieldLen) : numberToBytesBE(reduced, fieldLen);
+  return isLE2 ? numberToBytesLE(reduced, fieldLen) : numberToBytesBE(reduced, fieldLen);
 }
 
 // node_modules/@noble/curves/abstract/curve.js
@@ -1445,14 +1445,14 @@ function mulEndoUnsafe(Point, point, k1, k2) {
   }
   return { p1, p2 };
 }
-function createField(order, field, isLE) {
+function createField(order, field, isLE2) {
   if (field) {
     if (field.ORDER !== order)
       throw new Error("Field.ORDER must match order: Fp == p, Fn == n");
     validateField(field);
     return field;
   } else {
-    return Field(order, { isLE });
+    return Field(order, { isLE: isLE2 });
   }
 }
 function createCurveFields(type, CURVE, curveOpts = {}, FpFnLE) {
@@ -1613,8 +1613,8 @@ function edwards(params, extraOpts = {}) {
         x = modP(-x);
       return Point.fromAffine({ x, y });
     }
-    static fromHex(hex, zip215 = false) {
-      return Point.fromBytes(hexToBytes(hex), zip215);
+    static fromHex(hex2, zip215 = false) {
+      return Point.fromBytes(hexToBytes(hex2), zip215);
     }
     get x() {
       return this.toAffine().x;
@@ -2175,8 +2175,8 @@ var _RistrettoPoint = class __RistrettoPoint extends PrimeEdwardsPoint {
    * Described in [RFC9496](https://www.rfc-editor.org/rfc/rfc9496#name-decode).
    * @param hex Ristretto-encoded 32 bytes. Not every 32-byte string is valid ristretto encoding
    */
-  static fromHex(hex) {
-    return __RistrettoPoint.fromBytes(hexToBytes(hex));
+  static fromHex(hex2) {
+    return __RistrettoPoint.fromBytes(hexToBytes(hex2));
   }
   /**
    * Encodes ristretto point to Uint8Array.
@@ -2272,6 +2272,16 @@ var ristretto255_hasher = {
 function isBytes2(a) {
   return a instanceof Uint8Array || ArrayBuffer.isView(a) && a.constructor.name === "Uint8Array" && "BYTES_PER_ELEMENT" in a && a.BYTES_PER_ELEMENT === 1;
 }
+function anumber2(n, title = "") {
+  if (typeof n !== "number") {
+    const prefix = title && `"${title}" `;
+    throw new TypeError(`${prefix}expected number, got ${typeof n}`);
+  }
+  if (!Number.isSafeInteger(n) || n < 0) {
+    const prefix = title && `"${title}" `;
+    throw new RangeError(`${prefix}expected integer >= 0, got ${n}`);
+  }
+}
 function abytes2(value, length, title = "") {
   const bytes = isBytes2(value);
   const len = value?.length;
@@ -2300,6 +2310,9 @@ function aoutput2(out, instance) {
     throw new RangeError('"digestInto() output" expected to be of length >=' + min);
   }
 }
+function u32(arr) {
+  return new Uint32Array(arr.buffer, arr.byteOffset, Math.floor(arr.byteLength / 4));
+}
 function clean2(...arrays) {
   for (let i = 0; i < arrays.length; i++) {
     arrays[i].fill(0);
@@ -2311,6 +2324,17 @@ function createView2(arr) {
 function rotr2(word, shift) {
   return word << 32 - shift | word >>> shift;
 }
+var isLE = /* @__PURE__ */ (() => new Uint8Array(new Uint32Array([287454020]).buffer)[0] === 68)();
+function byteSwap(word) {
+  return word << 24 & 4278190080 | word << 8 & 16711680 | word >>> 8 & 65280 | word >>> 24 & 255;
+}
+function byteSwap32(arr) {
+  for (let i = 0; i < arr.length; i++) {
+    arr[i] = byteSwap(arr[i]);
+  }
+  return arr;
+}
+var swap32IfBE = isLE ? (u) => u : byteSwap32;
 var hasHexBuiltin2 = /* @__PURE__ */ (() => (
   // @ts-ignore
   typeof Uint8Array.from([]).toHex === "function" && typeof Uint8Array.fromHex === "function"
@@ -2320,11 +2344,11 @@ function bytesToHex2(bytes) {
   abytes2(bytes);
   if (hasHexBuiltin2)
     return bytes.toHex();
-  let hex = "";
+  let hex2 = "";
   for (let i = 0; i < bytes.length; i++) {
-    hex += hexes2[bytes[i]];
+    hex2 += hexes2[bytes[i]];
   }
-  return hex;
+  return hex2;
 }
 var asciis2 = { _0: 48, _9: 57, A: 65, F: 70, a: 97, f: 102 };
 function asciiToBase162(ch) {
@@ -2336,38 +2360,38 @@ function asciiToBase162(ch) {
     return ch - (asciis2.a - 10);
   return;
 }
-function hexToBytes2(hex) {
-  if (typeof hex !== "string")
-    throw new TypeError("hex string expected, got " + typeof hex);
+function hexToBytes2(hex2) {
+  if (typeof hex2 !== "string")
+    throw new TypeError("hex string expected, got " + typeof hex2);
   if (hasHexBuiltin2) {
     try {
-      return Uint8Array.fromHex(hex);
+      return Uint8Array.fromHex(hex2);
     } catch (error) {
       if (error instanceof SyntaxError)
         throw new RangeError(error.message);
       throw error;
     }
   }
-  const hl = hex.length;
+  const hl = hex2.length;
   const al = hl / 2;
   if (hl % 2)
     throw new RangeError("hex string expected, got unpadded hex of length " + hl);
   const array = new Uint8Array(al);
   for (let ai = 0, hi = 0; ai < al; ai++, hi += 2) {
-    const n1 = asciiToBase162(hex.charCodeAt(hi));
-    const n2 = asciiToBase162(hex.charCodeAt(hi + 1));
+    const n1 = asciiToBase162(hex2.charCodeAt(hi));
+    const n2 = asciiToBase162(hex2.charCodeAt(hi + 1));
     if (n1 === void 0 || n2 === void 0) {
-      const char = hex[hi] + hex[hi + 1];
+      const char = hex2[hi] + hex2[hi + 1];
       throw new RangeError('hex string expected, got non-hex character "' + char + '" at index ' + hi);
     }
     array[ai] = n1 * 16 + n2;
   }
   return array;
 }
-function utf8ToBytes(str3) {
-  if (typeof str3 !== "string")
+function utf8ToBytes(str4) {
+  if (typeof str4 !== "string")
     throw new TypeError("string expected");
-  return new Uint8Array(new TextEncoder().encode(str3));
+  return new Uint8Array(new TextEncoder().encode(str4));
 }
 function concatBytes2(...arrays) {
   let sum = 0;
@@ -2420,11 +2444,11 @@ var HashMD2 = class {
   length = 0;
   pos = 0;
   destroyed = false;
-  constructor(blockLen, outputLen, padOffset, isLE) {
+  constructor(blockLen, outputLen, padOffset, isLE2) {
     this.blockLen = blockLen;
     this.outputLen = outputLen;
     this.padOffset = padOffset;
-    this.isLE = isLE;
+    this.isLE = isLE2;
     this.buffer = new Uint8Array(blockLen);
     this.view = createView2(this.buffer);
   }
@@ -2457,7 +2481,7 @@ var HashMD2 = class {
     aexists2(this);
     aoutput2(out, this);
     this.finished = true;
-    const { buffer, view, blockLen, isLE } = this;
+    const { buffer, view, blockLen, isLE: isLE2 } = this;
     let { pos } = this;
     buffer[pos++] = 128;
     clean2(this.buffer.subarray(pos));
@@ -2467,7 +2491,7 @@ var HashMD2 = class {
     }
     for (let i = pos; i < blockLen; i++)
       buffer[i] = 0;
-    view.setBigUint64(blockLen - 8, BigInt(this.length * 8), isLE);
+    view.setBigUint64(blockLen - 8, BigInt(this.length * 8), isLE2);
     this.process(view, 0);
     const oview = createView2(out);
     const len = this.outputLen;
@@ -2478,7 +2502,7 @@ var HashMD2 = class {
     if (outLen > state.length)
       throw new Error("_sha2: outputLen bigger than state");
     for (let i = 0; i < outLen; i++)
-      oview.setUint32(4 * i, state[i], isLE);
+      oview.setUint32(4 * i, state[i], isLE2);
   }
   digest() {
     const { buffer, outputLen } = this;
@@ -2574,6 +2598,10 @@ var rotrSH2 = (h, l, s) => h >>> s | l << 32 - s;
 var rotrSL2 = (h, l, s) => h << 32 - s | l >>> s;
 var rotrBH2 = (h, l, s) => h << 64 - s | l >>> s - 32;
 var rotrBL2 = (h, l, s) => h >>> s - 32 | l << 64 - s;
+var rotlSH = (h, l, s) => h << s | l >>> 32 - s;
+var rotlSL = (h, l, s) => l << s | h >>> 32 - s;
+var rotlBH = (h, l, s) => l << s - 32 | h >>> 64 - s;
+var rotlBL = (h, l, s) => h << s - 32 | l >>> 64 - s;
 function add2(Ah, Al, Bh, Bl) {
   const l = (Al >>> 0) + (Bl >>> 0);
   return { h: Ah + Bh + (l / 2 ** 32 | 0) | 0, l: l | 0 };
@@ -3360,7 +3388,7 @@ var crypto2 = nc && typeof nc === "object" && "webcrypto" in nc ? nc.webcrypto :
 function isBytes3(a) {
   return a instanceof Uint8Array || ArrayBuffer.isView(a) && a.constructor.name === "Uint8Array";
 }
-function anumber2(n) {
+function anumber3(n) {
   if (!Number.isSafeInteger(n) || n < 0)
     throw new Error("positive integer expected, got " + n);
 }
@@ -3373,8 +3401,8 @@ function abytes3(b, ...lengths) {
 function ahash2(h) {
   if (typeof h !== "function" || typeof h.create !== "function")
     throw new Error("Hash should be wrapped by utils.createHasher");
-  anumber2(h.outputLen);
-  anumber2(h.blockLen);
+  anumber3(h.outputLen);
+  anumber3(h.blockLen);
 }
 function aexists3(instance, checkFinished = true) {
   if (instance.destroyed)
@@ -3409,11 +3437,11 @@ function bytesToHex3(bytes) {
   abytes3(bytes);
   if (hasHexBuiltin3)
     return bytes.toHex();
-  let hex = "";
+  let hex2 = "";
   for (let i = 0; i < bytes.length; i++) {
-    hex += hexes3[bytes[i]];
+    hex2 += hexes3[bytes[i]];
   }
-  return hex;
+  return hex2;
 }
 var asciis3 = { _0: 48, _9: 57, A: 65, F: 70, a: 97, f: 102 };
 function asciiToBase163(ch) {
@@ -3425,31 +3453,31 @@ function asciiToBase163(ch) {
     return ch - (asciis3.a - 10);
   return;
 }
-function hexToBytes3(hex) {
-  if (typeof hex !== "string")
-    throw new Error("hex string expected, got " + typeof hex);
+function hexToBytes3(hex2) {
+  if (typeof hex2 !== "string")
+    throw new Error("hex string expected, got " + typeof hex2);
   if (hasHexBuiltin3)
-    return Uint8Array.fromHex(hex);
-  const hl = hex.length;
+    return Uint8Array.fromHex(hex2);
+  const hl = hex2.length;
   const al = hl / 2;
   if (hl % 2)
     throw new Error("hex string expected, got unpadded hex of length " + hl);
   const array = new Uint8Array(al);
   for (let ai = 0, hi = 0; ai < al; ai++, hi += 2) {
-    const n1 = asciiToBase163(hex.charCodeAt(hi));
-    const n2 = asciiToBase163(hex.charCodeAt(hi + 1));
+    const n1 = asciiToBase163(hex2.charCodeAt(hi));
+    const n2 = asciiToBase163(hex2.charCodeAt(hi + 1));
     if (n1 === void 0 || n2 === void 0) {
-      const char = hex[hi] + hex[hi + 1];
+      const char = hex2[hi] + hex2[hi + 1];
       throw new Error('hex string expected, got non-hex character "' + char + '" at index ' + hi);
     }
     array[ai] = n1 * 16 + n2;
   }
   return array;
 }
-function utf8ToBytes2(str3) {
-  if (typeof str3 !== "string")
+function utf8ToBytes2(str4) {
+  if (typeof str4 !== "string")
     throw new Error("string expected");
-  return new Uint8Array(new TextEncoder().encode(str3));
+  return new Uint8Array(new TextEncoder().encode(str4));
 }
 function toBytes(data) {
   if (typeof data === "string")
@@ -3493,17 +3521,17 @@ function randomBytes2(bytesLength = 32) {
 }
 
 // ../node_modules/@noble/hashes/esm/_md.js
-function setBigUint64(view, byteOffset, value, isLE) {
+function setBigUint64(view, byteOffset, value, isLE2) {
   if (typeof view.setBigUint64 === "function")
-    return view.setBigUint64(byteOffset, value, isLE);
+    return view.setBigUint64(byteOffset, value, isLE2);
   const _32n4 = BigInt(32);
   const _u32_max = BigInt(4294967295);
   const wh = Number(value >> _32n4 & _u32_max);
   const wl = Number(value & _u32_max);
-  const h = isLE ? 4 : 0;
-  const l = isLE ? 0 : 4;
-  view.setUint32(byteOffset + h, wh, isLE);
-  view.setUint32(byteOffset + l, wl, isLE);
+  const h = isLE2 ? 4 : 0;
+  const l = isLE2 ? 0 : 4;
+  view.setUint32(byteOffset + h, wh, isLE2);
+  view.setUint32(byteOffset + l, wl, isLE2);
 }
 function Chi3(a, b, c) {
   return a & b ^ ~a & c;
@@ -3512,7 +3540,7 @@ function Maj3(a, b, c) {
   return a & b ^ a & c ^ b & c;
 }
 var HashMD3 = class extends Hash {
-  constructor(blockLen, outputLen, padOffset, isLE) {
+  constructor(blockLen, outputLen, padOffset, isLE2) {
     super();
     this.finished = false;
     this.length = 0;
@@ -3521,7 +3549,7 @@ var HashMD3 = class extends Hash {
     this.blockLen = blockLen;
     this.outputLen = outputLen;
     this.padOffset = padOffset;
-    this.isLE = isLE;
+    this.isLE = isLE2;
     this.buffer = new Uint8Array(blockLen);
     this.view = createView3(this.buffer);
   }
@@ -3555,7 +3583,7 @@ var HashMD3 = class extends Hash {
     aexists3(this);
     aoutput3(out, this);
     this.finished = true;
-    const { buffer, view, blockLen, isLE } = this;
+    const { buffer, view, blockLen, isLE: isLE2 } = this;
     let { pos } = this;
     buffer[pos++] = 128;
     clean3(this.buffer.subarray(pos));
@@ -3565,7 +3593,7 @@ var HashMD3 = class extends Hash {
     }
     for (let i = pos; i < blockLen; i++)
       buffer[i] = 0;
-    setBigUint64(view, blockLen - 8, BigInt(this.length * 8), isLE);
+    setBigUint64(view, blockLen - 8, BigInt(this.length * 8), isLE2);
     this.process(view, 0);
     const oview = createView3(out);
     const len = this.outputLen;
@@ -3576,7 +3604,7 @@ var HashMD3 = class extends Hash {
     if (outLen > state.length)
       throw new Error("_sha2: outputLen bigger than state");
     for (let i = 0; i < outLen; i++)
-      oview.setUint32(4 * i, state[i], isLE);
+      oview.setUint32(4 * i, state[i], isLE2);
   }
   digest() {
     const { buffer, outputLen } = this;
@@ -4066,13 +4094,13 @@ function _abytes2(value, length, title = "") {
   return value;
 }
 function numberToHexUnpadded2(num) {
-  const hex = num.toString(16);
-  return hex.length & 1 ? "0" + hex : hex;
+  const hex2 = num.toString(16);
+  return hex2.length & 1 ? "0" + hex2 : hex2;
 }
-function hexToNumber2(hex) {
-  if (typeof hex !== "string")
-    throw new Error("hex string expected, got " + typeof hex);
-  return hex === "" ? _0n6 : BigInt("0x" + hex);
+function hexToNumber2(hex2) {
+  if (typeof hex2 !== "string")
+    throw new Error("hex string expected, got " + typeof hex2);
+  return hex2 === "" ? _0n6 : BigInt("0x" + hex2);
 }
 function bytesToNumberBE2(bytes) {
   return hexToNumber2(bytesToHex3(bytes));
@@ -4087,16 +4115,16 @@ function numberToBytesBE2(n, len) {
 function numberToBytesLE2(n, len) {
   return numberToBytesBE2(n, len).reverse();
 }
-function ensureBytes(title, hex, expectedLength) {
+function ensureBytes(title, hex2, expectedLength) {
   let res;
-  if (typeof hex === "string") {
+  if (typeof hex2 === "string") {
     try {
-      res = hexToBytes3(hex);
+      res = hexToBytes3(hex2);
     } catch (e) {
       throw new Error(title + " must be hex string or Uint8Array, cause: " + e);
     }
-  } else if (isBytes3(hex)) {
-    res = Uint8Array.from(hex);
+  } else if (isBytes3(hex2)) {
+    res = Uint8Array.from(hex2);
   } else {
     throw new Error(title + " must be hex string or Uint8Array");
   }
@@ -4433,12 +4461,12 @@ function FpLegendre2(Fp3, n) {
 }
 function nLength2(n, nBitLength) {
   if (nBitLength !== void 0)
-    anumber2(nBitLength);
+    anumber3(nBitLength);
   const _nBitLength = nBitLength !== void 0 ? nBitLength : n.toString(2).length;
   const nByteLength = Math.ceil(_nBitLength / 8);
   return { nBitLength: _nBitLength, nByteLength };
 }
-function Field2(ORDER, bitLenOrOpts, isLE = false, opts = {}) {
+function Field2(ORDER, bitLenOrOpts, isLE2 = false, opts = {}) {
   if (ORDER <= _0n7)
     throw new Error("invalid field: expected ORDER > 0, got " + ORDER);
   let _nbitLength = void 0;
@@ -4446,7 +4474,7 @@ function Field2(ORDER, bitLenOrOpts, isLE = false, opts = {}) {
   let modFromBytes = false;
   let allowedLengths = void 0;
   if (typeof bitLenOrOpts === "object" && bitLenOrOpts != null) {
-    if (opts.sqrt || isLE)
+    if (opts.sqrt || isLE2)
       throw new Error("cannot specify opts in two arguments");
     const _opts = bitLenOrOpts;
     if (_opts.BITS)
@@ -4454,7 +4482,7 @@ function Field2(ORDER, bitLenOrOpts, isLE = false, opts = {}) {
     if (_opts.sqrt)
       _sqrt = _opts.sqrt;
     if (typeof _opts.isLE === "boolean")
-      isLE = _opts.isLE;
+      isLE2 = _opts.isLE;
     if (typeof _opts.modFromBytes === "boolean")
       modFromBytes = _opts.modFromBytes;
     allowedLengths = _opts.allowedLengths;
@@ -4470,7 +4498,7 @@ function Field2(ORDER, bitLenOrOpts, isLE = false, opts = {}) {
   let sqrtP;
   const f = Object.freeze({
     ORDER,
-    isLE,
+    isLE: isLE2,
     BITS,
     BYTES,
     MASK: bitMask2(BITS),
@@ -4506,19 +4534,19 @@ function Field2(ORDER, bitLenOrOpts, isLE = false, opts = {}) {
         sqrtP = FpSqrt2(ORDER);
       return sqrtP(f, n);
     }),
-    toBytes: (num) => isLE ? numberToBytesLE2(num, BYTES) : numberToBytesBE2(num, BYTES),
+    toBytes: (num) => isLE2 ? numberToBytesLE2(num, BYTES) : numberToBytesBE2(num, BYTES),
     fromBytes: (bytes, skipValidation = true) => {
       if (allowedLengths) {
         if (!allowedLengths.includes(bytes.length) || bytes.length > BYTES) {
           throw new Error("Field.fromBytes: expected " + allowedLengths + " bytes, got " + bytes.length);
         }
         const padded = new Uint8Array(BYTES);
-        padded.set(bytes, isLE ? 0 : padded.length - bytes.length);
+        padded.set(bytes, isLE2 ? 0 : padded.length - bytes.length);
         bytes = padded;
       }
       if (bytes.length !== BYTES)
         throw new Error("Field.fromBytes: expected " + BYTES + " bytes, got " + bytes.length);
-      let scalar = isLE ? bytesToNumberLE2(bytes) : bytesToNumberBE2(bytes);
+      let scalar = isLE2 ? bytesToNumberLE2(bytes) : bytesToNumberBE2(bytes);
       if (modFromBytes)
         scalar = mod3(scalar, ORDER);
       if (!skipValidation) {
@@ -4545,15 +4573,15 @@ function getMinHashLength2(fieldOrder) {
   const length = getFieldBytesLength2(fieldOrder);
   return length + Math.ceil(length / 2);
 }
-function mapHashToField2(key, fieldOrder, isLE = false) {
+function mapHashToField2(key, fieldOrder, isLE2 = false) {
   const len = key.length;
   const fieldLen = getFieldBytesLength2(fieldOrder);
   const minLen = getMinHashLength2(fieldOrder);
   if (len < 16 || len < minLen || len > 1024)
     throw new Error("expected " + minLen + "-1024 bytes of input, got " + len);
-  const num = isLE ? bytesToNumberLE2(key) : bytesToNumberBE2(key);
+  const num = isLE2 ? bytesToNumberLE2(key) : bytesToNumberBE2(key);
   const reduced = mod3(num, fieldOrder - _1n7) + _1n7;
-  return isLE ? numberToBytesLE2(reduced, fieldLen) : numberToBytesBE2(reduced, fieldLen);
+  return isLE2 ? numberToBytesLE2(reduced, fieldLen) : numberToBytesBE2(reduced, fieldLen);
 }
 
 // ../node_modules/@noble/curves/esm/abstract/curve.js
@@ -4802,14 +4830,14 @@ function pippenger(c, fieldN, points, scalars) {
   }
   return sum;
 }
-function createField2(order, field, isLE) {
+function createField2(order, field, isLE2) {
   if (field) {
     if (field.ORDER !== order)
       throw new Error("Field.ORDER must match order: Fp == p, Fn == n");
     validateField2(field);
     return field;
   } else {
-    return Field2(order, { isLE });
+    return Field2(order, { isLE: isLE2 });
   }
 }
 function _createCurveFields(type, CURVE, curveOpts = {}, FpFnLE) {
@@ -5514,8 +5542,8 @@ var _RistrettoPoint2 = class __RistrettoPoint extends PrimeEdwardsPoint2 {
     return new __RistrettoPoint(ep);
   }
   /** @deprecated use `import { ristretto255_hasher } from '@noble/curves/ed25519.js';` */
-  static hashToCurve(hex) {
-    return ristretto255_map(ensureBytes("ristrettoHash", hex, 64));
+  static hashToCurve(hex2) {
+    return ristretto255_map(ensureBytes("ristrettoHash", hex2, 64));
   }
   static fromBytes(bytes) {
     abytes3(bytes, 32);
@@ -5548,8 +5576,8 @@ var _RistrettoPoint2 = class __RistrettoPoint extends PrimeEdwardsPoint2 {
    * Described in [RFC9496](https://www.rfc-editor.org/rfc/rfc9496#name-decode).
    * @param hex Ristretto-encoded 32 bytes. Not every 32-byte string is valid ristretto encoding
    */
-  static fromHex(hex) {
-    return __RistrettoPoint.fromBytes(ensureBytes("ristrettoHex", hex, 32));
+  static fromHex(hex2) {
+    return __RistrettoPoint.fromBytes(ensureBytes("ristrettoHex", hex2, 32));
   }
   static msm(points, scalars) {
     return pippenger(__RistrettoPoint, ed255192.Point.Fn, points, scalars);
@@ -5781,12 +5809,12 @@ var DER = {
       const { Err: E } = DER;
       if (num < _0n11)
         throw new E("integer: negative integers are not allowed");
-      let hex = numberToHexUnpadded2(num);
-      if (Number.parseInt(hex[0], 16) & 8)
-        hex = "00" + hex;
-      if (hex.length & 1)
+      let hex2 = numberToHexUnpadded2(num);
+      if (Number.parseInt(hex2[0], 16) & 8)
+        hex2 = "00" + hex2;
+      if (hex2.length & 1)
         throw new E("unexpected DER parsing assertion: unpadded hex");
-      return hex;
+      return hex2;
     },
     decode(data) {
       const { Err: E } = DER;
@@ -5797,9 +5825,9 @@ var DER = {
       return bytesToNumberBE2(data);
     }
   },
-  toSig(hex) {
+  toSig(hex2) {
     const { Err: E, _int: int, _tlv: tlv } = DER;
-    const data = ensureBytes("signature", hex);
+    const data = ensureBytes("signature", hex2);
     const { v: seqBytes, l: seqLeftBytes } = tlv.decode(48, data);
     if (seqLeftBytes.length)
       throw new E("invalid signature: left bytes after parsing");
@@ -6007,8 +6035,8 @@ function weierstrassN(params, extraOpts = {}) {
       P.assertValidity();
       return P;
     }
-    static fromHex(hex) {
-      return Point.fromBytes(ensureBytes("pointHex", hex));
+    static fromHex(hex2) {
+      return Point.fromBytes(ensureBytes("pointHex", hex2));
     }
     get x() {
       return this.toAffine().x;
@@ -6427,8 +6455,8 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
       const s = bytes.subarray(L3, L3 * 2);
       return new Signature(Fn3.fromBytes(r), Fn3.fromBytes(s), recid);
     }
-    static fromHex(hex, format) {
-      return this.fromBytes(hexToBytes3(hex), format);
+    static fromHex(hex2, format) {
+      return this.fromBytes(hexToBytes3(hex2), format);
     }
     addRecoveryBit(recovery) {
       return new Signature(this.r, this.s, recovery);
@@ -6479,11 +6507,11 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
     // TODO: remove
     assertValidity() {
     }
-    static fromCompact(hex) {
-      return Signature.fromBytes(ensureBytes("sig", hex), "compact");
+    static fromCompact(hex2) {
+      return Signature.fromBytes(ensureBytes("sig", hex2), "compact");
     }
-    static fromDER(hex) {
-      return Signature.fromBytes(ensureBytes("sig", hex), "der");
+    static fromDER(hex2) {
+      return Signature.fromBytes(ensureBytes("sig", hex2), "der");
     }
     normalizeS() {
       return this.hasHighS() ? new Signature(this.r, Fn3.neg(this.s), this.recovery) : this;
@@ -7999,7 +8027,7 @@ function shapeErrors(v) {
   if (isRecord(q) && q.run !== void 0 && q.run !== null) {
     const r2 = q.run;
     const strs = (x) => Array.isArray(x) && x.every((s) => typeof s === "string" && s.trim());
-    if (!isRecord(r2) || !strs(r2.allowed_tools) || r2.allowed_tools.length === 0 || !strs(r2.egress_allowlist) || !Number.isSafeInteger(r2.attempts_per_task) || r2.attempts_per_task <= 0 || !isRecord(r2.dataset) || typeof r2.dataset.name !== "string" || typeof r2.dataset.digest !== "string" || !/^sha256:[0-9a-f]{64}$/.test(r2.dataset.digest) || r2.dataset.revision !== void 0 && typeof r2.dataset.revision !== "string" || !isRecord(r2.harness) || typeof r2.harness.name !== "string" || typeof r2.harness.digest !== "string" || !/^sha256:[0-9a-f]{64}$/.test(r2.harness.digest) || !Number.isSafeInteger(r2.time_limit_seconds) || r2.time_limit_seconds <= 0 || typeof r2.model_route !== "string" || !r2.model_route.trim()) errors.push("run requirements malformed");
+    if (!isRecord(r2) || !strs(r2.allowed_tools) || r2.allowed_tools.length === 0 || !strs(r2.egress_allowlist) || !Number.isSafeInteger(r2.attempts_per_task) || r2.attempts_per_task <= 0 || !isRecord(r2.dataset) || typeof r2.dataset.name !== "string" || typeof r2.dataset.digest !== "string" || !/^sha256:[0-9a-f]{64}$/.test(r2.dataset.digest) || r2.dataset.revision !== void 0 && typeof r2.dataset.revision !== "string" || !isRecord(r2.harness) || typeof r2.harness.name !== "string" || typeof r2.harness.digest !== "string" || !/^sha256:[0-9a-f]{64}$/.test(r2.harness.digest) || !Number.isSafeInteger(r2.time_limit_seconds) || r2.time_limit_seconds <= 0 || typeof r2.model_route !== "string" || !r2.model_route.trim() || !(r2.model_attestation === void 0 || r2.model_attestation === null || isRecord(r2.model_attestation) && typeof r2.model_attestation.provider === "string" && !!r2.model_attestation.provider.trim() && typeof r2.model_attestation.model === "string" && !!r2.model_attestation.model.trim())) errors.push("run requirements malformed");
   }
   const enf = v.enforcement;
   if (enf !== void 0 && enf !== null) {
@@ -8058,7 +8086,7 @@ function proofRequestReadback(r) {
   if (q.credentials_held_by_gate?.length) lines.push(`Credentials: ${q.credentials_held_by_gate.map((c) => `${c.label} for ${c.tool}`).join(", ")} held by the gateway and injected; the agent never sees them`);
   if (q.run) {
     lines.push(`Run: tools ${q.run.allowed_tools.join(", ")} only, enforced by the gateway before each call; network to ${q.run.egress_allowlist.join(", ") || "nothing"} only, enforced by the environment; ${q.run.attempts_per_task} attempt${q.run.attempts_per_task === 1 ? "" : "s"} per task; ${Math.round(q.run.time_limit_seconds / 60)} minutes per task`);
-    lines.push(`Run pins: task set ${q.run.dataset.name}${q.run.dataset.revision ? ` @ ${q.run.dataset.revision}` : ""} (${q.run.dataset.digest.slice(0, 19)}); harness ${q.run.harness.name} (${q.run.harness.digest.slice(0, 19)}); model route ${q.run.model_route}`);
+    lines.push(`Run pins: task set ${q.run.dataset.name}${q.run.dataset.revision ? ` @ ${q.run.dataset.revision}` : ""} (${q.run.dataset.digest.slice(0, 19)}); harness ${q.run.harness.name} (${q.run.harness.digest.slice(0, 19)}); model route ${q.run.model_route}${q.run.model_attestation ? `; every model call signed inside ${q.run.model_attestation.provider}'s TEE for ${q.run.model_attestation.model}, attestation verified offline` : ""}`);
   }
   lines.push(`Authority freshness: approval no older than ${Math.round(q.authority_max_age_seconds / 60)} minutes at dispatch`);
   lines.push(`Coverage: ${COVERAGE_LABELS[q.coverage]}`);
@@ -8822,12 +8850,12 @@ var DER2 = {
       const { Err: E } = DER2;
       if (num < _0n12)
         throw new E("integer: negative integers are not allowed");
-      let hex = numberToHexUnpadded(num);
-      if (Number.parseInt(hex[0], 16) & 8)
-        hex = "00" + hex;
-      if (hex.length & 1)
+      let hex2 = numberToHexUnpadded(num);
+      if (Number.parseInt(hex2[0], 16) & 8)
+        hex2 = "00" + hex2;
+      if (hex2.length & 1)
         throw new E("unexpected DER parsing assertion: unpadded hex");
-      return hex;
+      return hex2;
     },
     decode(data) {
       const { Err: E } = DER2;
@@ -9042,8 +9070,8 @@ function weierstrass2(params, extraOpts = {}) {
       P.assertValidity();
       return P;
     }
-    static fromHex(hex) {
-      return Point.fromBytes(hexToBytes(hex));
+    static fromHex(hex2) {
+      return Point.fromBytes(hexToBytes(hex2));
     }
     get x() {
       return this.toAffine().x;
@@ -9429,8 +9457,8 @@ function ecdsa2(Point, hash, ecdsaOpts = {}) {
       const s = bytes.subarray(L3, L3 * 2);
       return new Signature(Fn3.fromBytes(r), Fn3.fromBytes(s), recid);
     }
-    static fromHex(hex, format) {
-      return this.fromBytes(hexToBytes(hex), format);
+    static fromHex(hex2, format) {
+      return this.fromBytes(hexToBytes(hex2), format);
     }
     assertRecovery() {
       const { recovery } = this;
@@ -9854,6 +9882,9 @@ function parseCertificate(der) {
   };
 }
 var hashFor = (sigAlg) => sigAlg === OID.ecdsaSha256 ? "sha256" : sigAlg === OID.ecdsaSha384 ? "sha384" : sigAlg === OID.ed25519 ? "sha256" : null;
+function certificateSignedBy(cert, issuer) {
+  return signedBy(cert, issuer);
+}
 function signedBy(cert, issuer) {
   const hash = hashFor(cert.signatureAlgorithm);
   return hash !== null && verifySignature(issuer.key, cert.signature, cert.tbs, hash);
@@ -10232,6 +10263,593 @@ function verifySigstoreBundle(value, expect = {}, trust = SIGSTORE_PUBLIC_GOOD) 
 }
 var subjectDigest = (bytes) => bytesToHex2(sha2562(toBytes2(bytes)));
 
+// node_modules/@noble/curves/secp256k1.js
+var secp256k1_CURVE = {
+  p: BigInt("0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f"),
+  n: BigInt("0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"),
+  h: BigInt(1),
+  a: BigInt(0),
+  b: BigInt(7),
+  Gx: BigInt("0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"),
+  Gy: BigInt("0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8")
+};
+var secp256k1_ENDO = {
+  beta: BigInt("0x7ae96a2b657c07106e64479eac3434e99cf0497512f58995c1396c28719501ee"),
+  basises: [
+    [BigInt("0x3086d221a7d46bcde86c90e49284eb15"), -BigInt("0xe4437ed6010e88286f547fa90abfe4c3")],
+    [BigInt("0x114ca50f7a8e2f3f657c1108d9d44cfd8"), BigInt("0x3086d221a7d46bcde86c90e49284eb15")]
+  ]
+};
+var _2n9 = /* @__PURE__ */ BigInt(2);
+function sqrtMod(y) {
+  const P = secp256k1_CURVE.p;
+  const _3n6 = BigInt(3), _6n = BigInt(6), _11n = BigInt(11), _22n = BigInt(22);
+  const _23n = BigInt(23), _44n = BigInt(44), _88n = BigInt(88);
+  const b2 = y * y * y % P;
+  const b3 = b2 * b2 * y % P;
+  const b6 = pow2(b3, _3n6, P) * b3 % P;
+  const b9 = pow2(b6, _3n6, P) * b3 % P;
+  const b11 = pow2(b9, _2n9, P) * b2 % P;
+  const b22 = pow2(b11, _11n, P) * b11 % P;
+  const b44 = pow2(b22, _22n, P) * b22 % P;
+  const b88 = pow2(b44, _44n, P) * b44 % P;
+  const b176 = pow2(b88, _88n, P) * b88 % P;
+  const b220 = pow2(b176, _44n, P) * b44 % P;
+  const b223 = pow2(b220, _3n6, P) * b3 % P;
+  const t1 = pow2(b223, _23n, P) * b22 % P;
+  const t2 = pow2(t1, _6n, P) * b2 % P;
+  const root = pow2(t2, _2n9, P);
+  if (!Fpk1.eql(Fpk1.sqr(root), y))
+    throw new Error("Cannot find square root");
+  return root;
+}
+var Fpk1 = Field(secp256k1_CURVE.p, { sqrt: sqrtMod });
+var Pointk1 = /* @__PURE__ */ weierstrass2(secp256k1_CURVE, {
+  Fp: Fpk1,
+  endo: secp256k1_ENDO
+});
+var secp256k1 = /* @__PURE__ */ ecdsa2(Pointk1, sha256);
+
+// node_modules/@noble/hashes/sha3.js
+var _0n13 = BigInt(0);
+var _1n13 = BigInt(1);
+var _2n10 = BigInt(2);
+var _7n3 = BigInt(7);
+var _256n = BigInt(256);
+var _0x71n = BigInt(113);
+var SHA3_PI = [];
+var SHA3_ROTL = [];
+var _SHA3_IOTA = [];
+for (let round = 0, R = _1n13, x = 1, y = 0; round < 24; round++) {
+  [x, y] = [y, (2 * x + 3 * y) % 5];
+  SHA3_PI.push(2 * (5 * y + x));
+  SHA3_ROTL.push((round + 1) * (round + 2) / 2 % 64);
+  let t = _0n13;
+  for (let j = 0; j < 7; j++) {
+    R = (R << _1n13 ^ (R >> _7n3) * _0x71n) % _256n;
+    if (R & _2n10)
+      t ^= _1n13 << (_1n13 << BigInt(j)) - _1n13;
+  }
+  _SHA3_IOTA.push(t);
+}
+var IOTAS = split2(_SHA3_IOTA, true);
+var SHA3_IOTA_H = IOTAS[0];
+var SHA3_IOTA_L = IOTAS[1];
+var rotlH = (h, l, s) => s > 32 ? rotlBH(h, l, s) : rotlSH(h, l, s);
+var rotlL = (h, l, s) => s > 32 ? rotlBL(h, l, s) : rotlSL(h, l, s);
+function keccakP(s, rounds = 24) {
+  anumber2(rounds, "rounds");
+  if (rounds < 1 || rounds > 24)
+    throw new Error('"rounds" expected integer 1..24');
+  const B = new Uint32Array(5 * 2);
+  for (let round = 24 - rounds; round < 24; round++) {
+    for (let x = 0; x < 10; x++)
+      B[x] = s[x] ^ s[x + 10] ^ s[x + 20] ^ s[x + 30] ^ s[x + 40];
+    for (let x = 0; x < 10; x += 2) {
+      const idx1 = (x + 8) % 10;
+      const idx0 = (x + 2) % 10;
+      const B0 = B[idx0];
+      const B1 = B[idx0 + 1];
+      const Th = rotlH(B0, B1, 1) ^ B[idx1];
+      const Tl = rotlL(B0, B1, 1) ^ B[idx1 + 1];
+      for (let y = 0; y < 50; y += 10) {
+        s[x + y] ^= Th;
+        s[x + y + 1] ^= Tl;
+      }
+    }
+    let curH = s[2];
+    let curL = s[3];
+    for (let t = 0; t < 24; t++) {
+      const shift = SHA3_ROTL[t];
+      const Th = rotlH(curH, curL, shift);
+      const Tl = rotlL(curH, curL, shift);
+      const PI = SHA3_PI[t];
+      curH = s[PI];
+      curL = s[PI + 1];
+      s[PI] = Th;
+      s[PI + 1] = Tl;
+    }
+    for (let y = 0; y < 50; y += 10) {
+      const b0 = s[y], b1 = s[y + 1], b2 = s[y + 2], b3 = s[y + 3];
+      s[y] ^= ~s[y + 2] & s[y + 4];
+      s[y + 1] ^= ~s[y + 3] & s[y + 5];
+      s[y + 2] ^= ~s[y + 4] & s[y + 6];
+      s[y + 3] ^= ~s[y + 5] & s[y + 7];
+      s[y + 4] ^= ~s[y + 6] & s[y + 8];
+      s[y + 5] ^= ~s[y + 7] & s[y + 9];
+      s[y + 6] ^= ~s[y + 8] & b0;
+      s[y + 7] ^= ~s[y + 9] & b1;
+      s[y + 8] ^= ~b0 & b2;
+      s[y + 9] ^= ~b1 & b3;
+    }
+    s[0] ^= SHA3_IOTA_H[round];
+    s[1] ^= SHA3_IOTA_L[round];
+  }
+  clean2(B);
+}
+var Keccak = class _Keccak {
+  state;
+  pos = 0;
+  posOut = 0;
+  finished = false;
+  state32;
+  destroyed = false;
+  blockLen;
+  suffix;
+  outputLen;
+  canXOF;
+  enableXOF = false;
+  rounds;
+  // NOTE: we accept arguments in bytes instead of bits here.
+  constructor(blockLen, suffix, outputLen, enableXOF = false, rounds = 24) {
+    this.blockLen = blockLen;
+    this.suffix = suffix;
+    this.outputLen = outputLen;
+    this.enableXOF = enableXOF;
+    this.canXOF = enableXOF;
+    this.rounds = rounds;
+    anumber2(outputLen, "outputLen");
+    if (!(0 < blockLen && blockLen < 200))
+      throw new Error("only keccak-f1600 function is supported");
+    this.state = new Uint8Array(200);
+    this.state32 = u32(this.state);
+  }
+  clone() {
+    return this._cloneInto();
+  }
+  keccak() {
+    swap32IfBE(this.state32);
+    keccakP(this.state32, this.rounds);
+    swap32IfBE(this.state32);
+    this.posOut = 0;
+    this.pos = 0;
+  }
+  update(data) {
+    aexists2(this);
+    abytes2(data);
+    const { blockLen, state } = this;
+    const len = data.length;
+    for (let pos = 0; pos < len; ) {
+      const take = Math.min(blockLen - this.pos, len - pos);
+      for (let i = 0; i < take; i++)
+        state[this.pos++] ^= data[pos++];
+      if (this.pos === blockLen)
+        this.keccak();
+    }
+    return this;
+  }
+  finish() {
+    if (this.finished)
+      return;
+    this.finished = true;
+    const { state, suffix, pos, blockLen } = this;
+    state[pos] ^= suffix;
+    if ((suffix & 128) !== 0 && pos === blockLen - 1)
+      this.keccak();
+    state[blockLen - 1] ^= 128;
+    this.keccak();
+  }
+  writeInto(out) {
+    aexists2(this, false);
+    abytes2(out);
+    this.finish();
+    const bufferOut = this.state;
+    const { blockLen } = this;
+    for (let pos = 0, len = out.length; pos < len; ) {
+      if (this.posOut >= blockLen)
+        this.keccak();
+      const take = Math.min(blockLen - this.posOut, len - pos);
+      out.set(bufferOut.subarray(this.posOut, this.posOut + take), pos);
+      this.posOut += take;
+      pos += take;
+    }
+    return out;
+  }
+  xofInto(out) {
+    if (!this.enableXOF)
+      throw new Error("XOF is not possible for this instance");
+    return this.writeInto(out);
+  }
+  xof(bytes) {
+    anumber2(bytes);
+    return this.xofInto(new Uint8Array(bytes));
+  }
+  digestInto(out) {
+    aoutput2(out, this);
+    if (this.finished)
+      throw new Error("digest() was already called");
+    this.writeInto(out.subarray(0, this.outputLen));
+    this.destroy();
+  }
+  digest() {
+    const out = new Uint8Array(this.outputLen);
+    this.digestInto(out);
+    return out;
+  }
+  destroy() {
+    this.destroyed = true;
+    clean2(this.state);
+  }
+  _cloneInto(to) {
+    const { blockLen, suffix, outputLen, rounds, enableXOF } = this;
+    to ||= new _Keccak(blockLen, suffix, outputLen, enableXOF, rounds);
+    to.blockLen = blockLen;
+    to.state32.set(this.state32);
+    to.pos = this.pos;
+    to.posOut = this.posOut;
+    to.finished = this.finished;
+    to.rounds = rounds;
+    to.suffix = suffix;
+    to.outputLen = outputLen;
+    to.enableXOF = enableXOF;
+    to.canXOF = this.canXOF;
+    to.destroyed = this.destroyed;
+    return to;
+  }
+};
+var genKeccak = (suffix, blockLen, outputLen, info = {}) => createHasher3(() => new Keccak(blockLen, suffix, outputLen), info);
+var keccak_256 = /* @__PURE__ */ genKeccak(1, 136, 32);
+
+// src/intel-sgx-root.ts
+var INTEL_SGX_ROOT_CA_PEM = `-----BEGIN CERTIFICATE-----
+MIICjzCCAjSgAwIBAgIUImUM1lqdNInzg7SVUr9QGzknBqwwCgYIKoZIzj0EAwIw
+aDEaMBgGA1UEAwwRSW50ZWwgU0dYIFJvb3QgQ0ExGjAYBgNVBAoMEUludGVsIENv
+cnBvcmF0aW9uMRQwEgYDVQQHDAtTYW50YSBDbGFyYTELMAkGA1UECAwCQ0ExCzAJ
+BgNVBAYTAlVTMB4XDTE4MDUyMTEwNDUxMFoXDTQ5MTIzMTIzNTk1OVowaDEaMBgG
+A1UEAwwRSW50ZWwgU0dYIFJvb3QgQ0ExGjAYBgNVBAoMEUludGVsIENvcnBvcmF0
+aW9uMRQwEgYDVQQHDAtTYW50YSBDbGFyYTELMAkGA1UECAwCQ0ExCzAJBgNVBAYT
+AlVTMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEC6nEwMDIYZOj/iPWsCzaEKi7
+1OiOSLRFhWGjbnBVJfVnkY4u3IjkDYYL0MxO4mqsyYjlBalTVYxFP2sJBK5zlKOB
+uzCBuDAfBgNVHSMEGDAWgBQiZQzWWp00ifODtJVSv1AbOScGrDBSBgNVHR8ESzBJ
+MEegRaBDhkFodHRwczovL2NlcnRpZmljYXRlcy50cnVzdGVkc2VydmljZXMuaW50
+ZWwuY29tL0ludGVsU0dYUm9vdENBLmRlcjAdBgNVHQ4EFgQUImUM1lqdNInzg7SV
+Ur9QGzknBqwwDgYDVR0PAQH/BAQDAgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwCgYI
+KoZIzj0EAwIDSQAwRgIhAOW/5QkR+S9CiSDcNoowLuPRLsWGf/Yi7GSX94BgwTwg
+AiEA4J0lrHoMs+Xo5o/sX6O9QWxHRAvZUGOdRQ7cvqRXaqI=
+-----END CERTIFICATE-----
+`;
+var INTEL_SGX_ROOT_CA_SHA256 = "44a0196b2b99f889b8e149e95b807a350e7424964399e885a7cbb8ccfab674d3";
+
+// src/tdx-quote.ts
+var HEADER_LEN = 48;
+var TD_REPORT10_LEN = 584;
+var TD_REPORT15_LEN = 648;
+var ENCLAVE_REPORT_LEN = 384;
+var TEE_TYPE_TDX = 129;
+var ATT_KEY_ECDSA_P256 = 2;
+var CERT_TYPE_QE_REPORT = 6;
+var CERT_TYPE_PCK_CHAIN = 5;
+var hex = bytesToHex2;
+var Reader = class {
+  constructor(b) {
+    this.b = b;
+  }
+  off = 0;
+  u8() {
+    if (this.off + 1 > this.b.length) throw new Error("quote truncated");
+    return this.b[this.off++];
+  }
+  u16() {
+    const v = this.u8() | this.u8() << 8;
+    return v;
+  }
+  u32() {
+    const a = this.u16(), b = this.u16();
+    return a + b * 65536;
+  }
+  bytes(n) {
+    if (this.off + n > this.b.length) throw new Error("quote truncated");
+    const v = this.b.subarray(this.off, this.off + n);
+    this.off += n;
+    return v;
+  }
+  get remaining() {
+    return this.b.length - this.off;
+  }
+};
+function pemCertificates(text) {
+  const out = [];
+  const re = /-----BEGIN CERTIFICATE-----([\s\S]*?)-----END CERTIFICATE-----/g;
+  let m;
+  while ((m = re.exec(text)) !== null) out.push(parseCertificate(fromBase64(m[1])));
+  return out;
+}
+function quoteBytes(input) {
+  if (typeof input !== "string") return input;
+  const s = input.trim().replace(/^0x/i, "");
+  if (!/^[0-9a-fA-F]*$/.test(s) || s.length % 2) throw new Error("quote is not hex");
+  const out = new Uint8Array(s.length / 2);
+  for (let i = 0; i < out.length; i++) out[i] = parseInt(s.slice(i * 2, i * 2 + 2), 16);
+  return out;
+}
+function parseTdxQuote(input) {
+  const b = quoteBytes(input);
+  const r = new Reader(b);
+  const version = r.u16();
+  const attestation_key_type = r.u16();
+  const tee_type = r.u32();
+  const qe_svn = r.u16();
+  const pce_svn = r.u16();
+  const qe_vendor_id = hex(r.bytes(16));
+  r.bytes(20);
+  if (r.off !== HEADER_LEN) throw new Error("header length");
+  if (version !== 4 && version !== 5) throw new Error(`quote version ${version} is not 4 or 5`);
+  if (tee_type !== TEE_TYPE_TDX) throw new Error(`TEE type 0x${tee_type.toString(16)} is not TDX`);
+  if (attestation_key_type !== ATT_KEY_ECDSA_P256) throw new Error(`attestation key type ${attestation_key_type} is not ECDSA-256`);
+  let body_type = "td10";
+  let bodyLen = TD_REPORT10_LEN;
+  if (version === 5) {
+    const t = r.u16();
+    const size = r.u32();
+    if (t === 2) {
+      body_type = "td10";
+      bodyLen = TD_REPORT10_LEN;
+    } else if (t === 3) {
+      body_type = "td15";
+      bodyLen = TD_REPORT15_LEN;
+    } else throw new Error(`quote body type ${t} is not a TD report`);
+    if (size !== bodyLen) throw new Error("quote body size");
+  }
+  const bodyStart = r.off;
+  const tee_tcb_svn = hex(r.bytes(16)), mr_seam = hex(r.bytes(48)), mr_signer_seam = hex(r.bytes(48));
+  r.bytes(8);
+  const m = { tee_tcb_svn, mr_seam, mr_signer_seam, td_attributes: hex(r.bytes(8)), xfam: "", mr_td: "", mr_config_id: "", mr_owner: "", mr_owner_config: "", rtmr0: "", rtmr1: "", rtmr2: "", rtmr3: "", report_data: "" };
+  m.xfam = hex(r.bytes(8));
+  m.mr_td = hex(r.bytes(48));
+  m.mr_config_id = hex(r.bytes(48));
+  m.mr_owner = hex(r.bytes(48));
+  m.mr_owner_config = hex(r.bytes(48));
+  m.rtmr0 = hex(r.bytes(48));
+  m.rtmr1 = hex(r.bytes(48));
+  m.rtmr2 = hex(r.bytes(48));
+  m.rtmr3 = hex(r.bytes(48));
+  m.report_data = hex(r.bytes(64));
+  if (body_type === "td15") r.bytes(TD_REPORT15_LEN - TD_REPORT10_LEN);
+  if (r.off - bodyStart !== bodyLen) throw new Error("TD report length");
+  const signed2 = b.subarray(0, r.off);
+  const authLen = r.u32();
+  if (authLen > r.remaining) throw new Error("signature data length");
+  const a = new Reader(r.bytes(authLen));
+  const signature = a.bytes(64);
+  const attestation_key = a.bytes(64);
+  const certType = a.u16();
+  const certSize = a.u32();
+  if (certType !== CERT_TYPE_QE_REPORT) throw new Error(`certification data type ${certType} is not a QE report`);
+  const q = new Reader(a.bytes(certSize));
+  const qe_report = q.bytes(ENCLAVE_REPORT_LEN);
+  const qe_report_signature = q.bytes(64);
+  const qe_auth_data = q.bytes(q.u16());
+  const innerType = q.u16();
+  const innerSize = q.u32();
+  if (innerType !== CERT_TYPE_PCK_CHAIN) throw new Error(`PCK certification data type ${innerType} is not a certificate chain`);
+  const pck_chain = pemCertificates(new TextDecoder().decode(q.bytes(innerSize)));
+  if (pck_chain.length < 2) throw new Error("PCK certificate chain too short");
+  return { version, tee_type, attestation_key_type, qe_svn, pce_svn, qe_vendor_id, body_type, measurements: m, signed: signed2, signature, attestation_key, qe_report, qe_report_signature, qe_auth_data, pck_chain };
+}
+var p256Verify = (sig64, data, pub) => {
+  try {
+    return p2563.verify(sig64, sha2562(data), pub, { prehash: false, lowS: false });
+  } catch {
+    return false;
+  }
+};
+function verifyTdxQuote(input, now = /* @__PURE__ */ new Date()) {
+  const checks = [];
+  let quote;
+  try {
+    quote = parseTdxQuote(input);
+  } catch (e) {
+    checks.push({ id: "quote", label: "Quote", ok: false, detail: `Not a TDX quote this verifier reads: ${e.message}.` });
+    return { valid: false, checks, quote: null, chain: [] };
+  }
+  checks.push({ id: "quote", label: "Quote", ok: true, detail: `TDX quote v${quote.version} (${quote.body_type}), ECDSA-256 attestation key, QE vendor ${quote.qe_vendor_id}.` });
+  const attKey = concatBytes2(new Uint8Array([4]), quote.attestation_key);
+  const sigOk = p256Verify(quote.signature, quote.signed, attKey);
+  checks.push({ id: "quote_signature", label: "Quote signature", ok: sigOk, detail: sigOk ? "The attestation key signed the header and the TD report." : "The quote signature does not verify under the attestation key." });
+  const qeReportData = quote.qe_report.subarray(320, 384);
+  const expected = sha2562(concatBytes2(quote.attestation_key, quote.qe_auth_data));
+  const bindOk = expected.every((x, i) => x === qeReportData[i]);
+  checks.push({ id: "qe_binding", label: "Quoting enclave", ok: bindOk, detail: bindOk ? "The quoting enclave's report binds this attestation key (SHA-256 of the key and its auth data)." : "The quoting enclave's report does not bind this attestation key." });
+  const leaf = quote.pck_chain[0];
+  const qeSigOk = leaf.key.alg === "p256" && p256Verify(quote.qe_report_signature, quote.qe_report, leaf.key.bytes);
+  checks.push({ id: "qe_signature", label: "QE report signature", ok: qeSigOk, detail: qeSigOk ? `The PCK certificate (${leaf.subject}) signed the quoting enclave's report.` : "The quoting enclave's report is not signed by the PCK certificate." });
+  const root = parseCertificate(fromBase64(INTEL_SGX_ROOT_CA_PEM.replace(/-----[A-Z ]+-----/g, "")));
+  const rootOk = bytesToHex2(sha2562(root.der)) === INTEL_SGX_ROOT_CA_SHA256;
+  const problems = [];
+  if (!rootOk) problems.push("the pinned Intel root does not match its recorded fingerprint");
+  let current = leaf;
+  const names = [leaf.subject];
+  let reached = false;
+  for (let i = 0; i < 6 && !reached; i++) {
+    if (now < current.notBefore || now > current.notAfter) problems.push(`${current.subject} is outside its validity window`);
+    const issuer = current.issuer === root.subject ? root : quote.pck_chain.find((c) => c.subject === current.issuer && c !== current) ?? null;
+    if (!issuer) {
+      problems.push(`no issuer for ${current.subject}`);
+      break;
+    }
+    if (!certificateSignedBy(current, issuer)) {
+      problems.push(`${current.subject} is not signed by ${issuer.subject}`);
+      break;
+    }
+    if (issuer === root) {
+      reached = certificateSignedBy(root, root);
+      if (!reached) problems.push("the root is not self-signed");
+      break;
+    }
+    names.push(issuer.subject);
+    current = issuer;
+  }
+  if (!reached && problems.length === 0) problems.push("the chain does not reach the Intel SGX Root CA");
+  const chainOk = reached && problems.length === 0;
+  checks.push({ id: "pck_chain", label: "PCK chain", ok: chainOk, detail: chainOk ? `${names.join(" <- ")} <- ${root.subject}: every link signed, every certificate in date, root pinned by fingerprint.` : `${problems.join("; ")}.` });
+  checks.push({ id: "tcb", label: "TCB status", ok: true, informational: true, detail: "Not evaluated here: the platform's TCB level and revocation need Intel's current collateral; the quote is genuine and its measurements are as reported." });
+  return { valid: checks.every((c) => c.ok), checks, quote, chain: [...names, root.subject] };
+}
+
+// src/attested-model.ts
+var utf83 = (s) => new TextEncoder().encode(s);
+var isRecord4 = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
+var str3 = (v) => typeof v === "string" ? v : null;
+var strip0x = (s) => s.replace(/^0x/i, "").toLowerCase();
+var HEX64 = /^[0-9a-f]{64}$/;
+function parseModelCalls(text) {
+  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+  return lines.map((line, i) => {
+    let v;
+    try {
+      v = JSON.parse(line);
+    } catch {
+      throw new Error(`line ${i + 1} is not JSON`);
+    }
+    if (!isRecord4(v)) throw new Error(`line ${i + 1} is not an object`);
+    const model = str3(v.model), kind = str3(v.kind), req = str3(v.request_sha256), res = str3(v.response_sha256), sig = str3(v.signature), addr = str3(v.signing_address), algo = str3(v.signing_algo);
+    if (!model || kind !== "provider_tee" && kind !== "gateway" || !req || !HEX64.test(req) || !res || !HEX64.test(res) || !sig || !addr || algo !== "ecdsa" && algo !== "ed25519") throw new Error(`line ${i + 1} is not a model call record`);
+    if (typeof v.index !== "number" || v.index !== i) throw new Error(`line ${i + 1} carries index ${String(v.index)}, expected ${i}`);
+    return { index: i, task_id: str3(v.task_id) ?? void 0, attempt: typeof v.attempt === "number" ? v.attempt : void 0, model, kind, request_sha256: req, response_sha256: res, chat_id: str3(v.chat_id) ?? void 0, signature: sig, signing_address: addr, signing_algo: algo, made_at: str3(v.made_at) ?? void 0 };
+  });
+}
+var signedText = (c) => c.kind === "provider_tee" ? `${c.model}:${c.request_sha256}:${c.response_sha256}` : `${c.request_sha256}:${c.response_sha256}`;
+function personalSignDigest(text) {
+  const body = utf83(text);
+  return keccak_256(new Uint8Array([...utf83(`Ethereum Signed Message:
+${body.length}`), ...body]));
+}
+function recoverSigner(call) {
+  try {
+    const text = signedText(call);
+    if (call.signing_algo === "ecdsa") {
+      const sig = hexToBytes2(strip0x(call.signature));
+      if (sig.length !== 65) return null;
+      let v = sig[64];
+      if (v >= 27) v -= 27;
+      if (v > 3) return null;
+      const point = secp256k1.Signature.fromBytes(sig.subarray(0, 64), "compact").addRecoveryBit(v).recoverPublicKey(personalSignDigest(text));
+      const pub2 = point.toBytes(false);
+      return `0x${bytesToHex2(keccak_256(pub2.subarray(1)).subarray(12))}`;
+    }
+    const pub = hexToBytes2(strip0x(call.signing_address));
+    return ed25519.verify(hexToBytes2(strip0x(call.signature)), utf83(text), pub) ? strip0x(call.signing_address) : null;
+  } catch {
+    return null;
+  }
+}
+function parseModelAttestationReport(value) {
+  if (!isRecord4(value)) throw new Error("not an object");
+  const signing_address = str3(value.signing_address);
+  const algo = str3(value.signing_algo) ?? "ecdsa";
+  const intel_quote = str3(value.intel_quote);
+  if (!signing_address) throw new Error("no signing_address");
+  if (algo !== "ecdsa" && algo !== "ed25519") throw new Error(`signing_algo ${algo}`);
+  if (!intel_quote) throw new Error("no intel_quote");
+  const nv = value.nvidia_payload;
+  return {
+    signing_address,
+    signing_algo: algo,
+    intel_quote,
+    nvidia_payload: typeof nv === "string" ? nv : nv === void 0 || nv === null ? null : JSON.stringify(nv),
+    nonce: str3(value.nonce) ?? str3(value.request_nonce),
+    model: str3(value.model) ?? str3(value.model_name) ?? str3(value.model_id),
+    tls_fingerprint: str3(value.tls_cert_fingerprint) ?? str3(value.tls_fingerprint),
+    info: value.info ?? null,
+    raw: value
+  };
+}
+var attestationReportDigest = (value) => `sha256:${sha256Hex(canonicalize2(value))}`;
+function verifyModelAttestation(value, expect = {}, now = /* @__PURE__ */ new Date()) {
+  const checks = [];
+  const result = (extra = {}) => ({ valid: checks.every((c) => c.ok), checks, report: null, quote: null, signing_address: null, measurements: null, compose: null, ...extra });
+  let report;
+  try {
+    report = parseModelAttestationReport(value);
+  } catch (e) {
+    checks.push({ id: "report", label: "Report", ok: false, detail: `Not an attestation report this verifier reads: ${e.message}.` });
+    return result();
+  }
+  const address = report.signing_algo === "ecdsa" ? `0x${strip0x(report.signing_address)}` : strip0x(report.signing_address);
+  checks.push({ id: "report", label: "Report", ok: true, detail: `Attestation report for signing address ${address} (${report.signing_algo})${report.model ? `, model ${report.model}` : ""}${report.nonce ? ", with a nonce" : ""}.` });
+  const quote = verifyTdxQuote(report.intel_quote, now);
+  for (const c of quote.checks) checks.push({ id: `quote_${c.id}`, label: `Quote: ${c.label}`, ok: c.ok, detail: c.detail, ...c.informational ? { informational: true } : {} });
+  const m = quote.quote?.measurements ?? null;
+  if (m) {
+    const rd = hexToBytes2(m.report_data);
+    const first = bytesToHex2(rd.subarray(0, 32));
+    const second = bytesToHex2(rd.subarray(32, 64));
+    const addrBytes = hexToBytes2(strip0x(report.signing_address));
+    const padded = new Uint8Array(32);
+    padded.set(addrBytes.subarray(0, 32));
+    let expectedFirst = bytesToHex2(padded);
+    let mode = "the signing address, padded";
+    if (report.tls_fingerprint) {
+      expectedFirst = bytesToHex2(sha2562(new Uint8Array([...addrBytes, ...hexToBytes2(strip0x(report.tls_fingerprint))])));
+      mode = "SHA-256 of the signing address and the TLS certificate fingerprint";
+    }
+    const bindsKey = first === expectedFirst;
+    const nonce = expect.nonce ?? report.nonce;
+    const nonceOk = nonce ? second === strip0x(nonce).padEnd(64, "0").slice(0, 64) : null;
+    const ok = bindsKey && nonceOk !== false;
+    checks.push({ id: "report_data", label: "Key binding", ok, detail: ok ? `report_data carries ${mode}${nonceOk ? " and the request nonce" : nonce ? "" : " (no nonce to check)"}: the signing key lives in this measured machine.` : !bindsKey ? `report_data does not carry ${mode}: the signing key is not bound to this quote.` : "report_data does not carry the request nonce: the quote may be a replay." });
+  }
+  if (expect.model) {
+    const ok = report.model === null || report.model === expect.model;
+    checks.push({ id: "model", label: "Model", ok, detail: ok ? report.model ? `The report names ${report.model}, as expected.` : "The report names no model; the signed calls name it." : `The report names ${report.model}, not ${expect.model}.` });
+  }
+  let compose = null;
+  const info = isRecord4(report.info) ? report.info : null;
+  const composeText = info ? str3(info.compose_file) ?? str3(info.docker_compose) ?? str3(info.compose) ?? null : null;
+  if (composeText && m) {
+    const digest = bytesToHex2(sha2562(utf83(composeText)));
+    const matched = m.mr_config_id.startsWith(digest) ? "mr_config_id" : "none";
+    compose = { digest, matched };
+    checks.push({ id: "compose", label: "Container", ok: true, informational: true, detail: matched === "mr_config_id" ? `The compose manifest the report carries hashes to the measured MRCONFIGID (${digest.slice(0, 16)}...): the container configuration is the measured one.` : `The compose manifest the report carries (sha256 ${digest.slice(0, 16)}...) is not the MRCONFIGID measurement; how this provider measures its configuration is not checked here.` });
+  }
+  if (report.nvidia_payload) {
+    let nonceMatches = null;
+    try {
+      const p = JSON.parse(report.nvidia_payload);
+      nonceMatches = expect.nonce || report.nonce ? strip0x(String(p.nonce ?? "")) === strip0x(expect.nonce ?? report.nonce ?? "") : null;
+    } catch {
+    }
+    checks.push({ id: "gpu", label: "GPU", ok: true, informational: true, detail: `NVIDIA attestation evidence is carried${nonceMatches === true ? " with the request nonce" : nonceMatches === false ? " but its nonce differs" : ""}; its verdict is an online service and is not verified here.` });
+  }
+  return result({ report, quote, signing_address: address, measurements: m ? { mr_td: m.mr_td, mr_config_id: m.mr_config_id, rtmr3: m.rtmr3, report_data: m.report_data } : null, compose });
+}
+function verifyAttestedCalls(calls, attestations, expectModel = null) {
+  const bound = new Set(attestations.filter((a) => a.valid && a.signing_address).map((a) => a.signing_address));
+  const unattested = /* @__PURE__ */ new Set();
+  const invalid = [];
+  const other_model = [];
+  for (const c of calls) {
+    const signer = recoverSigner(c);
+    if (!signer) {
+      invalid.push(c.index);
+      continue;
+    }
+    if (!bound.has(signer)) unattested.add(signer);
+    if (expectModel && c.model !== expectModel) other_model.push(c.index);
+  }
+  return { ok: invalid.length === 0 && unattested.size === 0 && other_model.length === 0, count: calls.length, unattested: [...unattested], invalid, other_model };
+}
+
 // src/run-manifest.ts
 var RUN_MANIFEST_V1 = "scopeblind.run_manifest.v1";
 var RUN_MANIFEST_DOMAIN = "scopeblind.run-manifest.v1";
@@ -10241,9 +10859,9 @@ var RUN_REGRADE_V1 = "scopeblind.run_regrade.v1";
 var RUN_REGRADE_DOMAIN = "scopeblind.run-regrade.v1";
 var REGRADE_UNSIGNED_KEYS = ["type", "version", "run_id", "manifest_digest", "grader", "environment", "results", "regraded_at", "nonce"];
 function verifyRunRegrade(value) {
-  if (!isRecord4(value) || value.type !== RUN_REGRADE_V1 || value.version !== 1) return { valid: false, detail: "not a run regrade" };
+  if (!isRecord5(value) || value.type !== RUN_REGRADE_V1 || value.version !== 1) return { valid: false, detail: "not a run regrade" };
   const v = value;
-  if (typeof v.run_id !== "string" || !isHex64(v.manifest_digest) || !isRecord4(v.grader) || !isHex64(v.grader.verification_key) || !Array.isArray(v.results) || !isIso2(v.regraded_at) || !v.results.every((r) => isRecord4(r) && typeof r.task_id === "string" && Number.isSafeInteger(r.attempt) && ["pass", "fail", "error"].includes(r.verdict) && isRecord4(r.tests) && isDigest(r.tests.output_digest) && isDigest(r.workspace_digest))) return { valid: false, detail: "regrade malformed" };
+  if (typeof v.run_id !== "string" || !isHex64(v.manifest_digest) || !isRecord5(v.grader) || !isHex64(v.grader.verification_key) || !Array.isArray(v.results) || !isIso2(v.regraded_at) || !v.results.every((r) => isRecord5(r) && typeof r.task_id === "string" && Number.isSafeInteger(r.attempt) && ["pass", "fail", "error"].includes(r.verdict) && isRecord5(r.tests) && isDigest(r.tests.output_digest) && isDigest(r.workspace_digest))) return { valid: false, detail: "regrade malformed" };
   const { digest_valid, signature_valid } = checkEnvelope(RUN_REGRADE_DOMAIN, v, REGRADE_UNSIGNED_KEYS, v.grader.verification_key);
   return { valid: digest_valid && signature_valid, detail: !digest_valid ? "regrade altered after signing" : !signature_valid ? "regrade signature does not verify" : "regrade verifies" };
 }
@@ -10260,34 +10878,37 @@ function isDemoRunSignerKey(verificationKey) {
   if (!demoSignerKeys) demoSignerKeys = new Set(DEMO_SIGNER_SEEDS.map((s) => runSignerFromSeed(s, "").verification_key));
   return demoSignerKeys.has(verificationKey.toLowerCase());
 }
-var isRecord4 = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
+var isRecord5 = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
 var isIso2 = (v) => typeof v === "string" && !Number.isNaN(Date.parse(v));
 var isDigest = (v) => typeof v === "string" && /^sha256:[0-9a-f]{64}$/.test(v);
 var isHex64 = (v) => typeof v === "string" && /^[0-9a-f]{64}$/.test(v);
 function shapeErrors2(value) {
   const errors = [];
-  if (!isRecord4(value)) return ["not an object"];
+  if (!isRecord5(value)) return ["not an object"];
   const m = value;
   if (m.type !== RUN_MANIFEST_V1 || m.version !== 1) errors.push("not a scopeblind.run_manifest.v1");
   if (typeof m.run_id !== "string" || !m.run_id.trim()) errors.push("run_id missing");
   const s = m.standard;
-  if (!isRecord4(s) || typeof s.request_id !== "string" || !isHex64(s.digest) || !isHex64(s.recipient_key) || !isDigest(s.policy_digest)) errors.push("standard binding malformed");
+  if (!isRecord5(s) || typeof s.request_id !== "string" || !isHex64(s.digest) || !isHex64(s.recipient_key) || !isDigest(s.policy_digest)) errors.push("standard binding malformed");
   const a = m.agent;
-  if (!isRecord4(a) || ["name", "version", "model", "model_route"].some((k) => typeof a[k] !== "string")) errors.push("agent malformed");
+  if (!isRecord5(a) || ["name", "version", "model", "model_route"].some((k) => typeof a[k] !== "string")) errors.push("agent malformed");
   const h = m.harness;
-  if (!isRecord4(h) || typeof h.name !== "string" || !isDigest(h.digest) || typeof h.gateway !== "string") errors.push("harness malformed");
+  if (!isRecord5(h) || typeof h.name !== "string" || !isDigest(h.digest) || typeof h.gateway !== "string") errors.push("harness malformed");
   const d = m.dataset;
-  if (!isRecord4(d) || typeof d.name !== "string" || !isDigest(d.digest) || !Number.isSafeInteger(d.task_count) || d.revision !== void 0 && typeof d.revision !== "string") errors.push("dataset malformed");
+  if (!isRecord5(d) || typeof d.name !== "string" || !isDigest(d.digest) || !Number.isSafeInteger(d.task_count) || d.revision !== void 0 && typeof d.revision !== "string") errors.push("dataset malformed");
   const e = m.environment;
-  if (!isRecord4(e) || typeof e.sandbox !== "string" || !Array.isArray(e.egress) || !e.egress.every((x) => typeof x === "string") || !(e.attestation === null || isRecord4(e.attestation) && typeof e.attestation.kind === "string" && typeof e.attestation.reference === "string" && isDigest(e.attestation.digest) && (e.attestation.commit === void 0 || typeof e.attestation.commit === "string") && (e.attestation.workflow === void 0 || typeof e.attestation.workflow === "string"))) errors.push("environment malformed");
+  if (!isRecord5(e) || typeof e.sandbox !== "string" || !Array.isArray(e.egress) || !e.egress.every((x) => typeof x === "string") || !(e.attestation === null || isRecord5(e.attestation) && typeof e.attestation.kind === "string" && typeof e.attestation.reference === "string" && isDigest(e.attestation.digest) && (e.attestation.commit === void 0 || typeof e.attestation.commit === "string") && (e.attestation.workflow === void 0 || typeof e.attestation.workflow === "string")) || !(e.model_attestation === void 0 || isRecord5(e.model_attestation) && typeof e.model_attestation.provider === "string" && typeof e.model_attestation.model === "string" && Array.isArray(e.model_attestation.reports) && e.model_attestation.reports.every((r) => isRecord5(r) && isDigest(r.digest) && typeof r.signing_address === "string"))) errors.push("environment malformed");
+  const mc = m.model_calls;
+  if (!(mc === void 0 || isRecord5(mc) && isDigest(mc.digest) && Number.isSafeInteger(mc.count) && typeof mc.disclosed === "boolean")) errors.push("model_calls malformed");
+  if (Array.isArray(m.attempts) && m.attempts.some((t) => isRecord5(t) && t.model_calls !== void 0 && !(isRecord5(t.model_calls) && Number.isSafeInteger(t.model_calls.from) && Number.isSafeInteger(t.model_calls.to)))) errors.push("attempt model_calls malformed");
   const g = m.gateway;
-  if (!isRecord4(g) || typeof g.key_id !== "string" || !isHex64(g.verification_key) || !Number.isSafeInteger(g.receipt_count) || !(g.chain_head === null || isDigest(g.chain_head)) || !isDigest(g.log_digest) || g.calls_digest !== void 0 && !isDigest(g.calls_digest) || g.calls_disclosed !== void 0 && typeof g.calls_disclosed !== "boolean") errors.push("gateway malformed");
-  if (!Array.isArray(m.attempts) || !m.attempts.every((t) => isRecord4(t) && typeof t.task_id === "string" && Number.isSafeInteger(t.attempt) && isIso2(t.started_at) && isIso2(t.ended_at) && isRecord4(t.receipts) && Number.isSafeInteger(t.receipts.from) && Number.isSafeInteger(t.receipts.to) && t.receipts.from <= t.receipts.to && Number.isSafeInteger(t.calls) && Number.isSafeInteger(t.refused) && ["pass", "fail", "error"].includes(t.verdict) && isRecord4(t.tests) && typeof t.tests.runner === "string" && Number.isSafeInteger(t.tests.passed) && Number.isSafeInteger(t.tests.failed) && isDigest(t.tests.output_digest) && isRecord4(t.agent) && (t.agent.exit_code === null || Number.isSafeInteger(t.agent.exit_code)) && typeof t.agent.timed_out === "boolean" && (t.workspace === void 0 || isRecord4(t.workspace) && isDigest(t.workspace.digest) && Number.isSafeInteger(t.workspace.file_count) && typeof t.workspace.disclosed === "boolean"))) errors.push("attempts malformed");
+  if (!isRecord5(g) || typeof g.key_id !== "string" || !isHex64(g.verification_key) || !Number.isSafeInteger(g.receipt_count) || !(g.chain_head === null || isDigest(g.chain_head)) || !isDigest(g.log_digest) || g.calls_digest !== void 0 && !isDigest(g.calls_digest) || g.calls_disclosed !== void 0 && typeof g.calls_disclosed !== "boolean") errors.push("gateway malformed");
+  if (!Array.isArray(m.attempts) || !m.attempts.every((t) => isRecord5(t) && typeof t.task_id === "string" && Number.isSafeInteger(t.attempt) && isIso2(t.started_at) && isIso2(t.ended_at) && isRecord5(t.receipts) && Number.isSafeInteger(t.receipts.from) && Number.isSafeInteger(t.receipts.to) && t.receipts.from <= t.receipts.to && Number.isSafeInteger(t.calls) && Number.isSafeInteger(t.refused) && ["pass", "fail", "error"].includes(t.verdict) && isRecord5(t.tests) && typeof t.tests.runner === "string" && Number.isSafeInteger(t.tests.passed) && Number.isSafeInteger(t.tests.failed) && isDigest(t.tests.output_digest) && isRecord5(t.agent) && (t.agent.exit_code === null || Number.isSafeInteger(t.agent.exit_code)) && typeof t.agent.timed_out === "boolean" && (t.workspace === void 0 || isRecord5(t.workspace) && isDigest(t.workspace.digest) && Number.isSafeInteger(t.workspace.file_count) && typeof t.workspace.disclosed === "boolean"))) errors.push("attempts malformed");
   const u = m.summary;
-  if (!isRecord4(u) || ["tasks", "passed", "failed", "errored", "calls", "refused"].some((k) => !Number.isSafeInteger(u[k]))) errors.push("summary malformed");
+  if (!isRecord5(u) || ["tasks", "passed", "failed", "errored", "calls", "refused"].some((k) => !Number.isSafeInteger(u[k]))) errors.push("summary malformed");
   const sg = m.signer;
-  if (!isRecord4(sg) || typeof sg.name !== "string" || typeof sg.key_id !== "string" || !isHex64(sg.verification_key)) errors.push("signer malformed");
-  if (!isIso2(m.issued_at) || typeof m.nonce !== "string" || typeof m.digest !== "string" || !isRecord4(m.signature) || m.signature.algorithm !== "Ed25519" || typeof m.signature.value !== "string") errors.push("envelope malformed");
+  if (!isRecord5(sg) || typeof sg.name !== "string" || typeof sg.key_id !== "string" || !isHex64(sg.verification_key)) errors.push("signer malformed");
+  if (!isIso2(m.issued_at) || typeof m.nonce !== "string" || typeof m.digest !== "string" || !isRecord5(m.signature) || m.signature.algorithm !== "Ed25519" || typeof m.signature.value !== "string") errors.push("envelope malformed");
   return errors;
 }
 var PROVENANCE_FILES = { manifest: "manifest.json", receipts: "receipts.jsonl", standard: "standard.json", regrade: "regrade.json" };
@@ -10349,7 +10970,9 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
       const egressOk = m.environment.egress.every((h) => run.egress_allowlist.includes(h));
       checks.push({ id: "egress", label: "Network", ok: egressOk, detail: egressOk ? `The environment declares egress to ${m.environment.egress.join(", ") || "nothing"}, within the standard's allowlist. Declared by the harness; enforced by the sandbox, not by anything this page can check.` : "The environment declares egress the standard does not allow.", informational: egressOk && !m.environment.attestation });
       const routeOk = m.agent.model_route === run.model_route;
-      checks.push({ id: "model_route", label: "Model route", ok: routeOk, detail: routeOk ? `Model calls declared to ${m.agent.model_route}, as the standard requires. Declared, not observed: the gateway never sees model traffic.` : `The manifest declares model route ${m.agent.model_route}; the standard requires ${run.model_route}.`, informational: true });
+      const attestationRequired = !!run.model_attestation;
+      const attestationDeclared = !!m.environment.model_attestation && !!m.model_calls;
+      checks.push({ id: "model_route", label: "Model route", ok: routeOk && (!attestationRequired || attestationDeclared), detail: !routeOk ? `The manifest declares model route ${m.agent.model_route}; the standard requires ${run.model_route}.` : attestationRequired && !attestationDeclared ? `The standard requires every model call signed inside ${run.model_attestation.provider}'s TEE, and the manifest carries no model attestation.` : attestationDeclared ? `Model calls to ${m.agent.model_route}, as the standard requires; observed, not declared: every call is signed inside the model's TEE (checked below).` : `Model calls declared to ${m.agent.model_route}, as the standard requires. Declared, not observed: the gateway never sees model traffic.` });
       bound &&= dataOk && harnessOk && attemptsOk && timeOk && egressOk;
       const accepted = std.trust.accepted_gate_keys.map((k) => k.toLowerCase()).includes(m.gateway.verification_key.toLowerCase());
       checks.push({ id: "gate_key", label: "Gateway key", ok: accepted, detail: accepted ? "The gateway key the manifest names is one the standard accepts." : "The standard does not accept the gateway key the manifest names." });
@@ -10409,6 +11032,58 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
   } else if (calls && !chain) {
     checks.push({ id: "calls_bind", label: "Calls", ok: false, detail: "A calls log was supplied without the receipt log it binds to." });
     bound = false;
+  }
+  const matt = m.environment.model_attestation ?? null;
+  let modelAttestations = [];
+  let attestedModel = null;
+  if (matt && context.modelAttestations && context.modelAttestations.length > 0) {
+    anythingGiven = true;
+    const expectModel = std?.requirements.run?.model_attestation?.model ?? matt.model;
+    modelAttestations = context.modelAttestations.map((r) => verifyModelAttestation(r, { model: expectModel }, now));
+    const digests = context.modelAttestations.map((r) => attestationReportDigest(r));
+    const pinned = matt.reports.every((p) => digests.includes(p.digest)) && matt.reports.length === context.modelAttestations.length;
+    const addressesOk = modelAttestations.every((v, i) => v.signing_address !== null && matt.reports.some((p) => p.digest === digests[i] && p.signing_address.toLowerCase() === v.signing_address.toLowerCase()));
+    const allValid = modelAttestations.every((v) => v.valid);
+    for (const [i, v] of modelAttestations.entries()) for (const c of v.checks) checks.push({ id: `model_attestation_${i + 1}_${c.id}`, label: `Model attestation ${i + 1}: ${c.label}`, ok: c.ok, detail: c.detail, ...c.informational ? { informational: true } : {} });
+    const ok = pinned && addressesOk && allValid;
+    checks.push({ id: "model_attestation", label: "Model attestation", ok, detail: ok ? `${modelAttestations.length} report${modelAttestations.length === 1 ? "" : "s"} from ${matt.provider}, each pinned by the manifest and verified offline: the TDX quote chains to Intel's root and binds the signing key.` : !pinned ? "The reports supplied are not the ones the manifest pins." : !addressesOk ? "A report binds a different signing address than the manifest records for it." : "A report does not verify." });
+    bound &&= ok;
+    const modelOk = !std?.requirements.run?.model_attestation || matt.provider === std.requirements.run.model_attestation.provider && matt.model === std.requirements.run.model_attestation.model;
+    if (std?.requirements.run?.model_attestation) checks.push({ id: "model_attestation_pin", label: "Attested model", ok: modelOk, detail: modelOk ? `The attested provider and model are the ones the standard names: ${matt.provider}, ${matt.model}.` : `The standard names ${std.requirements.run.model_attestation.provider} ${std.requirements.run.model_attestation.model}; the manifest attests ${matt.provider} ${matt.model}.` });
+    bound &&= modelOk;
+    if (ok && modelOk) attestedModel = { model: matt.model, calls: 0, addresses: modelAttestations.map((v) => v.signing_address), mr_td: modelAttestations[0]?.measurements?.mr_td ?? null };
+  } else if (matt) {
+    checks.push({ id: "model_attestation", label: "Model attestation", ok: true, informational: true, detail: `The manifest carries ${matt.reports.length} attestation report${matt.reports.length === 1 ? "" : "s"} by digest; supply model-attestation.json to verify them here.` });
+  }
+  if (m.model_calls && context.modelCalls !== void 0 && context.modelCalls !== null) {
+    anythingGiven = true;
+    const text = context.modelCalls;
+    const digestOk = fileDigest(text) === m.model_calls.digest;
+    let parsed = null;
+    let parseError = "";
+    try {
+      parsed = parseModelCalls(text);
+    } catch (e) {
+      parseError = e.message;
+    }
+    const countOk = parsed !== null && parsed.length === m.model_calls.count;
+    const ranges = m.attempts.filter((t) => t.model_calls);
+    const partition2 = parsed !== null && (ranges.length === 0 || [...ranges].sort((a, b) => a.model_calls.from - b.model_calls.from).reduce((cursor2, t) => cursor2 === t.model_calls.from ? t.model_calls.to : -1, 0) === parsed.length);
+    checks.push({ id: "model_calls_digest", label: "Model calls", ok: digestOk && countOk && partition2, detail: !digestOk ? "The model-calls log supplied is not the one the manifest digests." : !countOk ? parseError ? `The model-calls log does not parse: ${parseError}.` : `The log holds ${parsed?.length ?? 0} calls; the manifest says ${m.model_calls.count}.` : !partition2 ? "The attempts' model-call ranges do not partition the log." : `The ${parsed.length} signed model-call records are the ones the manifest digests, and the attempts account for all of them.` });
+    bound &&= digestOk && countOk && partition2;
+    if (parsed && modelAttestations.length > 0) {
+      const v = verifyAttestedCalls(parsed, modelAttestations, matt?.model ?? null);
+      checks.push({ id: "model_calls_bind", label: "Model call signatures", ok: v.ok, detail: v.ok ? `Every one of the ${v.count} model calls recovers to a signing key that a verified report binds, and names ${matt?.model}: the model's TEE answered each request and response as digested.` : `${v.invalid.length ? `${v.invalid.length} signature${v.invalid.length === 1 ? "" : "s"} do not verify` : ""}${v.unattested.length ? `${v.invalid.length ? "; " : ""}signed by ${v.unattested.join(", ")}, which no verified report binds` : ""}${v.other_model.length ? `${v.invalid.length || v.unattested.length ? "; " : ""}${v.other_model.length} call${v.other_model.length === 1 ? "" : "s"} name another model` : ""}.` });
+      bound &&= v.ok;
+      if (attestedModel && v.ok) attestedModel.calls = v.count;
+      else attestedModel = null;
+    } else if (parsed && matt) {
+      checks.push({ id: "model_calls_bind", label: "Model call signatures", ok: true, informational: true, detail: "Signed model calls supplied; supply the attestation reports to bind their signing keys to hardware." });
+      attestedModel = null;
+    }
+  } else if (m.model_calls && matt) {
+    checks.push({ id: "model_calls_digest", label: "Model calls", ok: true, informational: true, detail: `The manifest pins ${m.model_calls.count} signed model-call records; supply model-calls.jsonl to check them.` });
+    attestedModel = null;
   }
   const workspaces = context.workspaces ?? null;
   if (workspaces) {
@@ -10520,6 +11195,9 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
   else not_established.push(`That the run was made in the workflow it names: the attestation is referenced (${att.reference}) but its bundle was not supplied. Supply provenance/*.sigstore.jsonl to verify it here, or run gh attestation verify.`);
   if (!reconciled) not_established.push(regrade ? "That the verdicts are more than the harness's word: the second grading supplied does not reconcile." : "That the verdicts are more than the harness's word: no second grading is supplied. The archived workspace and the pinned tests let anyone make one.");
   if (!calls) not_established.push("What any allowed call did: the receipts carry the digest of each input, not the input. Supply the calls log to open them.");
+  if (attestedModel) establishes.push(`Every model call (${attestedModel.calls}) was answered by ${attestedModel.model} inside a TDX confidential machine: the model's TEE signed each request and response digest with a key bound into an Intel-signed quote${attestedModel.mr_td ? ` (MRTD ${attestedModel.mr_td.slice(0, 16)}...)` : ""}, verified offline against the pinned Intel root. Not established: the platform's current TCB status, the GPU verdict, and what the model did with the bytes beyond signing them.`);
+  else if (matt) not_established.push(`That the model calls were answered inside ${matt.provider}'s TEE: the manifest names the attestation; supply model-calls.jsonl and model-attestation.json to verify it here.`);
+  else not_established.push("Which model answered: the model route is the harness's declaration; an attested route would let the model's own TEE sign each call.");
   not_established.push("What the agent said or reasoned: the receipts record tool calls and the harness records test verdicts, not the transcript.");
   if (!std) not_established.push("Which standard the run was under: supply the signed standard to check the pins and the policy.");
   if (!receipts) not_established.push("That the receipts the manifest names exist and verify: supply the gateway's receipt log.");
@@ -10530,7 +11208,7 @@ function runManifestReadback(m) {
   const lines = [];
   lines.push(`Run ${m.run_id}, signed by ${m.signer.name} (${m.signer.key_id}) at ${m.issued_at}`);
   lines.push(`Task set: ${m.dataset.name}${m.dataset.revision ? ` at ${m.dataset.revision}` : ""}, ${m.dataset.task_count} task${m.dataset.task_count === 1 ? "" : "s"}, digest ${m.dataset.digest.slice(0, 19)}`);
-  lines.push(`Agent: ${m.agent.name} ${m.agent.version}, model ${m.agent.model} via ${m.agent.model_route}`);
+  lines.push(`Agent: ${m.agent.name} ${m.agent.version}, model ${m.agent.model} via ${m.agent.model_route}${m.environment.model_attestation ? `; attested: ${m.model_calls?.count ?? 0} model calls signed inside ${m.environment.model_attestation.provider}'s TEE for ${m.environment.model_attestation.model}, ${m.environment.model_attestation.reports.length} report${m.environment.model_attestation.reports.length === 1 ? "" : "s"}` : ""}`);
   lines.push(`Harness: ${m.harness.name} (${m.harness.digest.slice(0, 19)}), gateway ${m.harness.gateway}`);
   lines.push(`Environment: ${m.environment.sandbox}; egress to ${m.environment.egress.join(", ") || "nothing"}; attestation ${m.environment.attestation ? `${m.environment.attestation.kind} ${m.environment.attestation.reference}` : "none carried"}`);
   lines.push(`Standard: ${m.standard.request_id}, digest ${m.standard.digest.slice(0, 16)}, gate policy ${m.standard.policy_digest.slice(0, 19)}`);
@@ -10543,6 +11221,9 @@ function taskSetDigest(name, revision, tasks) {
   const canonical = { name, revision: revision ?? null, tasks: tasks.map((t) => ({ id: t.id, files: [...t.files].sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0) })).sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0) };
   return `sha256:${sha256Hex(canonicalize2(canonical))}`;
 }
+function fileDigest(content2) {
+  return `sha256:${shaHex(content2)}`;
+}
 export {
   ACTION_ASSURANCE_BUNDLE_V1,
   ADMISSION_DECISION_V1,
@@ -10550,6 +11231,7 @@ export {
   RUN_MANIFEST_V1,
   RUN_REGRADE_V1,
   SIGSTORE_PUBLIC_GOOD,
+  attestationReportDigest,
   charterDigest,
   covenantState,
   isActionAssuranceBundleV1,
@@ -10557,20 +11239,26 @@ export {
   isDemoRunSignerKey,
   isDemoTrustKey,
   parseClaimsJson,
+  parseModelCalls,
   parseSigstoreBundle,
+  parseTdxQuote,
   proofRequestReadback,
   recomputeAdmissionDecision,
+  recoverSigner,
   runManifestReadback,
   subjectDigest,
   taskSetDigest,
   trustProvenance,
   verifyActionAssuranceBundleV1,
   verifyAdmissionDecision,
+  verifyAttestedCalls,
   verifyCosignedDiversification,
   verifyEpochBundle,
+  verifyModelAttestation,
   verifyProofRequest,
   verifyRunManifest,
   verifyRunRegrade,
   verifySigstoreBundle,
+  verifyTdxQuote,
   workspaceDigest
 };
