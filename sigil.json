@@ -1,14 +1,14 @@
 {
   "sigil_version": 1,
-  "fingerprint": "dc090261",
-  "name": "Quiet Wind",
-  "sigil_hash": "dc0902619b95dc8c88e98770614389520e97d5c3143ef63b64e18800ad935f60",
+  "fingerprint": "6e0ba5d5",
+  "name": "High Anchor",
+  "sigil_hash": "6e0ba5d552924fa4a09c492eb50737d4024503b057dc9ccc53d112716d390990",
   "project_public_key": "fe665e861867cec7e171c0c13bbc873c3362079faef21f54df7804b7fb9ae8af",
   "commitment_authentication": "public_recomputable_integrity_only",
   "policy": {
     "version": 3,
     "package": "@veritasacta/verify",
-    "package_version": "0.10.11",
+    "package_version": "0.10.12",
     "source_hash": "8c2a3540b8003f9a30d7bea1bfe8428bd732739af9b46c9b4a63e6a3695b94cd",
     "monitored_files": [
       "README.md",
@@ -75,6 +75,6 @@
     ],
     "created_at": 1784267169966
   },
-  "policy_hash": "8815a0981b7c29d0945a639604a94563ff7816cf605119da337607d52798cade",
+  "policy_hash": "1af18ba98ab956c85d06f14d8cb840027202a2ee32b3ab3df7ddf06f0e07bb17",
   "derived_at": "2026-07-17T05:46:09.966Z"
 }

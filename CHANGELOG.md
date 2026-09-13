@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.10.12 (2026-09-13)
+
+- A grading by a grader the standard does not name is reported as a third word the standard did not choose: it is shown, agreeing or disagreeing, and it never binds, so no one can manufacture a contradiction by supplying an artifact. A named grader's disagreement still blocks.
+- Gradings carry how the tests were run: the profile (black box, where the tests never import the submission; in process, where they do and the submission's code ran inside the scoring interpreter), the hygiene check for scoring-hijack configuration, and whether pytest's summary, its JUnit report, and its exit status agreed. The regrade's environment declares who administers it, what implementation ran the tests, where the tests came from, and what the judgment is.
+
 ## 0.10.11 (2026-09-12)
 
 - Exit status means what a CI gate needs it to mean. A run manifest given companion files exits 1 unless it binds to all of them; alone it still exits 0 and says unbound. Before this, a mutated receipt log could fail a check, report `binding: partial`, and exit 0 (found by aeoess).

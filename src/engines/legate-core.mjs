@@ -8497,13 +8497,13 @@ async function recomputeAdmissionDecision(decision, context) {
     now: decidedAt
   });
   const digest = admissionReportDigest(report);
-  const matches = digest === decision.report_digest && report.verdict === decision.acknowledged_verdict;
+  const matches2 = digest === decision.report_digest && report.verdict === decision.acknowledged_verdict;
   return {
     recomputed: true,
-    matches,
+    matches: matches2,
     verdict: report.verdict,
     report,
-    detail: matches ? `Recomputed from the presented evidence at ${decision.decided_at}: ${report.verdict}, matching the acknowledged result.` : `Recomputed result is ${report.verdict} (${report.title}); the decision acknowledges ${decision.acknowledged_verdict}${digest !== decision.report_digest ? " and its report digest does not match" : ""}. The signature is valid; the acknowledged report is not.`
+    detail: matches2 ? `Recomputed from the presented evidence at ${decision.decided_at}: ${report.verdict}, matching the acknowledged result.` : `Recomputed result is ${report.verdict} (${report.title}); the decision acknowledges ${decision.acknowledged_verdict}${digest !== decision.report_digest ? " and its report digest does not match" : ""}. The signature is valid; the acknowledged report is not.`
   };
 }
 
@@ -10860,6 +10860,115 @@ function verifyAttestedCalls(calls, attestations, expectModel = null) {
   return { ok: invalid.length === 0 && unattested.size === 0 && other_model.length === 0, count: calls.length, unattested: [...unattested], invalid, other_model };
 }
 
+// src/temporal.ts
+var globToRegExp = (glob) => new RegExp(`^${glob.split("*").map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join(".*")}$`, "s");
+var likes = (pattern2, value) => {
+  if (pattern2 === void 0) return true;
+  if (value === null) return null;
+  const list = Array.isArray(pattern2) ? pattern2 : [pattern2];
+  return list.some((p) => globToRegExp(p).test(value));
+};
+function matches(filter, e) {
+  if (filter.tool !== void 0 && filter.tool !== e.tool) return false;
+  if (filter.decision !== void 0 && filter.decision !== e.decision) return false;
+  return likes(filter.command_like, e.command);
+}
+var needsCommand = (f) => f.command_like !== void 0;
+function projectEvents(receipts, options = {}) {
+  const attemptOf = (i) => options.attempts?.find((a) => i >= a.receipts.from && i < a.receipts.to) ?? null;
+  return receipts.map((r, i) => {
+    const call = options.calls?.[i] ?? null;
+    const input = call && call.tool === r.tool ? call.input : null;
+    const command = input === null ? null : typeof input === "string" ? input : typeof input.command === "string" ? String(input.command) : JSON.stringify(input);
+    const a = attemptOf(i);
+    return { index: i, at: Date.parse(r.issued_at), tool: r.tool, decision: r.decision, input_digest: r.input_hash, command, task_id: a?.task_id ?? null, attempt: a?.attempt ?? null, link: r.link };
+  });
+}
+var sameScope = (rule, a, b) => rule.scope === "run" || a.task_id === b.task_id && a.attempt === b.attempt;
+function evaluateTemporal(events, policy) {
+  const results = [];
+  for (const rule of policy.rules) {
+    const filters = rule.kind === "count_within" ? [rule.filter] : rule.kind === "forbid_after" ? [rule.trigger, rule.forbid] : [rule.before, rule.require];
+    if (filters.some(needsCommand) && events.some((e) => e.command === null)) {
+      results.push({ rule, evaluable: false, reason: "the rule reads the command behind each call, and the calls log is not supplied for every receipt", events_examined: events.length, violations: [] });
+      continue;
+    }
+    const violations = [];
+    const iso = (e) => new Date(e.at).toISOString();
+    for (let i = 0; i < events.length; i++) {
+      const e = events[i];
+      const history = events.slice(0, i).filter((h) => sameScope(rule, h, e));
+      if (rule.kind === "count_within") {
+        if (matches(rule.filter, e) !== true) continue;
+        const n = history.filter((h) => matches(rule.filter, h) === true && e.at - h.at <= rule.window_seconds * 1e3).length + 1;
+        if (n > rule.max) violations.push({ rule: rule.id, event_index: i, at: iso(e), link: e.link, detail: `${n} matching calls within ${rule.window_seconds} s at receipt ${i} (${e.tool}, ${e.decision}); the rule allows ${rule.max}.` });
+      } else if (rule.kind === "forbid_after") {
+        if (matches(rule.forbid, e) !== true) continue;
+        const trigger = history.find((h) => matches(rule.trigger, h) === true);
+        if (trigger) violations.push({ rule: rule.id, event_index: i, at: iso(e), link: e.link, detail: `receipt ${i} (${e.tool}) matches what is forbidden after receipt ${trigger.index} (${trigger.tool}) matched the trigger; the label does not expire.` });
+      } else {
+        if (matches(rule.before, e) !== true) continue;
+        const prior = history.find((h) => matches(rule.require, h) === true && e.at - h.at <= rule.window_seconds * 1e3);
+        if (!prior) violations.push({ rule: rule.id, event_index: i, at: iso(e), link: e.link, detail: `receipt ${i} (${e.tool}) has no required prior event within ${rule.window_seconds} s before it.` });
+      }
+    }
+    results.push({ rule, evaluable: true, events_examined: events.length, violations });
+  }
+  return { events: events.length, results, ok: results.every((r) => r.evaluable && r.violations.length === 0), not_evaluable: results.filter((r) => !r.evaluable).map((r) => r.rule.id) };
+}
+var dwString = (s) => JSON.stringify(s);
+var actionOf = (f) => `Legate::Action::${dwString(f.tool ?? "Bash")}`;
+var derivedName = (ruleId, role) => `p_${ruleId.replace(/[^A-Za-z0-9_]/g, "_")}_${role}`;
+function derivedOf(policy) {
+  const out = [];
+  for (const r of policy.rules) {
+    const parts = r.kind === "count_within" ? [["match", r.filter]] : r.kind === "forbid_after" ? [["trigger", r.trigger], ["forbid", r.forbid]] : [["before", r.before], ["require", r.require]];
+    for (const [role, f] of parts) if (f.command_like !== void 0) out.push({ name: derivedName(r.id, role), patterns: Array.isArray(f.command_like) ? f.command_like : [f.command_like], rule: r.id, role, filter: f });
+  }
+  return out;
+}
+var pattern = (f, scope, derived) => {
+  const fields = [scope === "attempt" ? "input.task: context.input.task" : null, derived ? `input.${derived}: true` : null].filter(Boolean).join(", ");
+  return `${actionOf(f)}::request{ ${fields} }`;
+};
+function toDogwood(policy) {
+  const derived = derivedOf(policy);
+  const d = (rule, role) => derived.find((x) => x.rule === rule && x.role === role)?.name ?? null;
+  const lines = ["// Generated from a Legate temporal policy (legate-temporal.v1). A base permit, then one forbid per rule, firing at the event that breaks it."];
+  if (derived.length) {
+    lines.push("// Derived predicates carried by the trace (Dogwood compares, it does not pattern-match); each is: the command matches any of the globs.");
+    for (const x of derived) lines.push(`//   ${x.name} := command like ${x.patterns.map(dwString).join(" or ")}`);
+  }
+  lines.push('@id("legate_base_permit")', "permit (principal, action, resource);");
+  for (const r of policy.rules) {
+    if (r.kind === "count_within") {
+      const name = d(r.id, "match");
+      lines.push(`@id(${dwString(r.id)})`, `forbid (principal, action == ${actionOf(r.filter)}, resource)`, ...name ? [`when { context.input.${name} == true }`] : [], `when temporal {`, `    exists (n: Long). ((count_within(${r.window_seconds}s, ${pattern(r.filter, r.scope, name)})) == n && n > ${r.max})`, `};`);
+    } else if (r.kind === "forbid_after") {
+      const trig = d(r.id, "trigger");
+      const forb = d(r.id, "forbid");
+      lines.push(`@id(${dwString(r.id)})`, `forbid (principal, action == ${actionOf(r.forbid)}, resource)`, ...forb ? [`when { context.input.${forb} == true }`] : [], `when temporal {`, `    formerly within 86400s ${pattern(r.trigger, r.scope, trig)}`, `};`);
+    } else {
+      const bef = d(r.id, "before");
+      const req = d(r.id, "require");
+      lines.push(`@id(${dwString(r.id)})`, `forbid (principal, action == ${actionOf(r.before)}, resource)`, ...bef ? [`when { context.input.${bef} == true }`] : [], `unless temporal {`, `    formerly within ${r.window_seconds}s ${pattern(r.require, r.scope, req)}`, `};`);
+    }
+  }
+  const tools = [...new Set(policy.rules.flatMap((r) => (r.kind === "count_within" ? [r.filter] : r.kind === "forbid_after" ? [r.trigger, r.forbid] : [r.before, r.require]).map((f) => f.tool ?? "Bash")))];
+  const schema = ["namespace Legate {", `  type CallInput = { command: String, task: String${derived.map((x) => `, ${x.name}: Bool`).join("")} };`, "  type SystemContext = { now: datetime };", "  entity Agent;", "  entity Gate;", ...tools.map((t) => `  action ${dwString(t)} appliesTo { principal: [Agent], resource: [Gate], context: { input: CallInput, system: SystemContext } };`), "}"].join("\n");
+  return { policy: lines.join("\n"), schema };
+}
+function toDogwoodTrace(events, policy) {
+  if (!events.length) return "";
+  const t0 = events[0].at;
+  const derived = policy ? derivedOf(policy) : [];
+  return events.map((e) => {
+    const flags = derived.map((x) => `, ${x.name}: ${matches(x.filter, e) === true ? "true" : "false"}`).join("");
+    const input = `{ command: ${dwString(e.command ?? "")}, task: ${dwString(e.task_id ? `${e.task_id}#${e.attempt}` : "run")}${flags} }`;
+    return `@${Math.max(0, Math.round((e.at - t0) / 1e3))} scope(principal: Legate::Agent::"agent", resource: Legate::Gate::"gate") request_context(input: ${input}) Legate::Action::${dwString(e.tool)}::request(input: ${input}, callerPrincipal: Legate::Agent::"agent", callerResource: Legate::Gate::"gate")`;
+  }).join("\n") + "\n";
+}
+
 // src/standard-compiler.ts
 function policyDigest(engine, files) {
   const entries = files.map((f) => ({ name: f.name, sha256: sha256Hex(f.content) })).sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
@@ -11052,6 +11161,30 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
       }
     }
   }
+  const temporal = std?.enforcement?.temporal ?? null;
+  if (temporal && chain) {
+    const recomputed = `sha256:${sha256Hex(canonicalize2({ format: temporal.format, rules: temporal.rules }))}`;
+    if (recomputed !== temporal.digest) {
+      checks.push({ id: "temporal_policy", label: "History rules", ok: false, detail: "The history rules the standard carries do not hash to the digest it declares." });
+      bound = false;
+    } else {
+      const events = projectEvents(chain.receipts.map((r) => ({ tool: r.tool ?? "", decision: r.decision === "deny" ? "deny" : "allow", input_hash: r.input_hash ?? "", issued_at: r.issued_at ?? (/* @__PURE__ */ new Date(0)).toISOString(), link: r.hash })), { attempts: m.attempts, calls: context.calls ?? null });
+      const ev = evaluateTemporal(events, { format: temporal.format, rules: temporal.rules });
+      for (const r of ev.results) {
+        const id = `temporal_${r.rule.id}`;
+        if (!r.evaluable) {
+          checks.push({ id, label: `History rule: ${r.rule.id}`, ok: true, informational: true, detail: `Not evaluable here: ${r.reason}.` });
+          continue;
+        }
+        const ok = r.violations.length === 0;
+        checks.push({ id, label: `History rule: ${r.rule.id}`, ok, detail: ok ? `Held at every one of ${r.events_examined} receipts${r.rule.note ? ` (${r.rule.note})` : ""}.` : `Broken at receipt ${r.violations[0].event_index}: ${r.violations[0].detail} History head at that decision: ${r.violations[0].link.slice(0, 19)}\u2026${r.violations.length > 1 ? ` (${r.violations.length} violations in all)` : ""}` });
+        bound &&= ok;
+      }
+      const held = ev.results.filter((r) => r.evaluable && r.violations.length === 0).map((r) => r.rule.id);
+      if (held.length) establishes.push(`The history rules the standard declares (${held.join(", ")}) held at every receipt, replayed here from the chain; the same rules are written in Dogwood's syntax beside the standard for the reference interpreter.`);
+      if (ev.not_evaluable.length) not_established.push(`Whether the history rules that read each command held (${ev.not_evaluable.join(", ")}): supply calls.jsonl.`);
+    }
+  } else if (temporal && !chain) checks.push({ id: "temporal_policy", label: "History rules", ok: true, informational: true, detail: "The standard declares history rules; supply the receipts to replay them." });
   const rawReceipts = context.bytes?.receipts ?? context.provenance?.bytes?.receipts;
   if (receipts && rawReceipts !== void 0) {
     const digest = `sha256:${subjectDigest(rawReceipts)}`;
@@ -11168,8 +11301,10 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
     });
     const ok = sameRun && graderAccepted && distinct && agrees;
     const id = i === 0 ? "regrade" : `regrade_${i + 1}`;
-    checks.push({ id, label: i === 0 ? "Second grading" : `Grading ${i + 2}`, ok, detail: !rv.valid ? rv.detail : !sameRun ? "The regrade is for a different manifest." : !std ? "Supply the standard to check the grader." : !graderAccepted ? "The grader key is not one the standard accepts, and the regrade carries no verified provenance from a repository the standard accepts." : !distinct ? "The regrade was signed by the same key as the manifest; that is not a second party." : !agrees ? "This grading disagrees with the manifest on at least one verdict or workspace." : `A grading under key ${rg.grader.key_id}${graderByKey ? "" : " (accepted by its provenance identity)"}${madeBy}, from the archived workspaces with the pinned tests, agrees with every verdict.` });
-    bound &&= ok;
+    const unnamed = Boolean(std) && rv.valid && sameRun && !graderAccepted;
+    const profileNote = rg.results?.some((r) => r.grading?.profile === "in_process") ? " Profile: the tests import the submission, so its code ran inside the scoring interpreter (declared as the weaker profile)." : rg.results?.every((r) => r.grading?.profile === "black_box") && rg.results?.length ? " Profile: black box, the tests never import the submission." : "";
+    checks.push({ id, label: i === 0 ? "Second grading" : `Grading ${i + 2}`, ok: unnamed ? agrees : ok, ...unnamed ? { informational: true } : {}, detail: !rv.valid ? rv.detail : !sameRun ? "The regrade is for a different manifest." : !std ? "Supply the standard to check the grader." : unnamed ? `A grading by ${rg.grader.name} (${rg.grader.key_id}), which the standard does not name as a grader: it ${agrees ? "agrees with every verdict" : "DISAGREES with the manifest on at least one verdict or workspace"}, and it does not bind either way. The standard names who may reconcile its verdicts.${profileNote}` : !distinct ? "The regrade was signed by the same key as the manifest; that is not a second party." : !agrees ? "This grading disagrees with the manifest on at least one verdict or workspace." : `A grading under key ${rg.grader.key_id}${graderByKey ? "" : " (accepted by its provenance identity)"}${madeBy}, from the archived workspaces with the pinned tests, agrees with every verdict.${profileNote}` });
+    if (!unnamed) bound &&= ok;
     if (ok) {
       reconciled = true;
       const repoShort = (regradeIdentity?.repository ?? "").replace(/^https:\/\/github\.com\//, "");
@@ -11306,6 +11441,7 @@ export {
   attestationReportDigest,
   charterDigest,
   covenantState,
+  evaluateTemporal,
   isActionAssuranceBundleV1,
   isDemoGatewayKey,
   isDemoRecipientKey,
@@ -11315,12 +11451,15 @@ export {
   parseModelCalls,
   parseSigstoreBundle,
   parseTdxQuote,
+  projectEvents,
   proofRequestReadback,
   recomputeAdmissionDecision,
   recoverSigner,
   runManifestReadback,
   subjectDigest,
   taskSetDigest,
+  toDogwood,
+  toDogwoodTrace,
   trustProvenance,
   verifyActionAssuranceBundleV1,
   verifyAdmissionDecision,
