@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.10.11 (2026-09-12)
+
+- Exit status means what a CI gate needs it to mean. A run manifest given companion files exits 1 unless it binds to all of them; alone it still exits 0 and says unbound. Before this, a mutated receipt log could fail a check, report `binding: partial`, and exit 0 (found by aeoess).
+- The receipt log and the calls log are checked as bytes: `receipts.jsonl` and `calls.jsonl` as given must hash to the digests the manifest records, not merely parse to the same records (found by aeoess).
+- The gate policy digest is recomputed from the policy text the standard carries, instead of two declared digests being compared (found by aeoess).
+- `--maintainer-key <hex|file>` pins the maintainer key that must have signed the standard, a trust root from outside the files; the report then establishes who signed the standard instead of asking you to pin it.
+
 ## 0.10.10 (2026-09-12)
 
 - Readable names. Certificate subjects and issuers print as `CN=..., O=...` instead of raw attribute OIDs, in the Sigstore and Intel TDX chains alike.

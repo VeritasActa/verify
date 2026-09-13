@@ -92,7 +92,9 @@ export async function verifyLegateStandard(input, opts = {}) {
     const regrades = Array.isArray(opts.regrades) ? opts.regrades : null;
     const modelCalls = typeof opts.modelCalls === 'string' ? opts.modelCalls : null;
     const modelAttestations = Array.isArray(opts.modelAttestations) ? opts.modelAttestations : null;
-    const v = m.verifyRunManifest(input, { standard, receipts, calls, regrade, regrades, provenance, modelCalls, modelAttestations }, now);
+    const bytes = opts.bytes && typeof opts.bytes === 'object' ? opts.bytes : null;
+    const pins = opts.pins && typeof opts.pins === 'object' ? opts.pins : null;
+    const v = m.verifyRunManifest(input, { standard, receipts, calls, regrade, regrades, provenance, modelCalls, modelAttestations, bytes, pins }, now);
     return {
       valid: v.cryptographically_valid,
       ...base,

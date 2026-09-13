@@ -165,3 +165,46 @@ test('--regrade may be given more than once: the first is the run\'s own, the re
   assert.equal(r.status, 0, r.stderr || r.stdout);
   assert.match(r.stdout, /"id":\s*"regrade_2",\s*"label":\s*"Grading 3",\s*"ok":\s*true/);
 });
+
+test('the receipt log is checked as bytes: a log that parses to the same records but differs in bytes fails log_bytes and unbinds', async () => {
+  const text = readFileSync(fixturePath('run-receipts.jsonl'), 'utf8');
+  const exact = await verifyLegateStandard(fixture('run-manifest.json'), { now: NOW, standard: fixture('run-standard.json'), receipts: fixture('run-receipts.json'), bytes: { receipts: text } });
+  assert.ok(exact.checks.some((c) => c.id === 'log_bytes' && c.ok), JSON.stringify(exact.checks.find((c) => c.id === 'log_bytes')));
+  const padded = await verifyLegateStandard(fixture('run-manifest.json'), { now: NOW, standard: fixture('run-standard.json'), receipts: fixture('run-receipts.json'), bytes: { receipts: text.replace('\n', ' \n') } });
+  assert.ok(padded.checks.some((c) => c.id === 'log_bytes' && !c.ok));
+  assert.notEqual(padded.binding, 'bound');
+});
+
+test('a pinned maintainer key is a trust root from outside the files: the right key establishes the signer, a wrong one unbinds', async () => {
+  const standard = fixture('run-standard.json');
+  const right = await verifyLegateStandard(fixture('run-manifest.json'), { now: NOW, standard, receipts: fixture('run-receipts.json'), pins: { maintainer_key: standard.recipient.verification_key } });
+  assert.ok(right.checks.some((c) => c.id === 'maintainer_pin' && c.ok));
+  assert.ok(right.establishes.some((s) => /maintainer key you pinned/.test(s)));
+  const wrong = await verifyLegateStandard(fixture('run-manifest.json'), { now: NOW, standard, receipts: fixture('run-receipts.json'), pins: { maintainer_key: 'ab'.repeat(32) } });
+  assert.ok(wrong.checks.some((c) => c.id === 'maintainer_pin' && !c.ok));
+  assert.notEqual(wrong.binding, 'bound');
+});
+
+test('the gate policy digest is recomputed from the policy text the standard carries', async () => {
+  const r = await verifyLegateStandard(fixture('run-manifest.json'), { now: NOW, standard: fixture('run-standard.json'), receipts: fixture('run-receipts.json') });
+  const policy = r.checks.find((c) => c.id === 'policy');
+  assert.ok(policy && policy.ok && /recomputed here/.test(policy.detail), JSON.stringify(policy));
+});
+
+test('the exit status is 1 when a run manifest fails to bind to a companion file, and 0 alone or when bound', async () => {
+  const { mkdtempSync, writeFileSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const cli = join(here, '..', '..', 'cli.js');
+  const dir = mkdtempSync(join(tmpdir(), 'verify-exit-'));
+  const lines = readFileSync(fixturePath('run-receipts.jsonl'), 'utf8').trim().split('\n');
+  const truncated = join(dir, 'receipts-truncated.jsonl'); writeFileSync(truncated, lines.slice(0, -1).join('\n') + '\n');
+  const bad = spawnSync(process.execPath, [cli, fixturePath('run-manifest.json'), '--standard', fixturePath('run-standard.json'), '--receipts', truncated, '--json'], { encoding: 'utf8' });
+  assert.equal(bad.status, 1, bad.stdout.slice(0, 300));
+  assert.match(bad.stdout, /"binding":\s*"partial"/);
+  // The fixture standard asks for verdict evidence, so the bound case carries the second grading and the calls log too.
+  const good = spawnSync(process.execPath, [cli, fixturePath('run-manifest.json'), '--standard', fixturePath('run-standard.json'), '--receipts', fixturePath('run-receipts.jsonl'), '--calls', fixturePath('run-calls.jsonl'), '--regrade', fixturePath('run-regrade.json'), '--maintainer-key', fixture('run-standard.json').recipient.verification_key, '--json'], { encoding: 'utf8' });
+  assert.equal(good.status, 0, good.stdout.slice(0, 300));
+  assert.match(good.stdout, /"id":\s*"maintainer_pin",\s*"label":\s*"Maintainer key pinned",\s*"ok":\s*true/);
+  const alone = spawnSync(process.execPath, [cli, fixturePath('run-manifest.json'), '--json'], { encoding: 'utf8' });
+  assert.equal(alone.status, 0);
+});

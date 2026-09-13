@@ -10860,6 +10860,12 @@ function verifyAttestedCalls(calls, attestations, expectModel = null) {
   return { ok: invalid.length === 0 && unattested.size === 0 && other_model.length === 0, count: calls.length, unattested: [...unattested], invalid, other_model };
 }
 
+// src/standard-compiler.ts
+function policyDigest(engine, files) {
+  const entries = files.map((f) => ({ name: f.name, sha256: sha256Hex(f.content) })).sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
+  return `sha256:${sha256Hex(canonicalize2({ construction: "acta-policy-digest-v1", engine, files: entries }))}`;
+}
+
 // src/run-manifest.ts
 var RUN_MANIFEST_V1 = "scopeblind.run_manifest.v1";
 var RUN_MANIFEST_DOMAIN = "scopeblind.run-manifest.v1";
@@ -10972,8 +10978,16 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
     const same = sv.cryptographically_valid && std.request_id === m.standard.request_id && std.digest === m.standard.digest && std.recipient.verification_key.toLowerCase() === m.standard.recipient_key.toLowerCase();
     checks.push({ id: "standard", label: "Standard", ok: same, detail: same ? `The manifest names this standard by request id and digest (${std.request_id}), and the standard verifies.` : !sv.cryptographically_valid ? "The standard supplied does not itself verify." : "The manifest names a different standard (request id, digest, or recipient key differ)." });
     bound &&= same;
-    const policyOk = Boolean(std.enforcement && std.enforcement.policy_digest === m.standard.policy_digest);
-    checks.push({ id: "policy", label: "Gate policy", ok: policyOk, detail: policyOk ? `The policy digest the manifest records is the one compiled from the standard (${m.standard.policy_digest.slice(0, 19)}\u2026).` : std.enforcement ? "The manifest records a different policy digest from the one the standard carries." : "The standard carries no compiled gate policy." });
+    if (context.pins?.maintainer_key) {
+      const pin = context.pins.maintainer_key.trim().toLowerCase();
+      const pinOk = std.recipient.verification_key.toLowerCase() === pin;
+      checks.push({ id: "maintainer_pin", label: "Maintainer key pinned", ok: pinOk, detail: pinOk ? `The standard is signed by the maintainer key you pinned (${std.recipient.key_id}), a trust root from outside these files.` : `The standard is signed by ${std.recipient.key_id}, not by the key you pinned. Nothing in these files can make up for that.` });
+      bound &&= pinOk;
+    }
+    const policyRecomputed = std.enforcement ? policyDigest(std.enforcement.policy_format, [{ name: std.enforcement.file_name, content: std.enforcement.policy }]) : null;
+    const policyDeclared = Boolean(std.enforcement && std.enforcement.policy_digest === m.standard.policy_digest);
+    const policyOk = policyDeclared && policyRecomputed === m.standard.policy_digest;
+    checks.push({ id: "policy", label: "Gate policy", ok: policyOk, detail: policyOk ? `The policy digest the manifest records is the digest of the policy text the standard carries, recomputed here (${m.standard.policy_digest.slice(0, 19)}\u2026).` : !std.enforcement ? "The standard carries no enforcement block, so the manifest's policy digest cannot be checked against it." : !policyDeclared ? "The manifest records a different policy digest than the standard declares." : "The policy text the standard carries does not hash to the digest it declares; the declared digest is not the policy's." });
     bound &&= policyOk;
     if (run) {
       const dataOk = run.dataset.digest === m.dataset.digest && run.dataset.name === m.dataset.name;
@@ -11038,6 +11052,20 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
       }
     }
   }
+  const rawReceipts = context.bytes?.receipts ?? context.provenance?.bytes?.receipts;
+  if (receipts && rawReceipts !== void 0) {
+    const digest = `sha256:${subjectDigest(rawReceipts)}`;
+    const ok = digest === m.gateway.log_digest;
+    checks.push({ id: "log_bytes", label: "Receipt log bytes", ok, detail: ok ? `receipts.jsonl as supplied hashes to the digest the manifest records (${digest.slice(0, 19)}\u2026).` : `The receipt log supplied is not, byte for byte, the log the manifest digests (${m.gateway.log_digest.slice(0, 19)}\u2026): the chain may verify, but these are not the bytes the harness wrote.` });
+    bound &&= ok;
+  }
+  const rawCalls = context.bytes?.calls;
+  if (context.calls && rawCalls !== void 0 && m.gateway.calls_digest) {
+    const digest = `sha256:${subjectDigest(rawCalls)}`;
+    const ok = digest === m.gateway.calls_digest;
+    checks.push({ id: "calls_bytes", label: "Calls log bytes", ok, detail: ok ? `calls.jsonl as supplied hashes to the digest the manifest records (${digest.slice(0, 19)}\u2026).` : `The calls log supplied is not, byte for byte, the log the manifest digests (${m.gateway.calls_digest.slice(0, 19)}\u2026).` });
+    bound &&= ok;
+  }
   const calls = context.calls ?? null;
   if (calls && chain) {
     anythingGiven = true;
@@ -11045,8 +11073,6 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
     const boundCalls = chain.receipts.slice(0, n).filter((r, i) => r.tool === calls[i].tool && r.input_hash === sha256Hex(canonicalize2(calls[i].input))).length;
     const callsOk = calls.length === chain.receipts.length && boundCalls === chain.receipts.length;
     checks.push({ id: "calls_bind", label: "Calls", ok: callsOk, detail: callsOk ? `All ${calls.length} calls in the log bind to their receipts: the input digest in each receipt is the digest of the call recorded.` : `${boundCalls} of ${chain.receipts.length} receipts bind to the calls log (${calls.length} entries); the rest were not the calls recorded.` });
-    if (m.gateway.calls_digest) {
-    }
     bound &&= callsOk;
   } else if (calls && !chain) {
     checks.push({ id: "calls_bind", label: "Calls", ok: false, detail: "A calls log was supplied without the receipt log it binds to." });
@@ -11228,7 +11254,8 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
     if (receipts && chain) establishes.push(`The ${chain.count} receipts are the ones the manifest names, every one under that policy, every allowed call on the tool list, and the refusals counted match.`);
   }
   establishes.push(...gradingLines);
-  not_established.push(`Who holds the maintainer key that signed the standard${std ? ` (${std.recipient.organization}, ${std.recipient.key_id})` : ""}: pin its verification key through a channel you already trust.`);
+  if (std && context.pins?.maintainer_key && std.recipient.verification_key.toLowerCase() === context.pins.maintainer_key.trim().toLowerCase()) establishes.push(`The standard is signed by the maintainer key you pinned from outside these files (${std.recipient.organization}, ${std.recipient.key_id}).`);
+  else not_established.push(`Who holds the maintainer key that signed the standard${std ? ` (${std.recipient.organization}, ${std.recipient.key_id})` : ""}: pin its verification key through a channel you already trust (the CLI takes --maintainer-key; the keys are published on legate.scopeblind.com/trust and at the repository root).`);
   if (!att) not_established.push("That the sandbox enforced the declared network rule: this run carries no environment attestation, so egress and model route are the harness's declaration.");
   else if (provenance?.verified && provenance.identity) establishes.push(`Provenance verified here against the pinned Sigstore trust root: ${provenance.covered.map((r) => PROVENANCE_FILES[r]).join(", ")} came out of GitHub Actions workflow ${(provenance.identity.workflow ?? "").replace(/^https:\/\/github\.com\/[^/]+\/[^/]+\//, "").replace(/@.*$/, "")} at ${(provenance.identity.repository ?? "").replace(/^https:\/\/github\.com\//, "")}${provenance.identity.commit ? `, commit ${provenance.identity.commit.slice(0, 12)}` : ""}, run ${(provenance.identity.run ?? att.reference).replace(/^.*\/actions\/runs\//, "").replace(/\/attempts\/\d+$/, "")}; the certificate chains to Fulcio and the signature is logged in ${(provenance.log?.base_url ?? "the transparency log").replace(/^https:\/\//, "")} at index ${provenance.log?.index ?? "?"} (${provenance.log?.integrated_time ?? "time unknown"}). What that workflow configured, the sandbox and the network rule, is in the repository at that commit.`);
   else if (prov && prov.bundles.length > 0) not_established.push(`That the run was made in the workflow it names (${att.reference}): the provenance supplied does not verify, or does not name these bytes.`);

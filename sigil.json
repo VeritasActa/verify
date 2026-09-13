@@ -1,15 +1,15 @@
 {
   "sigil_version": 1,
-  "fingerprint": "583cc9f4",
-  "name": "Pale River",
-  "sigil_hash": "583cc9f4705d6208df9987c325d3d25affd00019e89ca6d58176e86c933e7dd4",
+  "fingerprint": "dc090261",
+  "name": "Quiet Wind",
+  "sigil_hash": "dc0902619b95dc8c88e98770614389520e97d5c3143ef63b64e18800ad935f60",
   "project_public_key": "fe665e861867cec7e171c0c13bbc873c3362079faef21f54df7804b7fb9ae8af",
   "commitment_authentication": "public_recomputable_integrity_only",
   "policy": {
     "version": 3,
     "package": "@veritasacta/verify",
-    "package_version": "0.10.10",
-    "source_hash": "73ffdc618cce3a8f9236684e8ab39ee4aa8d7e551970603c835f0ddd6eca3198",
+    "package_version": "0.10.11",
+    "source_hash": "8c2a3540b8003f9a30d7bea1bfe8428bd732739af9b46c9b4a63e6a3695b94cd",
     "monitored_files": [
       "README.md",
       "cli.js",
@@ -75,6 +75,6 @@
     ],
     "created_at": 1784267169966
   },
-  "policy_hash": "9ffb7bdfddc0b918429bd92960a229ff1695b34921c8f240a416144239e7d7ac",
+  "policy_hash": "8815a0981b7c29d0945a639604a94563ff7816cf605119da337607d52798cade",
   "derived_at": "2026-07-17T05:46:09.966Z"
 }

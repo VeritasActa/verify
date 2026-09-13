@@ -113,6 +113,13 @@ import { formatAsJson } from './src/output/json.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PKG = JSON.parse(readFileSync(join(__dirname, 'package.json'), 'utf-8'));
 
+/** Exit 0 means the answer is the good one: valid, and, when companion files were given, bound to all of them. A run manifest that verifies alone is exit 0 and says unbound; one that fails to bind to what was supplied is exit 1, however valid its own signature. */
+function exitOk(result) {
+  if (!result || !result.valid) return false;
+  if (typeof result.binding === 'string') return result.binding === 'bound' || result.binding === 'manifest_only';
+  return true;
+}
+
 /** The mode line names the Legate artifact that was checked, not the list of what could have been. */
 function legateModeLabel(r) {
   const t = r && r.artifact_type;
@@ -220,6 +227,7 @@ function parseArgs() {
       case '--receipts': opts.receiptsFile = next(); break;
       case '--calls': opts.callsFile = next(); break;
       case '--regrade': (opts.regradeFiles ??= []).push(next()); break;
+      case '--maintainer-key': opts.maintainerKey = next(); break;
       case '--provenance': (opts.provenanceFiles ??= []).push(next()); break;
       case '--model-calls': opts.modelCallsFile = next(); break;
       case '--model-attestation': opts.modelAttestationFile = next(); break;
@@ -358,6 +366,7 @@ ${bold('Options:')}
   --standard <file>        Legate run manifest: the signed standard to check the pins and policy against
   --receipts <file>        Legate run manifest: the gateway's receipt log (JSONL or array) to check the chain against
   --calls <file>           Legate run manifest: the calls log (JSONL), one call per receipt, to open the input digests
+  --maintainer-key <hex|file>  Legate run manifest: pin the maintainer key that must have signed the standard (a hex key, or a maintainer-key.json); a trust root from outside the files
   --regrade <file>         Legate run manifest: a second grading (scopeblind.run_regrade.v1) to reconcile with the manifest; repeatable: the first is the run's own, any further one a grading made elsewhere
   --provenance <path>      Legate run manifest: Sigstore provenance bundle(s) (.sigstore.jsonl, or a directory of them), verified here against the pinned trust root; repeatable
   --model-calls <file>     Legate run manifest: the model-calls log (model-calls.jsonl), each call signed inside the model's TEE
@@ -653,6 +662,18 @@ async function dispatch(input, opts) {
         }
         if (opts.modelCallsFile) subOpts.modelCalls = readFileSync(opts.modelCallsFile, 'utf8');
         if (opts.modelAttestationFile) { const v = JSON.parse(readFileSync(opts.modelAttestationFile, 'utf8')); subOpts.modelAttestations = Array.isArray(v) ? v : [v]; }
+        // The manifest digests the receipt log and the calls log as files, so the files given are handed over as bytes as well as records.
+        const fileBytes = {};
+        if (opts.receiptsFile) fileBytes.receipts = readFileSync(opts.receiptsFile);
+        if (opts.callsFile) fileBytes.calls = readFileSync(opts.callsFile);
+        subOpts.bytes = fileBytes;
+        if (opts.maintainerKey) {
+          const { existsSync } = await import('node:fs');
+          let pin = opts.maintainerKey.trim();
+          if (existsSync(pin)) { const raw = readFileSync(pin, 'utf8').trim(); try { const j = JSON.parse(raw); pin = String(j.public_key ?? j.verification_key ?? ''); } catch { pin = raw; } }
+          if (!/^[0-9a-f]{64}$/i.test(pin)) { console.error('--maintainer-key: expected a 64-hex Ed25519 public key or a maintainer-key.json carrying public_key'); process.exit(2); }
+          subOpts.pins = { maintainer_key: pin };
+        }
       }
       const r = await verifyLegateStandard(input, subOpts);
       return { ...r, modeLabel: legateModeLabel(r) };
@@ -859,7 +880,7 @@ async function runReplayChain(opts) {
     } else {
       console.log(html);
     }
-    process.exit(result.valid ? 0 : 1);
+    process.exit(exitOk(result) ? 0 : 1);
   }
 
   if (opts.json) {
@@ -877,7 +898,7 @@ async function runReplayChain(opts) {
     }
     console.log('');
   }
-  process.exit(result.valid ? 0 : 1);
+  process.exit(exitOk(result) ? 0 : 1);
 }
 
 /**
@@ -952,7 +973,7 @@ async function runPromptVerify(opts) {
     }
     console.log('');
   }
-  process.exit(result.valid ? 0 : 1);
+  process.exit(exitOk(result) ? 0 : 1);
 }
 
 /**
@@ -983,7 +1004,7 @@ async function runChainExplore(opts) {
   } else {
     console.log(renderChainTree(result));
   }
-  process.exit(result.valid ? 0 : 1);
+  process.exit(exitOk(result) ? 0 : 1);
 }
 
 /**
@@ -1276,7 +1297,7 @@ async function main() {
     } else {
       console.log(out);
     }
-    process.exit(result.valid ? 0 : exitCodeFor(result.error));
+    process.exit(exitOk(result) ? 0 : result.valid ? 1 : exitCodeFor(result.error));
   }
 
   // Audit log
@@ -1306,7 +1327,7 @@ async function main() {
     } else {
       console.log(html);
     }
-    process.exit(result.valid ? 0 : exitCodeFor(result.error));
+    process.exit(exitOk(result) ? 0 : result.valid ? 1 : exitCodeFor(result.error));
   }
 
   // Resolve a human label for the signer key, if one is known. Display aid only;
@@ -1386,6 +1407,10 @@ async function main() {
         ));
       }
       process.exit(2);
+    }
+    if (!exitOk(result)) {
+      if (!opts.json) console.error(red(`\n  Exit 1: the file verifies on its own, but does not bind to what was supplied (${result.binding}). Read the failed checks above.\n`));
+      process.exit(1);
     }
     process.exit(0);
   }
