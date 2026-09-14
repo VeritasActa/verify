@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.14 (2026-09-14)
+
+- The package's integrity commitment (`sigil.json`) is regenerated for this release. 0.10.13 shipped carrying the 0.10.12 commitment, so `--self-check` on 0.10.13 reports it stale; nothing else differs from 0.10.13. The release gate now catches this before a site deploy, which is how it was found.
+
 ## 0.10.13 (2026-09-13)
 
 - A result the verifier could not decide is reported as `NOT CHECKED (<code>)`, not `INVALID`. No key it may trust (`no_public_key`, or `embedded_key_rejected` when the only key is inside the signed bytes), an unknown shape (`unknown_format`), a missing signature, and the other undecidable codes all exit 2 and say which; `INVALID` and exit 1 are reserved for a check that ran and failed. A script that needs the distinction reads `error` from `--json`, as ERRORS.md says. Prompted by the embedded-key review on ScopeBlind/agent-governance-testvectors#21, where the two could not be told apart from the exit status alone.

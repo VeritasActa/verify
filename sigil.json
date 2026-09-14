@@ -1,15 +1,15 @@
 {
   "sigil_version": 1,
-  "fingerprint": "6e0ba5d5",
-  "name": "High Anchor",
-  "sigil_hash": "6e0ba5d552924fa4a09c492eb50737d4024503b057dc9ccc53d112716d390990",
+  "fingerprint": "a75ee518",
+  "name": "Still Reed",
+  "sigil_hash": "a75ee518def4dc9453de318d8f494965fbbd683f96c83de7028debd632a31dd4",
   "project_public_key": "fe665e861867cec7e171c0c13bbc873c3362079faef21f54df7804b7fb9ae8af",
   "commitment_authentication": "public_recomputable_integrity_only",
   "policy": {
     "version": 3,
     "package": "@veritasacta/verify",
-    "package_version": "0.10.12",
-    "source_hash": "8c2a3540b8003f9a30d7bea1bfe8428bd732739af9b46c9b4a63e6a3695b94cd",
+    "package_version": "0.10.14",
+    "source_hash": "1c7c0d55086e6280db163788829bc77e2bc2e12c9745666cdc03c719cbaf360f",
     "monitored_files": [
       "README.md",
       "cli.js",
@@ -75,6 +75,6 @@
     ],
     "created_at": 1784267169966
   },
-  "policy_hash": "1af18ba98ab956c85d06f14d8cb840027202a2ee32b3ab3df7ddf06f0e07bb17",
+  "policy_hash": "5038e4a238e6a46bb79e1f9a964c4d42af33063daa5fb0d08f3ad9ca36f014ef",
   "derived_at": "2026-07-17T05:46:09.966Z"
 }
