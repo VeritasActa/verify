@@ -10,6 +10,7 @@
  */
 
 import { deriveFilteredSigil } from '../engines/sigil.js';
+import { getError } from '../errors.js';
 
 const isCI = Boolean(process.env.CI || process.env.NO_COLOR);
 
@@ -126,8 +127,7 @@ export function formatReceiptResult(result, opts = {}) {
     lines.push(renderTerminalSigil(result.publicKey));
   }
 
-  const icon = result.valid ? green('✓') : red('✗');
-  const status = result.valid ? green('VALID') : red('INVALID');
+  const { icon, status } = verdictWord(result);
   lines.push(`\n${icon} Signature: ${status}`);
 
   if (result.format) lines.push(`  Format:     ${result.format}${result.specVersion ? ` (${result.specVersion})` : ''}`);
@@ -222,7 +222,7 @@ export function formatReceiptResult(result, opts = {}) {
  */
 export function formatRunManifestResult(result, opts = {}) {
   const lines = [];
-  const icon = result.valid ? green('✓') : red('✗');
+  const { icon } = verdictWord(result);
   lines.push(`\n${icon} ${bold(result.title || (result.valid ? 'Run manifest verifies' : 'Run manifest does not verify'))}`);
   if (result.modeLabel) lines.push(`  Mode:       ${result.modeLabel}`);
   if (result.artifact_id) lines.push(`  Run:        ${result.artifact_id}`);
@@ -255,8 +255,7 @@ export function formatRunManifestResult(result, opts = {}) {
 
 export function formatBundleResult(result, opts = {}) {
   const lines = [];
-  const icon = result.valid ? green('✓') : red('✗');
-  const status = result.valid ? green('VALID') : red('INVALID');
+  const { icon, status } = verdictWord(result);
   lines.push(`\n${icon} Bundle: ${status}`);
   lines.push(`  Total:      ${result.total}`);
   lines.push(`  Passed:     ${green(String(result.passed))}`);
@@ -277,6 +276,17 @@ export function formatBundleResult(result, opts = {}) {
  * @param {Object} s macroSummary object from engines/macro-snapshot.js
  * @returns {string[]}
  */
+// A result the verifier could not decide (no key it may trust, an unknown
+// format, a missing signature) is not a failed signature. Say so: INVALID is
+// reserved for a check that ran and failed, so a reader and a script can tell
+// an enforced rule from one that was never reached.
+function verdictWord(result) {
+  if (result.valid) return { icon: green('✓'), status: green('VALID') };
+  const cls = result.error ? getError(result.error)?.class : undefined;
+  if (cls === 'undecidable') return { icon: yellow('?'), status: yellow('NOT CHECKED') + dim(` (${result.error})`) };
+  return { icon: red('✗'), status: red('INVALID') };
+}
+
 function macroSummaryLines(s) {
   const lines = [];
   if (s.description) lines.push(`  Snapshot:   ${dim(s.description)}`);
@@ -347,8 +357,7 @@ export function formatGateTupleResult(result, opts = {}) {
     lines.push(renderTerminalSigil(result.publicKey));
   }
 
-  const icon = result.valid ? green('✓') : red('✗');
-  const status = result.valid ? green('VALID') : red('INVALID');
+  const { icon, status } = verdictWord(result);
   lines.push(`\n${icon} Signature: ${status}`);
   lines.push(`  Format:     ${result.macroSchema ? 'ScopeBlind macro-engine snapshot' : 'ScopeBlind Gate receipt tuple'}`);
   if (result.schema) {
@@ -433,8 +442,7 @@ export function formatGovernedReceiptResult(result, opts = {}) {
     lines.push(renderTerminalSigil(result.publicKey));
   }
 
-  const icon = result.valid ? green('✓') : red('✗');
-  const status = result.valid ? green('VALID') : red('INVALID');
+  const { icon, status } = verdictWord(result);
   lines.push(`\n${icon} Signature: ${status}`);
   lines.push(`  Format:     Legate governed receipt`);
 
@@ -516,8 +524,7 @@ export function formatTrustedContextPackResult(result, opts = {}) {
     lines.push(renderTerminalSigil(result.publicKey));
   }
 
-  const icon = result.valid ? green('✓') : red('✗');
-  const status = result.valid ? green('VALID') : red('INVALID');
+  const { icon, status } = verdictWord(result);
   lines.push(`\n${icon} Signature: ${status}`);
   lines.push(`  Format:     ScopeBlind Trusted Context Pack`);
   if (result.schema) {
@@ -587,8 +594,7 @@ export function formatTrustedContextPackResult(result, opts = {}) {
  */
 export function formatGateBundleResult(result, opts = {}) {
   const lines = [];
-  const icon = result.valid ? green('✓') : red('✗');
-  const status = result.valid ? green('VALID') : red('INVALID');
+  const { icon, status } = verdictWord(result);
   lines.push(`\n${icon} Gate evidence bundle: ${status}`);
   lines.push(`  Schema:      ${result.schema || '(missing)'}`);
   if (result.exportedAt) lines.push(`  Exported:    ${dim(result.exportedAt)}`);
@@ -646,8 +652,7 @@ export function formatGateBundleResult(result, opts = {}) {
  */
 export function formatMacroTrackRecordResult(result, opts = {}) {
   const lines = [];
-  const icon = result.valid ? green('✓') : red('✗');
-  const status = result.valid ? green('VALID') : red('INVALID');
+  const { icon, status } = verdictWord(result);
   lines.push(`\n${icon} Macro track-record bundle: ${status}`);
   lines.push(`  Schema:      ${result.schema || '(missing)'}`);
   if (result.exportedAt) lines.push(`  Exported:    ${dim(result.exportedAt)}`);
@@ -705,8 +710,7 @@ export function formatMacroTrackRecordResult(result, opts = {}) {
 
 export function formatKuResult(result, opts = {}) {
   const lines = [];
-  const icon = result.valid ? green('✓') : red('✗');
-  const status = result.valid ? green('VALID') : red('INVALID');
+  const { icon, status } = verdictWord(result);
   lines.push(`\n${icon} Knowledge Unit: ${status}`);
   if (result.topic) lines.push(`  Topic:        "${result.topic}"`);
   if (result.totalReceipts !== undefined) {

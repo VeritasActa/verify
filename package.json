@@ -1,6 +1,6 @@
 {
   "name": "@veritasacta/verify",
-  "version": "0.10.12",
+  "version": "0.10.13",
   "mcpName": "io.github.tomjwxf/veritasacta-verify",
   "description": "Offline verifier for Veritas Acta signed receipts. Powers protect-mcp, ScopeBlind cold-chain hardware, and Microsoft AGT Lesson 18.",
   "license": "Apache-2.0",
