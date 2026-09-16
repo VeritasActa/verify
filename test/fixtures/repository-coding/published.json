@@ -1,0 +1,563 @@
+{
+  "type": "scopeblind.repository.coding-evidence.v1",
+  "job": {
+    "payload": {
+      "type": "scopeblind.repository.coding-job.v1",
+      "request": {
+        "payload": {
+          "type": "scopeblind.repository.coding-request.v1",
+          "id": "36ab6a39-fc7b-4a14-8db9-384153b09d21",
+          "workspace_id": "0cbea62e-e057-4d6a-8cfe-87cc7016dceb",
+          "mandate_digest": "0a375fe83dc5189f39baeb9b3f6d240eaecd046e3d494921463725ad46af14f6",
+          "source": {
+            "task_id": "5b677e40-2c71-4db3-8906-6dc251144858",
+            "task_digest": "27ebb664a0dc9ddbb25efe3b2f7f1f6637b0099de6ff7f05a01b8eb13f913847",
+            "basis_digest": "d82a3331fdcbdc89f216439d38db3877d267ca4fa346bfa39bac62404bbc7528",
+            "packet_digest": "217df0fb571189226ca7bbdb862532dd1ff727b764e46e1ab45f3aae8851815c",
+            "feedback_digest": "12fbf2e77b1758d603b2c54766e7ed7ae82e99f531cdf49f3e0383843c1e8591"
+          },
+          "owner_key": "0e06e7b19178a3de45c3efcf483cdff127dcb9a8fe0fccd1952b9977f0370262",
+          "issued_at": "2026-09-16T22:18:46.169Z"
+        },
+        "signer": "0e06e7b19178a3de45c3efcf483cdff127dcb9a8fe0fccd1952b9977f0370262",
+        "digest": "58c23673e2f2a4ef96606aad3769db117c9d3624ac40633994cd6441e6c0269f",
+        "signature": "c508326dc204262551edaa4852efe1d554813a39e733c31cc7c925fa7ac8f362cc4566cfd9b570bc247cf670f30057bc0023a74bd6479d6ce5df5e38b649bd0b"
+      },
+      "mandate": {
+        "payload": {
+          "type": "scopeblind.repository.coding-mandate.v1",
+          "id": "4e523d50-2053-49fc-ac9c-d349288597c8",
+          "workspace_id": "0cbea62e-e057-4d6a-8cfe-87cc7016dceb",
+          "workspace_digest": "7b33a694a7bdbc5b1a70bd95f4a2ffaffa40f5c98143f563c49c60f3d8d9ad6b",
+          "mode": "edit_code",
+          "owner_member_id": "30669188-c2be-473f-8972-be065208bbb5",
+          "owner_key": "0e06e7b19178a3de45c3efcf483cdff127dcb9a8fe0fccd1952b9977f0370262",
+          "owner_member_revision": 1,
+          "reviewer_member_id": "fe40225d-0cee-4c68-9dc0-20009ab3e3e2",
+          "reviewer_key": "e30cf6a961f482f737037372c65b9563ec8a318bb92e64c7453dde8ac405356d",
+          "reviewer_member_revision": 1,
+          "worker_key": "e0bb6fa7ea7b2c6af888ab9429c63271a586d9dcc9dc70f29acc4cc845d99bc9",
+          "repository": "scopeblind/coding-test",
+          "base_branch": "main",
+          "allowed_paths": [
+            "site/**"
+          ],
+          "required_checks": [
+            {
+              "name": "ScopeBlind isolated coding checks",
+              "app_id": 15368
+            }
+          ],
+          "runtime": "node22-static-v1",
+          "docker_image": "node@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "test_command": [
+            "node",
+            "--test",
+            "tests/site.test.mjs"
+          ],
+          "build_command": [
+            "node",
+            "tools/build.mjs"
+          ],
+          "preview_directory": "dist",
+          "max_jobs": 2,
+          "max_attempts": 2,
+          "max_model_calls": 3,
+          "max_tokens": 65536,
+          "max_seconds": 300,
+          "max_changed_files": 3,
+          "max_changed_bytes": 32768,
+          "permissions": [
+            "read_source",
+            "edit_code",
+            "run_tests",
+            "open_pull_request",
+            "publish_preview"
+          ],
+          "issued_at": "2026-09-16T22:18:46.092Z",
+          "expires_at": "2026-09-16T23:18:46.092Z"
+        },
+        "signer": "0e06e7b19178a3de45c3efcf483cdff127dcb9a8fe0fccd1952b9977f0370262",
+        "digest": "0a375fe83dc5189f39baeb9b3f6d240eaecd046e3d494921463725ad46af14f6",
+        "signature": "5f9db3f08ca925e4c9b3c45ba6495b4afb5fa8a1f7a689dd1272a38fe080d54a95355753766928cb3b664fd1d584b0a92c220867eae9ac0bea0ec76c78bd1d00"
+      },
+      "adoption": {
+        "payload": {
+          "type": "scopeblind.repository.coding-mandate.v1",
+          "id": "4e523d50-2053-49fc-ac9c-d349288597c8",
+          "workspace_id": "0cbea62e-e057-4d6a-8cfe-87cc7016dceb",
+          "workspace_digest": "7b33a694a7bdbc5b1a70bd95f4a2ffaffa40f5c98143f563c49c60f3d8d9ad6b",
+          "mode": "edit_code",
+          "owner_member_id": "30669188-c2be-473f-8972-be065208bbb5",
+          "owner_key": "0e06e7b19178a3de45c3efcf483cdff127dcb9a8fe0fccd1952b9977f0370262",
+          "owner_member_revision": 1,
+          "reviewer_member_id": "fe40225d-0cee-4c68-9dc0-20009ab3e3e2",
+          "reviewer_key": "e30cf6a961f482f737037372c65b9563ec8a318bb92e64c7453dde8ac405356d",
+          "reviewer_member_revision": 1,
+          "worker_key": "e0bb6fa7ea7b2c6af888ab9429c63271a586d9dcc9dc70f29acc4cc845d99bc9",
+          "repository": "scopeblind/coding-test",
+          "base_branch": "main",
+          "allowed_paths": [
+            "site/**"
+          ],
+          "required_checks": [
+            {
+              "name": "ScopeBlind isolated coding checks",
+              "app_id": 15368
+            }
+          ],
+          "runtime": "node22-static-v1",
+          "docker_image": "node@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "test_command": [
+            "node",
+            "--test",
+            "tests/site.test.mjs"
+          ],
+          "build_command": [
+            "node",
+            "tools/build.mjs"
+          ],
+          "preview_directory": "dist",
+          "max_jobs": 2,
+          "max_attempts": 2,
+          "max_model_calls": 3,
+          "max_tokens": 65536,
+          "max_seconds": 300,
+          "max_changed_files": 3,
+          "max_changed_bytes": 32768,
+          "permissions": [
+            "read_source",
+            "edit_code",
+            "run_tests",
+            "open_pull_request",
+            "publish_preview"
+          ],
+          "issued_at": "2026-09-16T22:18:46.092Z",
+          "expires_at": "2026-09-16T23:18:46.092Z"
+        },
+        "signer": "e30cf6a961f482f737037372c65b9563ec8a318bb92e64c7453dde8ac405356d",
+        "digest": "0a375fe83dc5189f39baeb9b3f6d240eaecd046e3d494921463725ad46af14f6",
+        "signature": "573175e4ab43804fb593a279f2402f5a8b01ee8e92db801f57781ce00b071586ca895a89dfb6186fd06ccf5a45cff11f17a1d7cddd1665f4280f28c830f6f708"
+      },
+      "workspace": {
+        "payload": {
+          "type": "scopeblind.repository.workspace-state.v1",
+          "workspace": {
+            "payload": {
+              "type": "scopeblind.repository.workspace.v1",
+              "id": "0cbea62e-e057-4d6a-8cfe-87cc7016dceb",
+              "title": "Coding test project",
+              "client_name": "Client",
+              "repository": "scopeblind/coding-test",
+              "base_branch": "main",
+              "owner_member_id": "30669188-c2be-473f-8972-be065208bbb5",
+              "owner_key": "0e06e7b19178a3de45c3efcf483cdff127dcb9a8fe0fccd1952b9977f0370262",
+              "receiver_key": "ecdd1ab6e9b40f8209ef94c26ba8c4bd939beace517448972f65dd040182a18e",
+              "authority_key": "7be1941bfaa3823802a4cf6331ee264309922e40dfd8d24753dd1bb6b7f2268b",
+              "issued_at": "2026-09-16T22:18:44.022Z",
+              "expires_at": "2026-09-17T22:18:44.022Z"
+            },
+            "signer": "0e06e7b19178a3de45c3efcf483cdff127dcb9a8fe0fccd1952b9977f0370262",
+            "digest": "7b33a694a7bdbc5b1a70bd95f4a2ffaffa40f5c98143f563c49c60f3d8d9ad6b",
+            "signature": "9098367ab0736095b71bd8bf6d7173606865c35eab8574f1213e2cfa671ea1d3a56c14d076e6b51b92ec60499e2227dac951fc40fce0a43c781cab72c3ed8501"
+          },
+          "members": [
+            {
+              "member_id": "30669188-c2be-473f-8972-be065208bbb5",
+              "display_name": "Project owner",
+              "current_key": "0e06e7b19178a3de45c3efcf483cdff127dcb9a8fe0fccd1952b9977f0370262",
+              "role": "owner",
+              "status": "active",
+              "revision": 1,
+              "invitation": null,
+              "claim": null,
+              "recovery": null,
+              "rotations": [],
+              "updates": []
+            },
+            {
+              "member_id": "fe40225d-0cee-4c68-9dc0-20009ab3e3e2",
+              "display_name": "Reviewer",
+              "current_key": "e30cf6a961f482f737037372c65b9563ec8a318bb92e64c7453dde8ac405356d",
+              "role": "reviewer",
+              "status": "active",
+              "revision": 1,
+              "invitation": {
+                "payload": {
+                  "type": "scopeblind.repository.workspace-invitation.v1",
+                  "id": "424cd670-f5ab-405c-b22b-8e2a1f2b8861",
+                  "workspace_id": "0cbea62e-e057-4d6a-8cfe-87cc7016dceb",
+                  "workspace_digest": "7b33a694a7bdbc5b1a70bd95f4a2ffaffa40f5c98143f563c49c60f3d8d9ad6b",
+                  "member_id": "fe40225d-0cee-4c68-9dc0-20009ab3e3e2",
+                  "role": "reviewer",
+                  "display_name": "Reviewer",
+                  "issuer_key": "0e06e7b19178a3de45c3efcf483cdff127dcb9a8fe0fccd1952b9977f0370262",
+                  "secret_hash": "ffe054fe7ae0cb6dc65c3af9b61d5209f439851db43d0ba5997337df154668eb",
+                  "issued_at": "2026-09-16T22:18:44.189Z",
+                  "expires_at": "2026-09-16T23:18:44.189Z"
+                },
+                "signer": "0e06e7b19178a3de45c3efcf483cdff127dcb9a8fe0fccd1952b9977f0370262",
+                "digest": "f8089eb7297139b3050ee6a49f94e941291b722c908581b227c06d9731683246",
+                "signature": "424ae0b8d2eadc4e4d8eba10cd1dba0ff20714e715c3ef56338358b413d330145a6fe0b544d5de2a216002ee92d86248e775c0262f0fa3a6e415186d51938c05"
+              },
+              "claim": {
+                "payload": {
+                  "type": "scopeblind.repository.workspace-member-claim.v1",
+                  "workspace_id": "0cbea62e-e057-4d6a-8cfe-87cc7016dceb",
+                  "invitation_digest": "f8089eb7297139b3050ee6a49f94e941291b722c908581b227c06d9731683246",
+                  "member_id": "fe40225d-0cee-4c68-9dc0-20009ab3e3e2",
+                  "member_key": "e30cf6a961f482f737037372c65b9563ec8a318bb92e64c7453dde8ac405356d",
+                  "issued_at": "2026-09-16T22:18:44.403Z"
+                },
+                "signer": "e30cf6a961f482f737037372c65b9563ec8a318bb92e64c7453dde8ac405356d",
+                "digest": "5b9863138540e57c54fb1421fd4aed04238df88a9c995c4bbd190d34997a201f",
+                "signature": "2c9810d820b09ff4304c4a5ff926f37eef297eb1e09117fa0fe2ae8ace4e63022a7aca9bd2fbf65036e9933a004f537e5244f0fd9c319fc2ad712bb65a510f06"
+              },
+              "recovery": null,
+              "rotations": [],
+              "updates": []
+            }
+          ],
+          "assignments": [
+            {
+              "payload": {
+                "type": "scopeblind.repository.workspace-task-assignment.v1",
+                "workspace_id": "0cbea62e-e057-4d6a-8cfe-87cc7016dceb",
+                "workspace_digest": "7b33a694a7bdbc5b1a70bd95f4a2ffaffa40f5c98143f563c49c60f3d8d9ad6b",
+                "task_id": "5b677e40-2c71-4db3-8906-6dc251144858",
+                "task_digest": "27ebb664a0dc9ddbb25efe3b2f7f1f6637b0099de6ff7f05a01b8eb13f913847",
+                "owner_member_id": "30669188-c2be-473f-8972-be065208bbb5",
+                "owner_key": "0e06e7b19178a3de45c3efcf483cdff127dcb9a8fe0fccd1952b9977f0370262",
+                "owner_member_revision": 1,
+                "reviewer_member_id": "fe40225d-0cee-4c68-9dc0-20009ab3e3e2",
+                "reviewer_key": "e30cf6a961f482f737037372c65b9563ec8a318bb92e64c7453dde8ac405356d",
+                "reviewer_member_revision": 1,
+                "review_brief_digest": "1b80bed8b6baab4f0581393be233a4a43aa03e2819c9a5160f899b74a949a15a",
+                "issued_at": "2026-09-16T22:18:44.652Z",
+                "expires_at": "2026-09-16T23:18:44.596Z"
+              },
+              "signer": "0e06e7b19178a3de45c3efcf483cdff127dcb9a8fe0fccd1952b9977f0370262",
+              "digest": "fc917c0158098acbf165d5bbe569b37d190a0d78f7c41b9afbaaaf3d037b79d7",
+              "signature": "a9517066a958adadbbe6e698035ab65d4797264770f158e82d12fdef3525c0a41da27da00a04829e9e73e8934ef23543809aad8b636a0a6409e7b07948d9fd08"
+            }
+          ],
+          "invitations": [
+            {
+              "payload": {
+                "type": "scopeblind.repository.workspace-invitation.v1",
+                "id": "424cd670-f5ab-405c-b22b-8e2a1f2b8861",
+                "workspace_id": "0cbea62e-e057-4d6a-8cfe-87cc7016dceb",
+                "workspace_digest": "7b33a694a7bdbc5b1a70bd95f4a2ffaffa40f5c98143f563c49c60f3d8d9ad6b",
+                "member_id": "fe40225d-0cee-4c68-9dc0-20009ab3e3e2",
+                "role": "reviewer",
+                "display_name": "Reviewer",
+                "issuer_key": "0e06e7b19178a3de45c3efcf483cdff127dcb9a8fe0fccd1952b9977f0370262",
+                "secret_hash": "ffe054fe7ae0cb6dc65c3af9b61d5209f439851db43d0ba5997337df154668eb",
+                "issued_at": "2026-09-16T22:18:44.189Z",
+                "expires_at": "2026-09-16T23:18:44.189Z"
+              },
+              "signer": "0e06e7b19178a3de45c3efcf483cdff127dcb9a8fe0fccd1952b9977f0370262",
+              "digest": "f8089eb7297139b3050ee6a49f94e941291b722c908581b227c06d9731683246",
+              "signature": "424ae0b8d2eadc4e4d8eba10cd1dba0ff20714e715c3ef56338358b413d330145a6fe0b544d5de2a216002ee92d86248e775c0262f0fa3a6e415186d51938c05"
+            }
+          ],
+          "mandates": [],
+          "drafts": [],
+          "viewer": {
+            "key": "0e06e7b19178a3de45c3efcf483cdff127dcb9a8fe0fccd1952b9977f0370262",
+            "member_id": "30669188-c2be-473f-8972-be065208bbb5",
+            "role": "owner",
+            "capabilities": [
+              "read",
+              "invite",
+              "assign",
+              "prepare_mandate",
+              "review_draft",
+              "recover"
+            ]
+          },
+          "observed_at": "2026-09-16T22:18:46.425Z"
+        },
+        "signer": "7be1941bfaa3823802a4cf6331ee264309922e40dfd8d24753dd1bb6b7f2268b",
+        "digest": "e8dd3efcb226cd21a3a669c8ef5eb97ce8616dba79ce4d87d9dcbde0b8cb450b",
+        "signature": "a39ba4065e10f5c013500fc3abcbe3ebe4014c58185c2f744fbfd1f29b62366db1a7334e74ac46409f7acb0b164ff05f3f693c69fc029b3503e6cc7b5f8ee501"
+      },
+      "parent": {
+        "type": "scopeblind.repository.review-evidence.v1",
+        "repository": {
+          "type": "scopeblind.repository.evidence.v1",
+          "state": {
+            "payload": {
+              "type": "scopeblind.repository.state.v1",
+              "task": {
+                "payload": {
+                  "type": "scopeblind.repository.task.v1",
+                  "id": "5b677e40-2c71-4db3-8906-6dc251144858",
+                  "title": "Contact page",
+                  "repository": "scopeblind/coding-test",
+                  "pull_number": 1,
+                  "base_branch": "main",
+                  "owner_key": "0e06e7b19178a3de45c3efcf483cdff127dcb9a8fe0fccd1952b9977f0370262",
+                  "receiver_key": "ecdd1ab6e9b40f8209ef94c26ba8c4bd939beace517448972f65dd040182a18e",
+                  "authority_key": "7be1941bfaa3823802a4cf6331ee264309922e40dfd8d24753dd1bb6b7f2268b",
+                  "allowed_paths": [
+                    "site/**"
+                  ],
+                  "required_checks": [
+                    {
+                      "name": "ScopeBlind isolated coding checks",
+                      "app_id": 15368
+                    }
+                  ],
+                  "reviewer_secret_hash": "ffe054fe7ae0cb6dc65c3af9b61d5209f439851db43d0ba5997337df154668eb",
+                  "issued_at": "2026-09-16T22:18:44.595Z",
+                  "expires_at": "2026-09-16T23:18:44.596Z"
+                },
+                "signer": "0e06e7b19178a3de45c3efcf483cdff127dcb9a8fe0fccd1952b9977f0370262",
+                "digest": "27ebb664a0dc9ddbb25efe3b2f7f1f6637b0099de6ff7f05a01b8eb13f913847",
+                "signature": "f338e7ee31dd054322115456b2dc844bcac57b900e1df3ce642cd57b6f2480b2d0b12893699be16bec2541132fed6bfac1a94ff22c7e916f2ff903f66c154509"
+              },
+              "reviewer": {
+                "payload": {
+                  "type": "scopeblind.repository.claim.v1",
+                  "task_id": "5b677e40-2c71-4db3-8906-6dc251144858",
+                  "task_digest": "27ebb664a0dc9ddbb25efe3b2f7f1f6637b0099de6ff7f05a01b8eb13f913847",
+                  "reviewer_key": "e30cf6a961f482f737037372c65b9563ec8a318bb92e64c7453dde8ac405356d",
+                  "name": "Reviewer",
+                  "issued_at": "2026-09-16T22:18:44.936Z"
+                },
+                "signer": "e30cf6a961f482f737037372c65b9563ec8a318bb92e64c7453dde8ac405356d",
+                "digest": "13695891dee68a0ead5e79fe5c4127961da436205fedc187292a7ef95828669b",
+                "signature": "c09c21864d93d84ca6368cc371cf01210e0af4d5f3e0ce5a09d0459426b1d49e119f871f2d4245f130336db922b18092c3edfc3cc8086b98ad3bb46274992c09"
+              },
+              "proposal": {
+                "payload": {
+                  "type": "scopeblind.repository.proposal.v1",
+                  "id": "daff0f7f-456f-49c4-b268-9cbdadd1e1a2",
+                  "task_id": "5b677e40-2c71-4db3-8906-6dc251144858",
+                  "task_digest": "27ebb664a0dc9ddbb25efe3b2f7f1f6637b0099de6ff7f05a01b8eb13f913847",
+                  "repository_id": "R_test",
+                  "base_ref": "refs/heads/main",
+                  "head_ref": "refs/heads/change",
+                  "base_sha": "1111111111111111111111111111111111111111",
+                  "head_sha": "2222222222222222222222222222222222222222",
+                  "merge_sha": "3333333333333333333333333333333333333333",
+                  "tree_sha": "4444444444444444444444444444444444444444",
+                  "files": [
+                    {
+                      "path": "site/index.html",
+                      "status": "modified",
+                      "mode": "100644",
+                      "additions": 1,
+                      "deletions": 1,
+                      "patch": "@@ -1 +1 @@\n-old\n+new"
+                    }
+                  ],
+                  "checks": [
+                    {
+                      "id": 123,
+                      "name": "ScopeBlind isolated coding checks",
+                      "app_id": 15368,
+                      "head_sha": "2222222222222222222222222222222222222222",
+                      "conclusion": "success"
+                    }
+                  ],
+                  "observed_at": "2026-09-16T22:18:45.156Z"
+                },
+                "signer": "ecdd1ab6e9b40f8209ef94c26ba8c4bd939beace517448972f65dd040182a18e",
+                "digest": "d82a3331fdcbdc89f216439d38db3877d267ca4fa346bfa39bac62404bbc7528",
+                "signature": "4388019ca47368631c27f0cf1e63d5845db712ff392c83facc2da310d4cdabebab16c90b0b553e40c4e0b0c8b11a2f587502d73a7b894d642fa975c361fe6a03"
+              },
+              "approvals": [],
+              "execution": null,
+              "outcome": null,
+              "acceptance": null,
+              "status": "review",
+              "revision": 3,
+              "observed_at": "2026-09-16T22:18:45.675Z"
+            },
+            "signer": "7be1941bfaa3823802a4cf6331ee264309922e40dfd8d24753dd1bb6b7f2268b",
+            "digest": "b0a017c74eff177131f96e7c9988678d2e1ad6ba327c4c24733544c801ea1ccd",
+            "signature": "3211e5729b9f77d8fc06c120b6b56c22470113e793ed3ca50aac69c24fc67dcadc4ee60ee270b8723aa5782507c836913ad69b29ee0f450bc3f9e1cace541409"
+          }
+        },
+        "review": {
+          "payload": {
+            "type": "scopeblind.repository.review-state.v1",
+            "task_id": "5b677e40-2c71-4db3-8906-6dc251144858",
+            "task_digest": "27ebb664a0dc9ddbb25efe3b2f7f1f6637b0099de6ff7f05a01b8eb13f913847",
+            "brief": {
+              "payload": {
+                "type": "scopeblind.repository.review-brief.v1",
+                "task_id": "5b677e40-2c71-4db3-8906-6dc251144858",
+                "task_digest": "27ebb664a0dc9ddbb25efe3b2f7f1f6637b0099de6ff7f05a01b8eb13f913847",
+                "owner_key": "0e06e7b19178a3de45c3efcf483cdff127dcb9a8fe0fccd1952b9977f0370262",
+                "brief": "Improve contact form behavior.",
+                "success_criteria": [
+                  {
+                    "id": "contact-valid",
+                    "text": "Invalid email addresses display a useful error."
+                  }
+                ],
+                "issued_at": "2026-09-16T22:18:44.596Z",
+                "expires_at": "2026-09-16T23:18:44.596Z"
+              },
+              "signer": "0e06e7b19178a3de45c3efcf483cdff127dcb9a8fe0fccd1952b9977f0370262",
+              "digest": "1b80bed8b6baab4f0581393be233a4a43aa03e2819c9a5160f899b74a949a15a",
+              "signature": "0e9a55e14ce1bab81209724cc0d09ab75c74495d9b49d110a7099ebe98bc81166fe87eaff78388d8d384496327290c2372afccb4b558f2135e9f9b5d2f85780d"
+            },
+            "packet": {
+              "payload": {
+                "type": "scopeblind.repository.review-packet.v1",
+                "task_id": "5b677e40-2c71-4db3-8906-6dc251144858",
+                "task_digest": "27ebb664a0dc9ddbb25efe3b2f7f1f6637b0099de6ff7f05a01b8eb13f913847",
+                "brief_digest": "1b80bed8b6baab4f0581393be233a4a43aa03e2819c9a5160f899b74a949a15a",
+                "proposal_digest": "d82a3331fdcbdc89f216439d38db3877d267ca4fa346bfa39bac62404bbc7528",
+                "base_sha": "1111111111111111111111111111111111111111",
+                "head_sha": "2222222222222222222222222222222222222222",
+                "merge_sha": "3333333333333333333333333333333333333333",
+                "preview": {
+                  "status": "not_requested",
+                  "reason": "No preview required."
+                },
+                "observed_at": "2026-09-16T22:18:45.261Z",
+                "expires_at": "2026-09-16T22:28:45.261Z"
+              },
+              "signer": "ecdd1ab6e9b40f8209ef94c26ba8c4bd939beace517448972f65dd040182a18e",
+              "digest": "217df0fb571189226ca7bbdb862532dd1ff727b764e46e1ab45f3aae8851815c",
+              "signature": "32a9dcac18bce426d3efbbb021e62e529c6aca175bf65bb6755bcba1fb883cd3aa4efddfd26f0bad9205fc937d18651973d6955cfd5e2b6621cfd64b479a510d"
+            },
+            "decisions": [],
+            "feedback": [
+              {
+                "payload": {
+                  "type": "scopeblind.repository.review-feedback.v1",
+                  "id": "887d5c00-e100-468a-83fb-07211cf529a9",
+                  "task_id": "5b677e40-2c71-4db3-8906-6dc251144858",
+                  "task_digest": "27ebb664a0dc9ddbb25efe3b2f7f1f6637b0099de6ff7f05a01b8eb13f913847",
+                  "basis_digest": "d82a3331fdcbdc89f216439d38db3877d267ca4fa346bfa39bac62404bbc7528",
+                  "packet_digest": "217df0fb571189226ca7bbdb862532dd1ff727b764e46e1ab45f3aae8851815c",
+                  "requester_key": "e30cf6a961f482f737037372c65b9563ec8a318bb92e64c7453dde8ac405356d",
+                  "criterion_ids": [
+                    "contact-valid"
+                  ],
+                  "message": "Show an error for invalid email.",
+                  "requested_changes": "Implement validation.",
+                  "issued_at": "2026-09-16T22:18:45.663Z"
+                },
+                "signer": "e30cf6a961f482f737037372c65b9563ec8a318bb92e64c7453dde8ac405356d",
+                "digest": "12fbf2e77b1758d603b2c54766e7ed7ae82e99f531cdf49f3e0383843c1e8591",
+                "signature": "cc6c4f10c968573a2e98616eae7bd6cdc199ea2af8a1b9295b0bd23c493aac468e633f2803fdd00c48be1fe9ed6a5662132fbd4741581bffbda8874f207d5903"
+              }
+            ],
+            "recommendations": [],
+            "history": [],
+            "agent_uses": [],
+            "observed_at": "2026-09-16T22:18:46.302Z"
+          },
+          "signer": "7be1941bfaa3823802a4cf6331ee264309922e40dfd8d24753dd1bb6b7f2268b",
+          "digest": "1ce7da003efb7268c40276d9866e4bcfe63a97af6e50f1d8174af17195e901dc",
+          "signature": "b22029c52d6b46c7baf51b766f1d255d897eb038f2109b7bf49d9032ca1191024d2f92ed1bd607111c1d478f8f2cf761ec18192e549a0c9eb68d4ab54e309606"
+        }
+      },
+      "status": "pr_ready",
+      "attempts": 1,
+      "model_calls": 1,
+      "reserved_tokens": 10765,
+      "lease_id": "7f5065b4-dc26-4a4c-b61f-4610e5f25acf",
+      "lease_expires_at": "1970-01-01T00:00:00.000Z",
+      "started_at": "2026-09-16T22:18:46.497Z",
+      "plan": {
+        "payload": {
+          "type": "scopeblind.repository.coding-plan.v1",
+          "job_id": "36ab6a39-fc7b-4a14-8db9-384153b09d21",
+          "request_digest": "58c23673e2f2a4ef96606aad3769db117c9d3624ac40633994cd6441e6c0269f",
+          "mandate_digest": "0a375fe83dc5189f39baeb9b3f6d240eaecd046e3d494921463725ad46af14f6",
+          "source_head_sha": "2222222222222222222222222222222222222222",
+          "source_base_sha": "1111111111111111111111111111111111111111",
+          "branch": "scopeblind/code/36ab6a39-fc7b-4a14-8db9-384153b09d21",
+          "commit_sha": "5555555555555555555555555555555555555555",
+          "tree_sha": "6666666666666666666666666666666666666666",
+          "files": [
+            {
+              "path": "site/index.html",
+              "before_sha": "7777777777777777777777777777777777777777",
+              "after_sha": "8888888888888888888888888888888888888888",
+              "bytes": 100
+            }
+          ],
+          "tests": {
+            "command_digest": "767ab9cebb72743726113ad7db013010c6fb86a83edd6170a3fb60d4f3bb71cc",
+            "exit_code": 0,
+            "output_sha256": "517c376578678613720523f32c81243a0ca443d19e51994c3befbb8b05730836",
+            "duration_ms": 20
+          },
+          "build": {
+            "command_digest": "9f1b107f0736de4b2fbbf36cbac3811929cb761434bec41ddc445039603ae915",
+            "exit_code": 0,
+            "output_sha256": "06bd0bdc44cf90e55a319d9397fd6d3b0d4579a133d63584cb7d09d27c0e322d",
+            "duration_ms": 20
+          },
+          "preview_digest": "652d3f27a338bde23ecb1fef09d578c32b0a9b16eaa53251a3cc249194fd599e",
+          "model_calls": 1,
+          "reserved_tokens": 10765,
+          "issued_at": "2026-09-16T22:18:46.742Z"
+        },
+        "signer": "e0bb6fa7ea7b2c6af888ab9429c63271a586d9dcc9dc70f29acc4cc845d99bc9",
+        "digest": "b8c73d02a0bdd33a5c6cd0b59480ec11b84bee8ba24ebcc48930ca28cd520ed9",
+        "signature": "b5bfb7d9334a1213fbd6a7e7f531fdc7768ab9fbc0a5e74ea7501ea12bed2803786dc9b78d84fad9917cd091b6b9490e96c0fc395bc14d8d579b95d6d2030d0e"
+      },
+      "publication": {
+        "payload": {
+          "type": "scopeblind.repository.coding-publication.v1",
+          "job_id": "36ab6a39-fc7b-4a14-8db9-384153b09d21",
+          "plan_digest": "b8c73d02a0bdd33a5c6cd0b59480ec11b84bee8ba24ebcc48930ca28cd520ed9",
+          "mandate_digest": "0a375fe83dc5189f39baeb9b3f6d240eaecd046e3d494921463725ad46af14f6",
+          "request_digest": "58c23673e2f2a4ef96606aad3769db117c9d3624ac40633994cd6441e6c0269f",
+          "worker_key": "e0bb6fa7ea7b2c6af888ab9429c63271a586d9dcc9dc70f29acc4cc845d99bc9",
+          "lease_id": "7f5065b4-dc26-4a4c-b61f-4610e5f25acf",
+          "issued_at": "2026-09-16T22:18:46.781Z",
+          "expires_at": "2026-09-16T22:20:46.781Z"
+        },
+        "signer": "7be1941bfaa3823802a4cf6331ee264309922e40dfd8d24753dd1bb6b7f2268b",
+        "digest": "1af7d0cf8b63e998b3aad95be895f8e3be68eb64255ba52bd4a8cc24b35f6668",
+        "signature": "248f39c4f6af39d110a9793c740435e919c866096986fa830941f512e7386579b8b7ac22c4030570b00c7d82ddb41aa706d98bb86a3814936908046500107d08"
+      },
+      "result": {
+        "payload": {
+          "type": "scopeblind.repository.coding-result.v1",
+          "job_id": "36ab6a39-fc7b-4a14-8db9-384153b09d21",
+          "plan_digest": "b8c73d02a0bdd33a5c6cd0b59480ec11b84bee8ba24ebcc48930ca28cd520ed9",
+          "publication_digest": "1af7d0cf8b63e998b3aad95be895f8e3be68eb64255ba52bd4a8cc24b35f6668",
+          "repository": "scopeblind/coding-test",
+          "branch": "scopeblind/code/36ab6a39-fc7b-4a14-8db9-384153b09d21",
+          "head_sha": "5555555555555555555555555555555555555555",
+          "pull_number": 2,
+          "pull_url": "https://github.com/scopeblind/coding-test/pull/2",
+          "preview_url": "https://preview.scopeblind.test/v1/36ab6a39-fc7b-4a14-8db9-384153b09d21/5555555555555555555555555555555555555555/652d3f27a338bde23ecb1fef09d578c32b0a9b16eaa53251a3cc249194fd599e/index.html",
+          "preview_digest": "652d3f27a338bde23ecb1fef09d578c32b0a9b16eaa53251a3cc249194fd599e",
+          "deployment_id": 11,
+          "deployment_status_id": 12,
+          "deployment_environment": "ScopeBlind coding preview",
+          "check": {
+            "id": 13,
+            "name": "ScopeBlind isolated coding checks",
+            "app_id": 15368,
+            "head_sha": "5555555555555555555555555555555555555555",
+            "conclusion": "success"
+          },
+          "observed_at": "2026-09-16T22:18:46.969Z"
+        },
+        "signer": "e0bb6fa7ea7b2c6af888ab9429c63271a586d9dcc9dc70f29acc4cc845d99bc9",
+        "digest": "e62fc93fd05844b5ee6d30d9e1bbe47b122f219b609bc40612de96c76d2c0bd4",
+        "signature": "5fe4765475b697616c01fac1d406a0b3340c2fc5d2699c2060a9f9b852ef26ad8d52aadbd5614ae3dce171c536a33d61ea6e99c3836d7011b515b0849054ad04"
+      },
+      "stop": null,
+      "error": null,
+      "observed_at": "2026-09-16T22:18:47.662Z"
+    },
+    "signer": "7be1941bfaa3823802a4cf6331ee264309922e40dfd8d24753dd1bb6b7f2268b",
+    "digest": "50687e80997b8409c94cf4ecc0f97c79876dc25e4d2004f45ad45183a1493a1a",
+    "signature": "abd203289b8288df6d3ba02f36717c848f9a8fe316711a519b55bfde6d29e8b647d4fec381c2abcb298d8d37475941728819bd17949deba7d167958bd8ff2e09"
+  }
+}

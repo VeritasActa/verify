@@ -1,15 +1,15 @@
 {
   "sigil_version": 1,
-  "fingerprint": "4447a551",
-  "name": "Swift Wind",
-  "sigil_hash": "4447a551e25aea17736309f931780520d691210aa039bf70790dda0ca53c2b50",
+  "fingerprint": "af9cabf3",
+  "name": "Pale Beacon",
+  "sigil_hash": "af9cabf380e8e2f70ee900e5d4f8fc596f1786441122047ef2c25020d25bde1e",
   "project_public_key": "fe665e861867cec7e171c0c13bbc873c3362079faef21f54df7804b7fb9ae8af",
   "commitment_authentication": "public_recomputable_integrity_only",
   "policy": {
     "version": 3,
     "package": "@veritasacta/verify",
-    "package_version": "0.10.17",
-    "source_hash": "2591244cac9011ce9ffcca0710295517e3d8429916172bf0ad77a72c76f93eb4",
+    "package_version": "0.10.18",
+    "source_hash": "6b726b798e76f38a86cfdbb68be496856fc8b2651be0b610c6094da9ef424d09",
     "monitored_files": [
       "README.md",
       "cli.js",
@@ -76,6 +76,6 @@
     ],
     "created_at": 1784267169966
   },
-  "policy_hash": "02ddb5f06eed7394988efb998ee57a5c3e87b115e72df8545f66ece98340600e",
+  "policy_hash": "19abff64d4af622f5fc400fc490250463dbc68d445b4666091bd848b2c166daa",
   "derived_at": "2026-07-17T05:46:09.966Z"
 }

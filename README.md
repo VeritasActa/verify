@@ -103,7 +103,7 @@ Legacy `scopeblind.gate.evidence-bundle/1` files are detected but fail closed be
 ### Repository reviews
 
 ```bash
-npx @veritasacta/verify@0.10.17 review.json --key <service-ed25519-public-key> --json
+npx @veritasacta/verify@0.10.18 review.json --key <service-ed25519-public-key> --json
 ```
 
 Repository review exports bind the owner’s brief and acceptance criteria to an exact receiver-signed pull-request proposal, preview observation, and each human’s matching approval or rejection. Scoped agent findings include their signed preparation authority and service-recorded use. A review prepared from earlier feedback carries its exact frozen source and a signed registration commitment; approvals remain specific to the new task.
@@ -386,3 +386,12 @@ Patent-adjacent; covered by the Apache-2.0 patent grant (§3). See [PATENTS.md](
 ### Canonical JSON compatibility (0.10.15)
 
 Receipt verification uses RFC 8785 key ordering, including numeric-looking keys. Historical receipts signed using JavaScript's numeric-key insertion order fail with `legacy_non_jcs_signature`. To inspect one intentionally, use `verify receipt.json --allow-legacy-canonicalization --key PUBLIC_KEY`. The result is labeled as a historical encoding; it does not claim JCS conformance. `--strict` always disables this compatibility mode. Metadata such as `holder_binding` is reported as declared until its underlying property is actually verified.
+
+
+Code-work exports (`scopeblind.repository.coding-evidence.v1`) use the same command:
+
+```sh
+npx @veritasacta/verify@0.10.18 coding-work.json --key <service-ed25519-public-key> --json
+```
+
+The report checks the separate coding mandate, exact source feedback, recorded limits and worker's publication statement. A published PR is not a merge approval or recipient acceptance. Tests, build results and GitHub readbacks are attributed attestations; offline verification does not rerun code or fetch the preview. Project-device records additionally carry the principal's scoped grant and a service-signed authority check at recording time; this proves recorded history, not current device access.

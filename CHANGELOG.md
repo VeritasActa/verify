@@ -1,3 +1,9 @@
+## 0.10.18 — Coding work and project devices
+
+- Recognize `scopeblind.repository.coding-evidence.v1`: check separate dual authority, exact recorded feedback, bounded work, publication admission and worker-attested PR/preview result.
+- Verify fresh review origins from coding work and project-scoped device statements, including the service's recorded authority check. Old valid history remains verifiable after device revocation.
+- Keep publication, merge approval, recipient acceptance and independent key pinning distinct in the report. Verification does not execute the build, fetch preview bytes or establish code correctness.
+
 ## 0.10.17 — 2026-09-16
 
 - Verify signed repository review briefs, exact proposal-bound preview observations, and the matching packet decision for every ordinary approval or rejection. Historical repository evidence stays supported.

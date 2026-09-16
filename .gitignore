@@ -1,0 +1,4 @@
+node_modules/
+*.tgz
+packed.json
+.protect-mcp-log.jsonl

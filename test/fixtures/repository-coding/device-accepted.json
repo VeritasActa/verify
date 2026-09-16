@@ -1,0 +1,822 @@
+{
+  "type": "scopeblind.repository.review-evidence.v1",
+  "repository": {
+    "type": "scopeblind.repository.collaboration-evidence.v1",
+    "repository": {
+      "type": "scopeblind.repository.evidence.v1",
+      "state": {
+        "payload": {
+          "type": "scopeblind.repository.state.v1",
+          "task": {
+            "payload": {
+              "type": "scopeblind.repository.task.v1",
+              "id": "9b42cbca-f930-4137-8947-d0c03eedab88",
+              "title": "Review the contact improvement",
+              "repository": "scopeblind/workspace-test",
+              "pull_number": 1,
+              "base_branch": "main",
+              "owner_key": "e938c10eebb361c91de256ff7814b662a94889cbb94f9231e26b302081032cfc",
+              "receiver_key": "664559fce98c66bcef273d1434df9ede1d64c303bfc5ee0268989f76d6b69d33",
+              "authority_key": "7a5644765db020ca9d08ff94a792a05ed224b8c4cb1946dbdaedbb3c15cc0e85",
+              "allowed_paths": [
+                "site/**"
+              ],
+              "required_checks": [
+                {
+                  "name": "site-checks",
+                  "app_id": 123
+                }
+              ],
+              "reviewer_secret_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "issued_at": "2026-09-16T22:21:22.423Z",
+              "expires_at": "2026-09-16T23:21:22.423Z"
+            },
+            "signer": "e938c10eebb361c91de256ff7814b662a94889cbb94f9231e26b302081032cfc",
+            "digest": "2ea56f4643b1fcf72a5611d0971ad7c6c22a39472071e1066ee502ded2a1063a",
+            "signature": "87d0dc09d7312c4b93765492fa38614e4c8fefdb5ed947744226506ee8afc1667aaf4ba42bf52ef2ed4228011627a73c6a0e5c24b4c0742639050a3d86b07f03"
+          },
+          "reviewer": {
+            "payload": {
+              "type": "scopeblind.repository.claim.v1",
+              "task_id": "9b42cbca-f930-4137-8947-d0c03eedab88",
+              "task_digest": "2ea56f4643b1fcf72a5611d0971ad7c6c22a39472071e1066ee502ded2a1063a",
+              "reviewer_key": "3715156cd8291e7e59e6cdf661d9f8f2fecce7f1c855354efdaa153c27605dc6",
+              "name": "Jamie",
+              "issued_at": "2026-09-16T22:21:22.470Z"
+            },
+            "signer": "f309476321ae3e1a75d1bb09d6b73c05d00e1b676b3a1af603540ee215e62277",
+            "digest": "100a37761f64db9561909af262ae01a0ac7fb29c05bfe938e96fc720186f7c22",
+            "signature": "ce9a208c8cf0ded15ff2a08e9d5e3f89b3fdd29743887a0c4951acfa7f9ad697af74417ac5d7c11df570964f2e85a90048d40af826d4186d5380abe0305c3505",
+            "repository_authorization": {
+              "payload": {
+                "type": "scopeblind.repository.device-authorization.v1",
+                "id": "26f2d282-45c0-41da-a968-058196e64c68",
+                "link_id": "29b4cccc-50b8-41fd-af94-aeb21af3a0a5",
+                "workspace_id": "e947527f-3ba4-4fcd-9b93-7479a2d45490",
+                "workspace_digest": "ba392847b0c5ac305f06c98658ea09abcbf77ca9be0e7c4a82d68cb8b902ed07",
+                "member_id": "d49e5cb0-1edb-4765-95f6-a5ee5dc5382e",
+                "member_revision": 1,
+                "principal_key": "3715156cd8291e7e59e6cdf661d9f8f2fecce7f1c855354efdaa153c27605dc6",
+                "device_key": "f309476321ae3e1a75d1bb09d6b73c05d00e1b676b3a1af603540ee215e62277",
+                "device_name": "Review phone",
+                "actions": [
+                  "read",
+                  "claim",
+                  "review",
+                  "feedback",
+                  "accept"
+                ],
+                "authority_key": "7a5644765db020ca9d08ff94a792a05ed224b8c4cb1946dbdaedbb3c15cc0e85",
+                "issued_at": "2026-09-16T22:21:22.390Z",
+                "expires_at": "2026-09-16T22:51:22.390Z"
+              },
+              "signer": "3715156cd8291e7e59e6cdf661d9f8f2fecce7f1c855354efdaa153c27605dc6",
+              "digest": "caf5a9cce7690d2af417e7b366ace076a47dc8a5678d8adb569ba4da9d71df19",
+              "signature": "05194f332deeea02ee7e3b9167984e68aa352cc3f3bc9934a7b9e77f799b500b9ad0cb8eaf0a8e09fede50b2f79b304f86f652114d0768c25a7bb1f645fbaa0c"
+            },
+            "repository_authorization_signature": "10de82549e2557634d8391c1ca80e7ae22c9f0789a61f2c8036d6a07969674ad1191b2f319b56b1dc2868760debc75be1967f789ad8936639f7c1888c9748103",
+            "repository_authorization_use": {
+              "payload": {
+                "type": "scopeblind.repository.device-use.v1",
+                "authorization_digest": "caf5a9cce7690d2af417e7b366ace076a47dc8a5678d8adb569ba4da9d71df19",
+                "workspace_id": "e947527f-3ba4-4fcd-9b93-7479a2d45490",
+                "workspace_digest": "ba392847b0c5ac305f06c98658ea09abcbf77ca9be0e7c4a82d68cb8b902ed07",
+                "member_id": "d49e5cb0-1edb-4765-95f6-a5ee5dc5382e",
+                "member_revision": 1,
+                "principal_key": "3715156cd8291e7e59e6cdf661d9f8f2fecce7f1c855354efdaa153c27605dc6",
+                "device_key": "f309476321ae3e1a75d1bb09d6b73c05d00e1b676b3a1af603540ee215e62277",
+                "task_id": "9b42cbca-f930-4137-8947-d0c03eedab88",
+                "task_digest": "2ea56f4643b1fcf72a5611d0971ad7c6c22a39472071e1066ee502ded2a1063a",
+                "payload_digest": "100a37761f64db9561909af262ae01a0ac7fb29c05bfe938e96fc720186f7c22",
+                "action": "claim",
+                "recorded_at": "2026-09-16T22:21:22.486Z"
+              },
+              "signer": "7a5644765db020ca9d08ff94a792a05ed224b8c4cb1946dbdaedbb3c15cc0e85",
+              "digest": "173622467d6658374d0f5b67e8c212d8fd64f1e044517759134a46d3bc72178a",
+              "signature": "657206fa6acff3f3f1a1431d6612df9b05d707d78dcb90de574f61697d5a2c6dbc1acc864841b189ae1d39087eb4872337fac04fcd3bb51adbce29b46bd42d0b"
+            }
+          },
+          "proposal": {
+            "payload": {
+              "type": "scopeblind.repository.proposal.v1",
+              "id": "aad90b10-af55-4c0b-bbb8-c5592a0a07e7",
+              "task_id": "9b42cbca-f930-4137-8947-d0c03eedab88",
+              "task_digest": "2ea56f4643b1fcf72a5611d0971ad7c6c22a39472071e1066ee502ded2a1063a",
+              "repository_id": "R_repository_test",
+              "base_ref": "refs/heads/main",
+              "head_ref": "refs/heads/feature",
+              "base_sha": "1111111111111111111111111111111111111111",
+              "head_sha": "2222222222222222222222222222222222222222",
+              "merge_sha": "3333333333333333333333333333333333333333",
+              "tree_sha": "5555555555555555555555555555555555555555",
+              "files": [
+                {
+                  "path": "site/index.html",
+                  "status": "modified",
+                  "mode": "100644",
+                  "additions": 1,
+                  "deletions": 1,
+                  "patch": "@@ -1 +1 @@\n-before\n+after"
+                }
+              ],
+              "checks": [
+                {
+                  "id": 91,
+                  "name": "site-checks",
+                  "app_id": 123,
+                  "head_sha": "2222222222222222222222222222222222222222",
+                  "conclusion": "success"
+                }
+              ],
+              "observed_at": "2026-09-16T22:21:22.547Z"
+            },
+            "signer": "664559fce98c66bcef273d1434df9ede1d64c303bfc5ee0268989f76d6b69d33",
+            "digest": "6f98b3b00c1b690b2c5a2080d569cd174f0558b5f1f12b414e0f2f25c97f5b56",
+            "signature": "acb46263ada479479b70538ca8ac3f7d37723fd3f04fd9ac731f4f9f33a13ced924df225f2882ecd6988e761f14d320d6ac17d9549fcf68fb42493a3827d6303"
+          },
+          "approvals": [
+            {
+              "payload": {
+                "type": "scopeblind.repository.approval.v1",
+                "task_id": "9b42cbca-f930-4137-8947-d0c03eedab88",
+                "task_digest": "2ea56f4643b1fcf72a5611d0971ad7c6c22a39472071e1066ee502ded2a1063a",
+                "proposal_digest": "6f98b3b00c1b690b2c5a2080d569cd174f0558b5f1f12b414e0f2f25c97f5b56",
+                "role": "owner",
+                "principal_key": "e938c10eebb361c91de256ff7814b662a94889cbb94f9231e26b302081032cfc",
+                "decision": "approve",
+                "issued_at": "2026-09-16T22:21:22.710Z",
+                "expires_at": "2026-09-16T22:26:22.710Z",
+                "note": "Reviewed exact criteria and changed files."
+              },
+              "signer": "45f532f818d68b6eb2f6c1d5951389c710f465795221b7a3836a2bf3a77e28e8",
+              "digest": "aefb7e8c4cfdfcf464360af3fe52ad2d1651b3293e03fc4a176f848676bc8d46",
+              "signature": "f1b9ec9c3b02cb579e8124645bfab92885e1290167e3f55d24cb409a81ec6159ec59abdcfbfd60eaed501967e0f438d8450ee48f56c4899c9d3d12092823390f",
+              "repository_authorization": {
+                "payload": {
+                  "type": "scopeblind.repository.device-authorization.v1",
+                  "id": "16a73e55-b804-4611-8315-b7fb6228b351",
+                  "link_id": "f58d1d09-ad91-45c2-afa1-5d83b925dd2a",
+                  "workspace_id": "e947527f-3ba4-4fcd-9b93-7479a2d45490",
+                  "workspace_digest": "ba392847b0c5ac305f06c98658ea09abcbf77ca9be0e7c4a82d68cb8b902ed07",
+                  "member_id": "c40b4bb1-d77d-41ee-b8ad-200002c5b8c8",
+                  "member_revision": 1,
+                  "principal_key": "e938c10eebb361c91de256ff7814b662a94889cbb94f9231e26b302081032cfc",
+                  "device_key": "45f532f818d68b6eb2f6c1d5951389c710f465795221b7a3836a2bf3a77e28e8",
+                  "device_name": "Review phone",
+                  "actions": [
+                    "read",
+                    "claim",
+                    "review",
+                    "feedback",
+                    "accept"
+                  ],
+                  "authority_key": "7a5644765db020ca9d08ff94a792a05ed224b8c4cb1946dbdaedbb3c15cc0e85",
+                  "issued_at": "2026-09-16T22:21:22.411Z",
+                  "expires_at": "2026-09-16T22:51:22.411Z"
+                },
+                "signer": "e938c10eebb361c91de256ff7814b662a94889cbb94f9231e26b302081032cfc",
+                "digest": "abebcde3cfa7d15e3877333734b23e017382b96e61c525f3928b6b0c58ca39ce",
+                "signature": "a0ced1a8ce3d76e32b6c84125abb5445588251522a4e8b62f48f2bf3daf9cc284dab48d53a7c0441cfe8b0f3948d8ff924d8cd4d3ce7accc44263bdb42b09f0d"
+              },
+              "repository_authorization_signature": "9322a2c96748d7b37fe3df3e28912e4102bfd8493ad6d9ac4e0afb07e9de3f7df85aa3350d7cba6fb7f893e7f2196286d1359286c243d7e4ba5d10c822b6dd01",
+              "repository_authorization_use": {
+                "payload": {
+                  "type": "scopeblind.repository.device-use.v1",
+                  "authorization_digest": "abebcde3cfa7d15e3877333734b23e017382b96e61c525f3928b6b0c58ca39ce",
+                  "workspace_id": "e947527f-3ba4-4fcd-9b93-7479a2d45490",
+                  "workspace_digest": "ba392847b0c5ac305f06c98658ea09abcbf77ca9be0e7c4a82d68cb8b902ed07",
+                  "member_id": "c40b4bb1-d77d-41ee-b8ad-200002c5b8c8",
+                  "member_revision": 1,
+                  "principal_key": "e938c10eebb361c91de256ff7814b662a94889cbb94f9231e26b302081032cfc",
+                  "device_key": "45f532f818d68b6eb2f6c1d5951389c710f465795221b7a3836a2bf3a77e28e8",
+                  "task_id": "9b42cbca-f930-4137-8947-d0c03eedab88",
+                  "task_digest": "2ea56f4643b1fcf72a5611d0971ad7c6c22a39472071e1066ee502ded2a1063a",
+                  "payload_digest": "aefb7e8c4cfdfcf464360af3fe52ad2d1651b3293e03fc4a176f848676bc8d46",
+                  "action": "review",
+                  "recorded_at": "2026-09-16T22:21:22.743Z"
+                },
+                "signer": "7a5644765db020ca9d08ff94a792a05ed224b8c4cb1946dbdaedbb3c15cc0e85",
+                "digest": "ec8b788f88396c56407884f4d1f47c6d8a9df0fddc8a0937bbc16631f9167e58",
+                "signature": "f743690d7878de1aa0380149953672b26248bf41ec89942bf484f60e59aec220bd8f234cab14da068085cd4784e6087184236aeb45b048d0763fb05e3148980a"
+              }
+            },
+            {
+              "payload": {
+                "type": "scopeblind.repository.approval.v1",
+                "task_id": "9b42cbca-f930-4137-8947-d0c03eedab88",
+                "task_digest": "2ea56f4643b1fcf72a5611d0971ad7c6c22a39472071e1066ee502ded2a1063a",
+                "proposal_digest": "6f98b3b00c1b690b2c5a2080d569cd174f0558b5f1f12b414e0f2f25c97f5b56",
+                "role": "reviewer",
+                "principal_key": "3715156cd8291e7e59e6cdf661d9f8f2fecce7f1c855354efdaa153c27605dc6",
+                "decision": "approve",
+                "issued_at": "2026-09-16T22:21:22.730Z",
+                "expires_at": "2026-09-16T22:26:22.730Z",
+                "note": "Reviewed exact criteria and changed files."
+              },
+              "signer": "f309476321ae3e1a75d1bb09d6b73c05d00e1b676b3a1af603540ee215e62277",
+              "digest": "56351e029523186d9659d6469e5cb090e3e3b8d90f0c93e98ee67860d5dedc8a",
+              "signature": "c8fa507e77ae00b6ff08d0545f0a60890886e24cc0cec8f2fc4ab69ae5bf6cbc502d9794a9708cab983c2e5b4a753ba4275f2aba45a744ef3c7e6a9863435807",
+              "repository_authorization": {
+                "payload": {
+                  "type": "scopeblind.repository.device-authorization.v1",
+                  "id": "26f2d282-45c0-41da-a968-058196e64c68",
+                  "link_id": "29b4cccc-50b8-41fd-af94-aeb21af3a0a5",
+                  "workspace_id": "e947527f-3ba4-4fcd-9b93-7479a2d45490",
+                  "workspace_digest": "ba392847b0c5ac305f06c98658ea09abcbf77ca9be0e7c4a82d68cb8b902ed07",
+                  "member_id": "d49e5cb0-1edb-4765-95f6-a5ee5dc5382e",
+                  "member_revision": 1,
+                  "principal_key": "3715156cd8291e7e59e6cdf661d9f8f2fecce7f1c855354efdaa153c27605dc6",
+                  "device_key": "f309476321ae3e1a75d1bb09d6b73c05d00e1b676b3a1af603540ee215e62277",
+                  "device_name": "Review phone",
+                  "actions": [
+                    "read",
+                    "claim",
+                    "review",
+                    "feedback",
+                    "accept"
+                  ],
+                  "authority_key": "7a5644765db020ca9d08ff94a792a05ed224b8c4cb1946dbdaedbb3c15cc0e85",
+                  "issued_at": "2026-09-16T22:21:22.390Z",
+                  "expires_at": "2026-09-16T22:51:22.390Z"
+                },
+                "signer": "3715156cd8291e7e59e6cdf661d9f8f2fecce7f1c855354efdaa153c27605dc6",
+                "digest": "caf5a9cce7690d2af417e7b366ace076a47dc8a5678d8adb569ba4da9d71df19",
+                "signature": "05194f332deeea02ee7e3b9167984e68aa352cc3f3bc9934a7b9e77f799b500b9ad0cb8eaf0a8e09fede50b2f79b304f86f652114d0768c25a7bb1f645fbaa0c"
+              },
+              "repository_authorization_signature": "8cefb11f3a232e36aaeac7a5a1bae5231010db163816601b19d9098bcd3bf8fd9025404eca10aa1e53d0b8aa831a5101b1642bcaa5ca0cb34fed2c6ca9e7c400",
+              "repository_authorization_use": {
+                "payload": {
+                  "type": "scopeblind.repository.device-use.v1",
+                  "authorization_digest": "caf5a9cce7690d2af417e7b366ace076a47dc8a5678d8adb569ba4da9d71df19",
+                  "workspace_id": "e947527f-3ba4-4fcd-9b93-7479a2d45490",
+                  "workspace_digest": "ba392847b0c5ac305f06c98658ea09abcbf77ca9be0e7c4a82d68cb8b902ed07",
+                  "member_id": "d49e5cb0-1edb-4765-95f6-a5ee5dc5382e",
+                  "member_revision": 1,
+                  "principal_key": "3715156cd8291e7e59e6cdf661d9f8f2fecce7f1c855354efdaa153c27605dc6",
+                  "device_key": "f309476321ae3e1a75d1bb09d6b73c05d00e1b676b3a1af603540ee215e62277",
+                  "task_id": "9b42cbca-f930-4137-8947-d0c03eedab88",
+                  "task_digest": "2ea56f4643b1fcf72a5611d0971ad7c6c22a39472071e1066ee502ded2a1063a",
+                  "payload_digest": "56351e029523186d9659d6469e5cb090e3e3b8d90f0c93e98ee67860d5dedc8a",
+                  "action": "review",
+                  "recorded_at": "2026-09-16T22:21:22.762Z"
+                },
+                "signer": "7a5644765db020ca9d08ff94a792a05ed224b8c4cb1946dbdaedbb3c15cc0e85",
+                "digest": "fe3481e138828b903aac0d329341ceb8a0253160739a8b5fa39dc712d5c7ba1c",
+                "signature": "e68bd69c9dc3dae8c2c1072e2c49685b42bbf09e06971ce48af065289a8904dac0651cfe99cdc3ddfcfc32fac68421a00ebce8741bd100236cbc9537a975790d"
+              }
+            }
+          ],
+          "execution": {
+            "payload": {
+              "type": "scopeblind.repository.execution.v1",
+              "operation_id": "repo-9b42cbca-f930-4137-8947-d0c03eedab88",
+              "receiver_attempt_id": "a9f584db-ddcd-4370-a5ed-a6b653d6f098",
+              "task_id": "9b42cbca-f930-4137-8947-d0c03eedab88",
+              "task_digest": "2ea56f4643b1fcf72a5611d0971ad7c6c22a39472071e1066ee502ded2a1063a",
+              "proposal_digest": "6f98b3b00c1b690b2c5a2080d569cd174f0558b5f1f12b414e0f2f25c97f5b56",
+              "owner_approval_digest": "aefb7e8c4cfdfcf464360af3fe52ad2d1651b3293e03fc4a176f848676bc8d46",
+              "reviewer_approval_digest": "56351e029523186d9659d6469e5cb090e3e3b8d90f0c93e98ee67860d5dedc8a",
+              "receiver_key": "664559fce98c66bcef273d1434df9ede1d64c303bfc5ee0268989f76d6b69d33",
+              "action": "github.updateRefs",
+              "issued_at": "2026-09-16T22:21:22.845Z",
+              "expires_at": "2026-09-16T22:23:22.845Z"
+            },
+            "signer": "7a5644765db020ca9d08ff94a792a05ed224b8c4cb1946dbdaedbb3c15cc0e85",
+            "digest": "24676059ed0201e7f27b6fc2e927bce2f2da0f7a63861db3229c5b8a24f2d6fd",
+            "signature": "c6bf5a8460b5783f6c4bf02b46cc31e92bc31a62d79d704596413b2a0deff77af683a85ac473bc949f4b24f6e10720068a5a7994c68be72dae2e13625907ca09"
+          },
+          "outcome": {
+            "payload": {
+              "type": "scopeblind.repository.outcome.v1",
+              "operation_id": "repo-9b42cbca-f930-4137-8947-d0c03eedab88",
+              "task_id": "9b42cbca-f930-4137-8947-d0c03eedab88",
+              "task_digest": "2ea56f4643b1fcf72a5611d0971ad7c6c22a39472071e1066ee502ded2a1063a",
+              "proposal_digest": "6f98b3b00c1b690b2c5a2080d569cd174f0558b5f1f12b414e0f2f25c97f5b56",
+              "execution_digest": "24676059ed0201e7f27b6fc2e927bce2f2da0f7a63861db3229c5b8a24f2d6fd",
+              "status": "confirmed",
+              "observed_base_sha": "3333333333333333333333333333333333333333",
+              "readback": "exact_ref",
+              "note": "GitHub accepted the exact atomic reference update. The receiver then read back the destination.",
+              "github_request_id": "receiver-fixture-request",
+              "observed_at": "2026-09-16T22:21:22.858Z"
+            },
+            "signer": "664559fce98c66bcef273d1434df9ede1d64c303bfc5ee0268989f76d6b69d33",
+            "digest": "47b7f60c9a23e8a266befc946868ab251e383b2f56e5bf4f4c2b0498b33e5756",
+            "signature": "c7559f4a549560a9caf5a0b1620ebff214c75735457225d783c9634ee10554ed14d642342e9056e659df77d966bb243e8b41935e820788d3166a48b27e547b06"
+          },
+          "acceptance": {
+            "payload": {
+              "type": "scopeblind.repository.acceptance.v1",
+              "task_id": "9b42cbca-f930-4137-8947-d0c03eedab88",
+              "task_digest": "2ea56f4643b1fcf72a5611d0971ad7c6c22a39472071e1066ee502ded2a1063a",
+              "outcome_digest": "47b7f60c9a23e8a266befc946868ab251e383b2f56e5bf4f4c2b0498b33e5756",
+              "reviewer_key": "3715156cd8291e7e59e6cdf661d9f8f2fecce7f1c855354efdaa153c27605dc6",
+              "decision": "accept",
+              "issued_at": "2026-09-16T22:21:22.873Z",
+              "note": "Checked the delivered result on my phone."
+            },
+            "signer": "f309476321ae3e1a75d1bb09d6b73c05d00e1b676b3a1af603540ee215e62277",
+            "digest": "b7d5287cbd2c11df76b895a2933c86da2edf6851fe32aff2b1e365f008df809a",
+            "signature": "705820655713e8d513a6c27fcd2ea40e447c3f3905352d35014c98b0ed93ed5cff5c4459eee34a594a760c8eada3090abe5af6e06040242ec155370d4c91fe04",
+            "repository_authorization": {
+              "payload": {
+                "type": "scopeblind.repository.device-authorization.v1",
+                "id": "26f2d282-45c0-41da-a968-058196e64c68",
+                "link_id": "29b4cccc-50b8-41fd-af94-aeb21af3a0a5",
+                "workspace_id": "e947527f-3ba4-4fcd-9b93-7479a2d45490",
+                "workspace_digest": "ba392847b0c5ac305f06c98658ea09abcbf77ca9be0e7c4a82d68cb8b902ed07",
+                "member_id": "d49e5cb0-1edb-4765-95f6-a5ee5dc5382e",
+                "member_revision": 1,
+                "principal_key": "3715156cd8291e7e59e6cdf661d9f8f2fecce7f1c855354efdaa153c27605dc6",
+                "device_key": "f309476321ae3e1a75d1bb09d6b73c05d00e1b676b3a1af603540ee215e62277",
+                "device_name": "Review phone",
+                "actions": [
+                  "read",
+                  "claim",
+                  "review",
+                  "feedback",
+                  "accept"
+                ],
+                "authority_key": "7a5644765db020ca9d08ff94a792a05ed224b8c4cb1946dbdaedbb3c15cc0e85",
+                "issued_at": "2026-09-16T22:21:22.390Z",
+                "expires_at": "2026-09-16T22:51:22.390Z"
+              },
+              "signer": "3715156cd8291e7e59e6cdf661d9f8f2fecce7f1c855354efdaa153c27605dc6",
+              "digest": "caf5a9cce7690d2af417e7b366ace076a47dc8a5678d8adb569ba4da9d71df19",
+              "signature": "05194f332deeea02ee7e3b9167984e68aa352cc3f3bc9934a7b9e77f799b500b9ad0cb8eaf0a8e09fede50b2f79b304f86f652114d0768c25a7bb1f645fbaa0c"
+            },
+            "repository_authorization_signature": "14b1b0c2eb46cf92dad40e4a18a2a477a01afb49af656cc8e2f05e507ef376e8502685c13454016dff6e5ab62289b8bfea683daca6e1da72f20a554d28aa8d0b",
+            "repository_authorization_use": {
+              "payload": {
+                "type": "scopeblind.repository.device-use.v1",
+                "authorization_digest": "caf5a9cce7690d2af417e7b366ace076a47dc8a5678d8adb569ba4da9d71df19",
+                "workspace_id": "e947527f-3ba4-4fcd-9b93-7479a2d45490",
+                "workspace_digest": "ba392847b0c5ac305f06c98658ea09abcbf77ca9be0e7c4a82d68cb8b902ed07",
+                "member_id": "d49e5cb0-1edb-4765-95f6-a5ee5dc5382e",
+                "member_revision": 1,
+                "principal_key": "3715156cd8291e7e59e6cdf661d9f8f2fecce7f1c855354efdaa153c27605dc6",
+                "device_key": "f309476321ae3e1a75d1bb09d6b73c05d00e1b676b3a1af603540ee215e62277",
+                "task_id": "9b42cbca-f930-4137-8947-d0c03eedab88",
+                "task_digest": "2ea56f4643b1fcf72a5611d0971ad7c6c22a39472071e1066ee502ded2a1063a",
+                "payload_digest": "b7d5287cbd2c11df76b895a2933c86da2edf6851fe32aff2b1e365f008df809a",
+                "action": "accept",
+                "recorded_at": "2026-09-16T22:21:22.886Z"
+              },
+              "signer": "7a5644765db020ca9d08ff94a792a05ed224b8c4cb1946dbdaedbb3c15cc0e85",
+              "digest": "0a4b55b2ba85c5c4345745986c001e1e4ed63fa0c17352b5d6a4b31b8d940468",
+              "signature": "7f957ced38ecfa06be5ef49b25e8b7aaa33858c334031dccb3e274eb049187e88118249f554c2c442267cf1b421db835f48c47085b0fa0fa33cbdce2986a5e0d"
+            }
+          },
+          "status": "accepted",
+          "revision": 8,
+          "observed_at": "2026-09-16T22:21:22.911Z"
+        },
+        "signer": "7a5644765db020ca9d08ff94a792a05ed224b8c4cb1946dbdaedbb3c15cc0e85",
+        "digest": "80af83a1dfee86ac08264477919f58fbcfc928c770b17d251e47e0640c9b1636",
+        "signature": "da64942b8222559c35f084ff6e1b109df84c81e1dd92f60d8d679a6f49c3276648370fdee14a4684077a4af5e0a5c5c0a7f2095337851b9b782305abbc50330c"
+      }
+    },
+    "collaboration": {
+      "payload": {
+        "type": "scopeblind.repository.collaboration.v1",
+        "task_id": "9b42cbca-f930-4137-8947-d0c03eedab88",
+        "task_digest": "2ea56f4643b1fcf72a5611d0971ad7c6c22a39472071e1066ee502ded2a1063a",
+        "participants": null,
+        "preview": null,
+        "requests": [],
+        "revisions": [],
+        "agent_grants": [],
+        "observed_at": "2026-09-16T22:21:22.921Z"
+      },
+      "signer": "7a5644765db020ca9d08ff94a792a05ed224b8c4cb1946dbdaedbb3c15cc0e85",
+      "digest": "2d13939f10948262721d5c70c0da5324814015503bab4c5d7fdff164f573a091",
+      "signature": "0b339ececcd792ae1565a7d6d6674d5a35a81e91d6cc610fac258e2f082b54489435840f19fc2fccf4250c43ad1ca686cb198523bfe60cb389af6d8401522a07"
+    }
+  },
+  "review": {
+    "payload": {
+      "type": "scopeblind.repository.review-state.v1",
+      "task_id": "9b42cbca-f930-4137-8947-d0c03eedab88",
+      "task_digest": "2ea56f4643b1fcf72a5611d0971ad7c6c22a39472071e1066ee502ded2a1063a",
+      "brief": {
+        "payload": {
+          "type": "scopeblind.repository.review-brief.v1",
+          "task_id": "9b42cbca-f930-4137-8947-d0c03eedab88",
+          "task_digest": "2ea56f4643b1fcf72a5611d0971ad7c6c22a39472071e1066ee502ded2a1063a",
+          "owner_key": "e938c10eebb361c91de256ff7814b662a94889cbb94f9231e26b302081032cfc",
+          "brief": "Make it easy to contact the team.",
+          "success_criteria": [
+            {
+              "id": "contact-opens",
+              "text": "The contact button opens the contact panel."
+            }
+          ],
+          "issued_at": "2026-09-16T22:21:22.424Z",
+          "expires_at": "2026-09-16T23:21:22.423Z"
+        },
+        "signer": "e938c10eebb361c91de256ff7814b662a94889cbb94f9231e26b302081032cfc",
+        "digest": "47263890493a8374a1014a3760940dcdab417f33c70bbef789362ea9c8fcb125",
+        "signature": "18448de10c53aa80b772d209ee0c8976bef8d8a7af2176a07cbe34a864c6fb88dc15fb8437218cf6ed1f00d91d8f1c8d931ce2eda528004490440d4a7ab01909"
+      },
+      "packet": {
+        "payload": {
+          "type": "scopeblind.repository.review-packet.v1",
+          "task_id": "9b42cbca-f930-4137-8947-d0c03eedab88",
+          "task_digest": "2ea56f4643b1fcf72a5611d0971ad7c6c22a39472071e1066ee502ded2a1063a",
+          "brief_digest": "47263890493a8374a1014a3760940dcdab417f33c70bbef789362ea9c8fcb125",
+          "proposal_digest": "6f98b3b00c1b690b2c5a2080d569cd174f0558b5f1f12b414e0f2f25c97f5b56",
+          "base_sha": "1111111111111111111111111111111111111111",
+          "head_sha": "2222222222222222222222222222222222222222",
+          "merge_sha": "3333333333333333333333333333333333333333",
+          "preview": {
+            "status": "not_requested",
+            "reason": "This brief does not require or identify a deployment preview."
+          },
+          "observed_at": "2026-09-16T22:21:22.564Z",
+          "expires_at": "2026-09-16T22:36:22.564Z"
+        },
+        "signer": "664559fce98c66bcef273d1434df9ede1d64c303bfc5ee0268989f76d6b69d33",
+        "digest": "6563b36f5b57fcc56addc461681ff11fae5c5b49f64aef20a258ca6273f968de",
+        "signature": "89093be73d92fd7e615442bd67c2adf4684f2c2767b932bd53e2ed3ec7868522f4d64a8e1c97dd8dc2081d04b638b1ff456e559e96a6f8261731500060ebce04"
+      },
+      "decisions": [
+        {
+          "payload": {
+            "type": "scopeblind.repository.review-decision.v1",
+            "task_id": "9b42cbca-f930-4137-8947-d0c03eedab88",
+            "task_digest": "2ea56f4643b1fcf72a5611d0971ad7c6c22a39472071e1066ee502ded2a1063a",
+            "brief_digest": "47263890493a8374a1014a3760940dcdab417f33c70bbef789362ea9c8fcb125",
+            "packet_digest": "6563b36f5b57fcc56addc461681ff11fae5c5b49f64aef20a258ca6273f968de",
+            "proposal_digest": "6f98b3b00c1b690b2c5a2080d569cd174f0558b5f1f12b414e0f2f25c97f5b56",
+            "approval_digest": "aefb7e8c4cfdfcf464360af3fe52ad2d1651b3293e03fc4a176f848676bc8d46",
+            "principal_key": "e938c10eebb361c91de256ff7814b662a94889cbb94f9231e26b302081032cfc",
+            "role": "owner",
+            "issued_at": "2026-09-16T22:21:22.710Z",
+            "expires_at": "2026-09-16T22:26:22.710Z"
+          },
+          "signer": "45f532f818d68b6eb2f6c1d5951389c710f465795221b7a3836a2bf3a77e28e8",
+          "digest": "c1354261d851a889d6af284ab4f5a9f2316734eddaecb0b7db5672201a967762",
+          "signature": "a0881e540ad77a2e65fb6c5ac5bd37b103a545cdab950da7abd50aaaaac4051ab777f858e5fd31f0a81ef0aac8a230c0428fb96fbb66cd41c274ed6613b08b02",
+          "repository_authorization": {
+            "payload": {
+              "type": "scopeblind.repository.device-authorization.v1",
+              "id": "16a73e55-b804-4611-8315-b7fb6228b351",
+              "link_id": "f58d1d09-ad91-45c2-afa1-5d83b925dd2a",
+              "workspace_id": "e947527f-3ba4-4fcd-9b93-7479a2d45490",
+              "workspace_digest": "ba392847b0c5ac305f06c98658ea09abcbf77ca9be0e7c4a82d68cb8b902ed07",
+              "member_id": "c40b4bb1-d77d-41ee-b8ad-200002c5b8c8",
+              "member_revision": 1,
+              "principal_key": "e938c10eebb361c91de256ff7814b662a94889cbb94f9231e26b302081032cfc",
+              "device_key": "45f532f818d68b6eb2f6c1d5951389c710f465795221b7a3836a2bf3a77e28e8",
+              "device_name": "Review phone",
+              "actions": [
+                "read",
+                "claim",
+                "review",
+                "feedback",
+                "accept"
+              ],
+              "authority_key": "7a5644765db020ca9d08ff94a792a05ed224b8c4cb1946dbdaedbb3c15cc0e85",
+              "issued_at": "2026-09-16T22:21:22.411Z",
+              "expires_at": "2026-09-16T22:51:22.411Z"
+            },
+            "signer": "e938c10eebb361c91de256ff7814b662a94889cbb94f9231e26b302081032cfc",
+            "digest": "abebcde3cfa7d15e3877333734b23e017382b96e61c525f3928b6b0c58ca39ce",
+            "signature": "a0ced1a8ce3d76e32b6c84125abb5445588251522a4e8b62f48f2bf3daf9cc284dab48d53a7c0441cfe8b0f3948d8ff924d8cd4d3ce7accc44263bdb42b09f0d"
+          },
+          "repository_authorization_signature": "c9567e6bbf956a1e309f6ac6d4dd38888dcb424b8cea8ba5a2d2a84a47c151ccd86383a4d29b1749dee1dfcb27b3b980da6c4067df57724e81cf8a2a4a97de0c",
+          "repository_authorization_use": {
+            "payload": {
+              "type": "scopeblind.repository.device-use.v1",
+              "authorization_digest": "abebcde3cfa7d15e3877333734b23e017382b96e61c525f3928b6b0c58ca39ce",
+              "workspace_id": "e947527f-3ba4-4fcd-9b93-7479a2d45490",
+              "workspace_digest": "ba392847b0c5ac305f06c98658ea09abcbf77ca9be0e7c4a82d68cb8b902ed07",
+              "member_id": "c40b4bb1-d77d-41ee-b8ad-200002c5b8c8",
+              "member_revision": 1,
+              "principal_key": "e938c10eebb361c91de256ff7814b662a94889cbb94f9231e26b302081032cfc",
+              "device_key": "45f532f818d68b6eb2f6c1d5951389c710f465795221b7a3836a2bf3a77e28e8",
+              "task_id": "9b42cbca-f930-4137-8947-d0c03eedab88",
+              "task_digest": "2ea56f4643b1fcf72a5611d0971ad7c6c22a39472071e1066ee502ded2a1063a",
+              "payload_digest": "c1354261d851a889d6af284ab4f5a9f2316734eddaecb0b7db5672201a967762",
+              "action": "review",
+              "recorded_at": "2026-09-16T22:21:22.744Z"
+            },
+            "signer": "7a5644765db020ca9d08ff94a792a05ed224b8c4cb1946dbdaedbb3c15cc0e85",
+            "digest": "75dec3abd001d18a8d48ef679775d200e5ece7142f1069ec9a2773fcde64d6b0",
+            "signature": "11abd8237d5f1b4d3bc19662cdbcfb1b31edf1b4f18bf0fb1164576c2596e9924b80ac664694f099369390c57d6856d4c10fb6c792feb6899c1f48788b30a50f"
+          }
+        },
+        {
+          "payload": {
+            "type": "scopeblind.repository.review-decision.v1",
+            "task_id": "9b42cbca-f930-4137-8947-d0c03eedab88",
+            "task_digest": "2ea56f4643b1fcf72a5611d0971ad7c6c22a39472071e1066ee502ded2a1063a",
+            "brief_digest": "47263890493a8374a1014a3760940dcdab417f33c70bbef789362ea9c8fcb125",
+            "packet_digest": "6563b36f5b57fcc56addc461681ff11fae5c5b49f64aef20a258ca6273f968de",
+            "proposal_digest": "6f98b3b00c1b690b2c5a2080d569cd174f0558b5f1f12b414e0f2f25c97f5b56",
+            "approval_digest": "56351e029523186d9659d6469e5cb090e3e3b8d90f0c93e98ee67860d5dedc8a",
+            "principal_key": "3715156cd8291e7e59e6cdf661d9f8f2fecce7f1c855354efdaa153c27605dc6",
+            "role": "reviewer",
+            "issued_at": "2026-09-16T22:21:22.730Z",
+            "expires_at": "2026-09-16T22:26:22.730Z"
+          },
+          "signer": "f309476321ae3e1a75d1bb09d6b73c05d00e1b676b3a1af603540ee215e62277",
+          "digest": "5b1e9998d3b2716cec70dc2c99a7d157007f1a4a5d3d9c0e9b61a59e1ecc1f77",
+          "signature": "906ca7fe06f1b08f744132c51d6a94f7f097e70e881b4e08958ad55260a7dda27ff48c75aa79a7dfa3c6de12f5260b415a40405bb07de37db5f62837e5d84d0d",
+          "repository_authorization": {
+            "payload": {
+              "type": "scopeblind.repository.device-authorization.v1",
+              "id": "26f2d282-45c0-41da-a968-058196e64c68",
+              "link_id": "29b4cccc-50b8-41fd-af94-aeb21af3a0a5",
+              "workspace_id": "e947527f-3ba4-4fcd-9b93-7479a2d45490",
+              "workspace_digest": "ba392847b0c5ac305f06c98658ea09abcbf77ca9be0e7c4a82d68cb8b902ed07",
+              "member_id": "d49e5cb0-1edb-4765-95f6-a5ee5dc5382e",
+              "member_revision": 1,
+              "principal_key": "3715156cd8291e7e59e6cdf661d9f8f2fecce7f1c855354efdaa153c27605dc6",
+              "device_key": "f309476321ae3e1a75d1bb09d6b73c05d00e1b676b3a1af603540ee215e62277",
+              "device_name": "Review phone",
+              "actions": [
+                "read",
+                "claim",
+                "review",
+                "feedback",
+                "accept"
+              ],
+              "authority_key": "7a5644765db020ca9d08ff94a792a05ed224b8c4cb1946dbdaedbb3c15cc0e85",
+              "issued_at": "2026-09-16T22:21:22.390Z",
+              "expires_at": "2026-09-16T22:51:22.390Z"
+            },
+            "signer": "3715156cd8291e7e59e6cdf661d9f8f2fecce7f1c855354efdaa153c27605dc6",
+            "digest": "caf5a9cce7690d2af417e7b366ace076a47dc8a5678d8adb569ba4da9d71df19",
+            "signature": "05194f332deeea02ee7e3b9167984e68aa352cc3f3bc9934a7b9e77f799b500b9ad0cb8eaf0a8e09fede50b2f79b304f86f652114d0768c25a7bb1f645fbaa0c"
+          },
+          "repository_authorization_signature": "3796fd66c1c8440b0a14fae6fbcc6cb9430fe1e796677d52585f0e1436ba8eac2403fbe12cda401dd36aaabe150df1b336045ed450f4ca06dffc8192c911880a",
+          "repository_authorization_use": {
+            "payload": {
+              "type": "scopeblind.repository.device-use.v1",
+              "authorization_digest": "caf5a9cce7690d2af417e7b366ace076a47dc8a5678d8adb569ba4da9d71df19",
+              "workspace_id": "e947527f-3ba4-4fcd-9b93-7479a2d45490",
+              "workspace_digest": "ba392847b0c5ac305f06c98658ea09abcbf77ca9be0e7c4a82d68cb8b902ed07",
+              "member_id": "d49e5cb0-1edb-4765-95f6-a5ee5dc5382e",
+              "member_revision": 1,
+              "principal_key": "3715156cd8291e7e59e6cdf661d9f8f2fecce7f1c855354efdaa153c27605dc6",
+              "device_key": "f309476321ae3e1a75d1bb09d6b73c05d00e1b676b3a1af603540ee215e62277",
+              "task_id": "9b42cbca-f930-4137-8947-d0c03eedab88",
+              "task_digest": "2ea56f4643b1fcf72a5611d0971ad7c6c22a39472071e1066ee502ded2a1063a",
+              "payload_digest": "5b1e9998d3b2716cec70dc2c99a7d157007f1a4a5d3d9c0e9b61a59e1ecc1f77",
+              "action": "review",
+              "recorded_at": "2026-09-16T22:21:22.764Z"
+            },
+            "signer": "7a5644765db020ca9d08ff94a792a05ed224b8c4cb1946dbdaedbb3c15cc0e85",
+            "digest": "1f2ab77bb2d000b5da632ab61ffa42c7db105f2a130c15f0aba88b034e8f9417",
+            "signature": "b4d406789f9e6e273a067c81f8b5da03ff86547abd195af80fa1b6f962e63d5aaebf89bbc8bdb06ebda987aa8cdd04903b6f6ebd1490ad229bc05895129c780a"
+          }
+        }
+      ],
+      "feedback": [
+        {
+          "payload": {
+            "type": "scopeblind.repository.review-feedback.v1",
+            "id": "cc0b87d3-cecb-430d-9a33-41006ea1044f",
+            "task_id": "9b42cbca-f930-4137-8947-d0c03eedab88",
+            "task_digest": "2ea56f4643b1fcf72a5611d0971ad7c6c22a39472071e1066ee502ded2a1063a",
+            "packet_digest": "6563b36f5b57fcc56addc461681ff11fae5c5b49f64aef20a258ca6273f968de",
+            "basis_digest": "6f98b3b00c1b690b2c5a2080d569cd174f0558b5f1f12b414e0f2f25c97f5b56",
+            "requester_key": "3715156cd8291e7e59e6cdf661d9f8f2fecce7f1c855354efdaa153c27605dc6",
+            "criterion_ids": [
+              "contact-opens"
+            ],
+            "message": "The contact panel is ready to review.",
+            "requested_changes": "Preserve the working contact panel.",
+            "issued_at": "2026-09-16T22:21:22.614Z"
+          },
+          "signer": "f309476321ae3e1a75d1bb09d6b73c05d00e1b676b3a1af603540ee215e62277",
+          "digest": "1dedb214062ff38b67837143abe15b1fcc20ad72822f8cc621c5e415a1c38286",
+          "signature": "81ed05ddefd7bb32f9ee0f37cf45682b7cce74c1eab7932a10d01f277a98b85129d314b87c787fc1e18ee5bdf80fbfbbe17747c30f11bb527f41bd422f8b4907",
+          "repository_authorization": {
+            "payload": {
+              "type": "scopeblind.repository.device-authorization.v1",
+              "id": "26f2d282-45c0-41da-a968-058196e64c68",
+              "link_id": "29b4cccc-50b8-41fd-af94-aeb21af3a0a5",
+              "workspace_id": "e947527f-3ba4-4fcd-9b93-7479a2d45490",
+              "workspace_digest": "ba392847b0c5ac305f06c98658ea09abcbf77ca9be0e7c4a82d68cb8b902ed07",
+              "member_id": "d49e5cb0-1edb-4765-95f6-a5ee5dc5382e",
+              "member_revision": 1,
+              "principal_key": "3715156cd8291e7e59e6cdf661d9f8f2fecce7f1c855354efdaa153c27605dc6",
+              "device_key": "f309476321ae3e1a75d1bb09d6b73c05d00e1b676b3a1af603540ee215e62277",
+              "device_name": "Review phone",
+              "actions": [
+                "read",
+                "claim",
+                "review",
+                "feedback",
+                "accept"
+              ],
+              "authority_key": "7a5644765db020ca9d08ff94a792a05ed224b8c4cb1946dbdaedbb3c15cc0e85",
+              "issued_at": "2026-09-16T22:21:22.390Z",
+              "expires_at": "2026-09-16T22:51:22.390Z"
+            },
+            "signer": "3715156cd8291e7e59e6cdf661d9f8f2fecce7f1c855354efdaa153c27605dc6",
+            "digest": "caf5a9cce7690d2af417e7b366ace076a47dc8a5678d8adb569ba4da9d71df19",
+            "signature": "05194f332deeea02ee7e3b9167984e68aa352cc3f3bc9934a7b9e77f799b500b9ad0cb8eaf0a8e09fede50b2f79b304f86f652114d0768c25a7bb1f645fbaa0c"
+          },
+          "repository_authorization_signature": "73bacfd51ff100da3f70d0c7438756aea975ee2b8ca648bfcb65db6ddd80b8b1536464b6354a46ed67a0b770c995d7e20bddf225abcfaab990a3c453b33a4503",
+          "repository_authorization_use": {
+            "payload": {
+              "type": "scopeblind.repository.device-use.v1",
+              "authorization_digest": "caf5a9cce7690d2af417e7b366ace076a47dc8a5678d8adb569ba4da9d71df19",
+              "workspace_id": "e947527f-3ba4-4fcd-9b93-7479a2d45490",
+              "workspace_digest": "ba392847b0c5ac305f06c98658ea09abcbf77ca9be0e7c4a82d68cb8b902ed07",
+              "member_id": "d49e5cb0-1edb-4765-95f6-a5ee5dc5382e",
+              "member_revision": 1,
+              "principal_key": "3715156cd8291e7e59e6cdf661d9f8f2fecce7f1c855354efdaa153c27605dc6",
+              "device_key": "f309476321ae3e1a75d1bb09d6b73c05d00e1b676b3a1af603540ee215e62277",
+              "task_id": "9b42cbca-f930-4137-8947-d0c03eedab88",
+              "task_digest": "2ea56f4643b1fcf72a5611d0971ad7c6c22a39472071e1066ee502ded2a1063a",
+              "payload_digest": "1dedb214062ff38b67837143abe15b1fcc20ad72822f8cc621c5e415a1c38286",
+              "action": "feedback",
+              "recorded_at": "2026-09-16T22:21:22.647Z"
+            },
+            "signer": "7a5644765db020ca9d08ff94a792a05ed224b8c4cb1946dbdaedbb3c15cc0e85",
+            "digest": "0c2796f2dfa87c6da212bc3659647009e7c884eb9b679b3a6d7d349412600c25",
+            "signature": "b30da7c19696042a34e10e076427506905c6966a872b097213ab7c768ec23a0053e9de2b8253af53b7749dd37159809cb0c2f5ae145f14b3e24530d4a2a74903"
+          }
+        }
+      ],
+      "recommendations": [],
+      "history": [
+        {
+          "state": {
+            "payload": {
+              "type": "scopeblind.repository.state.v1",
+              "task": {
+                "payload": {
+                  "type": "scopeblind.repository.task.v1",
+                  "id": "9b42cbca-f930-4137-8947-d0c03eedab88",
+                  "title": "Review the contact improvement",
+                  "repository": "scopeblind/workspace-test",
+                  "pull_number": 1,
+                  "base_branch": "main",
+                  "owner_key": "e938c10eebb361c91de256ff7814b662a94889cbb94f9231e26b302081032cfc",
+                  "receiver_key": "664559fce98c66bcef273d1434df9ede1d64c303bfc5ee0268989f76d6b69d33",
+                  "authority_key": "7a5644765db020ca9d08ff94a792a05ed224b8c4cb1946dbdaedbb3c15cc0e85",
+                  "allowed_paths": [
+                    "site/**"
+                  ],
+                  "required_checks": [
+                    {
+                      "name": "site-checks",
+                      "app_id": 123
+                    }
+                  ],
+                  "reviewer_secret_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "issued_at": "2026-09-16T22:21:22.423Z",
+                  "expires_at": "2026-09-16T23:21:22.423Z"
+                },
+                "signer": "e938c10eebb361c91de256ff7814b662a94889cbb94f9231e26b302081032cfc",
+                "digest": "2ea56f4643b1fcf72a5611d0971ad7c6c22a39472071e1066ee502ded2a1063a",
+                "signature": "87d0dc09d7312c4b93765492fa38614e4c8fefdb5ed947744226506ee8afc1667aaf4ba42bf52ef2ed4228011627a73c6a0e5c24b4c0742639050a3d86b07f03"
+              },
+              "reviewer": {
+                "payload": {
+                  "type": "scopeblind.repository.claim.v1",
+                  "task_id": "9b42cbca-f930-4137-8947-d0c03eedab88",
+                  "task_digest": "2ea56f4643b1fcf72a5611d0971ad7c6c22a39472071e1066ee502ded2a1063a",
+                  "reviewer_key": "3715156cd8291e7e59e6cdf661d9f8f2fecce7f1c855354efdaa153c27605dc6",
+                  "name": "Jamie",
+                  "issued_at": "2026-09-16T22:21:22.470Z"
+                },
+                "signer": "f309476321ae3e1a75d1bb09d6b73c05d00e1b676b3a1af603540ee215e62277",
+                "digest": "100a37761f64db9561909af262ae01a0ac7fb29c05bfe938e96fc720186f7c22",
+                "signature": "ce9a208c8cf0ded15ff2a08e9d5e3f89b3fdd29743887a0c4951acfa7f9ad697af74417ac5d7c11df570964f2e85a90048d40af826d4186d5380abe0305c3505",
+                "repository_authorization": {
+                  "payload": {
+                    "type": "scopeblind.repository.device-authorization.v1",
+                    "id": "26f2d282-45c0-41da-a968-058196e64c68",
+                    "link_id": "29b4cccc-50b8-41fd-af94-aeb21af3a0a5",
+                    "workspace_id": "e947527f-3ba4-4fcd-9b93-7479a2d45490",
+                    "workspace_digest": "ba392847b0c5ac305f06c98658ea09abcbf77ca9be0e7c4a82d68cb8b902ed07",
+                    "member_id": "d49e5cb0-1edb-4765-95f6-a5ee5dc5382e",
+                    "member_revision": 1,
+                    "principal_key": "3715156cd8291e7e59e6cdf661d9f8f2fecce7f1c855354efdaa153c27605dc6",
+                    "device_key": "f309476321ae3e1a75d1bb09d6b73c05d00e1b676b3a1af603540ee215e62277",
+                    "device_name": "Review phone",
+                    "actions": [
+                      "read",
+                      "claim",
+                      "review",
+                      "feedback",
+                      "accept"
+                    ],
+                    "authority_key": "7a5644765db020ca9d08ff94a792a05ed224b8c4cb1946dbdaedbb3c15cc0e85",
+                    "issued_at": "2026-09-16T22:21:22.390Z",
+                    "expires_at": "2026-09-16T22:51:22.390Z"
+                  },
+                  "signer": "3715156cd8291e7e59e6cdf661d9f8f2fecce7f1c855354efdaa153c27605dc6",
+                  "digest": "caf5a9cce7690d2af417e7b366ace076a47dc8a5678d8adb569ba4da9d71df19",
+                  "signature": "05194f332deeea02ee7e3b9167984e68aa352cc3f3bc9934a7b9e77f799b500b9ad0cb8eaf0a8e09fede50b2f79b304f86f652114d0768c25a7bb1f645fbaa0c"
+                },
+                "repository_authorization_signature": "10de82549e2557634d8391c1ca80e7ae22c9f0789a61f2c8036d6a07969674ad1191b2f319b56b1dc2868760debc75be1967f789ad8936639f7c1888c9748103",
+                "repository_authorization_use": {
+                  "payload": {
+                    "type": "scopeblind.repository.device-use.v1",
+                    "authorization_digest": "caf5a9cce7690d2af417e7b366ace076a47dc8a5678d8adb569ba4da9d71df19",
+                    "workspace_id": "e947527f-3ba4-4fcd-9b93-7479a2d45490",
+                    "workspace_digest": "ba392847b0c5ac305f06c98658ea09abcbf77ca9be0e7c4a82d68cb8b902ed07",
+                    "member_id": "d49e5cb0-1edb-4765-95f6-a5ee5dc5382e",
+                    "member_revision": 1,
+                    "principal_key": "3715156cd8291e7e59e6cdf661d9f8f2fecce7f1c855354efdaa153c27605dc6",
+                    "device_key": "f309476321ae3e1a75d1bb09d6b73c05d00e1b676b3a1af603540ee215e62277",
+                    "task_id": "9b42cbca-f930-4137-8947-d0c03eedab88",
+                    "task_digest": "2ea56f4643b1fcf72a5611d0971ad7c6c22a39472071e1066ee502ded2a1063a",
+                    "payload_digest": "100a37761f64db9561909af262ae01a0ac7fb29c05bfe938e96fc720186f7c22",
+                    "action": "claim",
+                    "recorded_at": "2026-09-16T22:21:22.486Z"
+                  },
+                  "signer": "7a5644765db020ca9d08ff94a792a05ed224b8c4cb1946dbdaedbb3c15cc0e85",
+                  "digest": "173622467d6658374d0f5b67e8c212d8fd64f1e044517759134a46d3bc72178a",
+                  "signature": "657206fa6acff3f3f1a1431d6612df9b05d707d78dcb90de574f61697d5a2c6dbc1acc864841b189ae1d39087eb4872337fac04fcd3bb51adbce29b46bd42d0b"
+                }
+              },
+              "proposal": {
+                "payload": {
+                  "type": "scopeblind.repository.proposal.v1",
+                  "id": "aad90b10-af55-4c0b-bbb8-c5592a0a07e7",
+                  "task_id": "9b42cbca-f930-4137-8947-d0c03eedab88",
+                  "task_digest": "2ea56f4643b1fcf72a5611d0971ad7c6c22a39472071e1066ee502ded2a1063a",
+                  "repository_id": "R_repository_test",
+                  "base_ref": "refs/heads/main",
+                  "head_ref": "refs/heads/feature",
+                  "base_sha": "1111111111111111111111111111111111111111",
+                  "head_sha": "2222222222222222222222222222222222222222",
+                  "merge_sha": "3333333333333333333333333333333333333333",
+                  "tree_sha": "5555555555555555555555555555555555555555",
+                  "files": [
+                    {
+                      "path": "site/index.html",
+                      "status": "modified",
+                      "mode": "100644",
+                      "additions": 1,
+                      "deletions": 1,
+                      "patch": "@@ -1 +1 @@\n-before\n+after"
+                    }
+                  ],
+                  "checks": [
+                    {
+                      "id": 91,
+                      "name": "site-checks",
+                      "app_id": 123,
+                      "head_sha": "2222222222222222222222222222222222222222",
+                      "conclusion": "success"
+                    }
+                  ],
+                  "observed_at": "2026-09-16T22:21:22.547Z"
+                },
+                "signer": "664559fce98c66bcef273d1434df9ede1d64c303bfc5ee0268989f76d6b69d33",
+                "digest": "6f98b3b00c1b690b2c5a2080d569cd174f0558b5f1f12b414e0f2f25c97f5b56",
+                "signature": "acb46263ada479479b70538ca8ac3f7d37723fd3f04fd9ac731f4f9f33a13ced924df225f2882ecd6988e761f14d320d6ac17d9549fcf68fb42493a3827d6303"
+              },
+              "approvals": [],
+              "execution": null,
+              "outcome": null,
+              "acceptance": null,
+              "status": "review",
+              "revision": 3,
+              "observed_at": "2026-09-16T22:21:22.623Z"
+            },
+            "signer": "7a5644765db020ca9d08ff94a792a05ed224b8c4cb1946dbdaedbb3c15cc0e85",
+            "digest": "9bc239e096a126f11ff7068a42e808346e2ba07403020b0dd889663b0a2f486d",
+            "signature": "6fbeb444df12844d06a47b5832d1077ff3c62e822f3b6e25c645e9cf7e5123d4d2908a0caad47a4989975d0705951d439039e5d9f10ba60dcdcb5fda5bfc710c"
+          },
+          "packet": {
+            "payload": {
+              "type": "scopeblind.repository.review-packet.v1",
+              "task_id": "9b42cbca-f930-4137-8947-d0c03eedab88",
+              "task_digest": "2ea56f4643b1fcf72a5611d0971ad7c6c22a39472071e1066ee502ded2a1063a",
+              "brief_digest": "47263890493a8374a1014a3760940dcdab417f33c70bbef789362ea9c8fcb125",
+              "proposal_digest": "6f98b3b00c1b690b2c5a2080d569cd174f0558b5f1f12b414e0f2f25c97f5b56",
+              "base_sha": "1111111111111111111111111111111111111111",
+              "head_sha": "2222222222222222222222222222222222222222",
+              "merge_sha": "3333333333333333333333333333333333333333",
+              "preview": {
+                "status": "not_requested",
+                "reason": "This brief does not require or identify a deployment preview."
+              },
+              "observed_at": "2026-09-16T22:21:22.564Z",
+              "expires_at": "2026-09-16T22:36:22.564Z"
+            },
+            "signer": "664559fce98c66bcef273d1434df9ede1d64c303bfc5ee0268989f76d6b69d33",
+            "digest": "6563b36f5b57fcc56addc461681ff11fae5c5b49f64aef20a258ca6273f968de",
+            "signature": "89093be73d92fd7e615442bd67c2adf4684f2c2767b932bd53e2ed3ec7868522f4d64a8e1c97dd8dc2081d04b638b1ff456e559e96a6f8261731500060ebce04"
+          },
+          "decisions": []
+        }
+      ],
+      "agent_uses": [],
+      "observed_at": "2026-09-16T22:21:22.919Z"
+    },
+    "signer": "7a5644765db020ca9d08ff94a792a05ed224b8c4cb1946dbdaedbb3c15cc0e85",
+    "digest": "3a5b5f560518d411ae6562aee55d634a0666da873ea801ac8e19f77d7d8339ff",
+    "signature": "9b01d906f394e90b66b86113fc905beff79addd8592b33f7608d0f6f8b4d6710cd1f3d03ead3ff442f70748ed1f8df0d388f753d6fc4027d0dce2bd6b0fb2309"
+  }
+}
