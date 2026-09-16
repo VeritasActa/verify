@@ -1,15 +1,15 @@
 {
   "sigil_version": 1,
-  "fingerprint": "f4b420bb",
-  "name": "Pale Beacon",
-  "sigil_hash": "f4b420bb0758edb4441b4677e091f6884ef58bdb21d65bb2b5a016c9c85cfb45",
+  "fingerprint": "f911aa21",
+  "name": "Woven Cairn",
+  "sigil_hash": "f911aa213bf2202ef4585a19724f17015880a03d2f69d7787286bb9fdbcb6de2",
   "project_public_key": "fe665e861867cec7e171c0c13bbc873c3362079faef21f54df7804b7fb9ae8af",
   "commitment_authentication": "public_recomputable_integrity_only",
   "policy": {
     "version": 3,
     "package": "@veritasacta/verify",
-    "package_version": "0.10.15",
-    "source_hash": "81e3c32792ba7517c2f1089253dc099e3d43d19903ff35bdddbd525c8929027e",
+    "package_version": "0.10.16",
+    "source_hash": "f0fac4e3368f53e74b1c18fca8a4da51d9950e399fe68c34e8595c98b723627a",
     "monitored_files": [
       "README.md",
       "cli.js",
@@ -76,6 +76,6 @@
     ],
     "created_at": 1784267169966
   },
-  "policy_hash": "ea7dbc88630a42fb88d58b89db46cacd0dfbdbdbb5c62d768c7084ff64a0791e",
+  "policy_hash": "f5d7f9d8c24d9c250b9505776dbd28fe40479a52b0fc1a76acb70227756900a2",
   "derived_at": "2026-07-17T05:46:09.966Z"
 }

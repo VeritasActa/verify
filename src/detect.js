@@ -41,6 +41,7 @@ export function detectFormat(input) {
   }
 
   if (input.type === 'scopeblind.repository.evidence.v1') return { mode: 'repository-evidence', signals: ['type=scopeblind.repository.evidence.v1'], hasSelectiveDisclosure: false, isBundle: false };
+  if (input.type === 'scopeblind.repository.collaboration-evidence.v1') return { mode: 'repository-evidence', signals: ['type=scopeblind.repository.collaboration-evidence.v1'], hasSelectiveDisclosure: false, isBundle: false };
 
   const signals = [];
 

@@ -1,3 +1,8 @@
+## 0.10.16 — 2026-09-16
+
+- Verify repository collaboration evidence offline: exact visual model hashes, Git blob identities, scoped agent suggestions and signed feedback linking fresh tasks.
+- Keep approval, observed destination effect, rendered preview and recipient acceptance distinct. Existing repository v1 evidence remains supported.
+
 ## 0.10.15 — 2026-09-16
 
 - Derive assurance features from successful verification, with unchecked declarations reported separately. Metadata alone never raises a conformance tier.

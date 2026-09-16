@@ -61,11 +61,11 @@ function bytesToHex(bytes) {
   abytes(bytes);
   if (hasHexBuiltin)
     return bytes.toHex();
-  let hex2 = "";
+  let hex3 = "";
   for (let i = 0; i < bytes.length; i++) {
-    hex2 += hexes[bytes[i]];
+    hex3 += hexes[bytes[i]];
   }
-  return hex2;
+  return hex3;
 }
 var asciis = { _0: 48, _9: 57, A: 65, F: 70, a: 97, f: 102 };
 function asciiToBase16(ch) {
@@ -77,21 +77,21 @@ function asciiToBase16(ch) {
     return ch - (asciis.a - 10);
   return;
 }
-function hexToBytes(hex2) {
-  if (typeof hex2 !== "string")
-    throw new Error("hex string expected, got " + typeof hex2);
+function hexToBytes(hex3) {
+  if (typeof hex3 !== "string")
+    throw new Error("hex string expected, got " + typeof hex3);
   if (hasHexBuiltin)
-    return Uint8Array.fromHex(hex2);
-  const hl = hex2.length;
+    return Uint8Array.fromHex(hex3);
+  const hl = hex3.length;
   const al = hl / 2;
   if (hl % 2)
     throw new Error("hex string expected, got unpadded hex of length " + hl);
   const array = new Uint8Array(al);
   for (let ai = 0, hi = 0; ai < al; ai++, hi += 2) {
-    const n1 = asciiToBase16(hex2.charCodeAt(hi));
-    const n2 = asciiToBase16(hex2.charCodeAt(hi + 1));
+    const n1 = asciiToBase16(hex3.charCodeAt(hi));
+    const n2 = asciiToBase16(hex3.charCodeAt(hi + 1));
     if (n1 === void 0 || n2 === void 0) {
-      const char = hex2[hi] + hex2[hi + 1];
+      const char = hex3[hi] + hex3[hi + 1];
       throw new Error('hex string expected, got non-hex character "' + char + '" at index ' + hi);
     }
     array[ai] = n1 * 16 + n2;
@@ -722,13 +722,13 @@ function asafenumber(value, title = "") {
   }
 }
 function numberToHexUnpadded(num) {
-  const hex2 = abignumber(num).toString(16);
-  return hex2.length & 1 ? "0" + hex2 : hex2;
+  const hex3 = abignumber(num).toString(16);
+  return hex3.length & 1 ? "0" + hex3 : hex3;
 }
-function hexToNumber(hex2) {
-  if (typeof hex2 !== "string")
-    throw new Error("hex string expected, got " + typeof hex2);
-  return hex2 === "" ? _0n : BigInt("0x" + hex2);
+function hexToNumber(hex3) {
+  if (typeof hex3 !== "string")
+    throw new Error("hex string expected, got " + typeof hex3);
+  return hex3 === "" ? _0n : BigInt("0x" + hex3);
 }
 function bytesToNumberBE(bytes) {
   return hexToNumber(bytesToHex(bytes));
@@ -833,11 +833,11 @@ function createHmacDrbg(hashLen, qByteLen, hmacFn) {
   };
   return genUntil;
 }
-function validateObject(object2, fields = {}, optFields = {}) {
-  if (!object2 || typeof object2 !== "object")
+function validateObject(object3, fields = {}, optFields = {}) {
+  if (!object3 || typeof object3 !== "object")
     throw new Error("expected valid options object");
   function checkField(fieldName, expectedType, isOpt) {
-    const val = object2[fieldName];
+    const val = object3[fieldName];
     if (isOpt && val === void 0)
       return;
     const current = typeof val;
@@ -1613,8 +1613,8 @@ function edwards(params, extraOpts = {}) {
         x = modP(-x);
       return Point.fromAffine({ x, y });
     }
-    static fromHex(hex2, zip215 = false) {
-      return Point.fromBytes(hexToBytes(hex2), zip215);
+    static fromHex(hex3, zip215 = false) {
+      return Point.fromBytes(hexToBytes(hex3), zip215);
     }
     get x() {
       return this.toAffine().x;
@@ -2175,8 +2175,8 @@ var _RistrettoPoint = class __RistrettoPoint extends PrimeEdwardsPoint {
    * Described in [RFC9496](https://www.rfc-editor.org/rfc/rfc9496#name-decode).
    * @param hex Ristretto-encoded 32 bytes. Not every 32-byte string is valid ristretto encoding
    */
-  static fromHex(hex2) {
-    return __RistrettoPoint.fromBytes(hexToBytes(hex2));
+  static fromHex(hex3) {
+    return __RistrettoPoint.fromBytes(hexToBytes(hex3));
   }
   /**
    * Encodes ristretto point to Uint8Array.
@@ -2344,11 +2344,11 @@ function bytesToHex2(bytes) {
   abytes2(bytes);
   if (hasHexBuiltin2)
     return bytes.toHex();
-  let hex2 = "";
+  let hex3 = "";
   for (let i = 0; i < bytes.length; i++) {
-    hex2 += hexes2[bytes[i]];
+    hex3 += hexes2[bytes[i]];
   }
-  return hex2;
+  return hex3;
 }
 var asciis2 = { _0: 48, _9: 57, A: 65, F: 70, a: 97, f: 102 };
 function asciiToBase162(ch) {
@@ -2360,28 +2360,28 @@ function asciiToBase162(ch) {
     return ch - (asciis2.a - 10);
   return;
 }
-function hexToBytes2(hex2) {
-  if (typeof hex2 !== "string")
-    throw new TypeError("hex string expected, got " + typeof hex2);
+function hexToBytes2(hex3) {
+  if (typeof hex3 !== "string")
+    throw new TypeError("hex string expected, got " + typeof hex3);
   if (hasHexBuiltin2) {
     try {
-      return Uint8Array.fromHex(hex2);
+      return Uint8Array.fromHex(hex3);
     } catch (error) {
       if (error instanceof SyntaxError)
         throw new RangeError(error.message);
       throw error;
     }
   }
-  const hl = hex2.length;
+  const hl = hex3.length;
   const al = hl / 2;
   if (hl % 2)
     throw new RangeError("hex string expected, got unpadded hex of length " + hl);
   const array = new Uint8Array(al);
   for (let ai = 0, hi = 0; ai < al; ai++, hi += 2) {
-    const n1 = asciiToBase162(hex2.charCodeAt(hi));
-    const n2 = asciiToBase162(hex2.charCodeAt(hi + 1));
+    const n1 = asciiToBase162(hex3.charCodeAt(hi));
+    const n2 = asciiToBase162(hex3.charCodeAt(hi + 1));
     if (n1 === void 0 || n2 === void 0) {
-      const char = hex2[hi] + hex2[hi + 1];
+      const char = hex3[hi] + hex3[hi + 1];
       throw new RangeError('hex string expected, got non-hex character "' + char + '" at index ' + hi);
     }
     array[ai] = n1 * 16 + n2;
@@ -3132,7 +3132,7 @@ var contribMsg = (kind, c) => lp(
 var resolutionMsg = (charter_digest, epoch, as_of, kind) => lp("legate-covenant/resolution/v2", charter_digest, epoch, as_of, kind);
 function verifyEpochBundle(signed2, bundle) {
   const checks = [];
-  const push = (id, label, ok2, detail) => checks.push({ id, label, ok: ok2, detail });
+  const push = (id2, label, ok2, detail) => checks.push({ id: id2, label, ok: ok2, detail });
   const ch = signed2.charter;
   const dig = charterDigest(ch);
   const keyOf = new Map(ch.roster.map((p) => [p.party_id, p.public_key]));
@@ -3437,11 +3437,11 @@ function bytesToHex3(bytes) {
   abytes3(bytes);
   if (hasHexBuiltin3)
     return bytes.toHex();
-  let hex2 = "";
+  let hex3 = "";
   for (let i = 0; i < bytes.length; i++) {
-    hex2 += hexes3[bytes[i]];
+    hex3 += hexes3[bytes[i]];
   }
-  return hex2;
+  return hex3;
 }
 var asciis3 = { _0: 48, _9: 57, A: 65, F: 70, a: 97, f: 102 };
 function asciiToBase163(ch) {
@@ -3453,21 +3453,21 @@ function asciiToBase163(ch) {
     return ch - (asciis3.a - 10);
   return;
 }
-function hexToBytes3(hex2) {
-  if (typeof hex2 !== "string")
-    throw new Error("hex string expected, got " + typeof hex2);
+function hexToBytes3(hex3) {
+  if (typeof hex3 !== "string")
+    throw new Error("hex string expected, got " + typeof hex3);
   if (hasHexBuiltin3)
-    return Uint8Array.fromHex(hex2);
-  const hl = hex2.length;
+    return Uint8Array.fromHex(hex3);
+  const hl = hex3.length;
   const al = hl / 2;
   if (hl % 2)
     throw new Error("hex string expected, got unpadded hex of length " + hl);
   const array = new Uint8Array(al);
   for (let ai = 0, hi = 0; ai < al; ai++, hi += 2) {
-    const n1 = asciiToBase163(hex2.charCodeAt(hi));
-    const n2 = asciiToBase163(hex2.charCodeAt(hi + 1));
+    const n1 = asciiToBase163(hex3.charCodeAt(hi));
+    const n2 = asciiToBase163(hex3.charCodeAt(hi + 1));
     if (n1 === void 0 || n2 === void 0) {
-      const char = hex2[hi] + hex2[hi + 1];
+      const char = hex3[hi] + hex3[hi + 1];
       throw new Error('hex string expected, got non-hex character "' + char + '" at index ' + hi);
     }
     array[ai] = n1 * 16 + n2;
@@ -4094,13 +4094,13 @@ function _abytes2(value, length, title = "") {
   return value;
 }
 function numberToHexUnpadded2(num) {
-  const hex2 = num.toString(16);
-  return hex2.length & 1 ? "0" + hex2 : hex2;
+  const hex3 = num.toString(16);
+  return hex3.length & 1 ? "0" + hex3 : hex3;
 }
-function hexToNumber2(hex2) {
-  if (typeof hex2 !== "string")
-    throw new Error("hex string expected, got " + typeof hex2);
-  return hex2 === "" ? _0n6 : BigInt("0x" + hex2);
+function hexToNumber2(hex3) {
+  if (typeof hex3 !== "string")
+    throw new Error("hex string expected, got " + typeof hex3);
+  return hex3 === "" ? _0n6 : BigInt("0x" + hex3);
 }
 function bytesToNumberBE2(bytes) {
   return hexToNumber2(bytesToHex3(bytes));
@@ -4115,16 +4115,16 @@ function numberToBytesBE2(n, len) {
 function numberToBytesLE2(n, len) {
   return numberToBytesBE2(n, len).reverse();
 }
-function ensureBytes(title, hex2, expectedLength) {
+function ensureBytes(title, hex3, expectedLength) {
   let res;
-  if (typeof hex2 === "string") {
+  if (typeof hex3 === "string") {
     try {
-      res = hexToBytes3(hex2);
+      res = hexToBytes3(hex3);
     } catch (e) {
       throw new Error(title + " must be hex string or Uint8Array, cause: " + e);
     }
-  } else if (isBytes3(hex2)) {
-    res = Uint8Array.from(hex2);
+  } else if (isBytes3(hex3)) {
+    res = Uint8Array.from(hex3);
   } else {
     throw new Error(title + " must be hex string or Uint8Array");
   }
@@ -4209,11 +4209,11 @@ function createHmacDrbg2(hashLen, qByteLen, hmacFn) {
   };
   return genUntil;
 }
-function _validateObject(object2, fields, optFields = {}) {
-  if (!object2 || typeof object2 !== "object")
+function _validateObject(object3, fields, optFields = {}) {
+  if (!object3 || typeof object3 !== "object")
     throw new Error("expected valid options object");
   function checkField(fieldName, expectedType, isOpt) {
-    const val = object2[fieldName];
+    const val = object3[fieldName];
     if (isOpt && val === void 0)
       return;
     const current = typeof val;
@@ -5542,8 +5542,8 @@ var _RistrettoPoint2 = class __RistrettoPoint extends PrimeEdwardsPoint2 {
     return new __RistrettoPoint(ep);
   }
   /** @deprecated use `import { ristretto255_hasher } from '@noble/curves/ed25519.js';` */
-  static hashToCurve(hex2) {
-    return ristretto255_map(ensureBytes("ristrettoHash", hex2, 64));
+  static hashToCurve(hex3) {
+    return ristretto255_map(ensureBytes("ristrettoHash", hex3, 64));
   }
   static fromBytes(bytes) {
     abytes3(bytes, 32);
@@ -5576,8 +5576,8 @@ var _RistrettoPoint2 = class __RistrettoPoint extends PrimeEdwardsPoint2 {
    * Described in [RFC9496](https://www.rfc-editor.org/rfc/rfc9496#name-decode).
    * @param hex Ristretto-encoded 32 bytes. Not every 32-byte string is valid ristretto encoding
    */
-  static fromHex(hex2) {
-    return __RistrettoPoint.fromBytes(ensureBytes("ristrettoHex", hex2, 32));
+  static fromHex(hex3) {
+    return __RistrettoPoint.fromBytes(ensureBytes("ristrettoHex", hex3, 32));
   }
   static msm(points, scalars) {
     return pippenger(__RistrettoPoint, ed255192.Point.Fn, points, scalars);
@@ -5809,12 +5809,12 @@ var DER = {
       const { Err: E } = DER;
       if (num < _0n11)
         throw new E("integer: negative integers are not allowed");
-      let hex2 = numberToHexUnpadded2(num);
-      if (Number.parseInt(hex2[0], 16) & 8)
-        hex2 = "00" + hex2;
-      if (hex2.length & 1)
+      let hex3 = numberToHexUnpadded2(num);
+      if (Number.parseInt(hex3[0], 16) & 8)
+        hex3 = "00" + hex3;
+      if (hex3.length & 1)
         throw new E("unexpected DER parsing assertion: unpadded hex");
-      return hex2;
+      return hex3;
     },
     decode(data) {
       const { Err: E } = DER;
@@ -5825,9 +5825,9 @@ var DER = {
       return bytesToNumberBE2(data);
     }
   },
-  toSig(hex2) {
+  toSig(hex3) {
     const { Err: E, _int: int, _tlv: tlv } = DER;
-    const data = ensureBytes("signature", hex2);
+    const data = ensureBytes("signature", hex3);
     const { v: seqBytes, l: seqLeftBytes } = tlv.decode(48, data);
     if (seqLeftBytes.length)
       throw new E("invalid signature: left bytes after parsing");
@@ -6035,8 +6035,8 @@ function weierstrassN(params, extraOpts = {}) {
       P.assertValidity();
       return P;
     }
-    static fromHex(hex2) {
-      return Point.fromBytes(ensureBytes("pointHex", hex2));
+    static fromHex(hex3) {
+      return Point.fromBytes(ensureBytes("pointHex", hex3));
     }
     get x() {
       return this.toAffine().x;
@@ -6455,8 +6455,8 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
       const s = bytes.subarray(L3, L3 * 2);
       return new Signature(Fn3.fromBytes(r), Fn3.fromBytes(s), recid);
     }
-    static fromHex(hex2, format) {
-      return this.fromBytes(hexToBytes3(hex2), format);
+    static fromHex(hex3, format) {
+      return this.fromBytes(hexToBytes3(hex3), format);
     }
     addRecoveryBit(recovery) {
       return new Signature(this.r, this.s, recovery);
@@ -6507,11 +6507,11 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
     // TODO: remove
     assertValidity() {
     }
-    static fromCompact(hex2) {
-      return Signature.fromBytes(ensureBytes("sig", hex2), "compact");
+    static fromCompact(hex3) {
+      return Signature.fromBytes(ensureBytes("sig", hex3), "compact");
     }
-    static fromDER(hex2) {
-      return Signature.fromBytes(ensureBytes("sig", hex2), "der");
+    static fromDER(hex3) {
+      return Signature.fromBytes(ensureBytes("sig", hex3), "der");
     }
     normalizeS() {
       return this.hasHighS() ? new Signature(this.r, Fn3.neg(this.s), this.recovery) : this;
@@ -6820,12 +6820,12 @@ function canonicalize(value, depth, seen) {
     if (prototype !== Object.prototype && prototype !== null) {
       throw new Error("only plain JSON objects can be canonicalized");
     }
-    const object2 = value;
-    const keys = Object.keys(object2).sort();
+    const object3 = value;
+    const keys = Object.keys(object3).sort();
     if (keys.length > CLAIMS_JSON_LIMITS.max_object_members) throw new Error("maximum object member count exceeded");
     return `{${keys.map((key) => {
       assertUnicodeScalars(key, "object key");
-      return `${JSON.stringify(key)}:${canonicalize(object2[key], depth + 1, seen)}`;
+      return `${JSON.stringify(key)}:${canonicalize(object3[key], depth + 1, seen)}`;
     }).join(",")}}`;
   } finally {
     seen.delete(value);
@@ -7167,13 +7167,13 @@ function record(value, label) {
   return value;
 }
 function exactKeys(value, keys, label) {
-  const object2 = record(value, label);
-  const actual = Object.keys(object2).sort();
+  const object3 = record(value, label);
+  const actual = Object.keys(object3).sort();
   const expected = [...keys].sort();
   if (actual.length !== expected.length || actual.some((key, index) => key !== expected[index])) {
     throw new Error(`${label} contains missing or unknown fields`);
   }
-  return object2;
+  return object3;
 }
 function stringField(value, label, options = {}) {
   if (value === null && options.nullable) return null;
@@ -7185,9 +7185,9 @@ function stringField(value, label, options = {}) {
   return value;
 }
 function canonicalIso(value, label) {
-  const text2 = stringField(value, label, { max: 64 });
-  const parsed = Date.parse(text2);
-  if (!Number.isFinite(parsed) || new Date(parsed).toISOString() !== text2) {
+  const text3 = stringField(value, label, { max: 64 });
+  const parsed = Date.parse(text3);
+  if (!Number.isFinite(parsed) || new Date(parsed).toISOString() !== text3) {
     throw new Error(`${label} must be a canonical UTC timestamp`);
   }
   return parsed;
@@ -7412,7 +7412,7 @@ function emptyArtifact(reason) {
     reason
   };
 }
-function verifyRequest(value, pin, at) {
+function verifyRequest(value, pin, at2) {
   try {
     const request = exactKeys(value, REQUEST_KEYS, "approval request");
     const signature = exactKeys(request.signature, ["algorithm", "value"], "approval request signature");
@@ -7432,7 +7432,7 @@ function verifyRequest(value, pin, at) {
       utf8(preimage),
       hexToBytes3(verificationKey)
     );
-    const now = at.getTime();
+    const now = at2.getTime();
     const current = now >= Date.parse(request.issued_at) && now <= Date.parse(request.expires_at);
     const pinSupplied = Boolean(pin);
     const keyPinned = pinSupplied && pin === verificationKey;
@@ -7665,7 +7665,7 @@ async function verifyWebAuthnEvidence(decision, preimage, pin, expectedOrigin, e
     rp_id_pinned: rpIdPinned
   };
 }
-async function verifyDecision(value, request, pin, expectedOrigin, expectedRpId, at) {
+async function verifyDecision(value, request, pin, expectedOrigin, expectedRpId, at2) {
   try {
     const decision = exactKeys(value, DECISION_KEYS, "approval decision");
     const decisionUnsigned = unsigned(decision, DECISION_UNSIGNED_KEYS);
@@ -7677,7 +7677,7 @@ async function verifyDecision(value, request, pin, expectedOrigin, expectedRpId,
       throw new Error("decision was issued outside the approval request lifetime");
     }
     const preimage = decisionPreimage(decision);
-    const now = at.getTime();
+    const now = at2.getTime();
     const current = now >= issuedAt && now <= Date.parse(decision.expires_at);
     const signature = record(decision.signature, "approval decision signature");
     if (signature.algorithm === "WebAuthn") {
@@ -7998,8 +7998,8 @@ var REQUEST_UNSIGNED_KEYS2 = [
   "expires_at",
   "nonce"
 ];
-function shaHex(text2) {
-  return bytesToHex2(sha2562(encoder.encode(text2)));
+function shaHex(text3) {
+  return bytesToHex2(sha2562(encoder.encode(text3)));
 }
 function isRecord(v) {
   return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -8216,7 +8216,7 @@ function evaluateAdmission(input) {
   const org = request.recipient.organization || request.recipient.name;
   const checks = [];
   const axes = [];
-  const push = (id, label, ok, detail, informational = false) => checks.push({ id, label, ok, detail, informational });
+  const push = (id2, label, ok, detail, informational = false) => checks.push({ id: id2, label, ok, detail, informational });
   const empty = (verdict2, title2, reason2, extraChecks = []) => ({
     stage,
     kind,
@@ -8583,8 +8583,8 @@ function canonicalize2(obj) {
     return value;
   });
 }
-function sha256Hex(text2) {
-  return bytesToHex2(sha2562(utf8ToBytes(text2)));
+function sha256Hex(text3) {
+  return bytesToHex2(sha2562(utf8ToBytes(text3)));
 }
 function receiptHash(obj) {
   return sha256Hex(canonicalize2(obj));
@@ -8630,8 +8630,8 @@ function verifyReceipt2(receipt, publicKeyHex) {
       const rest = {};
       for (const k of Object.keys(receipt)) if (k !== "signature") rest[k] = receipt[k];
       const valid = ed25519.verify(hexToBytes2(signature), utf8ToBytes(canonicalize2(rest)), hexToBytes2(publicKeyHex));
-      const shape = receipt.v === 2 ? "legacy-v2" : "legacy-v1";
-      return valid ? { valid: true, shape, hash: receiptHash(receipt) } : { valid: false, shape, error: "invalid_signature" };
+      const shape3 = receipt.v === 2 ? "legacy-v2" : "legacy-v1";
+      return valid ? { valid: true, shape: shape3, hash: receiptHash(receipt) } : { valid: false, shape: shape3, error: "invalid_signature" };
     }
     return { valid: false, shape: null, error: "missing_signature" };
   } catch (err) {
@@ -8914,12 +8914,12 @@ var DER2 = {
       const { Err: E } = DER2;
       if (num < _0n12)
         throw new E("integer: negative integers are not allowed");
-      let hex2 = numberToHexUnpadded(num);
-      if (Number.parseInt(hex2[0], 16) & 8)
-        hex2 = "00" + hex2;
-      if (hex2.length & 1)
+      let hex3 = numberToHexUnpadded(num);
+      if (Number.parseInt(hex3[0], 16) & 8)
+        hex3 = "00" + hex3;
+      if (hex3.length & 1)
         throw new E("unexpected DER parsing assertion: unpadded hex");
-      return hex2;
+      return hex3;
     },
     decode(data) {
       const { Err: E } = DER2;
@@ -9134,8 +9134,8 @@ function weierstrass2(params, extraOpts = {}) {
       P.assertValidity();
       return P;
     }
-    static fromHex(hex2) {
-      return Point.fromBytes(hexToBytes(hex2));
+    static fromHex(hex3) {
+      return Point.fromBytes(hexToBytes(hex3));
     }
     get x() {
       return this.toAffine().x;
@@ -9521,8 +9521,8 @@ function ecdsa2(Point, hash, ecdsaOpts = {}) {
       const s = bytes.subarray(L3, L3 * 2);
       return new Signature(Fn3.fromBytes(r), Fn3.fromBytes(s), recid);
     }
-    static fromHex(hex2, format) {
-      return this.fromBytes(hexToBytes(hex2), format);
+    static fromHex(hex3, format) {
+      return this.fromBytes(hexToBytes(hex3), format);
     }
     assertRecovery() {
       const { recovery } = this;
@@ -10633,11 +10633,11 @@ var Reader = class {
     return this.b.length - this.off;
   }
 };
-function pemCertificates(text2) {
+function pemCertificates(text3) {
   const out = [];
   const re = /-----BEGIN CERTIFICATE-----([\s\S]*?)-----END CERTIFICATE-----/g;
   let m;
-  while ((m = re.exec(text2)) !== null) out.push(parseCertificate(fromBase64(m[1])));
+  while ((m = re.exec(text3)) !== null) out.push(parseCertificate(fromBase64(m[1])));
   return out;
 }
 function quoteBytes(input) {
@@ -10778,8 +10778,8 @@ var isRecord4 = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
 var str3 = (v) => typeof v === "string" ? v : null;
 var strip0x = (s) => s.replace(/^0x/i, "").toLowerCase();
 var HEX64 = /^[0-9a-f]{64}$/;
-function parseModelCalls(text2) {
-  const lines = text2.split("\n").map((l) => l.trim()).filter(Boolean);
+function parseModelCalls(text3) {
+  const lines = text3.split("\n").map((l) => l.trim()).filter(Boolean);
   return lines.map((line, i) => {
     let v;
     try {
@@ -10795,26 +10795,26 @@ function parseModelCalls(text2) {
   });
 }
 var signedText = (c) => c.kind === "provider_tee" ? `${c.model}:${c.request_sha256}:${c.response_sha256}` : `${c.request_sha256}:${c.response_sha256}`;
-function personalSignDigest(text2) {
-  const body = utf83(text2);
+function personalSignDigest(text3) {
+  const body = utf83(text3);
   return keccak_256(new Uint8Array([...utf83(`Ethereum Signed Message:
 ${body.length}`), ...body]));
 }
 function recoverSigner(call) {
   try {
-    const text2 = signedText(call);
+    const text3 = signedText(call);
     if (call.signing_algo === "ecdsa") {
       const sig = hexToBytes2(strip0x(call.signature));
       if (sig.length !== 65) return null;
       let v = sig[64];
       if (v >= 27) v -= 27;
       if (v > 3) return null;
-      const point = secp256k1.Signature.fromBytes(sig.subarray(0, 64), "compact").addRecoveryBit(v).recoverPublicKey(personalSignDigest(text2));
+      const point = secp256k1.Signature.fromBytes(sig.subarray(0, 64), "compact").addRecoveryBit(v).recoverPublicKey(personalSignDigest(text3));
       const pub2 = point.toBytes(false);
       return `0x${bytesToHex2(keccak_256(pub2.subarray(1)).subarray(12))}`;
     }
     const pub = hexToBytes2(strip0x(call.signing_address));
-    return ed25519.verify(hexToBytes2(strip0x(call.signature)), utf83(text2), pub) ? strip0x(call.signing_address) : null;
+    return ed25519.verify(hexToBytes2(strip0x(call.signature)), utf83(text3), pub) ? strip0x(call.signing_address) : null;
   } catch {
     return null;
   }
@@ -11215,9 +11215,9 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
         const slice = chain.receipts.slice(t.receipts.from, t.receipts.to);
         const times = slice.map((r) => r.issued_at ? Date.parse(r.issued_at) : NaN).filter((n) => !Number.isNaN(n));
         if (times.length >= 2) {
-          const span = (Math.max(...times) - Math.min(...times)) / 1e3;
-          const ok = span <= std.requirements.run.time_limit_seconds;
-          checks.push({ id: `receipt_time_${t.task_id}_${t.attempt}`, label: `Receipt times, ${t.task_id}`, ok, detail: ok ? `First to last receipt: ${Math.round(span)} s, within the limit, on the gate clock.` : `First to last receipt spans ${Math.round(span)} s, over the limit.` });
+          const span2 = (Math.max(...times) - Math.min(...times)) / 1e3;
+          const ok = span2 <= std.requirements.run.time_limit_seconds;
+          checks.push({ id: `receipt_time_${t.task_id}_${t.attempt}`, label: `Receipt times, ${t.task_id}`, ok, detail: ok ? `First to last receipt: ${Math.round(span2)} s, within the limit, on the gate clock.` : `First to last receipt spans ${Math.round(span2)} s, over the limit.` });
           bound &&= ok;
         }
       }
@@ -11233,13 +11233,13 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
       const events = projectEvents(chain.receipts.map((r) => ({ tool: r.tool ?? "", decision: r.decision === "deny" ? "deny" : "allow", input_hash: r.input_hash ?? "", issued_at: r.issued_at ?? (/* @__PURE__ */ new Date(0)).toISOString(), link: r.hash })), { attempts: m.attempts, calls: context.calls ?? null });
       const ev = evaluateTemporal(events, { format: temporal.format, rules: temporal.rules });
       for (const r of ev.results) {
-        const id = `temporal_${r.rule.id}`;
+        const id2 = `temporal_${r.rule.id}`;
         if (!r.evaluable) {
-          checks.push({ id, label: `History rule: ${r.rule.id}`, ok: true, informational: true, detail: `Not evaluable here: ${r.reason}.` });
+          checks.push({ id: id2, label: `History rule: ${r.rule.id}`, ok: true, informational: true, detail: `Not evaluable here: ${r.reason}.` });
           continue;
         }
         const ok = r.violations.length === 0;
-        checks.push({ id, label: `History rule: ${r.rule.id}`, ok, detail: ok ? `Held at every one of ${r.events_examined} receipts${r.rule.note ? ` (${r.rule.note})` : ""}.` : `Broken at receipt ${r.violations[0].event_index}: ${r.violations[0].detail} History head at that decision: ${r.violations[0].link.slice(0, 19)}\u2026${r.violations.length > 1 ? ` (${r.violations.length} violations in all)` : ""}` });
+        checks.push({ id: id2, label: `History rule: ${r.rule.id}`, ok, detail: ok ? `Held at every one of ${r.events_examined} receipts${r.rule.note ? ` (${r.rule.note})` : ""}.` : `Broken at receipt ${r.violations[0].event_index}: ${r.violations[0].detail} History head at that decision: ${r.violations[0].link.slice(0, 19)}\u2026${r.violations.length > 1 ? ` (${r.violations.length} violations in all)` : ""}` });
         bound &&= ok;
       }
       const held = ev.results.filter((r) => r.evaluable && r.violations.length === 0).map((r) => r.rule.id);
@@ -11298,12 +11298,12 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
   }
   if (m.model_calls && context.modelCalls !== void 0 && context.modelCalls !== null) {
     anythingGiven = true;
-    const text2 = context.modelCalls;
-    const digestOk = fileDigest(text2) === m.model_calls.digest;
+    const text3 = context.modelCalls;
+    const digestOk = fileDigest(text3) === m.model_calls.digest;
     let parsed = null;
     let parseError = "";
     try {
-      parsed = parseModelCalls(text2);
+      parsed = parseModelCalls(text3);
     } catch (e) {
       parseError = e.message;
     }
@@ -11362,10 +11362,10 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
       return Boolean(r) && r.verdict === t.verdict && (!t.workspace || r.workspace_digest === t.workspace.digest);
     });
     const ok = sameRun && graderAccepted && distinct && agrees;
-    const id = i === 0 ? "regrade" : `regrade_${i + 1}`;
+    const id2 = i === 0 ? "regrade" : `regrade_${i + 1}`;
     const unnamed = Boolean(std) && rv.valid && sameRun && !graderAccepted;
     const profileNote = rg.results?.some((r) => r.grading?.profile === "in_process") ? " Profile: the tests import the submission, so its code ran inside the scoring interpreter (declared as the weaker profile)." : rg.results?.every((r) => r.grading?.profile === "black_box") && rg.results?.length ? " Profile: black box, the tests never import the submission." : "";
-    checks.push({ id, label: i === 0 ? "Second grading" : `Grading ${i + 2}`, ok: unnamed ? agrees : ok, ...unnamed ? { informational: true } : {}, detail: !rv.valid ? rv.detail : !sameRun ? "The regrade is for a different manifest." : !std ? "Supply the standard to check the grader." : unnamed ? `A grading by ${rg.grader.name} (${rg.grader.key_id}), which the standard does not name as a grader: it ${agrees ? "agrees with every verdict" : "DISAGREES with the manifest on at least one verdict or workspace"}, and it does not bind either way. The standard names who may reconcile its verdicts.${profileNote}` : !distinct ? "The regrade was signed by the same key as the manifest; that is not a second party." : !agrees ? "This grading disagrees with the manifest on at least one verdict or workspace." : `A grading under key ${rg.grader.key_id}${graderByKey ? "" : " (accepted by its provenance identity)"}${madeBy}, from the archived workspaces with the pinned tests, agrees with every verdict.${profileNote}` });
+    checks.push({ id: id2, label: i === 0 ? "Second grading" : `Grading ${i + 2}`, ok: unnamed ? agrees : ok, ...unnamed ? { informational: true } : {}, detail: !rv.valid ? rv.detail : !sameRun ? "The regrade is for a different manifest." : !std ? "Supply the standard to check the grader." : unnamed ? `A grading by ${rg.grader.name} (${rg.grader.key_id}), which the standard does not name as a grader: it ${agrees ? "agrees with every verdict" : "DISAGREES with the manifest on at least one verdict or workspace"}, and it does not bind either way. The standard names who may reconcile its verdicts.${profileNote}` : !distinct ? "The regrade was signed by the same key as the manifest; that is not a second party." : !agrees ? "This grading disagrees with the manifest on at least one verdict or workspace." : `A grading under key ${rg.grader.key_id}${graderByKey ? "" : " (accepted by its provenance identity)"}${madeBy}, from the archived workspaces with the pinned tests, agrees with every verdict.${profileNote}` });
     if (!unnamed) bound &&= ok;
     if (ok) {
       reconciled = true;
@@ -11498,9 +11498,9 @@ var COORDINATION_DOMAIN = "scopeblind.coordination.v1\n";
 function bytesToHex4(bytes) {
   return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
-function hexToBytes4(hex2) {
-  if (!/^(?:[0-9a-f]{2})+$/i.test(hex2)) throw new Error("Invalid hexadecimal data");
-  return Uint8Array.from(hex2.match(/../g).map((x) => parseInt(x, 16)));
+function hexToBytes4(hex3) {
+  if (!/^(?:[0-9a-f]{2})+$/i.test(hex3)) throw new Error("Invalid hexadecimal data");
+  return Uint8Array.from(hex3.match(/../g).map((x) => parseInt(x, 16)));
 }
 function validUnicode(value) {
   for (let i = 0; i < value.length; i++) {
@@ -11529,22 +11529,22 @@ function canonical(value) {
   }
   if (typeof value === "object") {
     if (Object.getPrototypeOf(value) !== Object.prototype && Object.getPrototypeOf(value) !== null) throw new Error("Expected a plain JSON object");
-    const object2 = value;
-    return "{" + Object.keys(object2).sort().map((k) => canonical(k) + ":" + canonical(object2[k])).join(",") + "}";
+    const object3 = value;
+    return "{" + Object.keys(object3).sort().map((k) => canonical(k) + ":" + canonical(object3[k])).join(",") + "}";
   }
   throw new Error("Not a JSON value");
 }
 async function sha2565(value) {
   return bytesToHex4(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value))));
 }
-async function verify(envelope, expectedSigner) {
+async function verify(envelope2, expectedSigner) {
   try {
-    if (!envelope || !/^[0-9a-f]{64}$/.test(envelope.signer) || !/^[0-9a-f]{64}$/.test(envelope.digest) || !/^[0-9a-f]{128}$/.test(envelope.signature)) return false;
-    if (expectedSigner && expectedSigner !== envelope.signer) return false;
-    const preimage = COORDINATION_DOMAIN + canonical(envelope.payload);
-    if (await sha2565(preimage) !== envelope.digest) return false;
-    const key = await crypto.subtle.importKey("raw", hexToBytes4(envelope.signer), { name: "Ed25519" }, false, ["verify"]);
-    return await crypto.subtle.verify("Ed25519", key, hexToBytes4(envelope.signature), new TextEncoder().encode(preimage));
+    if (!envelope2 || !/^[0-9a-f]{64}$/.test(envelope2.signer) || !/^[0-9a-f]{64}$/.test(envelope2.digest) || !/^[0-9a-f]{128}$/.test(envelope2.signature)) return false;
+    if (expectedSigner && expectedSigner !== envelope2.signer) return false;
+    const preimage = COORDINATION_DOMAIN + canonical(envelope2.payload);
+    if (await sha2565(preimage) !== envelope2.digest) return false;
+    const key = await crypto.subtle.importKey("raw", hexToBytes4(envelope2.signer), { name: "Ed25519" }, false, ["verify"]);
+    return await crypto.subtle.verify("Ed25519", key, hexToBytes4(envelope2.signature), new TextEncoder().encode(preimage));
   } catch {
     return false;
   }
@@ -11630,6 +11630,162 @@ async function verifyRepositoryEvidence(value, pin) {
   }
   return { valid: errors.length === 0, errors, accepted: accepted && errors.length === 0, authorityPinned: !!pin && errors.length === 0, limitations: ["The pinned receiver attests to GitHub API observations; this is not a GitHub-signed receipt.", "This controls the installed receiver\u2019s exact branch update. Other credentials and repository actions are outside its coverage.", "Destination readback establishes resulting repository state. After a lost reply it does not establish which actor caused that state.", "The checked files, commits and named checks do not prove the code is safe or universally correct.", "Signatures identify keys, not a person\u2019s legal identity.", ...!pin ? ["No independent authority key was supplied. Only consistency with the included authority was checked."] : []] };
 }
+
+// ../../protect-mcp/src/coordination-repository-collaboration.ts
+var DEMO_REPOSITORY = "ScopeBlind/scopeblind-repository-demo";
+var DEMO_CHECK = { name: "ScopeBlind contact validation", app_id: 4962726 };
+var CONTACT_PATH = "demo/contact.json";
+var object2 = (value) => !!value && typeof value === "object" && !Array.isArray(value);
+var shape = (value, required, optional = []) => object2(value) && required.every((key) => key in value) && Object.keys(value).every((key) => required.includes(key) || optional.includes(key));
+var text2 = (value, max, empty = false) => typeof value === "string" && (empty || value.trim().length > 0) && value.length <= max && !/[\u0000-\u001f\u007f]/.test(value);
+var hex2 = (value) => typeof value === "string" && REPOSITORY_HEX.test(value);
+var id = (value) => typeof value === "string" && REPOSITORY_ID.test(value);
+var sha = (value) => typeof value === "string" && REPOSITORY_SHA.test(value);
+var at = (value) => typeof value === "string" && Number.isFinite(Date.parse(value)) && new Date(value).toISOString() === value;
+var span = (issued, expires, max) => at(issued) && at(expires) && Date.parse(String(expires)) > Date.parse(String(issued)) && Date.parse(String(expires)) - Date.parse(String(issued)) <= max;
+function validContactPage(value) {
+  return shape(value, ["type", "button_label", "target", "accent"]) && value.type === "scopeblind.contact-page.v1" && text2(value.button_label, 40) && ["broken", "contact"].includes(String(value.target)) && ["indigo", "emerald", "rose"].includes(String(value.accent));
+}
+function contactPageBytes(value) {
+  if (!validContactPage(value))
+    throw new Error("invalid_contact_page");
+  return canonical(value) + "\n";
+}
+function validRepositoryParticipants(v) {
+  return shape(v, ["type", "task_id", "task_digest", "owner_key", "receiver_key", "reviewer_key", "reviewer_claim_digest", "issued_at", "expires_at"]) && v.type === "scopeblind.repository.participants.v1" && id(v.task_id) && [v.task_digest, v.owner_key, v.receiver_key, v.reviewer_key, v.reviewer_claim_digest].every(hex2) && (/* @__PURE__ */ new Set([v.owner_key, v.receiver_key, v.reviewer_key])).size === 3 && span(v.issued_at, v.expires_at, 7 * 864e5);
+}
+function validRepositoryPreview(v) {
+  return shape(v, ["type", "task_id", "task_digest", "proposal_digest", "base_sha", "head_sha", "merge_sha", "tree_sha", "path", "before", "after", "renderer", "observed_at"]) && v.type === "scopeblind.repository.preview.v1" && id(v.task_id) && hex2(v.task_digest) && hex2(v.proposal_digest) && [v.base_sha, v.head_sha, v.merge_sha, v.tree_sha].every(sha) && v.path === CONTACT_PATH && v.renderer === "scopeblind.contact-page.v1" && at(v.observed_at) && [v.before, v.after].every((side) => shape(side, ["model", "blob_sha", "content_sha256"]) && validContactPage(side.model) && sha(side.blob_sha) && hex2(side.content_sha256));
+}
+function validRepositoryAgentGrant(v) {
+  return shape(v, ["type", "id", "task_id", "task_digest", "issuer_key", "agent_key", "permissions", "issued_at", "expires_at"]) && v.type === "scopeblind.repository.agent-grant.v1" && id(v.id) && id(v.task_id) && [v.task_digest, v.issuer_key, v.agent_key].every(hex2) && v.issuer_key !== v.agent_key && Array.isArray(v.permissions) && v.permissions.length > 0 && v.permissions.length <= 2 && new Set(v.permissions).size === v.permissions.length && v.permissions.every((p) => p === "read_task" || p === "request_revision") && v.permissions.includes("read_task") && span(v.issued_at, v.expires_at, 36e5);
+}
+function validRepositoryRevisionRequest(v) {
+  return shape(v, ["type", "id", "task_id", "task_digest", "basis_digest", "requester_key", "message", "proposed", "issued_at"], ["grant_digest"]) && v.type === "scopeblind.repository.revision-request.v1" && id(v.id) && id(v.task_id) && [v.task_digest, v.basis_digest, v.requester_key].every(hex2) && (v.grant_digest === void 0 || hex2(v.grant_digest)) && text2(v.message, 600) && validContactPage(v.proposed) && at(v.issued_at);
+}
+function validRepositoryRevisionLink(v) {
+  return shape(v, ["type", "id", "parent_task_id", "parent_task_digest", "parent_basis_digest", "request_digest", "child_task_id", "child_task_digest", "owner_key", "issued_at"]) && v.type === "scopeblind.repository.revision-link.v1" && [v.id, v.parent_task_id, v.child_task_id].every(id) && v.parent_task_id !== v.child_task_id && [v.parent_task_digest, v.parent_basis_digest, v.request_digest, v.child_task_digest, v.owner_key].every(hex2) && at(v.issued_at);
+}
+function validRepositoryDemoRequest(v) {
+  if (!shape(v, ["type", "id", "owner_key", "receiver_key", "authority_key", "title", "goal", "proposed", "reviewer_secret_hash", "issued_at", "expires_at"], ["parent_task_id", "parent_task_digest", "parent_basis_digest", "revision_request_digest"]))
+    return false;
+  const parent = ["parent_task_id", "parent_task_digest", "parent_basis_digest", "revision_request_digest"];
+  return v.type === "scopeblind.repository.demo-request.v1" && id(v.id) && [v.owner_key, v.receiver_key, v.authority_key, v.reviewer_secret_hash].every(hex2) && (/* @__PURE__ */ new Set([v.owner_key, v.receiver_key, v.authority_key])).size === 3 && text2(v.title, 140) && text2(v.goal, 600) && validContactPage(v.proposed) && span(v.issued_at, v.expires_at, 864e5) && (parent.every((k) => v[k] === void 0) || id(v.parent_task_id) && [v.parent_task_digest, v.parent_basis_digest, v.revision_request_digest].every(hex2));
+}
+function validRepositoryDemoProvision(v) {
+  return shape(v, ["type", "request_id", "request_digest", "repository", "base_branch", "head_branch", "pull_number", "initial_base_sha", "initial_head_sha", "receiver_key", "required_checks", "observed_at"]) && v.type === "scopeblind.repository.demo-provision.v1" && id(v.request_id) && [v.request_digest, v.receiver_key].every(hex2) && v.repository === DEMO_REPOSITORY && v.base_branch === `scopeblind/demo/${v.request_id}/base` && v.head_branch === `scopeblind/demo/${v.request_id}/change` && Number.isSafeInteger(v.pull_number) && Number(v.pull_number) > 0 && sha(v.initial_base_sha) && sha(v.initial_head_sha) && Array.isArray(v.required_checks) && canonical(v.required_checks) === canonical([DEMO_CHECK]) && at(v.observed_at);
+}
+function repositoryRevisionBasis(state) {
+  return state.acceptance?.digest ?? state.outcome?.digest ?? state.proposal?.digest ?? null;
+}
+
+// ../../protect-mcp/src/coordination-repository-collaboration-evidence.ts
+var shape2 = (v, required, optional = []) => !!v && typeof v === "object" && !Array.isArray(v) && required.every((k) => Object.hasOwn(v, k)) && Object.keys(v).every((k) => required.includes(k) || optional.includes(k));
+var envelope = (v) => shape2(v, ["payload", "signer", "digest", "signature"]);
+var time2 = (v) => typeof v === "string" && Number.isFinite(Date.parse(v)) && new Date(v).toISOString() === v;
+var within = (at2, start, end) => Date.parse(at2) >= Date.parse(start) && Date.parse(at2) <= Date.parse(end);
+function requireValid(condition, message) {
+  if (!condition) throw new Error(message);
+}
+var baseLimitations = [
+  "A preview is the receiver\u2019s signed observation of canonical contact-page data, rendered by ScopeBlind\u2019s fixed template. It does not execute repository code or prove a deployed website.",
+  "Agent grants allow only the recorded reading and revision suggestions. They do not convey human approval or receiver execution authority.",
+  "Revocation flags and the completeness of the collaboration history are statements by the service. The included record does not prove a currently live grant."
+];
+async function verifyRepositoryCollaborationEvidence(input, pins) {
+  const result = { valid: false, accepted: false, authorityPinned: false, previewVerified: false, revisionLinked: false, errors: [], limitations: [...baseLimitations] };
+  try {
+    requireValid(shape2(input, ["type", "repository", "collaboration"], ["demo", "parent", "parent_request", "parent_agent_grant"]) && input.type === "scopeblind.repository.collaboration-evidence.v1", "Unsupported collaboration evidence shape.");
+    const bundle = input;
+    const core = await verifyRepositoryEvidence(bundle.repository, pins);
+    result.limitations.push(...core.limitations);
+    requireValid(core.valid, core.errors.join("; "));
+    result.authorityPinned = core.authorityPinned;
+    const state = bundle.repository.state.payload, task = state.task.payload, collaboration = bundle.collaboration, c = collaboration?.payload;
+    requireValid(envelope(collaboration) && await verify(collaboration, task.authority_key) && shape2(c, ["type", "task_id", "task_digest", "participants", "preview", "requests", "revisions", "agent_grants", "observed_at"]) && c.type === "scopeblind.repository.collaboration.v1" && c.task_id === task.id && c.task_digest === state.task.digest && time2(c.observed_at), "Collaboration must be signed by this task\u2019s authority and name the exact task.");
+    const principals = [task.owner_key, ...state.reviewer ? [state.reviewer.payload.reviewer_key] : []];
+    if (c.participants !== null) {
+      const signed2 = c.participants, p = signed2?.payload;
+      requireValid(envelope(signed2) && validRepositoryParticipants(p) && await verify(signed2, task.owner_key) && p.task_id === task.id && p.task_digest === state.task.digest && p.owner_key === task.owner_key && p.receiver_key === task.receiver_key && p.reviewer_key === state.reviewer?.payload.reviewer_key && p.reviewer_claim_digest === state.reviewer?.digest && within(p.issued_at, task.issued_at, task.expires_at) && Date.parse(p.expires_at) <= Date.parse(task.expires_at), "The owner\u2019s participant binding does not match this task and enrolled reviewer.");
+    }
+    if (c.preview !== null) {
+      const signed2 = c.preview, p = signed2?.payload, proposal = state.proposal;
+      requireValid(envelope(signed2) && validRepositoryPreview(p) && await verify(signed2, task.receiver_key) && proposal && p.task_id === task.id && p.task_digest === state.task.digest && p.proposal_digest === proposal.digest && ["base_sha", "head_sha", "merge_sha", "tree_sha"].every((k) => p[k] === proposal.payload[k]) && proposal.payload.files.some((f) => f.path === CONTACT_PATH), "The preview is not bound to this exact receiver-reviewed proposal.");
+      for (const side of [p.before, p.after]) {
+        const bytes = new TextEncoder().encode(contactPageBytes(side.model)), header = new TextEncoder().encode(`blob ${bytes.length}\0`), blob = new Uint8Array(header.length + bytes.length);
+        blob.set(header);
+        blob.set(bytes, header.length);
+        const gitSha = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-1", blob)), (n) => n.toString(16).padStart(2, "0")).join("");
+        requireValid(await sha2565(contactPageBytes(side.model)) === side.content_sha256 && gitSha === side.blob_sha, "Preview content does not match its canonical bytes and Git blob digest.");
+      }
+      requireValid(Date.parse(p.observed_at) >= Date.parse(proposal.payload.observed_at) && Date.parse(p.observed_at) <= Date.parse(c.observed_at), "Preview timing does not follow the reviewed proposal.");
+      result.previewVerified = true;
+    }
+    requireValid(Array.isArray(c.agent_grants) && c.agent_grants.length <= 100 && Array.isArray(c.requests) && c.requests.length <= 100 && Array.isArray(c.revisions) && c.revisions.length <= 100, "Collaboration collections exceed their supported bounds.");
+    const incomingLinks = c.revisions.filter((link) => link?.payload?.child_task_id === task.id);
+    requireValid(incomingLinks.length <= 1 && (incomingLinks.length === 1 || !["parent", "parent_request", "parent_agent_grant"].some((key) => Object.hasOwn(bundle, key))), "Predecessor records must be consumed by exactly one incoming revision link.");
+    const grants = /* @__PURE__ */ new Map(), requestIds = /* @__PURE__ */ new Set(), requests = /* @__PURE__ */ new Map();
+    for (const entry of c.agent_grants) {
+      const signed2 = entry.grant, g = signed2?.payload;
+      requireValid(shape2(entry, ["grant", "revoked"]) && typeof entry.revoked === "boolean" && envelope(signed2) && validRepositoryAgentGrant(g) && await verify(signed2, g.issuer_key) && principals.includes(g.issuer_key) && ![...principals, task.receiver_key, task.authority_key].includes(g.agent_key) && g.task_id === task.id && g.task_digest === state.task.digest && within(g.issued_at, task.issued_at, task.expires_at) && Date.parse(g.issued_at) <= Date.parse(c.observed_at) && Date.parse(g.expires_at) <= Date.parse(task.expires_at) && !grants.has(signed2.digest), "An agent grant is invalid, duplicated, or crosses a human/receiver boundary.");
+      grants.set(signed2.digest, entry);
+    }
+    for (const signed2 of c.requests) {
+      const r = signed2?.payload;
+      requireValid(envelope(signed2) && validRepositoryRevisionRequest(r) && await verify(signed2, r.requester_key) && r.task_id === task.id && r.task_digest === state.task.digest && within(r.issued_at, task.issued_at, task.expires_at) && Date.parse(r.issued_at) <= Date.parse(c.observed_at) && !requestIds.has(r.id) && !requests.has(signed2.digest), "A revision request is invalid or duplicated.");
+      requestIds.add(r.id);
+      requests.set(signed2.digest, signed2);
+      if (principals.includes(r.requester_key)) requireValid(r.grant_digest === void 0, "A human revision must not borrow an agent grant.");
+      else {
+        const g = r.grant_digest ? grants.get(r.grant_digest)?.grant.payload : void 0;
+        requireValid(g && g.agent_key === r.requester_key && g.permissions.includes("request_revision") && within(r.issued_at, g.issued_at, g.expires_at), "The suggesting agent did not hold the exact recorded revision scope.");
+      }
+    }
+    let parent;
+    if (bundle.parent) {
+      const checked = await verifyRepositoryEvidence(bundle.parent, pins);
+      requireValid(checked.valid, "The predecessor repository evidence does not verify.");
+      parent = bundle.parent.state.payload;
+      requireValid(parent.task.payload.owner_key === task.owner_key && parent.task.payload.receiver_key === task.receiver_key && parent.task.payload.authority_key === task.authority_key && parent.task.payload.repository === task.repository, "The predecessor crosses this repository or participant authority.");
+    }
+    const linkIds = /* @__PURE__ */ new Set();
+    for (const signed2 of c.revisions) {
+      const l = signed2?.payload;
+      requireValid(envelope(signed2) && validRepositoryRevisionLink(l) && await verify(signed2, task.owner_key) && l.owner_key === task.owner_key && time2(l.issued_at) && Date.parse(l.issued_at) <= Date.parse(c.observed_at) && !linkIds.has(l.id), "A revision link is invalid or duplicated.");
+      linkIds.add(l.id);
+      if (l.child_task_id === task.id) {
+        requireValid(l.child_task_digest === state.task.digest && parent && l.parent_task_id === parent.task.payload.id && l.parent_task_digest === parent.task.digest && l.parent_basis_digest === repositoryRevisionBasis(parent), "The child revision does not bind the included predecessor and exact feedback.");
+        const signedRequest = bundle.parent_request, r = signedRequest?.payload, pt = parent.task.payload;
+        requireValid(envelope(signedRequest) && validRepositoryRevisionRequest(r) && await verify(signedRequest, r.requester_key) && signedRequest.digest === l.request_digest && r.task_id === pt.id && r.task_digest === parent.task.digest && r.basis_digest === l.parent_basis_digest && within(r.issued_at, pt.issued_at, pt.expires_at) && Date.parse(r.issued_at) <= Date.parse(l.issued_at), "The original signed feedback is missing or does not match this revision.");
+        const parentPrincipals = [pt.owner_key, ...parent.reviewer ? [parent.reviewer.payload.reviewer_key] : []];
+        if (parentPrincipals.includes(r.requester_key)) requireValid(r.grant_digest === void 0 && bundle.parent_agent_grant === void 0, "Human feedback must not borrow an agent grant.");
+        else {
+          const signedGrant = bundle.parent_agent_grant, g = signedGrant?.payload;
+          requireValid(envelope(signedGrant) && validRepositoryAgentGrant(g) && await verify(signedGrant, g.issuer_key) && signedGrant.digest === r.grant_digest && parentPrincipals.includes(g.issuer_key) && ![...parentPrincipals, pt.receiver_key, pt.authority_key].includes(g.agent_key) && g.agent_key === r.requester_key && g.task_id === pt.id && g.task_digest === parent.task.digest && g.permissions.includes("request_revision") && within(g.issued_at, pt.issued_at, pt.expires_at) && Date.parse(g.expires_at) <= Date.parse(pt.expires_at) && within(r.issued_at, g.issued_at, g.expires_at), "The original feedback agent\u2019s exact human-signed scope is missing or invalid.");
+        }
+        result.revisionLinked = true;
+      } else {
+        requireValid(l.parent_task_id === task.id && l.parent_task_digest === state.task.digest && requests.has(l.request_digest) && requests.get(l.request_digest).payload.basis_digest === l.parent_basis_digest, "The outgoing revision link does not name this task and an included suggestion.");
+      }
+    }
+    if (bundle.demo) {
+      const signed2 = bundle.demo, d = signed2?.payload, r = d?.request?.payload, p = d?.provision?.payload;
+      requireValid(envelope(signed2) && await verify(signed2, task.authority_key) && shape2(d, ["type", "request", "provision", "task", "status", "dispatch", "error", "observed_at"]) && d.type === "scopeblind.repository.demo-state.v1" && ["queued", "provisioning", "ready_to_review", "active", "failed", "expired"].includes(d.status) && ["requested", "unconfigured", "unavailable"].includes(d.dispatch) && (d.error === null || typeof d.error === "string" && d.error.length <= 100) && time2(d.observed_at), "The demo\u2019s service record is invalid.");
+      requireValid(envelope(d.request) && validRepositoryDemoRequest(r) && await verify(d.request, task.owner_key) && r.id === task.id && r.owner_key === task.owner_key && r.authority_key === task.authority_key && r.receiver_key === task.receiver_key && r.reviewer_secret_hash === task.reviewer_secret_hash && r.title === task.title && Date.parse(task.expires_at) <= Date.parse(r.expires_at), "The demo request is not the task owner\u2019s exact provisioning authority.");
+      requireValid(d.task && canonical(d.task) === canonical(state.task) && envelope(d.provision) && validRepositoryDemoProvision(p) && await verify(d.provision, task.receiver_key) && p.request_id === task.id && p.request_digest === d.request.digest && p.repository === task.repository && p.base_branch === task.base_branch && p.pull_number === task.pull_number && p.receiver_key === task.receiver_key && canonical(p.required_checks) === canonical(task.required_checks) && canonical(task.allowed_paths) === canonical([CONTACT_PATH]), "The provisioned workspace does not match the signed task.");
+      if (c.preview) requireValid(c.preview.payload.base_sha === p.initial_base_sha && c.preview.payload.head_sha === p.initial_head_sha && canonical(c.preview.payload.after.model) === canonical(r.proposed), "The demo preview differs from the exact requested and provisioned change.");
+      if (r.parent_task_id) requireValid(result.revisionLinked && parent && r.parent_task_id === parent.task.payload.id && r.parent_task_digest === parent.task.digest && r.parent_basis_digest === repositoryRevisionBasis(parent) && canonical(bundle.parent_request?.payload.proposed) === canonical(r.proposed) && c.revisions.some((l) => l.payload.child_task_id === task.id && l.payload.request_digest === r.revision_request_digest), "The demo revision lacks its exact predecessor link.");
+    }
+    result.valid = true;
+    result.accepted = core.accepted;
+  } catch (error) {
+    result.errors.push(error instanceof Error ? error.message : "The collaboration evidence could not be verified.");
+    result.previewVerified = false;
+    result.revisionLinked = false;
+    result.accepted = false;
+  }
+  return result;
+}
 export {
   ACTION_ASSURANCE_BUNDLE_V1,
   ADMISSION_DECISION_V1,
@@ -11668,6 +11824,7 @@ export {
   verifyEpochBundle,
   verifyModelAttestation,
   verifyProofRequest,
+  verifyRepositoryCollaborationEvidence,
   verifyRepositoryEvidence,
   verifyRunManifest,
   verifyRunRegrade,

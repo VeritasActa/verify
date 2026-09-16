@@ -39,3 +39,26 @@ test('offline verifier rejects altered signatures, false signed status, changed 
 test('actual CLI auto-detects an exported repository artifact and reports explicit trust limits offline',async()=>{
  const f=await fixture(),dir=await mkdtemp(join(tmpdir(),'scopeblind-repository-verify-'));try{const file=join(dir,'evidence.json');await writeFile(file,JSON.stringify(f.evidence));const result=spawnSync(process.execPath,['cli.js',file,'--key',f.service.key,'--json'],{cwd:new URL('../..',import.meta.url),encoding:'utf8'});assert.equal(result.status,0,result.stderr+result.stdout);const report=JSON.parse(result.stdout);assert.equal(report.format,'repository-evidence');assert.equal(report.authorityPinned,true);assert.equal(report.accepted,true);assert.match(report.not_established.join(' '),/Other credentials/);}finally{await rm(dir,{recursive:true,force:true});}
 });
+
+test('actual CLI verifies incoming companion feedback and scoped agent authority without inheriting parent acceptance',async()=>{
+ const f=await fixture(),agent=await identity(),parent=f.evidence.state.payload,time=n=>new Date(1800000000000+n*1000).toISOString();
+ const task=await sign({...parent.task.payload,id:'repository-child-test',pull_number:2,issued_at:time(10)},f.owner);
+ const state=await sign({type:'scopeblind.repository.state.v1',task,reviewer:null,proposal:null,approvals:[],execution:null,outcome:null,acceptance:null,status:'awaiting_reviewer',revision:1,observed_at:time(12)},f.service);
+ const grant=await sign({type:'scopeblind.repository.agent-grant.v1',id:'parent-agent-grant',task_id:parent.task.payload.id,task_digest:parent.task.digest,issuer_key:f.reviewer.key,agent_key:agent.key,permissions:['read_task','request_revision'],issued_at:time(7),expires_at:time(300)},f.reviewer);
+ const request=await sign({type:'scopeblind.repository.revision-request.v1',id:'parent-feedback',task_id:parent.task.payload.id,task_digest:parent.task.digest,basis_digest:parent.acceptance.digest,requester_key:agent.key,grant_digest:grant.digest,message:'Please make the contact button green.',proposed:{type:'scopeblind.contact-page.v1',button_label:'Get in touch',target:'contact',accent:'emerald'},issued_at:time(8)},agent);
+ const link=await sign({type:'scopeblind.repository.revision-link.v1',id:'parent-child-link',parent_task_id:parent.task.payload.id,parent_task_digest:parent.task.digest,parent_basis_digest:parent.acceptance.digest,request_digest:request.digest,child_task_id:task.payload.id,child_task_digest:task.digest,owner_key:f.owner.key,issued_at:time(10)},f.owner);
+ const collaboration=await sign({type:'scopeblind.repository.collaboration.v1',task_id:task.payload.id,task_digest:task.digest,participants:null,preview:null,requests:[],revisions:[link],agent_grants:[],observed_at:time(12)},f.service);
+ const evidence={type:'scopeblind.repository.collaboration-evidence.v1',repository:{type:'scopeblind.repository.evidence.v1',state},collaboration,parent:f.evidence,parent_request:request,parent_agent_grant:grant};
+ const dir=await mkdtemp(join(tmpdir(),'scopeblind-repository-companion-verify-'));
+ try{
+  const file=join(dir,'evidence.json');
+  async function run(value,key=f.service.key){await writeFile(file,JSON.stringify(value));const result=spawnSync(process.execPath,['cli.js',file,'--key',key,'--json'],{cwd:new URL('../..',import.meta.url),encoding:'utf8'});assert.equal(result.error,undefined);return{status:result.status,report:JSON.parse(result.stdout),diagnostic:result.stderr+result.stdout};}
+  const valid=await run(evidence);assert.equal(valid.status,0,valid.diagnostic);assert.equal(valid.report.valid,true);assert.equal(valid.report.format,'repository-evidence');assert.equal(valid.report.artifact_type,evidence.type);assert.equal(valid.report.authorityPinned,true);assert.equal(valid.report.revisionLinked,true);assert.equal(valid.report.accepted,false);assert.equal(valid.report.previewVerified,false);assert.match(valid.report.establishes.join(' '),/exact feedback/);assert.match(valid.report.not_established.join(' '),/do not convey human approval/);
+  const missingFeedback={...evidence};delete missingFeedback.parent_request;
+  const missingGrant={...evidence};delete missingGrant.parent_agent_grant;
+  const readOnly=await sign({...grant.payload,permissions:['read_task']},f.reviewer),unauthorized=await sign({...request.payload,grant_digest:readOnly.digest},agent),changedLink=await sign({...link.payload,request_digest:unauthorized.digest},f.owner);
+  const restricted={...evidence,parent_request:unauthorized,parent_agent_grant:readOnly,collaboration:await sign({...collaboration.payload,revisions:[changedLink]},f.service)};
+  for(const invalid of [missingFeedback,missingGrant,restricted]){const checked=await run(invalid);assert.notEqual(checked.status,0,checked.diagnostic);assert.equal(checked.report.valid,false);assert.equal(checked.report.revisionLinked,false);assert.equal(checked.report.accepted,false);}
+  const wrongPin=await run(evidence,f.owner.key);assert.notEqual(wrongPin.status,0,wrongPin.diagnostic);assert.equal(wrongPin.report.valid,false);
+ }finally{await rm(dir,{recursive:true,force:true});}
+});
