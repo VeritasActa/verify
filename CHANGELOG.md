@@ -1,3 +1,9 @@
+## 0.10.17 — 2026-09-16
+
+- Verify signed repository review briefs, exact proposal-bound preview observations, and the matching packet decision for every ordinary approval or rejection. Historical repository evidence stays supported.
+- Verify scoped agent findings and feedback against dual-signed preparation authority and service-recorded use; verify a fresh review’s registered origin against the exact frozen source feedback. Preparation never substitutes for human merge approval.
+- Distinguish mutable external preview links, provider observations, artifact digests when present, and recipient acceptance. No preview code is executed during verification.
+
 ## 0.10.16 — 2026-09-16
 
 - Verify repository collaboration evidence offline: exact visual model hashes, Git blob identities, scoped agent suggestions and signed feedback linking fresh tasks.

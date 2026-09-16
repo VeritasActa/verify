@@ -1,15 +1,15 @@
 {
   "sigil_version": 1,
-  "fingerprint": "f911aa21",
-  "name": "Woven Cairn",
-  "sigil_hash": "f911aa213bf2202ef4585a19724f17015880a03d2f69d7787286bb9fdbcb6de2",
+  "fingerprint": "4447a551",
+  "name": "Swift Wind",
+  "sigil_hash": "4447a551e25aea17736309f931780520d691210aa039bf70790dda0ca53c2b50",
   "project_public_key": "fe665e861867cec7e171c0c13bbc873c3362079faef21f54df7804b7fb9ae8af",
   "commitment_authentication": "public_recomputable_integrity_only",
   "policy": {
     "version": 3,
     "package": "@veritasacta/verify",
-    "package_version": "0.10.16",
-    "source_hash": "f0fac4e3368f53e74b1c18fca8a4da51d9950e399fe68c34e8595c98b723627a",
+    "package_version": "0.10.17",
+    "source_hash": "2591244cac9011ce9ffcca0710295517e3d8429916172bf0ad77a72c76f93eb4",
     "monitored_files": [
       "README.md",
       "cli.js",
@@ -76,6 +76,6 @@
     ],
     "created_at": 1784267169966
   },
-  "policy_hash": "f5d7f9d8c24d9c250b9505776dbd28fe40479a52b0fc1a76acb70227756900a2",
+  "policy_hash": "02ddb5f06eed7394988efb998ee57a5c3e87b115e72df8545f66ece98340600e",
   "derived_at": "2026-07-17T05:46:09.966Z"
 }

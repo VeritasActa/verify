@@ -61,11 +61,11 @@ function bytesToHex(bytes) {
   abytes(bytes);
   if (hasHexBuiltin)
     return bytes.toHex();
-  let hex3 = "";
+  let hex4 = "";
   for (let i = 0; i < bytes.length; i++) {
-    hex3 += hexes[bytes[i]];
+    hex4 += hexes[bytes[i]];
   }
-  return hex3;
+  return hex4;
 }
 var asciis = { _0: 48, _9: 57, A: 65, F: 70, a: 97, f: 102 };
 function asciiToBase16(ch) {
@@ -77,21 +77,21 @@ function asciiToBase16(ch) {
     return ch - (asciis.a - 10);
   return;
 }
-function hexToBytes(hex3) {
-  if (typeof hex3 !== "string")
-    throw new Error("hex string expected, got " + typeof hex3);
+function hexToBytes(hex4) {
+  if (typeof hex4 !== "string")
+    throw new Error("hex string expected, got " + typeof hex4);
   if (hasHexBuiltin)
-    return Uint8Array.fromHex(hex3);
-  const hl = hex3.length;
+    return Uint8Array.fromHex(hex4);
+  const hl = hex4.length;
   const al = hl / 2;
   if (hl % 2)
     throw new Error("hex string expected, got unpadded hex of length " + hl);
   const array = new Uint8Array(al);
   for (let ai = 0, hi = 0; ai < al; ai++, hi += 2) {
-    const n1 = asciiToBase16(hex3.charCodeAt(hi));
-    const n2 = asciiToBase16(hex3.charCodeAt(hi + 1));
+    const n1 = asciiToBase16(hex4.charCodeAt(hi));
+    const n2 = asciiToBase16(hex4.charCodeAt(hi + 1));
     if (n1 === void 0 || n2 === void 0) {
-      const char = hex3[hi] + hex3[hi + 1];
+      const char = hex4[hi] + hex4[hi + 1];
       throw new Error('hex string expected, got non-hex character "' + char + '" at index ' + hi);
     }
     array[ai] = n1 * 16 + n2;
@@ -721,14 +721,14 @@ function asafenumber(value, title = "") {
     throw new Error(prefix + "expected safe integer, got type=" + typeof value);
   }
 }
-function numberToHexUnpadded(num) {
-  const hex3 = abignumber(num).toString(16);
-  return hex3.length & 1 ? "0" + hex3 : hex3;
+function numberToHexUnpadded(num2) {
+  const hex4 = abignumber(num2).toString(16);
+  return hex4.length & 1 ? "0" + hex4 : hex4;
 }
-function hexToNumber(hex3) {
-  if (typeof hex3 !== "string")
-    throw new Error("hex string expected, got " + typeof hex3);
-  return hex3 === "" ? _0n : BigInt("0x" + hex3);
+function hexToNumber(hex4) {
+  if (typeof hex4 !== "string")
+    throw new Error("hex string expected, got " + typeof hex4);
+  return hex4 === "" ? _0n : BigInt("0x" + hex4);
 }
 function bytesToNumberBE(bytes) {
   return hexToNumber(bytesToHex(bytes));
@@ -833,11 +833,11 @@ function createHmacDrbg(hashLen, qByteLen, hmacFn) {
   };
   return genUntil;
 }
-function validateObject(object3, fields = {}, optFields = {}) {
-  if (!object3 || typeof object3 !== "object")
+function validateObject(object4, fields = {}, optFields = {}) {
+  if (!object4 || typeof object4 !== "object")
     throw new Error("expected valid options object");
   function checkField(fieldName, expectedType, isOpt) {
-    const val = object3[fieldName];
+    const val = object4[fieldName];
     if (isOpt && val === void 0)
       return;
     const current = typeof val;
@@ -1006,7 +1006,7 @@ function FpSqrt(P) {
     return sqrt9mod16(P);
   return tonelliShanks(P);
 }
-var isNegativeLE = (num, modulo) => (mod(num, modulo) & _1n2) === _1n2;
+var isNegativeLE = (num2, modulo) => (mod(num2, modulo) & _1n2) === _1n2;
 var FIELD_FIELDS = [
   "create",
   "isValid",
@@ -1039,15 +1039,15 @@ function validateField(field) {
   validateObject(field, opts);
   return field;
 }
-function FpPow(Fp3, num, power) {
+function FpPow(Fp3, num2, power) {
   if (power < _0n2)
     throw new Error("invalid exponent, negatives unsupported");
   if (power === _0n2)
     return Fp3.ONE;
   if (power === _1n2)
-    return num;
+    return num2;
   let p = Fp3.ONE;
-  let d = num;
+  let d = num2;
   while (power > _0n2) {
     if (power & _1n2)
       p = Fp3.mul(p, d);
@@ -1058,18 +1058,18 @@ function FpPow(Fp3, num, power) {
 }
 function FpInvertBatch(Fp3, nums, passZero = false) {
   const inverted = new Array(nums.length).fill(passZero ? Fp3.ZERO : void 0);
-  const multipliedAcc = nums.reduce((acc, num, i) => {
-    if (Fp3.is0(num))
+  const multipliedAcc = nums.reduce((acc, num2, i) => {
+    if (Fp3.is0(num2))
       return acc;
     inverted[i] = acc;
-    return Fp3.mul(acc, num);
+    return Fp3.mul(acc, num2);
   }, Fp3.ONE);
   const invertedAcc = Fp3.inv(multipliedAcc);
-  nums.reduceRight((acc, num, i) => {
-    if (Fp3.is0(num))
+  nums.reduceRight((acc, num2, i) => {
+    if (Fp3.is0(num2))
       return acc;
     inverted[i] = Fp3.mul(acc, inverted[i]);
-    return Fp3.mul(acc, num);
+    return Fp3.mul(acc, num2);
   }, invertedAcc);
   return inverted;
 }
@@ -1127,32 +1127,32 @@ var _Field = class {
     this._sqrt = void 0;
     Object.preventExtensions(this);
   }
-  create(num) {
-    return mod(num, this.ORDER);
+  create(num2) {
+    return mod(num2, this.ORDER);
   }
-  isValid(num) {
-    if (typeof num !== "bigint")
-      throw new Error("invalid field element: expected bigint, got " + typeof num);
-    return _0n2 <= num && num < this.ORDER;
+  isValid(num2) {
+    if (typeof num2 !== "bigint")
+      throw new Error("invalid field element: expected bigint, got " + typeof num2);
+    return _0n2 <= num2 && num2 < this.ORDER;
   }
-  is0(num) {
-    return num === _0n2;
+  is0(num2) {
+    return num2 === _0n2;
   }
   // is valid and invertible
-  isValidNot0(num) {
-    return !this.is0(num) && this.isValid(num);
+  isValidNot0(num2) {
+    return !this.is0(num2) && this.isValid(num2);
   }
-  isOdd(num) {
-    return (num & _1n2) === _1n2;
+  isOdd(num2) {
+    return (num2 & _1n2) === _1n2;
   }
-  neg(num) {
-    return mod(-num, this.ORDER);
+  neg(num2) {
+    return mod(-num2, this.ORDER);
   }
   eql(lhs, rhs) {
     return lhs === rhs;
   }
-  sqr(num) {
-    return mod(num * num, this.ORDER);
+  sqr(num2) {
+    return mod(num2 * num2, this.ORDER);
   }
   add(lhs, rhs) {
     return mod(lhs + rhs, this.ORDER);
@@ -1163,15 +1163,15 @@ var _Field = class {
   mul(lhs, rhs) {
     return mod(lhs * rhs, this.ORDER);
   }
-  pow(num, power) {
-    return FpPow(this, num, power);
+  pow(num2, power) {
+    return FpPow(this, num2, power);
   }
   div(lhs, rhs) {
     return mod(lhs * invert(rhs, this.ORDER), this.ORDER);
   }
   // Same as above, but doesn't normalize
-  sqrN(num) {
-    return num * num;
+  sqrN(num2) {
+    return num2 * num2;
   }
   addN(lhs, rhs) {
     return lhs + rhs;
@@ -1182,16 +1182,16 @@ var _Field = class {
   mulN(lhs, rhs) {
     return lhs * rhs;
   }
-  inv(num) {
-    return invert(num, this.ORDER);
+  inv(num2) {
+    return invert(num2, this.ORDER);
   }
-  sqrt(num) {
+  sqrt(num2) {
     if (!this._sqrt)
       this._sqrt = FpSqrt(this.ORDER);
-    return this._sqrt(this, num);
+    return this._sqrt(this, num2);
   }
-  toBytes(num) {
-    return this.isLE ? numberToBytesLE(num, this.BYTES) : numberToBytesBE(num, this.BYTES);
+  toBytes(num2) {
+    return this.isLE ? numberToBytesLE(num2, this.BYTES) : numberToBytesBE(num2, this.BYTES);
   }
   fromBytes(bytes, skipValidation = false) {
     abytes(bytes);
@@ -1238,15 +1238,15 @@ function getMinHashLength(fieldOrder) {
   const length = getFieldBytesLength(fieldOrder);
   return length + Math.ceil(length / 2);
 }
-function mapHashToField(key, fieldOrder, isLE2 = false) {
-  abytes(key);
-  const len = key.length;
+function mapHashToField(key2, fieldOrder, isLE2 = false) {
+  abytes(key2);
+  const len = key2.length;
   const fieldLen = getFieldBytesLength(fieldOrder);
   const minLen = getMinHashLength(fieldOrder);
   if (len < 16 || len < minLen || len > 1024)
     throw new Error("expected " + minLen + "-1024 bytes of input, got " + len);
-  const num = isLE2 ? bytesToNumberLE(key) : bytesToNumberBE(key);
-  const reduced = mod(num, fieldOrder - _1n2) + _1n2;
+  const num2 = isLE2 ? bytesToNumberLE(key2) : bytesToNumberBE(key2);
+  const reduced = mod(num2, fieldOrder - _1n2) + _1n2;
   return isLE2 ? numberToBytesLE(reduced, fieldLen) : numberToBytesBE(reduced, fieldLen);
 }
 
@@ -1613,8 +1613,8 @@ function edwards(params, extraOpts = {}) {
         x = modP(-x);
       return Point.fromAffine({ x, y });
     }
-    static fromHex(hex3, zip215 = false) {
-      return Point.fromBytes(hexToBytes(hex3), zip215);
+    static fromHex(hex4, zip215 = false) {
+      return Point.fromBytes(hexToBytes(hex4), zip215);
     }
     get x() {
       return this.toAffine().x;
@@ -1846,10 +1846,10 @@ function eddsa(Point, cHash, eddsaOpts = {}) {
   function modN_LE(hash) {
     return Fn3.create(bytesToNumberLE(hash));
   }
-  function getPrivateScalar(key) {
+  function getPrivateScalar(key2) {
     const len = lengths.secretKey;
-    abytes(key, lengths.secretKey, "secretKey");
-    const hashed = abytes(cHash(key), 2 * len, "hashedSecretKey");
+    abytes(key2, lengths.secretKey, "secretKey");
+    const hashed = abytes(cHash(key2), 2 * len, "hashedSecretKey");
     const head = adjustScalarBytes3(hashed.slice(0, len));
     const prefix = hashed.slice(len, 2 * len);
     const scalar = modN_LE(head);
@@ -1920,12 +1920,12 @@ function eddsa(Point, cHash, eddsaOpts = {}) {
   function randomSecretKey(seed = randomBytes3(lengths.seed)) {
     return abytes(seed, lengths.seed, "seed");
   }
-  function isValidSecretKey(key) {
-    return isBytes(key) && key.length === Fn3.BYTES;
+  function isValidSecretKey(key2) {
+    return isBytes(key2) && key2.length === Fn3.BYTES;
   }
-  function isValidPublicKey(key, zip215) {
+  function isValidPublicKey(key2, zip215) {
     try {
-      return !!Point.fromBytes(key, zip215);
+      return !!Point.fromBytes(key2, zip215);
     } catch (error) {
       return false;
     }
@@ -2175,8 +2175,8 @@ var _RistrettoPoint = class __RistrettoPoint extends PrimeEdwardsPoint {
    * Described in [RFC9496](https://www.rfc-editor.org/rfc/rfc9496#name-decode).
    * @param hex Ristretto-encoded 32 bytes. Not every 32-byte string is valid ristretto encoding
    */
-  static fromHex(hex3) {
-    return __RistrettoPoint.fromBytes(hexToBytes(hex3));
+  static fromHex(hex4) {
+    return __RistrettoPoint.fromBytes(hexToBytes(hex4));
   }
   /**
    * Encodes ristretto point to Uint8Array.
@@ -2344,11 +2344,11 @@ function bytesToHex2(bytes) {
   abytes2(bytes);
   if (hasHexBuiltin2)
     return bytes.toHex();
-  let hex3 = "";
+  let hex4 = "";
   for (let i = 0; i < bytes.length; i++) {
-    hex3 += hexes2[bytes[i]];
+    hex4 += hexes2[bytes[i]];
   }
-  return hex3;
+  return hex4;
 }
 var asciis2 = { _0: 48, _9: 57, A: 65, F: 70, a: 97, f: 102 };
 function asciiToBase162(ch) {
@@ -2360,28 +2360,28 @@ function asciiToBase162(ch) {
     return ch - (asciis2.a - 10);
   return;
 }
-function hexToBytes2(hex3) {
-  if (typeof hex3 !== "string")
-    throw new TypeError("hex string expected, got " + typeof hex3);
+function hexToBytes2(hex4) {
+  if (typeof hex4 !== "string")
+    throw new TypeError("hex string expected, got " + typeof hex4);
   if (hasHexBuiltin2) {
     try {
-      return Uint8Array.fromHex(hex3);
+      return Uint8Array.fromHex(hex4);
     } catch (error) {
       if (error instanceof SyntaxError)
         throw new RangeError(error.message);
       throw error;
     }
   }
-  const hl = hex3.length;
+  const hl = hex4.length;
   const al = hl / 2;
   if (hl % 2)
     throw new RangeError("hex string expected, got unpadded hex of length " + hl);
   const array = new Uint8Array(al);
   for (let ai = 0, hi = 0; ai < al; ai++, hi += 2) {
-    const n1 = asciiToBase162(hex3.charCodeAt(hi));
-    const n2 = asciiToBase162(hex3.charCodeAt(hi + 1));
+    const n1 = asciiToBase162(hex4.charCodeAt(hi));
+    const n2 = asciiToBase162(hex4.charCodeAt(hi + 1));
     if (n1 === void 0 || n2 === void 0) {
-      const char = hex3[hi] + hex3[hi + 1];
+      const char = hex4[hi] + hex4[hi + 1];
       throw new RangeError('hex string expected, got non-hex character "' + char + '" at index ' + hi);
     }
     array[ai] = n1 * 16 + n2;
@@ -3131,8 +3131,8 @@ var contribMsg = (kind, c) => lp(
 );
 var resolutionMsg = (charter_digest, epoch, as_of, kind) => lp("legate-covenant/resolution/v2", charter_digest, epoch, as_of, kind);
 function verifyEpochBundle(signed2, bundle) {
-  const checks = [];
-  const push = (id2, label, ok2, detail) => checks.push({ id: id2, label, ok: ok2, detail });
+  const checks2 = [];
+  const push = (id4, label, ok2, detail) => checks2.push({ id: id4, label, ok: ok2, detail });
   const ch = signed2.charter;
   const dig = charterDigest(ch);
   const keyOf = new Map(ch.roster.map((p) => [p.party_id, p.public_key]));
@@ -3278,8 +3278,8 @@ function verifyEpochBundle(signed2, bundle) {
   } else {
     push("resolution", "Epoch resolved by the aggregator", false, "no resolution posted; silence reads as STALE by design");
   }
-  const structuralOk = checks.filter((c) => c.id !== "resolution").every((c) => c.ok);
-  const resCheck = checks.find((c) => c.id === "resolution");
+  const structuralOk = checks2.filter((c) => c.id !== "resolution").every((c) => c.ok);
+  const resCheck = checks2.find((c) => c.id === "resolution");
   const ok = structuralOk && !!resCheck?.ok;
   if (!structuralOk) outcome = "invalid";
   const scope = [
@@ -3288,7 +3288,7 @@ function verifyEpochBundle(signed2, bundle) {
     "Individual values are never revealed: a healthy epoch reveals one bit (under cap), a breach reveals one bit (over cap).",
     "The aggregator learns nothing new (it already knew every bilateral value); everyone else learns only the bit."
   ];
-  return { verdict: { ok, checks, scope }, outcome, tierMix };
+  return { verdict: { ok, checks: checks2, scope }, outcome, tierMix };
 }
 function covenantState(signed2, bundles, nowIso) {
   const ch = signed2.charter;
@@ -3437,11 +3437,11 @@ function bytesToHex3(bytes) {
   abytes3(bytes);
   if (hasHexBuiltin3)
     return bytes.toHex();
-  let hex3 = "";
+  let hex4 = "";
   for (let i = 0; i < bytes.length; i++) {
-    hex3 += hexes3[bytes[i]];
+    hex4 += hexes3[bytes[i]];
   }
-  return hex3;
+  return hex4;
 }
 var asciis3 = { _0: 48, _9: 57, A: 65, F: 70, a: 97, f: 102 };
 function asciiToBase163(ch) {
@@ -3453,21 +3453,21 @@ function asciiToBase163(ch) {
     return ch - (asciis3.a - 10);
   return;
 }
-function hexToBytes3(hex3) {
-  if (typeof hex3 !== "string")
-    throw new Error("hex string expected, got " + typeof hex3);
+function hexToBytes3(hex4) {
+  if (typeof hex4 !== "string")
+    throw new Error("hex string expected, got " + typeof hex4);
   if (hasHexBuiltin3)
-    return Uint8Array.fromHex(hex3);
-  const hl = hex3.length;
+    return Uint8Array.fromHex(hex4);
+  const hl = hex4.length;
   const al = hl / 2;
   if (hl % 2)
     throw new Error("hex string expected, got unpadded hex of length " + hl);
   const array = new Uint8Array(al);
   for (let ai = 0, hi = 0; ai < al; ai++, hi += 2) {
-    const n1 = asciiToBase163(hex3.charCodeAt(hi));
-    const n2 = asciiToBase163(hex3.charCodeAt(hi + 1));
+    const n1 = asciiToBase163(hex4.charCodeAt(hi));
+    const n2 = asciiToBase163(hex4.charCodeAt(hi + 1));
     if (n1 === void 0 || n2 === void 0) {
-      const char = hex3[hi] + hex3[hi + 1];
+      const char = hex4[hi] + hex4[hi + 1];
       throw new Error('hex string expected, got non-hex character "' + char + '" at index ' + hi);
     }
     array[ai] = n1 * 16 + n2;
@@ -4093,14 +4093,14 @@ function _abytes2(value, length, title = "") {
   }
   return value;
 }
-function numberToHexUnpadded2(num) {
-  const hex3 = num.toString(16);
-  return hex3.length & 1 ? "0" + hex3 : hex3;
+function numberToHexUnpadded2(num2) {
+  const hex4 = num2.toString(16);
+  return hex4.length & 1 ? "0" + hex4 : hex4;
 }
-function hexToNumber2(hex3) {
-  if (typeof hex3 !== "string")
-    throw new Error("hex string expected, got " + typeof hex3);
-  return hex3 === "" ? _0n6 : BigInt("0x" + hex3);
+function hexToNumber2(hex4) {
+  if (typeof hex4 !== "string")
+    throw new Error("hex string expected, got " + typeof hex4);
+  return hex4 === "" ? _0n6 : BigInt("0x" + hex4);
 }
 function bytesToNumberBE2(bytes) {
   return hexToNumber2(bytesToHex3(bytes));
@@ -4115,16 +4115,16 @@ function numberToBytesBE2(n, len) {
 function numberToBytesLE2(n, len) {
   return numberToBytesBE2(n, len).reverse();
 }
-function ensureBytes(title, hex3, expectedLength) {
+function ensureBytes(title, hex4, expectedLength) {
   let res;
-  if (typeof hex3 === "string") {
+  if (typeof hex4 === "string") {
     try {
-      res = hexToBytes3(hex3);
+      res = hexToBytes3(hex4);
     } catch (e) {
       throw new Error(title + " must be hex string or Uint8Array, cause: " + e);
     }
-  } else if (isBytes3(hex3)) {
-    res = Uint8Array.from(hex3);
+  } else if (isBytes3(hex4)) {
+    res = Uint8Array.from(hex4);
   } else {
     throw new Error(title + " must be hex string or Uint8Array");
   }
@@ -4209,11 +4209,11 @@ function createHmacDrbg2(hashLen, qByteLen, hmacFn) {
   };
   return genUntil;
 }
-function _validateObject(object3, fields, optFields = {}) {
-  if (!object3 || typeof object3 !== "object")
+function _validateObject(object4, fields, optFields = {}) {
+  if (!object4 || typeof object4 !== "object")
     throw new Error("expected valid options object");
   function checkField(fieldName, expectedType, isOpt) {
-    const val = object3[fieldName];
+    const val = object4[fieldName];
     if (isOpt && val === void 0)
       return;
     const current = typeof val;
@@ -4381,7 +4381,7 @@ function FpSqrt2(P) {
     return sqrt9mod162(P);
   return tonelliShanks2(P);
 }
-var isNegativeLE2 = (num, modulo) => (mod3(num, modulo) & _1n7) === _1n7;
+var isNegativeLE2 = (num2, modulo) => (mod3(num2, modulo) & _1n7) === _1n7;
 var FIELD_FIELDS2 = [
   "create",
   "isValid",
@@ -4415,15 +4415,15 @@ function validateField2(field) {
   _validateObject(field, opts);
   return field;
 }
-function FpPow2(Fp3, num, power) {
+function FpPow2(Fp3, num2, power) {
   if (power < _0n7)
     throw new Error("invalid exponent, negatives unsupported");
   if (power === _0n7)
     return Fp3.ONE;
   if (power === _1n7)
-    return num;
+    return num2;
   let p = Fp3.ONE;
-  let d = num;
+  let d = num2;
   while (power > _0n7) {
     if (power & _1n7)
       p = Fp3.mul(p, d);
@@ -4434,18 +4434,18 @@ function FpPow2(Fp3, num, power) {
 }
 function FpInvertBatch2(Fp3, nums, passZero = false) {
   const inverted = new Array(nums.length).fill(passZero ? Fp3.ZERO : void 0);
-  const multipliedAcc = nums.reduce((acc, num, i) => {
-    if (Fp3.is0(num))
+  const multipliedAcc = nums.reduce((acc, num2, i) => {
+    if (Fp3.is0(num2))
       return acc;
     inverted[i] = acc;
-    return Fp3.mul(acc, num);
+    return Fp3.mul(acc, num2);
   }, Fp3.ONE);
   const invertedAcc = Fp3.inv(multipliedAcc);
-  nums.reduceRight((acc, num, i) => {
-    if (Fp3.is0(num))
+  nums.reduceRight((acc, num2, i) => {
+    if (Fp3.is0(num2))
       return acc;
     inverted[i] = Fp3.mul(acc, inverted[i]);
-    return Fp3.mul(acc, num);
+    return Fp3.mul(acc, num2);
   }, invertedAcc);
   return inverted;
 }
@@ -4505,36 +4505,36 @@ function Field2(ORDER, bitLenOrOpts, isLE2 = false, opts = {}) {
     ZERO: _0n7,
     ONE: _1n7,
     allowedLengths,
-    create: (num) => mod3(num, ORDER),
-    isValid: (num) => {
-      if (typeof num !== "bigint")
-        throw new Error("invalid field element: expected bigint, got " + typeof num);
-      return _0n7 <= num && num < ORDER;
+    create: (num2) => mod3(num2, ORDER),
+    isValid: (num2) => {
+      if (typeof num2 !== "bigint")
+        throw new Error("invalid field element: expected bigint, got " + typeof num2);
+      return _0n7 <= num2 && num2 < ORDER;
     },
-    is0: (num) => num === _0n7,
+    is0: (num2) => num2 === _0n7,
     // is valid and invertible
-    isValidNot0: (num) => !f.is0(num) && f.isValid(num),
-    isOdd: (num) => (num & _1n7) === _1n7,
-    neg: (num) => mod3(-num, ORDER),
+    isValidNot0: (num2) => !f.is0(num2) && f.isValid(num2),
+    isOdd: (num2) => (num2 & _1n7) === _1n7,
+    neg: (num2) => mod3(-num2, ORDER),
     eql: (lhs, rhs) => lhs === rhs,
-    sqr: (num) => mod3(num * num, ORDER),
+    sqr: (num2) => mod3(num2 * num2, ORDER),
     add: (lhs, rhs) => mod3(lhs + rhs, ORDER),
     sub: (lhs, rhs) => mod3(lhs - rhs, ORDER),
     mul: (lhs, rhs) => mod3(lhs * rhs, ORDER),
-    pow: (num, power) => FpPow2(f, num, power),
+    pow: (num2, power) => FpPow2(f, num2, power),
     div: (lhs, rhs) => mod3(lhs * invert2(rhs, ORDER), ORDER),
     // Same as above, but doesn't normalize
-    sqrN: (num) => num * num,
+    sqrN: (num2) => num2 * num2,
     addN: (lhs, rhs) => lhs + rhs,
     subN: (lhs, rhs) => lhs - rhs,
     mulN: (lhs, rhs) => lhs * rhs,
-    inv: (num) => invert2(num, ORDER),
+    inv: (num2) => invert2(num2, ORDER),
     sqrt: _sqrt || ((n) => {
       if (!sqrtP)
         sqrtP = FpSqrt2(ORDER);
       return sqrtP(f, n);
     }),
-    toBytes: (num) => isLE2 ? numberToBytesLE2(num, BYTES) : numberToBytesBE2(num, BYTES),
+    toBytes: (num2) => isLE2 ? numberToBytesLE2(num2, BYTES) : numberToBytesBE2(num2, BYTES),
     fromBytes: (bytes, skipValidation = true) => {
       if (allowedLengths) {
         if (!allowedLengths.includes(bytes.length) || bytes.length > BYTES) {
@@ -4573,14 +4573,14 @@ function getMinHashLength2(fieldOrder) {
   const length = getFieldBytesLength2(fieldOrder);
   return length + Math.ceil(length / 2);
 }
-function mapHashToField2(key, fieldOrder, isLE2 = false) {
-  const len = key.length;
+function mapHashToField2(key2, fieldOrder, isLE2 = false) {
+  const len = key2.length;
   const fieldLen = getFieldBytesLength2(fieldOrder);
   const minLen = getMinHashLength2(fieldOrder);
   if (len < 16 || len < minLen || len > 1024)
     throw new Error("expected " + minLen + "-1024 bytes of input, got " + len);
-  const num = isLE2 ? bytesToNumberLE2(key) : bytesToNumberBE2(key);
-  const reduced = mod3(num, fieldOrder - _1n7) + _1n7;
+  const num2 = isLE2 ? bytesToNumberLE2(key2) : bytesToNumberBE2(key2);
+  const reduced = mod3(num2, fieldOrder - _1n7) + _1n7;
   return isLE2 ? numberToBytesLE2(reduced, fieldLen) : numberToBytesBE2(reduced, fieldLen);
 }
 
@@ -5240,10 +5240,10 @@ function eddsa2(Point, cHash, eddsaOpts = {}) {
   function modN_LE(hash) {
     return Fn3.create(bytesToNumberLE2(hash));
   }
-  function getPrivateScalar(key) {
+  function getPrivateScalar(key2) {
     const len = lengths.secretKey;
-    key = ensureBytes("private key", key, len);
-    const hashed = ensureBytes("hashed private key", cHash(key), 2 * len);
+    key2 = ensureBytes("private key", key2, len);
+    const hashed = ensureBytes("hashed private key", cHash(key2), 2 * len);
     const head = adjustScalarBytes3(hashed.slice(0, len));
     const prefix = hashed.slice(len, 2 * len);
     const scalar = modN_LE(head);
@@ -5318,12 +5318,12 @@ function eddsa2(Point, cHash, eddsaOpts = {}) {
     const secretKey = utils.randomSecretKey(seed);
     return { secretKey, publicKey: getPublicKey(secretKey) };
   }
-  function isValidSecretKey(key) {
-    return isBytes3(key) && key.length === Fn3.BYTES;
+  function isValidSecretKey(key2) {
+    return isBytes3(key2) && key2.length === Fn3.BYTES;
   }
-  function isValidPublicKey(key, zip215) {
+  function isValidPublicKey(key2, zip215) {
     try {
-      return !!Point.fromBytes(key, zip215);
+      return !!Point.fromBytes(key2, zip215);
     } catch (error) {
       return false;
     }
@@ -5542,8 +5542,8 @@ var _RistrettoPoint2 = class __RistrettoPoint extends PrimeEdwardsPoint2 {
     return new __RistrettoPoint(ep);
   }
   /** @deprecated use `import { ristretto255_hasher } from '@noble/curves/ed25519.js';` */
-  static hashToCurve(hex3) {
-    return ristretto255_map(ensureBytes("ristrettoHash", hex3, 64));
+  static hashToCurve(hex4) {
+    return ristretto255_map(ensureBytes("ristrettoHash", hex4, 64));
   }
   static fromBytes(bytes) {
     abytes3(bytes, 32);
@@ -5576,8 +5576,8 @@ var _RistrettoPoint2 = class __RistrettoPoint extends PrimeEdwardsPoint2 {
    * Described in [RFC9496](https://www.rfc-editor.org/rfc/rfc9496#name-decode).
    * @param hex Ristretto-encoded 32 bytes. Not every 32-byte string is valid ristretto encoding
    */
-  static fromHex(hex3) {
-    return __RistrettoPoint.fromBytes(ensureBytes("ristrettoHex", hex3, 32));
+  static fromHex(hex4) {
+    return __RistrettoPoint.fromBytes(ensureBytes("ristrettoHex", hex4, 32));
   }
   static msm(points, scalars) {
     return pippenger(__RistrettoPoint, ed255192.Point.Fn, points, scalars);
@@ -5643,7 +5643,7 @@ var HMAC = class extends Hash {
     this.finished = false;
     this.destroyed = false;
     ahash2(hash);
-    const key = toBytes(_key);
+    const key2 = toBytes(_key);
     this.iHash = hash.create();
     if (typeof this.iHash.update !== "function")
       throw new Error("Expected instance of class which extends utils.Hash");
@@ -5651,7 +5651,7 @@ var HMAC = class extends Hash {
     this.outputLen = this.iHash.outputLen;
     const blockLen = this.blockLen;
     const pad = new Uint8Array(blockLen);
-    pad.set(key.length > blockLen ? hash.create().update(key).digest() : key);
+    pad.set(key2.length > blockLen ? hash.create().update(key2).digest() : key2);
     for (let i = 0; i < pad.length; i++)
       pad[i] ^= 54;
     this.iHash.update(pad);
@@ -5701,11 +5701,11 @@ var HMAC = class extends Hash {
     this.iHash.destroy();
   }
 };
-var hmac = (hash, key, message) => new HMAC(hash, key).update(message).digest();
-hmac.create = (hash, key) => new HMAC(hash, key);
+var hmac = (hash, key2, message) => new HMAC(hash, key2).update(message).digest();
+hmac.create = (hash, key2) => new HMAC(hash, key2);
 
 // ../node_modules/@noble/curves/esm/abstract/weierstrass.js
-var divNearest = (num, den) => (num + (num >= 0 ? den : -den) / _2n7) / den;
+var divNearest = (num2, den) => (num2 + (num2 >= 0 ? den : -den) / _2n7) / den;
 function _splitEndoScalar(k, basis, n) {
   const [[a1, b1], [a2, b2]] = basis;
   const c1 = divNearest(b2 * k, n);
@@ -5805,16 +5805,16 @@ var DER = {
   // - add zero byte if exists
   // - if next byte doesn't have a flag, leading zero is not allowed (minimal encoding)
   _int: {
-    encode(num) {
+    encode(num2) {
       const { Err: E } = DER;
-      if (num < _0n11)
+      if (num2 < _0n11)
         throw new E("integer: negative integers are not allowed");
-      let hex3 = numberToHexUnpadded2(num);
-      if (Number.parseInt(hex3[0], 16) & 8)
-        hex3 = "00" + hex3;
-      if (hex3.length & 1)
+      let hex4 = numberToHexUnpadded2(num2);
+      if (Number.parseInt(hex4[0], 16) & 8)
+        hex4 = "00" + hex4;
+      if (hex4.length & 1)
         throw new E("unexpected DER parsing assertion: unpadded hex");
-      return hex3;
+      return hex4;
     },
     decode(data) {
       const { Err: E } = DER;
@@ -5825,9 +5825,9 @@ var DER = {
       return bytesToNumberBE2(data);
     }
   },
-  toSig(hex3) {
+  toSig(hex4) {
     const { Err: E, _int: int, _tlv: tlv } = DER;
-    const data = ensureBytes("signature", hex3);
+    const data = ensureBytes("signature", hex4);
     const { v: seqBytes, l: seqLeftBytes } = tlv.decode(48, data);
     if (seqLeftBytes.length)
       throw new E("invalid signature: left bytes after parsing");
@@ -5850,22 +5850,22 @@ var _1n11 = BigInt(1);
 var _2n7 = BigInt(2);
 var _3n4 = BigInt(3);
 var _4n3 = BigInt(4);
-function _normFnElement(Fn3, key) {
+function _normFnElement(Fn3, key2) {
   const { BYTES: expected } = Fn3;
-  let num;
-  if (typeof key === "bigint") {
-    num = key;
+  let num2;
+  if (typeof key2 === "bigint") {
+    num2 = key2;
   } else {
-    let bytes = ensureBytes("private key", key);
+    let bytes = ensureBytes("private key", key2);
     try {
-      num = Fn3.fromBytes(bytes);
+      num2 = Fn3.fromBytes(bytes);
     } catch (error) {
-      throw new Error(`invalid private key: expected ui8a of size ${expected}, got ${typeof key}`);
+      throw new Error(`invalid private key: expected ui8a of size ${expected}, got ${typeof key2}`);
     }
   }
-  if (!Fn3.isValidNot0(num))
+  if (!Fn3.isValidNot0(num2))
     throw new Error("invalid private key: out of range [1..N-1]");
-  return num;
+  return num2;
 }
 function weierstrassN(params, extraOpts = {}) {
   const validated = _createCurveFields("weierstrass", params, extraOpts);
@@ -6035,8 +6035,8 @@ function weierstrassN(params, extraOpts = {}) {
       P.assertValidity();
       return P;
     }
-    static fromHex(hex3) {
-      return Point.fromBytes(ensureBytes("pointHex", hex3));
+    static fromHex(hex4) {
+      return Point.fromBytes(ensureBytes("pointHex", hex4));
     }
     get x() {
       return this.toAffine().x;
@@ -6386,7 +6386,7 @@ function ecdh(Point, ecdhOpts = {}) {
     // TODO: remove
     isValidPrivateKey: isValidSecretKey,
     randomPrivateKey: randomSecretKey,
-    normPrivateKeyToScalar: (key) => _normFnElement(Fn3, key),
+    normPrivateKeyToScalar: (key2) => _normFnElement(Fn3, key2),
     precompute(windowSize = 8, point = Point.BASE) {
       return point.precompute(windowSize, false);
     }
@@ -6403,7 +6403,7 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
     bits2int_modN: "function"
   });
   const randomBytes3 = ecdsaOpts.randomBytes || randomBytes2;
-  const hmac3 = ecdsaOpts.hmac || ((key, ...msgs) => hmac(hash, key, concatBytes3(...msgs)));
+  const hmac3 = ecdsaOpts.hmac || ((key2, ...msgs) => hmac(hash, key2, concatBytes3(...msgs)));
   const { Fp: Fp3, Fn: Fn3 } = Point;
   const { ORDER: CURVE_ORDER, BITS: fnBits } = Fn3;
   const { keygen, getPublicKey, getSharedSecret, utils, lengths } = ecdh(Point, ecdsaOpts);
@@ -6419,10 +6419,10 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
     const HALF = CURVE_ORDER >> _1n11;
     return number > HALF;
   }
-  function validateRS(title, num) {
-    if (!Fn3.isValidNot0(num))
+  function validateRS(title, num2) {
+    if (!Fn3.isValidNot0(num2))
       throw new Error(`invalid signature ${title}: out of range 1..Point.Fn.ORDER`);
-    return num;
+    return num2;
   }
   function validateSigLength(bytes, format) {
     validateSigFormat(format);
@@ -6455,8 +6455,8 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
       const s = bytes.subarray(L3, L3 * 2);
       return new Signature(Fn3.fromBytes(r), Fn3.fromBytes(s), recid);
     }
-    static fromHex(hex3, format) {
-      return this.fromBytes(hexToBytes3(hex3), format);
+    static fromHex(hex4, format) {
+      return this.fromBytes(hexToBytes3(hex4), format);
     }
     addRecoveryBit(recovery) {
       return new Signature(this.r, this.s, recovery);
@@ -6507,11 +6507,11 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
     // TODO: remove
     assertValidity() {
     }
-    static fromCompact(hex3) {
-      return Signature.fromBytes(ensureBytes("sig", hex3), "compact");
+    static fromCompact(hex4) {
+      return Signature.fromBytes(ensureBytes("sig", hex4), "compact");
     }
-    static fromDER(hex3) {
-      return Signature.fromBytes(ensureBytes("sig", hex3), "der");
+    static fromDER(hex4) {
+      return Signature.fromBytes(ensureBytes("sig", hex4), "der");
     }
     normalizeS() {
       return this.hasHighS() ? new Signature(this.r, Fn3.neg(this.s), this.recovery) : this;
@@ -6532,17 +6532,17 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
   const bits2int = ecdsaOpts.bits2int || function bits2int_def(bytes) {
     if (bytes.length > 8192)
       throw new Error("input is too large");
-    const num = bytesToNumberBE2(bytes);
+    const num2 = bytesToNumberBE2(bytes);
     const delta = bytes.length * 8 - fnBits;
-    return delta > 0 ? num >> BigInt(delta) : num;
+    return delta > 0 ? num2 >> BigInt(delta) : num2;
   };
   const bits2int_modN = ecdsaOpts.bits2int_modN || function bits2int_modN_def(bytes) {
     return Fn3.create(bits2int(bytes));
   };
   const ORDER_MASK = bitMask2(fnBits);
-  function int2octets(num) {
-    aInRange2("num < 2^" + fnBits, num, _0n11, ORDER_MASK);
-    return Fn3.toBytes(num);
+  function int2octets(num2) {
+    aInRange2("num < 2^" + fnBits, num2, _0n11, ORDER_MASK);
+    return Fn3.toBytes(num2);
   }
   function validateMsgAndHash(message, prehash) {
     _abytes2(message, void 0, "message");
@@ -6820,12 +6820,12 @@ function canonicalize(value, depth, seen) {
     if (prototype !== Object.prototype && prototype !== null) {
       throw new Error("only plain JSON objects can be canonicalized");
     }
-    const object3 = value;
-    const keys = Object.keys(object3).sort();
+    const object4 = value;
+    const keys = Object.keys(object4).sort();
     if (keys.length > CLAIMS_JSON_LIMITS.max_object_members) throw new Error("maximum object member count exceeded");
-    return `{${keys.map((key) => {
-      assertUnicodeScalars(key, "object key");
-      return `${JSON.stringify(key)}:${canonicalize(object3[key], depth + 1, seen)}`;
+    return `{${keys.map((key2) => {
+      assertUnicodeScalars(key2, "object key");
+      return `${JSON.stringify(key2)}:${canonicalize(object4[key2], depth + 1, seen)}`;
     }).join(",")}}`;
   } finally {
     seen.delete(value);
@@ -6911,13 +6911,13 @@ var StrictJsonParser = class {
     while (true) {
       if (seen.size >= this.limits.max_object_members) throw new Error("maximum object member count exceeded");
       if (this.source[this.index] !== '"') throw new Error(`object key must be a string at offset ${this.index}`);
-      const key = this.parseString();
-      if (seen.has(key)) throw new Error(`duplicate object key: ${key}`);
-      seen.add(key);
+      const key2 = this.parseString();
+      if (seen.has(key2)) throw new Error(`duplicate object key: ${key2}`);
+      seen.add(key2);
       this.skipWhitespace();
       this.expect(":");
       this.skipWhitespace();
-      result[key] = this.parseValue(depth + 1);
+      result[key2] = this.parseValue(depth + 1);
       this.skipWhitespace();
       const separator = this.source[this.index];
       if (separator === "}") {
@@ -7111,7 +7111,7 @@ var REQUEST_KEYS = [
   "digest",
   "signature"
 ];
-var REQUEST_UNSIGNED_KEYS = REQUEST_KEYS.filter((key) => !["digest", "signature"].includes(key));
+var REQUEST_UNSIGNED_KEYS = REQUEST_KEYS.filter((key2) => !["digest", "signature"].includes(key2));
 var DECISION_KEYS = [
   "type",
   "version",
@@ -7126,7 +7126,7 @@ var DECISION_KEYS = [
   "digest",
   "signature"
 ];
-var DECISION_UNSIGNED_KEYS = DECISION_KEYS.filter((key) => !["digest", "signature"].includes(key));
+var DECISION_UNSIGNED_KEYS = DECISION_KEYS.filter((key2) => !["digest", "signature"].includes(key2));
 var RECEIPT_KEYS = [
   "type",
   "version",
@@ -7143,7 +7143,7 @@ var RECEIPT_KEYS = [
   "digest",
   "signature"
 ];
-var RECEIPT_UNSIGNED_KEYS = RECEIPT_KEYS.filter((key) => !["digest", "signature"].includes(key));
+var RECEIPT_UNSIGNED_KEYS = RECEIPT_KEYS.filter((key2) => !["digest", "signature"].includes(key2));
 var BUNDLE_KEYS = ["type", "version", "request", "decision", "receipt"];
 var WEBAUTHN_EVIDENCE_KEYS = [
   "algorithm",
@@ -7167,13 +7167,13 @@ function record(value, label) {
   return value;
 }
 function exactKeys(value, keys, label) {
-  const object3 = record(value, label);
-  const actual = Object.keys(object3).sort();
+  const object4 = record(value, label);
+  const actual = Object.keys(object4).sort();
   const expected = [...keys].sort();
-  if (actual.length !== expected.length || actual.some((key, index) => key !== expected[index])) {
+  if (actual.length !== expected.length || actual.some((key2, index) => key2 !== expected[index])) {
     throw new Error(`${label} contains missing or unknown fields`);
   }
-  return object3;
+  return object4;
 }
 function stringField(value, label, options = {}) {
   if (value === null && options.nullable) return null;
@@ -7185,9 +7185,9 @@ function stringField(value, label, options = {}) {
   return value;
 }
 function canonicalIso(value, label) {
-  const text3 = stringField(value, label, { max: 64 });
-  const parsed = Date.parse(text3);
-  if (!Number.isFinite(parsed) || new Date(parsed).toISOString() !== text3) {
+  const text5 = stringField(value, label, { max: 64 });
+  const parsed = Date.parse(text5);
+  if (!Number.isFinite(parsed) || new Date(parsed).toISOString() !== text5) {
     throw new Error(`${label} must be a canonical UTC timestamp`);
   }
   return parsed;
@@ -7213,7 +7213,7 @@ function isolatedArrayBuffer(value) {
   return copy.buffer;
 }
 function unsigned(value, keys) {
-  return Object.fromEntries(keys.map((key) => [key, value[key]]));
+  return Object.fromEntries(keys.map((key2) => [key2, value[key2]]));
 }
 function validateNamedEntity(value, label) {
   const entity = exactKeys(value, ["id", "label"], label);
@@ -7412,7 +7412,7 @@ function emptyArtifact(reason) {
     reason
   };
 }
-function verifyRequest(value, pin, at2) {
+function verifyRequest(value, pin, at5) {
   try {
     const request = exactKeys(value, REQUEST_KEYS, "approval request");
     const signature = exactKeys(request.signature, ["algorithm", "value"], "approval request signature");
@@ -7432,7 +7432,7 @@ function verifyRequest(value, pin, at2) {
       utf8(preimage),
       hexToBytes3(verificationKey)
     );
-    const now = at2.getTime();
+    const now = at5.getTime();
     const current = now >= Date.parse(request.issued_at) && now <= Date.parse(request.expires_at);
     const pinSupplied = Boolean(pin);
     const keyPinned = pinSupplied && pin === verificationKey;
@@ -7478,10 +7478,10 @@ var CborReader = class {
       if (length > 32) throw new Error("COSE key map is too large");
       const value = /* @__PURE__ */ new Map();
       for (let index = 0; index < length; index += 1) {
-        const key = this.readValue(depth + 1);
-        if (typeof key !== "number" || !Number.isSafeInteger(key)) throw new Error("COSE key map keys must be integers");
-        if (value.has(key)) throw new Error("COSE key contains a duplicate map key");
-        value.set(key, this.readValue(depth + 1));
+        const key2 = this.readValue(depth + 1);
+        if (typeof key2 !== "number" || !Number.isSafeInteger(key2)) throw new Error("COSE key map keys must be integers");
+        if (value.has(key2)) throw new Error("COSE key contains a duplicate map key");
+        value.set(key2, this.readValue(depth + 1));
       }
       return value;
     }
@@ -7503,13 +7503,13 @@ var CborReader = class {
     return value;
   }
 };
-function coseInteger(map, key, label) {
-  const value = map.get(key);
+function coseInteger(map, key2, label) {
+  const value = map.get(key2);
   if (typeof value !== "number" || !Number.isSafeInteger(value)) throw new Error(`${label} is missing or invalid`);
   return value;
 }
-function coseBytes(map, key, label, max = 1024) {
-  const value = map.get(key);
+function coseBytes(map, key2, label, max = 1024) {
+  const value = map.get(key2);
   if (!(value instanceof Uint8Array) || value.length < 1 || value.length > max) {
     throw new Error(`${label} is missing or invalid`);
   }
@@ -7637,7 +7637,7 @@ async function verifyWebAuthnEvidence(decision, preimage, pin, expectedOrigin, e
     );
   } else if (cose.algorithm === -257 && cose.rsa_jwk) {
     if (!globalThis.crypto?.subtle) throw new Error("WebCrypto is unavailable for this RSA credential");
-    const key = await globalThis.crypto.subtle.importKey(
+    const key2 = await globalThis.crypto.subtle.importKey(
       "jwk",
       cose.rsa_jwk,
       { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
@@ -7646,7 +7646,7 @@ async function verifyWebAuthnEvidence(decision, preimage, pin, expectedOrigin, e
     );
     signatureValid = await globalThis.crypto.subtle.verify(
       "RSASSA-PKCS1-v1_5",
-      key,
+      key2,
       isolatedArrayBuffer(assertionSignature),
       isolatedArrayBuffer(signedBytes)
     );
@@ -7665,7 +7665,7 @@ async function verifyWebAuthnEvidence(decision, preimage, pin, expectedOrigin, e
     rp_id_pinned: rpIdPinned
   };
 }
-async function verifyDecision(value, request, pin, expectedOrigin, expectedRpId, at2) {
+async function verifyDecision(value, request, pin, expectedOrigin, expectedRpId, at5) {
   try {
     const decision = exactKeys(value, DECISION_KEYS, "approval decision");
     const decisionUnsigned = unsigned(decision, DECISION_UNSIGNED_KEYS);
@@ -7677,7 +7677,7 @@ async function verifyDecision(value, request, pin, expectedOrigin, expectedRpId,
       throw new Error("decision was issued outside the approval request lifetime");
     }
     const preimage = decisionPreimage(decision);
-    const now = at2.getTime();
+    const now = at5.getTime();
     const current = now >= issuedAt && now <= Date.parse(decision.expires_at);
     const signature = record(decision.signature, "approval decision signature");
     if (signature.algorithm === "WebAuthn") {
@@ -7998,8 +7998,8 @@ var REQUEST_UNSIGNED_KEYS2 = [
   "expires_at",
   "nonce"
 ];
-function shaHex(text3) {
-  return bytesToHex2(sha2562(encoder.encode(text3)));
+function shaHex(text5) {
+  return bytesToHex2(sha2562(encoder.encode(text5)));
 }
 function isRecord(v) {
   return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -8108,19 +8108,19 @@ function shapeErrors(v) {
   return errors;
 }
 function verifyProofRequest(value, now = /* @__PURE__ */ new Date()) {
-  const checks = [];
+  const checks2 = [];
   const errors = shapeErrors(value);
   const shape_valid = errors.length === 0;
-  checks.push({ id: "shape", label: "Shape", ok: shape_valid, detail: shape_valid ? "Every required field is present and well formed." : errors.join("; ") });
-  if (!shape_valid) return { shape_valid, digest_valid: false, signature_valid: false, current: false, cryptographically_valid: false, checks };
+  checks2.push({ id: "shape", label: "Shape", ok: shape_valid, detail: shape_valid ? "Every required field is present and well formed." : errors.join("; ") });
+  if (!shape_valid) return { shape_valid, digest_valid: false, signature_valid: false, current: false, cryptographically_valid: false, checks: checks2 };
   const v = value;
   const { digest_valid, signature_valid } = checkEnvelope(PROOF_REQUEST_DOMAIN, v, REQUEST_UNSIGNED_KEYS2, v.recipient.verification_key);
-  checks.push({ id: "digest", label: "Digest", ok: digest_valid, detail: digest_valid ? "The digest matches the canonical bytes of the request." : "The digest does not match: the request was altered after it was signed." });
-  checks.push({ id: "signature", label: "Signature", ok: signature_valid, detail: signature_valid ? `Ed25519 signature verifies against the recipient key ${v.recipient.key_id}. This proves possession of that key, not who holds it.` : "The signature does not verify against the key carried in the request." });
+  checks2.push({ id: "digest", label: "Digest", ok: digest_valid, detail: digest_valid ? "The digest matches the canonical bytes of the request." : "The digest does not match: the request was altered after it was signed." });
+  checks2.push({ id: "signature", label: "Signature", ok: signature_valid, detail: signature_valid ? `Ed25519 signature verifies against the recipient key ${v.recipient.key_id}. This proves possession of that key, not who holds it.` : "The signature does not verify against the key carried in the request." });
   const t = now.getTime();
   const current = Date.parse(v.issued_at) <= t + 6e4 && Date.parse(v.expires_at) > t;
-  checks.push({ id: "current", label: "Current", ok: current, detail: current ? `Valid until ${v.expires_at}.` : `Expired or not yet valid (issued ${v.issued_at}, expires ${v.expires_at}).` });
-  return { shape_valid, digest_valid, signature_valid, current, cryptographically_valid: shape_valid && digest_valid && signature_valid, checks };
+  checks2.push({ id: "current", label: "Current", ok: current, detail: current ? `Valid until ${v.expires_at}.` : `Expired or not yet valid (issued ${v.issued_at}, expires ${v.expires_at}).` });
+  return { shape_valid, digest_valid, signature_valid, current, cryptographically_valid: shape_valid && digest_valid && signature_valid, checks: checks2 };
 }
 function money(amount, currency) {
   return `${currency === "USD" ? "$" : `${currency} `}${amount.toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -8214,9 +8214,9 @@ function evaluateAdmission(input) {
   const q = request.requirements;
   const kind = request.decision.kind;
   const org = request.recipient.organization || request.recipient.name;
-  const checks = [];
+  const checks2 = [];
   const axes = [];
-  const push = (id2, label, ok, detail, informational = false) => checks.push({ id: id2, label, ok, detail, informational });
+  const push = (id4, label, ok, detail, informational = false) => checks2.push({ id: id4, label, ok, detail, informational });
   const empty = (verdict2, title2, reason2, extraChecks = []) => ({
     stage,
     kind,
@@ -8247,11 +8247,11 @@ function evaluateAdmission(input) {
   const bindingOk = dec.request_digest === req.digest;
   const integrityOk = verification.cryptographically_valid && verification.linkage_valid;
   push("integrity", "Record integrity", integrityOk, integrityOk ? "Request, decision, and receipt verify and link to one another by digest." : !bindingOk ? `The approval binds to request ${dec.request_digest.slice(0, 12)}, not to this request ${req.digest.slice(0, 12)}. A parameter changed after approval.` : "A signature or digest does not verify.");
-  axes.push({ id: "integrity", label: "Integrity", state: integrityOk ? "satisfied" : "violated", answer: integrityOk ? "Intact and linked" : !bindingOk ? "Approval does not bind to this action" : "Does not verify", detail: checks[checks.length - 1].detail });
+  axes.push({ id: "integrity", label: "Integrity", state: integrityOk ? "satisfied" : "violated", answer: integrityOk ? "Intact and linked" : !bindingOk ? "Approval does not bind to this action" : "Does not verify", detail: checks2[checks2.length - 1].detail });
   const pinsNamed = request.trust.accepted_gate_keys.length > 0 && request.trust.accepted_approver_keys.length > 0;
   const signerState = !pinsNamed ? "unknown" : verification.pins_complete && verification.pins_match ? "satisfied" : "violated";
   push("signer", "Signer accepted", signerState === "satisfied", signerState === "unknown" ? "The Proof Request names no accepted keys, so signer identity is not evaluated." : signerState === "satisfied" ? "Gate, approver, and receipt keys match keys the recipient named. Possession is proven; who holds them is a separate trust step." : "One or more keys are not among those the recipient named.");
-  axes.push({ id: "signer", label: "Signer", state: signerState, answer: signerState === "satisfied" ? "Keys the recipient named" : signerState === "unknown" ? "Not evaluated" : "Not a named key", detail: checks[checks.length - 1].detail });
+  axes.push({ id: "signer", label: "Signer", state: signerState, answer: signerState === "satisfied" ? "Keys the recipient named" : signerState === "unknown" ? "Not evaluated" : "Not a named key", detail: checks2[checks2.length - 1].detail });
   const windowOk = (t) => t >= Date.parse(req.issued_at) && t <= Date.parse(req.expires_at) && t >= Date.parse(dec.issued_at) && t <= Date.parse(dec.expires_at);
   const ageAt = (t) => (t - Date.parse(dec.issued_at)) / 1e3;
   const envOk = rank(ENVIRONMENT_CLASSES2, req.environment_class) >= rank(ENVIRONMENT_CLASSES2, q.environment_class_min);
@@ -8296,12 +8296,12 @@ function evaluateAdmission(input) {
     label: "Authority",
     state: refused ? "not-evaluable" : backdated ? "violated" : authorityOk ? "satisfied" : "held",
     answer: refused ? "Refused before dispatch" : backdated ? "Not established: receipt outside the approval window" : authorityOk ? stage === "after_dispatch" ? `${newDispatchNow ? "Current at dispatch and now" : "Current at dispatch; expired since"}${time_basis === "anchored" ? " (anchored)" : " (gate clock)"}` : "Current and sufficient" : "Below the recipient standard",
-    detail: checks.filter((c) => ["environment", "freshness", "assurance", "human", "limits", "time_basis"].includes(c.id) && !c.ok).map((c) => c.detail).join(" ") || `Environment, freshness, assurance, and approvers all meet the request.${stage === "after_dispatch" ? time_basis === "anchored" ? " Dispatch time bounded by an accepted witness." : " Dispatch time as recorded by the gate's own clock." : ""}`
+    detail: checks2.filter((c) => ["environment", "freshness", "assurance", "human", "limits", "time_basis"].includes(c.id) && !c.ok).map((c) => c.detail).join(" ") || `Environment, freshness, assurance, and approvers all meet the request.${stage === "after_dispatch" ? time_basis === "anchored" ? " Dispatch time bounded by an accepted witness." : " Dispatch time as recorded by the gate's own clock." : ""}`
   });
   const cov = rec.coverage;
   const coverageOk = cov.governed_route && (q.coverage === "governed_route" || cov.possible_bypass_count === 0 && cov.unknown_route_count === 0);
   push("coverage", stage === "before_dispatch" ? "Declared coverage" : "Coverage", coverageOk, coverageOk ? `Route governed; ${cov.possible_bypass_count} possible bypass, ${cov.unknown_route_count} unknown route.` : `Recipient requires no known bypass; the gate declares ${cov.possible_bypass_count} possible bypass and ${cov.unknown_route_count} unknown route.`);
-  axes.push({ id: "coverage", label: "Coverage", state: coverageOk ? "satisfied" : "held", answer: coverageOk ? COVERAGE_LABELS[q.coverage] : "Boundary has known gaps", detail: `${checks[checks.length - 1].detail} Declared by the gate; never a claim of universal completeness.` });
+  axes.push({ id: "coverage", label: "Coverage", state: coverageOk ? "satisfied" : "held", answer: coverageOk ? COVERAGE_LABELS[q.coverage] : "Boundary has known gaps", detail: `${checks2[checks2.length - 1].detail} Declared by the gate; never a claim of universal completeness.` });
   let effectLevel;
   let effectDetail = "";
   const conflicts = [];
@@ -8350,8 +8350,8 @@ function evaluateAdmission(input) {
   const missing = request.disclosure.required_fields.filter((f) => !present[f]);
   const disclosureOk = missing.length === 0;
   push("disclosure", "Disclosure", disclosureOk, disclosureOk ? "Every field the recipient asked for is present, and nothing else about the book is." : `Missing: ${missing.join(", ")}.`);
-  axes.push({ id: "disclosure", label: "Disclosure", state: disclosureOk ? "satisfied" : "held", answer: disclosureOk ? "Sufficient" : "Fields missing", detail: checks[checks.length - 1].detail });
-  const gaps = checks.filter((c) => !c.ok && !c.informational).map((c) => c.detail).join(" ");
+  axes.push({ id: "disclosure", label: "Disclosure", state: disclosureOk ? "satisfied" : "held", answer: disclosureOk ? "Sufficient" : "Fields missing", detail: checks2[checks2.length - 1].detail });
+  const gaps = checks2.filter((c) => !c.ok && !c.informational).map((c) => c.detail).join(" ");
   let verdict;
   let title;
   let reason;
@@ -8419,7 +8419,7 @@ function evaluateAdmission(input) {
     title,
     reason,
     axes,
-    checks,
+    checks: checks2,
     establishes,
     does_not_establish,
     effect_level: effectLevel,
@@ -8501,35 +8501,35 @@ function decisionShapeErrors(v) {
   return errors;
 }
 function verifyAdmissionDecision(value, context = {}, now = /* @__PURE__ */ new Date()) {
-  const checks = [];
+  const checks2 = [];
   const errors = decisionShapeErrors(value);
   const shape_valid = errors.length === 0;
-  checks.push({ id: "shape", label: "Shape", ok: shape_valid, detail: shape_valid ? "Every required field is present and well formed." : errors.join("; ") });
-  const fail = () => ({ shape_valid, digest_valid: false, signature_valid: false, semantics_valid: false, bound_to_request: null, bound_to_presentation: null, current: false, cryptographically_valid: false, checks });
+  checks2.push({ id: "shape", label: "Shape", ok: shape_valid, detail: shape_valid ? "Every required field is present and well formed." : errors.join("; ") });
+  const fail = () => ({ shape_valid, digest_valid: false, signature_valid: false, semantics_valid: false, bound_to_request: null, bound_to_presentation: null, current: false, cryptographically_valid: false, checks: checks2 });
   if (!shape_valid) return fail();
   const d = value;
   const { digest_valid, signature_valid } = checkEnvelope(ADMISSION_DECISION_DOMAIN, d, DECISION_UNSIGNED_KEYS2, d.recipient.verification_key);
-  checks.push({ id: "digest", label: "Digest", ok: digest_valid, detail: digest_valid ? "The digest matches the canonical bytes of the decision." : "The digest does not match: the decision was altered after it was signed." });
-  checks.push({ id: "signature", label: "Signature", ok: signature_valid, detail: signature_valid ? `Ed25519 signature verifies against the recipient key ${d.recipient.key_id}. Possession proven; identity is a separate trust step.` : "The signature does not verify against the key carried in the decision." });
+  checks2.push({ id: "digest", label: "Digest", ok: digest_valid, detail: digest_valid ? "The digest matches the canonical bytes of the decision." : "The digest does not match: the decision was altered after it was signed." });
+  checks2.push({ id: "signature", label: "Signature", ok: signature_valid, detail: signature_valid ? `Ed25519 signature verifies against the recipient key ${d.recipient.key_id}. Possession proven; identity is a separate trust step.` : "The signature does not verify against the key carried in the decision." });
   const semantics_valid = (d.decision !== "accept" || d.acknowledged_verdict === "ALLOW" && d.exceptions.length === 0 && d.requested_document_classes.length === 0) && (d.decision !== "accept_for_limited_purpose" || d.exceptions.length > 0 && !!d.reliance_purpose.trim() && !(d.acknowledged_verdict === "DENY" && !!context.request && d.reliance_purpose.trim().toLowerCase() === context.request.decision.purpose.trim().toLowerCase())) && (d.decision === "request_inspection" ? d.requested_document_classes.length > 0 : d.requested_document_classes.length === 0);
-  checks.push({ id: "semantics", label: "Decision semantics", ok: semantics_valid, detail: semantics_valid ? "The decision does not upgrade the acknowledged machine result into acceptance." : "The decision claims more than the acknowledged result supports." });
+  checks2.push({ id: "semantics", label: "Decision semantics", ok: semantics_valid, detail: semantics_valid ? "The decision does not upgrade the acknowledged machine result into acceptance." : "The decision claims more than the acknowledged result supports." });
   let bound_to_request = null;
   if (context.request) {
     bound_to_request = d.proof_request_digest === context.request.digest && d.proof_request_id === context.request.request_id && d.recipient.verification_key.toLowerCase() === context.request.recipient.verification_key.toLowerCase();
-    checks.push({ id: "request_binding", label: "Bound to the Proof Request", ok: bound_to_request, detail: bound_to_request ? "The decision names this exact request and is signed by its recipient key." : "The decision belongs to a different request, or a different recipient signed it." });
+    checks2.push({ id: "request_binding", label: "Bound to the Proof Request", ok: bound_to_request, detail: bound_to_request ? "The decision names this exact request and is signed by its recipient key." : "The decision belongs to a different request, or a different recipient signed it." });
   }
   let bound_to_presentation = null;
   if (context.bundle) {
     const expected = presentationDigests(context.bundle, context.readback ?? null, context.anchor ?? null, d.presentation.disclosed);
     bound_to_presentation = canonicalizeClaimsJson(expected) === canonicalizeClaimsJson(d.presentation);
-    checks.push({ id: "presentation_binding", label: "Bound to the presented evidence", ok: bound_to_presentation, detail: bound_to_presentation ? "The decision names exactly this bundle, readback, and anchor." : "The decision was recorded against different evidence. A decision does not transfer between presentations." });
+    checks2.push({ id: "presentation_binding", label: "Bound to the presented evidence", ok: bound_to_presentation, detail: bound_to_presentation ? "The decision names exactly this bundle, readback, and anchor." : "The decision was recorded against different evidence. A decision does not transfer between presentations." });
     const commitmentOk = context.bundle.request.action_class !== "payment" || paymentPayloadCommitment(d.presentation.disclosed) === context.bundle.request.payload_commitment;
-    checks.push({ id: "disclosed_terms", label: "Disclosed terms match the payload commitment", ok: commitmentOk, detail: commitmentOk ? "The amount, currency, destination, and reference the recipient reasoned about hash to the commitment the gate signed." : "The disclosed terms do not hash to the signed payload commitment: the decision reasoned about different terms than the gate approved." });
+    checks2.push({ id: "disclosed_terms", label: "Disclosed terms match the payload commitment", ok: commitmentOk, detail: commitmentOk ? "The amount, currency, destination, and reference the recipient reasoned about hash to the commitment the gate signed." : "The disclosed terms do not hash to the signed payload commitment: the decision reasoned about different terms than the gate approved." });
     if (!commitmentOk) bound_to_presentation = false;
   }
   const t = now.getTime();
   const current = Date.parse(d.decided_at) <= t + 6e4 && Date.parse(d.expires_at) > t && d.exceptions.every((e) => Date.parse(e.expires_at) > t);
-  checks.push({ id: "current", label: "Current", ok: current, detail: current ? `Decision and its exceptions are current until ${d.expires_at}.` : "The decision or one of its exceptions has expired or is not yet active." });
+  checks2.push({ id: "current", label: "Current", ok: current, detail: current ? `Decision and its exceptions are current until ${d.expires_at}.` : "The decision or one of its exceptions has expired or is not yet active." });
   return {
     shape_valid,
     digest_valid,
@@ -8539,7 +8539,7 @@ function verifyAdmissionDecision(value, context = {}, now = /* @__PURE__ */ new 
     bound_to_presentation,
     current,
     cryptographically_valid: digest_valid && signature_valid && semantics_valid && bound_to_request !== false && bound_to_presentation !== false,
-    checks
+    checks: checks2
   };
 }
 async function recomputeAdmissionDecision(decision, context) {
@@ -8570,8 +8570,8 @@ async function recomputeAdmissionDecision(decision, context) {
 }
 
 // src/acta-receipt.ts
-function canonicalize2(obj) {
-  return JSON.stringify(obj, (_key, value) => {
+function canonicalize2(obj2) {
+  return JSON.stringify(obj2, (_key, value) => {
     if (value && typeof value === "object" && !Array.isArray(value)) {
       const sorted = {};
       for (const k of Object.keys(value).sort()) {
@@ -8583,11 +8583,11 @@ function canonicalize2(obj) {
     return value;
   });
 }
-function sha256Hex(text3) {
-  return bytesToHex2(sha2562(utf8ToBytes(text3)));
+function sha256Hex(text5) {
+  return bytesToHex2(sha2562(utf8ToBytes(text5)));
 }
-function receiptHash(obj) {
-  return sha256Hex(canonicalize2(obj));
+function receiptHash(obj2) {
+  return sha256Hex(canonicalize2(obj2));
 }
 function chainLink(receipt) {
   return `sha256:${receiptHash(receipt)}`;
@@ -8630,8 +8630,8 @@ function verifyReceipt2(receipt, publicKeyHex) {
       const rest = {};
       for (const k of Object.keys(receipt)) if (k !== "signature") rest[k] = receipt[k];
       const valid = ed25519.verify(hexToBytes2(signature), utf8ToBytes(canonicalize2(rest)), hexToBytes2(publicKeyHex));
-      const shape3 = receipt.v === 2 ? "legacy-v2" : "legacy-v1";
-      return valid ? { valid: true, shape: shape3, hash: receiptHash(receipt) } : { valid: false, shape: shape3, error: "invalid_signature" };
+      const shape5 = receipt.v === 2 ? "legacy-v2" : "legacy-v1";
+      return valid ? { valid: true, shape: shape5, hash: receiptHash(receipt) } : { valid: false, shape: shape5, error: "invalid_signature" };
     }
     return { valid: false, shape: null, error: "missing_signature" };
   } catch (err) {
@@ -8657,14 +8657,14 @@ function citesPre03(receipt) {
 }
 function verifyActaChain(receipts, options = {}) {
   const acceptLegacy = options.acceptLegacyLinks ?? true;
-  const checks = [];
+  const checks2 = [];
   let keySource = "none";
   for (let i = 0; i < receipts.length; i++) {
     const receipt = receipts[i];
     const payload = receiptPayload(receipt);
-    const { key, source } = resolveReceiptKey(receipt, options.publicKeyHex);
+    const { key: key2, source } = resolveReceiptKey(receipt, options.publicKeyHex);
     if (i === 0) keySource = source;
-    const sigResult = key ? verifyReceipt2(receipt, key) : null;
+    const sigResult = key2 ? verifyReceipt2(receipt, key2) : null;
     let link;
     const stored = linkOf(receipt);
     if (i === 0) link = stored ? "dangling" : "genesis";
@@ -8677,11 +8677,11 @@ function verifyActaChain(receipts, options = {}) {
       else link = "broken";
     }
     const digest = str(payload.payload_digest) ?? (isRecord2(payload.payload_digest) ? str(payload.payload_digest.input_hash) : null);
-    checks.push({
+    checks2.push({
       index: i,
       identity: receiptIdentity(receipt),
       shape: sigResult?.shape ?? (isRecord2(receipt) && isRecord2(receipt.signature) ? "acta-02" : isRecord2(receipt) && typeof receipt.signature === "string" ? "legacy-v1" : null),
-      signature: !key ? "unchecked" : sigResult?.valid ? "valid" : "invalid",
+      signature: !key2 ? "unchecked" : sigResult?.valid ? "valid" : "invalid",
       keySource: source,
       error: sigResult && !sigResult.valid ? sigResult.error : void 0,
       link,
@@ -8697,41 +8697,41 @@ function verifyActaChain(receipts, options = {}) {
       input_hash: digest
     });
   }
-  const signaturesChecked = checks.length > 0 && checks.every((c) => c.signature !== "unchecked");
-  const allValid = signaturesChecked && checks.every((c) => c.signature === "valid");
-  const chainUnbroken = checks.every((c) => c.link === "genesis" || c.link === "linked" || c.link === "linked_legacy");
+  const signaturesChecked = checks2.length > 0 && checks2.every((c) => c.signature !== "unchecked");
+  const allValid = signaturesChecked && checks2.every((c) => c.signature === "valid");
+  const chainUnbroken = checks2.every((c) => c.link === "genesis" || c.link === "linked" || c.link === "linked_legacy");
   const uniq = (xs) => [...new Set(xs.filter((x) => !!x))];
-  const allow = checks.filter((c) => c.decision === "allow").length;
-  const deny = checks.filter((c) => c.decision === "deny").length;
+  const allow = checks2.filter((c) => c.decision === "allow").length;
+  const deny = checks2.filter((c) => c.decision === "deny").length;
   const established = [];
   const not_established = [];
   if (allValid) established.push(keySource === "supplied" ? "Every receipt is signed by the key you supplied, and none has been altered since." : "Every receipt is signed by the key the file carries, and none has been altered since. That proves the file is self-consistent, not who holds the key.");
   else if (!signaturesChecked) not_established.push("Signatures were not checked: no key was supplied and the file carries none. Paste the issuer's public key to check them.");
   else not_established.push("At least one signature does not verify. Treat the log as altered or signed by a different key.");
-  if (checks.length > 1) {
-    if (chainUnbroken) established.push(`The ${checks.length} receipts form one unbroken chain: none was inserted, removed, or reordered between the first and the last shown.${checks.some((c) => c.link === "linked_legacy") ? " Some links use the older payload-only rule from before draft -03." : ""}`);
+  if (checks2.length > 1) {
+    if (chainUnbroken) established.push(`The ${checks2.length} receipts form one unbroken chain: none was inserted, removed, or reordered between the first and the last shown.${checks2.some((c) => c.link === "linked_legacy") ? " Some links use the older payload-only rule from before draft -03." : ""}`);
     else not_established.push("The chain is broken: a receipt was inserted, removed, reordered, or re-signed between the first and the last shown.");
   }
   not_established.push("Who holds the signing key. A receipt proves possession of the key that signed it, not the organisation behind it; that comes from a key you pin out of band.");
   not_established.push("Anything about calls that did not pass through this gateway. Coverage is declared per route, never assumed.");
   return {
-    receipts: checks,
-    count: checks.length,
+    receipts: checks2,
+    count: checks2.length,
     all_signatures_valid: allValid,
     signatures_checked: signaturesChecked,
     chain_unbroken: chainUnbroken,
-    legacy_links: checks.filter((c) => c.link === "linked_legacy").length,
+    legacy_links: checks2.filter((c) => c.link === "linked_legacy").length,
     key_source: keySource,
     summary: {
       allow,
       deny,
-      other: checks.length - allow - deny,
-      tools: uniq(checks.map((c) => c.tool)),
-      policy_digests: uniq(checks.map((c) => c.policy_digest)),
-      kids: uniq(checks.map((c) => c.identity.kid)),
-      specs: uniq(checks.map((c) => c.spec)),
-      first_issued_at: checks[0]?.issued_at ?? null,
-      last_issued_at: checks[checks.length - 1]?.issued_at ?? null
+      other: checks2.length - allow - deny,
+      tools: uniq(checks2.map((c) => c.tool)),
+      policy_digests: uniq(checks2.map((c) => c.policy_digest)),
+      kids: uniq(checks2.map((c) => c.identity.kid)),
+      specs: uniq(checks2.map((c) => c.spec)),
+      first_issued_at: checks2[0]?.issued_at ?? null,
+      last_issued_at: checks2[checks2.length - 1]?.issued_at ?? null
     },
     established,
     not_established
@@ -8746,9 +8746,9 @@ var _HMAC = class {
   outputLen;
   finished = false;
   destroyed = false;
-  constructor(hash, key) {
+  constructor(hash, key2) {
     ahash(hash);
-    abytes(key, void 0, "key");
+    abytes(key2, void 0, "key");
     this.iHash = hash.create();
     if (typeof this.iHash.update !== "function")
       throw new Error("Expected instance of class which extends utils.Hash");
@@ -8756,7 +8756,7 @@ var _HMAC = class {
     this.outputLen = this.iHash.outputLen;
     const blockLen = this.blockLen;
     const pad = new Uint8Array(blockLen);
-    pad.set(key.length > blockLen ? hash.create().update(key).digest() : key);
+    pad.set(key2.length > blockLen ? hash.create().update(key2).digest() : key2);
     for (let i = 0; i < pad.length; i++)
       pad[i] ^= 54;
     this.iHash.update(pad);
@@ -8806,11 +8806,11 @@ var _HMAC = class {
     this.iHash.destroy();
   }
 };
-var hmac2 = (hash, key, message) => new _HMAC(hash, key).update(message).digest();
-hmac2.create = (hash, key) => new _HMAC(hash, key);
+var hmac2 = (hash, key2, message) => new _HMAC(hash, key2).update(message).digest();
+hmac2.create = (hash, key2) => new _HMAC(hash, key2);
 
 // node_modules/@noble/curves/abstract/weierstrass.js
-var divNearest2 = (num, den) => (num + (num >= 0 ? den : -den) / _2n8) / den;
+var divNearest2 = (num2, den) => (num2 + (num2 >= 0 ? den : -den) / _2n8) / den;
 function _splitEndoScalar2(k, basis, n) {
   const [[a1, b1], [a2, b2]] = basis;
   const c1 = divNearest2(b2 * k, n);
@@ -8910,16 +8910,16 @@ var DER2 = {
   // - add zero byte if exists
   // - if next byte doesn't have a flag, leading zero is not allowed (minimal encoding)
   _int: {
-    encode(num) {
+    encode(num2) {
       const { Err: E } = DER2;
-      if (num < _0n12)
+      if (num2 < _0n12)
         throw new E("integer: negative integers are not allowed");
-      let hex3 = numberToHexUnpadded(num);
-      if (Number.parseInt(hex3[0], 16) & 8)
-        hex3 = "00" + hex3;
-      if (hex3.length & 1)
+      let hex4 = numberToHexUnpadded(num2);
+      if (Number.parseInt(hex4[0], 16) & 8)
+        hex4 = "00" + hex4;
+      if (hex4.length & 1)
         throw new E("unexpected DER parsing assertion: unpadded hex");
-      return hex3;
+      return hex4;
     },
     decode(data) {
       const { Err: E } = DER2;
@@ -9134,8 +9134,8 @@ function weierstrass2(params, extraOpts = {}) {
       P.assertValidity();
       return P;
     }
-    static fromHex(hex3) {
-      return Point.fromBytes(hexToBytes(hex3));
+    static fromHex(hex4) {
+      return Point.fromBytes(hexToBytes(hex4));
     }
     get x() {
       return this.toAffine().x;
@@ -9397,8 +9397,8 @@ function ecdh2(Point, ecdhOpts = {}) {
   const lengths = Object.assign(getWLengths2(Point.Fp, Fn3), { seed: getMinHashLength(Fn3.ORDER) });
   function isValidSecretKey(secretKey) {
     try {
-      const num = Fn3.fromBytes(secretKey);
-      return Fn3.isValidNot0(num);
+      const num2 = Fn3.fromBytes(secretKey);
+      return Fn3.isValidNot0(num2);
     } catch (error) {
       return false;
     }
@@ -9459,7 +9459,7 @@ function ecdsa2(Point, hash, ecdsaOpts = {}) {
   });
   ecdsaOpts = Object.assign({}, ecdsaOpts);
   const randomBytes3 = ecdsaOpts.randomBytes || randomBytes;
-  const hmac3 = ecdsaOpts.hmac || ((key, msg) => hmac2(hash, key, msg));
+  const hmac3 = ecdsaOpts.hmac || ((key2, msg) => hmac2(hash, key2, msg));
   const { Fp: Fp3, Fn: Fn3 } = Point;
   const { ORDER: CURVE_ORDER, BITS: fnBits } = Fn3;
   const { keygen, getPublicKey, getSharedSecret, utils, lengths } = ecdh2(Point, ecdsaOpts);
@@ -9474,10 +9474,10 @@ function ecdsa2(Point, hash, ecdsaOpts = {}) {
     const HALF = CURVE_ORDER >> _1n12;
     return number > HALF;
   }
-  function validateRS(title, num) {
-    if (!Fn3.isValidNot0(num))
+  function validateRS(title, num2) {
+    if (!Fn3.isValidNot0(num2))
       throw new Error(`invalid signature ${title}: out of range 1..Point.Fn.ORDER`);
-    return num;
+    return num2;
   }
   function assertSmallCofactor() {
     if (hasLargeCofactor)
@@ -9521,8 +9521,8 @@ function ecdsa2(Point, hash, ecdsaOpts = {}) {
       const s = bytes.subarray(L3, L3 * 2);
       return new Signature(Fn3.fromBytes(r), Fn3.fromBytes(s), recid);
     }
-    static fromHex(hex3, format) {
-      return this.fromBytes(hexToBytes(hex3), format);
+    static fromHex(hex4, format) {
+      return this.fromBytes(hexToBytes(hex4), format);
     }
     assertRecovery() {
       const { recovery } = this;
@@ -9575,17 +9575,17 @@ function ecdsa2(Point, hash, ecdsaOpts = {}) {
   const bits2int = ecdsaOpts.bits2int || function bits2int_def(bytes) {
     if (bytes.length > 8192)
       throw new Error("input is too large");
-    const num = bytesToNumberBE(bytes);
+    const num2 = bytesToNumberBE(bytes);
     const delta = bytes.length * 8 - fnBits;
-    return delta > 0 ? num >> BigInt(delta) : num;
+    return delta > 0 ? num2 >> BigInt(delta) : num2;
   };
   const bits2int_modN = ecdsaOpts.bits2int_modN || function bits2int_modN_def(bytes) {
     return Fn3.create(bits2int(bytes));
   };
   const ORDER_MASK = bitMask(fnBits);
-  function int2octets(num) {
-    aInRange("num < 2^" + fnBits, num, _0n12, ORDER_MASK);
-    return Fn3.toBytes(num);
+  function int2octets(num2) {
+    aInRange("num < 2^" + fnBits, num2, _0n12, ORDER_MASK);
+    return Fn3.toBytes(num2);
   }
   function validateMsgAndHash(message, prehash) {
     abytes(message, void 0, "message");
@@ -9873,14 +9873,14 @@ function parseSpki(der) {
   const [algTlv, keyTlv] = children(der, spki);
   const algParts = children(der, algTlv);
   const alg = oidOf(der, algParts[0]);
-  const key = content(der, keyTlv).subarray(1);
+  const key2 = content(der, keyTlv).subarray(1);
   if (alg === OID.ecPublicKey) {
     const curve = oidOf(der, algParts[1]);
-    if (curve === OID.p256) return { alg: "p256", bytes: key, spki: raw(der, spki) };
-    if (curve === OID.p384) return { alg: "p384", bytes: key, spki: raw(der, spki) };
+    if (curve === OID.p256) return { alg: "p256", bytes: key2, spki: raw(der, spki) };
+    if (curve === OID.p384) return { alg: "p384", bytes: key2, spki: raw(der, spki) };
     throw new Error(`unsupported curve ${curve}`);
   }
-  if (alg === OID.ed25519) return { alg: "ed25519", bytes: key, spki: raw(der, spki) };
+  if (alg === OID.ed25519) return { alg: "ed25519", bytes: key2, spki: raw(der, spki) };
   throw new Error(`unsupported key algorithm ${alg}`);
 }
 function ecdsaCompact(sig, width) {
@@ -9896,12 +9896,12 @@ function ecdsaCompact(sig, width) {
   };
   return concatBytes2(fix(r), fix(s));
 }
-function verifySignature(key, signature, data, hash) {
+function verifySignature(key2, signature, data, hash) {
   try {
-    if (key.alg === "ed25519") return ed25519.verify(signature, data, key.bytes);
+    if (key2.alg === "ed25519") return ed25519.verify(signature, data, key2.bytes);
     const digest = hash === "sha384" ? sha3842(data) : sha2562(data);
-    const curve = key.alg === "p384" ? p3842 : p2563;
-    return curve.verify(ecdsaCompact(signature, key.alg === "p384" ? 48 : 32), digest, key.bytes, { prehash: false, lowS: false });
+    const curve = key2.alg === "p384" ? p3842 : p2563;
+    return curve.verify(ecdsaCompact(signature, key2.alg === "p384" ? 48 : 32), digest, key2.bytes, { prehash: false, lowS: false });
   } catch {
     return false;
   }
@@ -10084,24 +10084,24 @@ function parseStatement(payload) {
 }
 var GITHUB_OIDC = "https://token.actions.githubusercontent.com";
 function verifySigstoreBundle(value, expect = {}, trust = SIGSTORE_PUBLIC_GOOD) {
-  const checks = [];
-  const result = (extra = {}) => ({ valid: checks.every((c) => c.ok), checks, statement: null, identity: null, certificate: null, log: null, ...extra });
+  const checks2 = [];
+  const result = (extra = {}) => ({ valid: checks2.every((c) => c.ok), checks: checks2, statement: null, identity: null, certificate: null, log: null, ...extra });
   let bundle;
   try {
     bundle = parseSigstoreBundle(value);
   } catch (e) {
-    checks.push({ id: "bundle", label: "Bundle", ok: false, detail: `Not a Sigstore bundle this verifier reads: ${e.message}.` });
+    checks2.push({ id: "bundle", label: "Bundle", ok: false, detail: `Not a Sigstore bundle this verifier reads: ${e.message}.` });
     return result();
   }
-  checks.push({ id: "bundle", label: "Bundle", ok: true, detail: `${bundle.mediaType}: one certificate, a DSSE envelope with one signature${bundle.tlog ? ", a transparency-log entry" : ", no transparency-log entry"}.` });
+  checks2.push({ id: "bundle", label: "Bundle", ok: true, detail: `${bundle.mediaType}: one certificate, a DSSE envelope with one signature${bundle.tlog ? ", a transparency-log entry" : ", no transparency-log entry"}.` });
   let statement = null;
   try {
     if (bundle.payloadType !== "application/vnd.in-toto+json") throw new Error(`payload type ${bundle.payloadType}`);
     statement = parseStatement(bundle.payload);
     const slsa = statement.predicate_type === "https://slsa.dev/provenance/v1";
-    checks.push({ id: "statement", label: "Statement", ok: slsa, detail: slsa ? `in-toto statement over ${statement.subjects.map((s) => s.name).join(", ")} with a SLSA provenance predicate${statement.invocation ? ` for ${statement.invocation}` : ""}.` : `The predicate is ${statement.predicate_type || "missing"}, not SLSA provenance.` });
+    checks2.push({ id: "statement", label: "Statement", ok: slsa, detail: slsa ? `in-toto statement over ${statement.subjects.map((s) => s.name).join(", ")} with a SLSA provenance predicate${statement.invocation ? ` for ${statement.invocation}` : ""}.` : `The predicate is ${statement.predicate_type || "missing"}, not SLSA provenance.` });
   } catch (e) {
-    checks.push({ id: "statement", label: "Statement", ok: false, detail: `The envelope does not carry an in-toto provenance statement: ${e.message}.` });
+    checks2.push({ id: "statement", label: "Statement", ok: false, detail: `The envelope does not carry an in-toto provenance statement: ${e.message}.` });
   }
   let leaf = null;
   let issuerCert = null;
@@ -10141,9 +10141,9 @@ function verifySigstoreBundle(value, expect = {}, trust = SIGSTORE_PUBLIC_GOOD) 
       }
     })();
     const detail = chainOk ? `Issued by ${leaf.issuer} under ${authority}, chain verified to the pinned root; valid ${leaf.notBefore.toISOString()} to ${leaf.notAfter.toISOString()}${codeSigning ? "; code signing" : ""}.` : `The certificate (issuer ${leaf.issuer}) does not chain to a pinned certificate authority.`;
-    checks.push({ id: "certificate", label: "Certificate", ok: chainOk && codeSigning, detail: chainOk && !codeSigning ? "The certificate chains to a pinned authority but is not a code-signing certificate." : detail });
+    checks2.push({ id: "certificate", label: "Certificate", ok: chainOk && codeSigning, detail: chainOk && !codeSigning ? "The certificate chains to a pinned authority but is not a code-signing certificate." : detail });
   } catch (e) {
-    checks.push({ id: "certificate", label: "Certificate", ok: false, detail: `The certificate does not parse: ${e.message}.` });
+    checks2.push({ id: "certificate", label: "Certificate", ok: false, detail: `The certificate does not parse: ${e.message}.` });
   }
   let identity = null;
   if (leaf) {
@@ -10160,16 +10160,16 @@ function verifySigstoreBundle(value, expect = {}, trust = SIGSTORE_PUBLIC_GOOD) 
       if (statement.commit && identity.commit && statement.commit !== identity.commit) problems.push("the statement names a different commit than the certificate");
       if (statement.repository && identity.repository && statement.repository !== identity.repository) problems.push("the statement names a different repository than the certificate");
     }
-    checks.push({ id: "identity", label: "Identity", ok: problems.length === 0, detail: problems.length === 0 ? `GitHub Actions workflow ${identity.workflow} at ${identity.repository}${identity.commit ? ` commit ${identity.commit}` : ""}${identity.run ? `, run ${identity.run}` : ""}${identity.trigger ? ` (${identity.trigger}` : ""}${identity.runner ? `, ${identity.runner})` : identity.trigger ? ")" : ""}.` : `${problems.join("; ")}.` });
+    checks2.push({ id: "identity", label: "Identity", ok: problems.length === 0, detail: problems.length === 0 ? `GitHub Actions workflow ${identity.workflow} at ${identity.repository}${identity.commit ? ` commit ${identity.commit}` : ""}${identity.run ? `, run ${identity.run}` : ""}${identity.trigger ? ` (${identity.trigger}` : ""}${identity.runner ? `, ${identity.runner})` : identity.trigger ? ")" : ""}.` : `${problems.join("; ")}.` });
   }
   if (leaf) {
     const ok = verifySignature(leaf.key, bundle.signature, dssePae(bundle.payloadType, bundle.payload), "sha256");
-    checks.push({ id: "signature", label: "Signature", ok, detail: ok ? "The envelope signature verifies under the certificate's key." : "The envelope signature does not verify under the certificate's key." });
+    checks2.push({ id: "signature", label: "Signature", ok, detail: ok ? "The envelope signature verifies under the certificate's key." : "The envelope signature does not verify under the certificate's key." });
   }
   let logInfo = null;
   const tlog = bundle.tlog;
   if (!tlog) {
-    checks.push({ id: "log", label: "Transparency log", ok: false, detail: "The bundle carries no transparency-log entry, so nothing fixes when the signature was made." });
+    checks2.push({ id: "log", label: "Transparency log", ok: false, detail: "The bundle carries no transparency-log entry, so nothing fixes when the signature was made." });
   } else {
     const log = trust.transparency_logs.find((l) => bytesEqual2(fromBase64(l.log_id), tlog.logId)) ?? null;
     const problems = [];
@@ -10210,9 +10210,9 @@ function verifySigstoreBundle(value, expect = {}, trust = SIGSTORE_PUBLIC_GOOD) 
     if (log && (integrated < new Date(log.valid_from) || log.valid_to && integrated > new Date(log.valid_to))) problems.push("the entry was integrated outside the log key's validity");
     if (leaf && (integrated < leaf.notBefore || integrated > leaf.notAfter)) problems.push(`the entry was integrated at ${integrated.toISOString()}, outside the certificate's validity`);
     logInfo = { base_url: log?.base_url ?? "(unknown)", index: String(tlog.logIndex), integrated_time: integrated.toISOString(), tree_size: tlog.proof ? String(tlog.proof.treeSize) : null, origin: tlog.proof ? tlog.proof.checkpoint.split("\n")[0] ?? null : null };
-    checks.push({ id: "log", label: "Transparency log", ok: problems.length === 0, detail: problems.length === 0 ? `Entry ${tlog.logIndex} in ${log.base_url}, integrated ${integrated.toISOString()}, inside the certificate's validity; the entry is this envelope and the log signed it.` : `${problems.join("; ")}.` });
+    checks2.push({ id: "log", label: "Transparency log", ok: problems.length === 0, detail: problems.length === 0 ? `Entry ${tlog.logIndex} in ${log.base_url}, integrated ${integrated.toISOString()}, inside the certificate's validity; the entry is this envelope and the log signed it.` : `${problems.join("; ")}.` });
     if (!tlog.proof) {
-      checks.push({ id: "inclusion", label: "Inclusion", ok: false, detail: "The entry carries no inclusion proof." });
+      checks2.push({ id: "inclusion", label: "Inclusion", ok: false, detail: "The entry carries no inclusion proof." });
     } else {
       const problems2 = [];
       const root = rootFromInclusionProof(leafHash(tlog.body), tlog.proof.logIndex, tlog.proof.treeSize, tlog.proof.hashes);
@@ -10231,8 +10231,8 @@ function verifySigstoreBundle(value, expect = {}, trust = SIGSTORE_PUBLIC_GOOD) 
         if (!cpRoot || !bytesEqual2(cpRoot, tlog.proof.rootHash)) problems2.push("the checkpoint root is not the proof's root");
         const sigLines = tlog.proof.checkpoint.slice(sep + 2).split("\n").filter((l) => l.startsWith("\u2014 "));
         let signed2 = false;
-        for (const line of sigLines) {
-          const parts = line.split(" ");
+        for (const line2 of sigLines) {
+          const parts = line2.split(" ");
           try {
             const sig = fromBase64(parts[parts.length - 1]);
             if (!bytesEqual2(sig.subarray(0, 4), tlog.logId.subarray(0, 4))) continue;
@@ -10245,15 +10245,15 @@ function verifySigstoreBundle(value, expect = {}, trust = SIGSTORE_PUBLIC_GOOD) 
         }
         if (!signed2) problems2.push("the checkpoint is not signed by the pinned log key");
       }
-      checks.push({ id: "inclusion", label: "Inclusion", ok: problems2.length === 0, detail: problems2.length === 0 ? `The entry's leaf hash reaches the checkpoint root through ${tlog.proof.hashes.length} proof hashes at tree size ${tlog.proof.treeSize}; the checkpoint is signed by the log.` : `${problems2.join("; ")}.` });
+      checks2.push({ id: "inclusion", label: "Inclusion", ok: problems2.length === 0, detail: problems2.length === 0 ? `The entry's leaf hash reaches the checkpoint root through ${tlog.proof.hashes.length} proof hashes at tree size ${tlog.proof.treeSize}; the checkpoint is signed by the log.` : `${problems2.join("; ")}.` });
     }
   }
   if (leaf) {
     const sctExt = leaf.extensions.find((e) => e.oid === OID.sctList);
     if (!sctExt || !leaf.precertTbs) {
-      checks.push({ id: "sct", label: "Certificate transparency", ok: false, detail: "The certificate carries no signed certificate timestamp." });
+      checks2.push({ id: "sct", label: "Certificate transparency", ok: false, detail: "The certificate carries no signed certificate timestamp." });
     } else if (!issuerCert) {
-      checks.push({ id: "sct", label: "Certificate transparency", ok: false, detail: "The SCT cannot be checked without the issuing certificate." });
+      checks2.push({ id: "sct", label: "Certificate transparency", ok: false, detail: "The SCT cannot be checked without the issuing certificate." });
     } else {
       const problems3 = [];
       let verified = 0;
@@ -10309,15 +10309,15 @@ function verifySigstoreBundle(value, expect = {}, trust = SIGSTORE_PUBLIC_GOOD) 
             new Uint8Array([ext.length >> 8 & 255, ext.length & 255]),
             ext
           );
-          const key = parseSpki(fromBase64(ctlog.public_key));
-          if (verifySignature(key, sig, signedData, "sha256")) verified++;
+          const key2 = parseSpki(fromBase64(ctlog.public_key));
+          if (verifySignature(key2, sig, signedData, "sha256")) verified++;
           else problems3.push(`the SCT from ${ctlog.base_url} does not verify`);
         }
       } catch (e) {
         problems3.push(`the SCT list does not parse: ${e.message}`);
       }
       const ok = verified > 0 && problems3.length === 0;
-      checks.push({ id: "sct", label: "Certificate transparency", ok, detail: ok ? `${verified} signed certificate timestamp${verified === 1 ? "" : "s"} verified under the pinned CT log key: the certificate was logged before it was used.` : `${problems3.join("; ") || "no SCT verified"}.` });
+      checks2.push({ id: "sct", label: "Certificate transparency", ok, detail: ok ? `${verified} signed certificate timestamp${verified === 1 ? "" : "s"} verified under the pinned CT log key: the certificate was logged before it was used.` : `${problems3.join("; ") || "no SCT verified"}.` });
     }
   }
   return result({
@@ -10633,11 +10633,11 @@ var Reader = class {
     return this.b.length - this.off;
   }
 };
-function pemCertificates(text3) {
+function pemCertificates(text5) {
   const out = [];
   const re = /-----BEGIN CERTIFICATE-----([\s\S]*?)-----END CERTIFICATE-----/g;
   let m;
-  while ((m = re.exec(text3)) !== null) out.push(parseCertificate(fromBase64(m[1])));
+  while ((m = re.exec(text5)) !== null) out.push(parseCertificate(fromBase64(m[1])));
   return out;
 }
 function quoteBytes(input) {
@@ -10720,25 +10720,25 @@ var p256Verify = (sig64, data, pub) => {
   }
 };
 function verifyTdxQuote(input, now = /* @__PURE__ */ new Date()) {
-  const checks = [];
+  const checks2 = [];
   let quote;
   try {
     quote = parseTdxQuote(input);
   } catch (e) {
-    checks.push({ id: "quote", label: "Quote", ok: false, detail: `Not a TDX quote this verifier reads: ${e.message}.` });
-    return { valid: false, checks, quote: null, chain: [] };
+    checks2.push({ id: "quote", label: "Quote", ok: false, detail: `Not a TDX quote this verifier reads: ${e.message}.` });
+    return { valid: false, checks: checks2, quote: null, chain: [] };
   }
-  checks.push({ id: "quote", label: "Quote", ok: true, detail: `TDX quote v${quote.version} (${quote.body_type}), ECDSA-256 attestation key, QE vendor ${quote.qe_vendor_id}.` });
+  checks2.push({ id: "quote", label: "Quote", ok: true, detail: `TDX quote v${quote.version} (${quote.body_type}), ECDSA-256 attestation key, QE vendor ${quote.qe_vendor_id}.` });
   const attKey = concatBytes2(new Uint8Array([4]), quote.attestation_key);
   const sigOk = p256Verify(quote.signature, quote.signed, attKey);
-  checks.push({ id: "quote_signature", label: "Quote signature", ok: sigOk, detail: sigOk ? "The attestation key signed the header and the TD report." : "The quote signature does not verify under the attestation key." });
+  checks2.push({ id: "quote_signature", label: "Quote signature", ok: sigOk, detail: sigOk ? "The attestation key signed the header and the TD report." : "The quote signature does not verify under the attestation key." });
   const qeReportData = quote.qe_report.subarray(320, 384);
   const expected = sha2562(concatBytes2(quote.attestation_key, quote.qe_auth_data));
   const bindOk = expected.every((x, i) => x === qeReportData[i]);
-  checks.push({ id: "qe_binding", label: "Quoting enclave", ok: bindOk, detail: bindOk ? "The quoting enclave's report binds this attestation key (SHA-256 of the key and its auth data)." : "The quoting enclave's report does not bind this attestation key." });
+  checks2.push({ id: "qe_binding", label: "Quoting enclave", ok: bindOk, detail: bindOk ? "The quoting enclave's report binds this attestation key (SHA-256 of the key and its auth data)." : "The quoting enclave's report does not bind this attestation key." });
   const leaf = quote.pck_chain[0];
   const qeSigOk = leaf.key.alg === "p256" && p256Verify(quote.qe_report_signature, quote.qe_report, leaf.key.bytes);
-  checks.push({ id: "qe_signature", label: "QE report signature", ok: qeSigOk, detail: qeSigOk ? `The PCK certificate (${leaf.subject}) signed the quoting enclave's report.` : "The quoting enclave's report is not signed by the PCK certificate." });
+  checks2.push({ id: "qe_signature", label: "QE report signature", ok: qeSigOk, detail: qeSigOk ? `The PCK certificate (${leaf.subject}) signed the quoting enclave's report.` : "The quoting enclave's report is not signed by the PCK certificate." });
   const root = parseCertificate(fromBase64(INTEL_SGX_ROOT_CA_PEM.replace(/-----[A-Z ]+-----/g, "")));
   const rootOk = bytesToHex2(sha2562(root.der)) === INTEL_SGX_ROOT_CA_SHA256;
   const problems = [];
@@ -10767,9 +10767,9 @@ function verifyTdxQuote(input, now = /* @__PURE__ */ new Date()) {
   }
   if (!reached && problems.length === 0) problems.push("the chain does not reach the Intel SGX Root CA");
   const chainOk = reached && problems.length === 0;
-  checks.push({ id: "pck_chain", label: "PCK chain", ok: chainOk, detail: chainOk ? `${names.join(" <- ")} <- ${root.subject}: every link signed, every certificate in date, root pinned by fingerprint.` : `${problems.join("; ")}.` });
-  checks.push({ id: "tcb", label: "TCB status", ok: true, informational: true, detail: "Not evaluated here: the platform's TCB level and revocation need Intel's current collateral; the quote is genuine and its measurements are as reported." });
-  return { valid: checks.every((c) => c.ok), checks, quote, chain: [...names, root.subject] };
+  checks2.push({ id: "pck_chain", label: "PCK chain", ok: chainOk, detail: chainOk ? `${names.join(" <- ")} <- ${root.subject}: every link signed, every certificate in date, root pinned by fingerprint.` : `${problems.join("; ")}.` });
+  checks2.push({ id: "tcb", label: "TCB status", ok: true, informational: true, detail: "Not evaluated here: the platform's TCB level and revocation need Intel's current collateral; the quote is genuine and its measurements are as reported." });
+  return { valid: checks2.every((c) => c.ok), checks: checks2, quote, chain: [...names, root.subject] };
 }
 
 // src/attested-model.ts
@@ -10778,12 +10778,12 @@ var isRecord4 = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
 var str3 = (v) => typeof v === "string" ? v : null;
 var strip0x = (s) => s.replace(/^0x/i, "").toLowerCase();
 var HEX64 = /^[0-9a-f]{64}$/;
-function parseModelCalls(text3) {
-  const lines = text3.split("\n").map((l) => l.trim()).filter(Boolean);
-  return lines.map((line, i) => {
+function parseModelCalls(text5) {
+  const lines = text5.split("\n").map((l) => l.trim()).filter(Boolean);
+  return lines.map((line2, i) => {
     let v;
     try {
-      v = JSON.parse(line);
+      v = JSON.parse(line2);
     } catch {
       throw new Error(`line ${i + 1} is not JSON`);
     }
@@ -10795,26 +10795,26 @@ function parseModelCalls(text3) {
   });
 }
 var signedText = (c) => c.kind === "provider_tee" ? `${c.model}:${c.request_sha256}:${c.response_sha256}` : `${c.request_sha256}:${c.response_sha256}`;
-function personalSignDigest(text3) {
-  const body = utf83(text3);
+function personalSignDigest(text5) {
+  const body = utf83(text5);
   return keccak_256(new Uint8Array([...utf83(`Ethereum Signed Message:
 ${body.length}`), ...body]));
 }
 function recoverSigner(call) {
   try {
-    const text3 = signedText(call);
+    const text5 = signedText(call);
     if (call.signing_algo === "ecdsa") {
       const sig = hexToBytes2(strip0x(call.signature));
       if (sig.length !== 65) return null;
       let v = sig[64];
       if (v >= 27) v -= 27;
       if (v > 3) return null;
-      const point = secp256k1.Signature.fromBytes(sig.subarray(0, 64), "compact").addRecoveryBit(v).recoverPublicKey(personalSignDigest(text3));
+      const point = secp256k1.Signature.fromBytes(sig.subarray(0, 64), "compact").addRecoveryBit(v).recoverPublicKey(personalSignDigest(text5));
       const pub2 = point.toBytes(false);
       return `0x${bytesToHex2(keccak_256(pub2.subarray(1)).subarray(12))}`;
     }
     const pub = hexToBytes2(strip0x(call.signing_address));
-    return ed25519.verify(hexToBytes2(strip0x(call.signature)), utf83(text3), pub) ? strip0x(call.signing_address) : null;
+    return ed25519.verify(hexToBytes2(strip0x(call.signature)), utf83(text5), pub) ? strip0x(call.signing_address) : null;
   } catch {
     return null;
   }
@@ -10846,19 +10846,19 @@ function attestationEntries(value) {
 }
 var attestationReportDigest = (value) => `sha256:${sha256Hex(canonicalize2(value))}`;
 function verifyModelAttestation(value, expect = {}, now = /* @__PURE__ */ new Date()) {
-  const checks = [];
-  const result = (extra = {}) => ({ valid: checks.every((c) => c.ok), checks, report: null, quote: null, signing_address: null, measurements: null, compose: null, ...extra });
+  const checks2 = [];
+  const result = (extra = {}) => ({ valid: checks2.every((c) => c.ok), checks: checks2, report: null, quote: null, signing_address: null, measurements: null, compose: null, ...extra });
   let report;
   try {
     report = parseModelAttestationReport(value);
   } catch (e) {
-    checks.push({ id: "report", label: "Report", ok: false, detail: `Not an attestation report this verifier reads: ${e.message}.` });
+    checks2.push({ id: "report", label: "Report", ok: false, detail: `Not an attestation report this verifier reads: ${e.message}.` });
     return result();
   }
   const address = report.signing_algo === "ecdsa" ? `0x${strip0x(report.signing_address)}` : strip0x(report.signing_address);
-  checks.push({ id: "report", label: "Report", ok: true, detail: `Attestation report for signing address ${address} (${report.signing_algo})${report.model ? `, model ${report.model}` : ""}${report.nonce ? ", with a nonce" : ""}.` });
+  checks2.push({ id: "report", label: "Report", ok: true, detail: `Attestation report for signing address ${address} (${report.signing_algo})${report.model ? `, model ${report.model}` : ""}${report.nonce ? ", with a nonce" : ""}.` });
   const quote = verifyTdxQuote(report.intel_quote, now);
-  for (const c of quote.checks) checks.push({ id: `quote_${c.id}`, label: `Quote: ${c.label}`, ok: c.ok, detail: c.detail, ...c.informational ? { informational: true } : {} });
+  for (const c of quote.checks) checks2.push({ id: `quote_${c.id}`, label: `Quote: ${c.label}`, ok: c.ok, detail: c.detail, ...c.informational ? { informational: true } : {} });
   const m = quote.quote?.measurements ?? null;
   if (m) {
     const rd = hexToBytes2(m.report_data);
@@ -10877,11 +10877,11 @@ function verifyModelAttestation(value, expect = {}, now = /* @__PURE__ */ new Da
     const nonce = expect.nonce ?? report.nonce;
     const nonceOk = nonce ? second === strip0x(nonce).padEnd(64, "0").slice(0, 64) : null;
     const ok = bindsKey && nonceOk !== false;
-    checks.push({ id: "report_data", label: "Key binding", ok, detail: ok ? `report_data carries ${mode}${nonceOk ? " and the request nonce" : nonce ? "" : " (no nonce to check)"}: the signing key lives in this measured machine.` : !bindsKey ? `report_data does not carry ${mode}: the signing key is not bound to this quote.` : "report_data does not carry the request nonce: the quote may be a replay." });
+    checks2.push({ id: "report_data", label: "Key binding", ok, detail: ok ? `report_data carries ${mode}${nonceOk ? " and the request nonce" : nonce ? "" : " (no nonce to check)"}: the signing key lives in this measured machine.` : !bindsKey ? `report_data does not carry ${mode}: the signing key is not bound to this quote.` : "report_data does not carry the request nonce: the quote may be a replay." });
   }
   if (expect.model) {
     const ok = report.model === null || report.model === expect.model;
-    checks.push({ id: "model", label: "Model", ok, detail: ok ? report.model ? `The report names ${report.model}, as expected.` : "The report names no model; the signed calls name it." : `The report names ${report.model}, not ${expect.model}.` });
+    checks2.push({ id: "model", label: "Model", ok, detail: ok ? report.model ? `The report names ${report.model}, as expected.` : "The report names no model; the signed calls name it." : `The report names ${report.model}, not ${expect.model}.` });
   }
   let compose = null;
   const info = isRecord4(report.info) ? report.info : null;
@@ -10892,7 +10892,7 @@ function verifyModelAttestation(value, expect = {}, now = /* @__PURE__ */ new Da
     const matched = m.mr_config_id.startsWith(`01${digest}`) || m.mr_config_id.startsWith(digest) ? "mr_config_id" : "none";
     compose = { digest, matched };
     const ok = matched === "mr_config_id";
-    checks.push({ id: "compose", label: "Container", ok, informational: !ok && !statedHash, detail: ok ? `The compose hash the report states (${digest.slice(0, 16)}...) is the measured MRCONFIGID: the container configuration the provider names is the one the hardware measured. The compose file itself is not in the report.` : `The compose hash the report states (${digest.slice(0, 16)}...) is not the measured MRCONFIGID (${m.mr_config_id.slice(0, 18)}...).` });
+    checks2.push({ id: "compose", label: "Container", ok, informational: !ok && !statedHash, detail: ok ? `The compose hash the report states (${digest.slice(0, 16)}...) is the measured MRCONFIGID: the container configuration the provider names is the one the hardware measured. The compose file itself is not in the report.` : `The compose hash the report states (${digest.slice(0, 16)}...) is not the measured MRCONFIGID (${m.mr_config_id.slice(0, 18)}...).` });
   }
   if (report.nvidia_payload) {
     let nonceMatches = null;
@@ -10901,7 +10901,7 @@ function verifyModelAttestation(value, expect = {}, now = /* @__PURE__ */ new Da
       nonceMatches = expect.nonce || report.nonce ? strip0x(String(p.nonce ?? "")) === strip0x(expect.nonce ?? report.nonce ?? "") : null;
     } catch {
     }
-    checks.push({ id: "gpu", label: "GPU", ok: true, informational: true, detail: `NVIDIA attestation evidence is carried${nonceMatches === true ? " with the request nonce" : nonceMatches === false ? " but its nonce differs" : ""}; its verdict is an online service and is not verified here.` });
+    checks2.push({ id: "gpu", label: "GPU", ok: true, informational: true, detail: `NVIDIA attestation evidence is carried${nonceMatches === true ? " with the request nonce" : nonceMatches === false ? " but its nonce differs" : ""}; its verdict is an online service and is not verified here.` });
   }
   return result({ report, quote, signing_address: address, measurements: m ? { mr_td: m.mr_td, mr_config_id: m.mr_config_id, rtmr3: m.rtmr3, report_data: m.report_data } : null, compose });
 }
@@ -11112,16 +11112,16 @@ function regradeProvenanceIdentity(bytes, bundles) {
   return null;
 }
 function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()) {
-  const checks = [];
+  const checks2 = [];
   const errors = shapeErrors2(value);
   const shape_valid = errors.length === 0;
-  checks.push({ id: "shape", label: "Shape", ok: shape_valid, detail: shape_valid ? "Every required field is present and well formed." : errors.join("; ") });
-  const fail = (title2) => ({ shape_valid, digest_valid: false, signature_valid: false, cryptographically_valid: false, binding: "unbound", checks, chain: null, title: title2, establishes: [], not_established: ["Nothing rests on a manifest that does not verify."], provenance: null });
+  checks2.push({ id: "shape", label: "Shape", ok: shape_valid, detail: shape_valid ? "Every required field is present and well formed." : errors.join("; ") });
+  const fail = (title2) => ({ shape_valid, digest_valid: false, signature_valid: false, cryptographically_valid: false, binding: "unbound", checks: checks2, chain: null, title: title2, establishes: [], not_established: ["Nothing rests on a manifest that does not verify."], provenance: null });
   if (!shape_valid) return fail("Not a run manifest, or malformed");
   const m = value;
   const { digest_valid, signature_valid } = checkEnvelope(RUN_MANIFEST_DOMAIN, m, MANIFEST_UNSIGNED_KEYS, m.signer.verification_key);
-  checks.push({ id: "digest", label: "Digest", ok: digest_valid, detail: digest_valid ? "The digest matches the canonical bytes of the manifest." : "The digest does not match: the manifest was altered after it was signed." });
-  checks.push({ id: "signature", label: "Signature", ok: signature_valid, detail: signature_valid ? `Ed25519 signature verifies against the harness key ${m.signer.key_id}. This proves possession of that key, not who holds it.` : "The signature does not verify against the key carried in the manifest." });
+  checks2.push({ id: "digest", label: "Digest", ok: digest_valid, detail: digest_valid ? "The digest matches the canonical bytes of the manifest." : "The digest does not match: the manifest was altered after it was signed." });
+  checks2.push({ id: "signature", label: "Signature", ok: signature_valid, detail: signature_valid ? `Ed25519 signature verifies against the harness key ${m.signer.key_id}. This proves possession of that key, not who holds it.` : "The signature does not verify against the key carried in the manifest." });
   if (!digest_valid || !signature_valid) return fail("Run manifest does not verify");
   const sorted = [...m.attempts].sort((a, b) => a.receipts.from - b.receipts.from);
   let cursor = 0;
@@ -11131,12 +11131,12 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
     cursor = t.receipts.to;
   }
   const partition = contiguous && cursor === m.gateway.receipt_count;
-  checks.push({ id: "attempts_cover_chain", label: "Attempts cover the chain", ok: partition, detail: partition ? `${m.attempts.length} attempt${m.attempts.length === 1 ? " accounts" : "s account"} for all ${m.gateway.receipt_count} receipts, with no gap and no overlap.` : "The attempts do not account for every receipt exactly once: a call was left out of the attempts, or counted twice." });
+  checks2.push({ id: "attempts_cover_chain", label: "Attempts cover the chain", ok: partition, detail: partition ? `${m.attempts.length} attempt${m.attempts.length === 1 ? " accounts" : "s account"} for all ${m.gateway.receipt_count} receipts, with no gap and no overlap.` : "The attempts do not account for every receipt exactly once: a call was left out of the attempts, or counted twice." });
   const counted = { tasks: new Set(m.attempts.map((t) => t.task_id)).size, passed: m.attempts.filter((t) => t.verdict === "pass").length, failed: m.attempts.filter((t) => t.verdict === "fail").length, errored: m.attempts.filter((t) => t.verdict === "error").length, calls: m.attempts.reduce((n, t) => n + t.calls, 0), refused: m.attempts.reduce((n, t) => n + t.refused, 0) };
   const summaryOk = Object.keys(counted).every((k) => counted[k] === m.summary[k]) && m.attempts.every((t) => t.calls === t.receipts.to - t.receipts.from);
-  checks.push({ id: "summary", label: "Summary matches attempts", ok: summaryOk, detail: summaryOk ? `${counted.tasks} task${counted.tasks === 1 ? "" : "s"}: ${counted.passed} passed, ${counted.failed} failed, ${counted.errored} errored; ${counted.calls} governed call${counted.calls === 1 ? "" : "s"}, ${counted.refused} refused.` : "The summary does not add up from the attempts." });
+  checks2.push({ id: "summary", label: "Summary matches attempts", ok: summaryOk, detail: summaryOk ? `${counted.tasks} task${counted.tasks === 1 ? "" : "s"}: ${counted.passed} passed, ${counted.failed} failed, ${counted.errored} errored; ${counted.calls} governed call${counted.calls === 1 ? "" : "s"}, ${counted.refused} refused.` : "The summary does not add up from the attempts." });
   const timely = m.attempts.every((t) => !t.agent.timed_out);
-  checks.push({ id: "timeouts", label: "Time", ok: timely, detail: timely ? "No attempt hit the harness time limit." : `${m.attempts.filter((t) => t.agent.timed_out).length} attempt(s) were stopped at the time limit.`, informational: true });
+  checks2.push({ id: "timeouts", label: "Time", ok: timely, detail: timely ? "No attempt hit the harness time limit." : `${m.attempts.filter((t) => t.agent.timed_out).length} attempt(s) were stopped at the time limit.`, informational: true });
   const establishes = [];
   const not_established = [];
   let bound = true;
@@ -11147,45 +11147,45 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
     const sv = verifyProofRequest(std, now);
     const run = std.requirements.run ?? null;
     const same = sv.cryptographically_valid && std.request_id === m.standard.request_id && std.digest === m.standard.digest && std.recipient.verification_key.toLowerCase() === m.standard.recipient_key.toLowerCase();
-    checks.push({ id: "standard", label: "Standard", ok: same, detail: same ? `The manifest names this standard by request id and digest (${std.request_id}), and the standard verifies.` : !sv.cryptographically_valid ? "The standard supplied does not itself verify." : "The manifest names a different standard (request id, digest, or recipient key differ)." });
+    checks2.push({ id: "standard", label: "Standard", ok: same, detail: same ? `The manifest names this standard by request id and digest (${std.request_id}), and the standard verifies.` : !sv.cryptographically_valid ? "The standard supplied does not itself verify." : "The manifest names a different standard (request id, digest, or recipient key differ)." });
     bound &&= same;
     if (context.pins?.maintainer_key) {
       const pin = context.pins.maintainer_key.trim().toLowerCase();
       const pinOk = std.recipient.verification_key.toLowerCase() === pin;
-      checks.push({ id: "maintainer_pin", label: "Maintainer key pinned", ok: pinOk, detail: pinOk ? `The standard is signed by the maintainer key you pinned (${std.recipient.key_id}), a trust root from outside these files.` : `The standard is signed by ${std.recipient.key_id}, not by the key you pinned. Nothing in these files can make up for that.` });
+      checks2.push({ id: "maintainer_pin", label: "Maintainer key pinned", ok: pinOk, detail: pinOk ? `The standard is signed by the maintainer key you pinned (${std.recipient.key_id}), a trust root from outside these files.` : `The standard is signed by ${std.recipient.key_id}, not by the key you pinned. Nothing in these files can make up for that.` });
       bound &&= pinOk;
     }
     const policyRecomputed = std.enforcement ? policyDigest(std.enforcement.policy_format, [{ name: std.enforcement.file_name, content: std.enforcement.policy }]) : null;
     const policyDeclared = Boolean(std.enforcement && std.enforcement.policy_digest === m.standard.policy_digest);
     const policyOk = policyDeclared && policyRecomputed === m.standard.policy_digest;
-    checks.push({ id: "policy", label: "Gate policy", ok: policyOk, detail: policyOk ? `The policy digest the manifest records is the digest of the policy text the standard carries, recomputed here (${m.standard.policy_digest.slice(0, 19)}\u2026).` : !std.enforcement ? "The standard carries no enforcement block, so the manifest's policy digest cannot be checked against it." : !policyDeclared ? "The manifest records a different policy digest than the standard declares." : "The policy text the standard carries does not hash to the digest it declares; the declared digest is not the policy's." });
+    checks2.push({ id: "policy", label: "Gate policy", ok: policyOk, detail: policyOk ? `The policy digest the manifest records is the digest of the policy text the standard carries, recomputed here (${m.standard.policy_digest.slice(0, 19)}\u2026).` : !std.enforcement ? "The standard carries no enforcement block, so the manifest's policy digest cannot be checked against it." : !policyDeclared ? "The manifest records a different policy digest than the standard declares." : "The policy text the standard carries does not hash to the digest it declares; the declared digest is not the policy's." });
     bound &&= policyOk;
     if (run) {
       const dataOk = run.dataset.digest === m.dataset.digest && run.dataset.name === m.dataset.name;
-      checks.push({ id: "dataset_pin", label: "Task set pin", ok: dataOk, detail: dataOk ? `The task set digest equals the standard's pin (${run.dataset.name}${run.dataset.revision ? ` at ${run.dataset.revision}` : ""}).` : "The task set the run used is not the one the standard pins." });
+      checks2.push({ id: "dataset_pin", label: "Task set pin", ok: dataOk, detail: dataOk ? `The task set digest equals the standard's pin (${run.dataset.name}${run.dataset.revision ? ` at ${run.dataset.revision}` : ""}).` : "The task set the run used is not the one the standard pins." });
       const harnessOk = run.harness.digest === m.harness.digest && run.harness.name === m.harness.name;
-      checks.push({ id: "harness_pin", label: "Harness pin", ok: harnessOk, detail: harnessOk ? `The harness digest equals the standard's pin (${run.harness.name}).` : "The harness that ran is not the one the standard pins." });
+      checks2.push({ id: "harness_pin", label: "Harness pin", ok: harnessOk, detail: harnessOk ? `The harness digest equals the standard's pin (${run.harness.name}).` : "The harness that ran is not the one the standard pins." });
       const perTask = /* @__PURE__ */ new Map();
       for (const t of m.attempts) perTask.set(t.task_id, (perTask.get(t.task_id) ?? 0) + 1);
       const attemptsOk = [...perTask.values()].every((n) => n <= run.attempts_per_task);
-      checks.push({ id: "attempts", label: "Attempts", ok: attemptsOk, detail: attemptsOk ? `No task has more than ${run.attempts_per_task} attempt${run.attempts_per_task === 1 ? "" : "s"}.` : `A task has more attempts than the standard allows (${run.attempts_per_task}).` });
+      checks2.push({ id: "attempts", label: "Attempts", ok: attemptsOk, detail: attemptsOk ? `No task has more than ${run.attempts_per_task} attempt${run.attempts_per_task === 1 ? "" : "s"}.` : `A task has more attempts than the standard allows (${run.attempts_per_task}).` });
       const timeOk = m.attempts.every((t) => (Date.parse(t.ended_at) - Date.parse(t.started_at)) / 1e3 <= run.time_limit_seconds);
-      checks.push({ id: "time_limit", label: "Time limit", ok: timeOk, detail: timeOk ? `Every attempt finished within ${Math.round(run.time_limit_seconds / 60)} minutes, on the harness clock.` : "An attempt ran longer than the standard allows." });
+      checks2.push({ id: "time_limit", label: "Time limit", ok: timeOk, detail: timeOk ? `Every attempt finished within ${Math.round(run.time_limit_seconds / 60)} minutes, on the harness clock.` : "An attempt ran longer than the standard allows." });
       const egressOk = m.environment.egress.every((h) => run.egress_allowlist.includes(h));
-      checks.push({ id: "egress", label: "Network", ok: egressOk, detail: egressOk ? `The environment declares egress to ${m.environment.egress.join(", ") || "nothing"}, within the standard's allowlist. Declared by the harness; enforced by the sandbox, not by anything this page can check.` : "The environment declares egress the standard does not allow.", informational: egressOk && !m.environment.attestation });
+      checks2.push({ id: "egress", label: "Network", ok: egressOk, detail: egressOk ? `The environment declares egress to ${m.environment.egress.join(", ") || "nothing"}, within the standard's allowlist. Declared by the harness; enforced by the sandbox, not by anything this page can check.` : "The environment declares egress the standard does not allow.", informational: egressOk && !m.environment.attestation });
       const routeOk = m.agent.model_route === run.model_route;
       const attestationRequired = !!run.model_attestation;
       const attestationDeclared = !!m.environment.model_attestation && !!m.model_calls;
-      checks.push({ id: "model_route", label: "Model route", ok: routeOk && (!attestationRequired || attestationDeclared), detail: !routeOk ? `The manifest declares model route ${m.agent.model_route}; the standard requires ${run.model_route}.` : attestationRequired && !attestationDeclared ? `The standard requires every model call signed inside ${run.model_attestation.provider}'s TEE, and the manifest carries no model attestation.` : attestationDeclared ? `Model calls to ${m.agent.model_route}, as the standard requires; observed, not declared: every call is signed inside the model's TEE (checked below).` : `Model calls declared to ${m.agent.model_route}, as the standard requires. Declared, not observed: the gateway never sees model traffic.` });
+      checks2.push({ id: "model_route", label: "Model route", ok: routeOk && (!attestationRequired || attestationDeclared), detail: !routeOk ? `The manifest declares model route ${m.agent.model_route}; the standard requires ${run.model_route}.` : attestationRequired && !attestationDeclared ? `The standard requires every model call signed inside ${run.model_attestation.provider}'s TEE, and the manifest carries no model attestation.` : attestationDeclared ? `Model calls to ${m.agent.model_route}, as the standard requires; observed, not declared: every call is signed inside the model's TEE (checked below).` : `Model calls declared to ${m.agent.model_route}, as the standard requires. Declared, not observed: the gateway never sees model traffic.` });
       bound &&= dataOk && harnessOk && attemptsOk && timeOk && egressOk;
       const accepted = std.trust.accepted_gate_keys.map((k) => k.toLowerCase()).includes(m.gateway.verification_key.toLowerCase());
-      checks.push({ id: "gate_key", label: "Gateway key", ok: accepted, detail: accepted ? "The gateway key the manifest names is one the standard accepts." : "The standard does not accept the gateway key the manifest names." });
+      checks2.push({ id: "gate_key", label: "Gateway key", ok: accepted, detail: accepted ? "The gateway key the manifest names is one the standard accepts." : "The standard does not accept the gateway key the manifest names." });
       bound &&= accepted;
       const harnessAccepted = std.trust.accepted_readback_sources.map((k) => k.toLowerCase()).includes(m.signer.verification_key.toLowerCase());
-      checks.push({ id: "harness_key", label: "Harness key", ok: harnessAccepted, detail: harnessAccepted ? "The harness key that signed this manifest is one the standard accepts as a readback source." : "The standard does not accept the harness key that signed this manifest; it may be intact, but it is not the maintainer's harness." });
+      checks2.push({ id: "harness_key", label: "Harness key", ok: harnessAccepted, detail: harnessAccepted ? "The harness key that signed this manifest is one the standard accepts as a readback source." : "The standard does not accept the harness key that signed this manifest; it may be intact, but it is not the maintainer's harness." });
       bound &&= harnessAccepted;
     } else {
-      checks.push({ id: "run_clause", label: "Run requirements", ok: false, detail: "The standard has no run requirements, so it says nothing about attempts, time, task set, or harness." });
+      checks2.push({ id: "run_clause", label: "Run requirements", ok: false, detail: "The standard has no run requirements, so it says nothing about attempts, time, task set, or harness." });
       bound = false;
     }
   }
@@ -11195,29 +11195,29 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
     anythingGiven = true;
     chain = verifyActaChain(receipts, { publicKeyHex: m.gateway.verification_key });
     const intact = chain.all_signatures_valid && chain.chain_unbroken && chain.signatures_checked;
-    checks.push({ id: "chain", label: "Receipt chain", ok: intact, detail: intact ? `${chain.count} receipt${chain.count === 1 ? "" : "s"} verify against the gateway key and link without a gap.` : "The receipts do not all verify against the gateway key, or the chain is broken." });
+    checks2.push({ id: "chain", label: "Receipt chain", ok: intact, detail: intact ? `${chain.count} receipt${chain.count === 1 ? "" : "s"} verify against the gateway key and link without a gap.` : "The receipts do not all verify against the gateway key, or the chain is broken." });
     const head = receipts.length ? chainLink(receipts[receipts.length - 1]) : null;
     const headOk = chain.count === m.gateway.receipt_count && head === m.gateway.chain_head;
-    checks.push({ id: "chain_head", label: "Chain head", ok: headOk, detail: headOk ? "The receipt count and the hash of the last receipt equal what the manifest names: nothing was added or removed after signing." : "The receipt log differs from the one the manifest names (count or head hash)." });
+    checks2.push({ id: "chain_head", label: "Chain head", ok: headOk, detail: headOk ? "The receipt count and the hash of the last receipt equal what the manifest names: nothing was added or removed after signing." : "The receipt log differs from the one the manifest names (count or head hash)." });
     const policyOk = chain.receipts.every((r) => r.policy_digest === m.standard.policy_digest);
-    checks.push({ id: "receipt_policy", label: "Receipts under the policy", ok: policyOk, detail: policyOk ? "Every receipt cites the policy digest the manifest records." : "A receipt cites a different policy digest: it was not produced under this run's gate policy." });
+    checks2.push({ id: "receipt_policy", label: "Receipts under the policy", ok: policyOk, detail: policyOk ? "Every receipt cites the policy digest the manifest records." : "A receipt cites a different policy digest: it was not produced under this run's gate policy." });
     const refused = chain.receipts.filter((r) => r.decision === "deny").length;
     const refusedOk = refused === m.summary.refused;
-    checks.push({ id: "refusals", label: "Refusals", ok: refusedOk, detail: refusedOk ? `${refused} call${refused === 1 ? "" : "s"} refused by the gate, as the manifest says.` : `The chain shows ${refused} refusal(s); the manifest says ${m.summary.refused}.` });
+    checks2.push({ id: "refusals", label: "Refusals", ok: refusedOk, detail: refusedOk ? `${refused} call${refused === 1 ? "" : "s"} refused by the gate, as the manifest says.` : `The chain shows ${refused} refusal(s); the manifest says ${m.summary.refused}.` });
     bound &&= intact && headOk && policyOk && refusedOk;
     if (std?.requirements.run) {
       const allowed = std.requirements.run.allowed_tools;
       const offList = chain.receipts.filter((r) => r.decision === "allow" && (r.tool === null || !allowed.includes(r.tool)));
       const toolsOk = offList.length === 0;
-      checks.push({ id: "tools", label: "Tools", ok: toolsOk, detail: toolsOk ? `Every allowed call names a tool on the standard's list (${allowed.join(", ")}).` : `${offList.length} allowed call(s) name a tool off the list: the gate did not enforce this standard.` });
+      checks2.push({ id: "tools", label: "Tools", ok: toolsOk, detail: toolsOk ? `Every allowed call names a tool on the standard's list (${allowed.join(", ")}).` : `${offList.length} allowed call(s) name a tool off the list: the gate did not enforce this standard.` });
       bound &&= toolsOk;
       for (const t of m.attempts) {
         const slice = chain.receipts.slice(t.receipts.from, t.receipts.to);
         const times = slice.map((r) => r.issued_at ? Date.parse(r.issued_at) : NaN).filter((n) => !Number.isNaN(n));
         if (times.length >= 2) {
-          const span2 = (Math.max(...times) - Math.min(...times)) / 1e3;
-          const ok = span2 <= std.requirements.run.time_limit_seconds;
-          checks.push({ id: `receipt_time_${t.task_id}_${t.attempt}`, label: `Receipt times, ${t.task_id}`, ok, detail: ok ? `First to last receipt: ${Math.round(span2)} s, within the limit, on the gate clock.` : `First to last receipt spans ${Math.round(span2)} s, over the limit.` });
+          const span3 = (Math.max(...times) - Math.min(...times)) / 1e3;
+          const ok = span3 <= std.requirements.run.time_limit_seconds;
+          checks2.push({ id: `receipt_time_${t.task_id}_${t.attempt}`, label: `Receipt times, ${t.task_id}`, ok, detail: ok ? `First to last receipt: ${Math.round(span3)} s, within the limit, on the gate clock.` : `First to last receipt spans ${Math.round(span3)} s, over the limit.` });
           bound &&= ok;
         }
       }
@@ -11227,38 +11227,38 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
   if (temporal && chain) {
     const recomputed = `sha256:${sha256Hex(canonicalize2({ format: temporal.format, rules: temporal.rules }))}`;
     if (recomputed !== temporal.digest) {
-      checks.push({ id: "temporal_policy", label: "History rules", ok: false, detail: "The history rules the standard carries do not hash to the digest it declares." });
+      checks2.push({ id: "temporal_policy", label: "History rules", ok: false, detail: "The history rules the standard carries do not hash to the digest it declares." });
       bound = false;
     } else {
       const events = projectEvents(chain.receipts.map((r) => ({ tool: r.tool ?? "", decision: r.decision === "deny" ? "deny" : "allow", input_hash: r.input_hash ?? "", issued_at: r.issued_at ?? (/* @__PURE__ */ new Date(0)).toISOString(), link: r.hash })), { attempts: m.attempts, calls: context.calls ?? null });
       const ev = evaluateTemporal(events, { format: temporal.format, rules: temporal.rules });
       for (const r of ev.results) {
-        const id2 = `temporal_${r.rule.id}`;
+        const id4 = `temporal_${r.rule.id}`;
         if (!r.evaluable) {
-          checks.push({ id: id2, label: `History rule: ${r.rule.id}`, ok: true, informational: true, detail: `Not evaluable here: ${r.reason}.` });
+          checks2.push({ id: id4, label: `History rule: ${r.rule.id}`, ok: true, informational: true, detail: `Not evaluable here: ${r.reason}.` });
           continue;
         }
         const ok = r.violations.length === 0;
-        checks.push({ id: id2, label: `History rule: ${r.rule.id}`, ok, detail: ok ? `Held at every one of ${r.events_examined} receipts${r.rule.note ? ` (${r.rule.note})` : ""}.` : `Broken at receipt ${r.violations[0].event_index}: ${r.violations[0].detail} History head at that decision: ${r.violations[0].link.slice(0, 19)}\u2026${r.violations.length > 1 ? ` (${r.violations.length} violations in all)` : ""}` });
+        checks2.push({ id: id4, label: `History rule: ${r.rule.id}`, ok, detail: ok ? `Held at every one of ${r.events_examined} receipts${r.rule.note ? ` (${r.rule.note})` : ""}.` : `Broken at receipt ${r.violations[0].event_index}: ${r.violations[0].detail} History head at that decision: ${r.violations[0].link.slice(0, 19)}\u2026${r.violations.length > 1 ? ` (${r.violations.length} violations in all)` : ""}` });
         bound &&= ok;
       }
       const held = ev.results.filter((r) => r.evaluable && r.violations.length === 0).map((r) => r.rule.id);
       if (held.length) establishes.push(`The history rules the standard declares (${held.join(", ")}) held at every receipt, replayed here from the chain; the same rules are written in Dogwood's syntax beside the standard for the reference interpreter.`);
       if (ev.not_evaluable.length) not_established.push(`Whether the history rules that read each command held (${ev.not_evaluable.join(", ")}): supply calls.jsonl.`);
     }
-  } else if (temporal && !chain) checks.push({ id: "temporal_policy", label: "History rules", ok: true, informational: true, detail: "The standard declares history rules; supply the receipts to replay them." });
+  } else if (temporal && !chain) checks2.push({ id: "temporal_policy", label: "History rules", ok: true, informational: true, detail: "The standard declares history rules; supply the receipts to replay them." });
   const rawReceipts = context.bytes?.receipts ?? context.provenance?.bytes?.receipts;
   if (receipts && rawReceipts !== void 0) {
     const digest = `sha256:${subjectDigest(rawReceipts)}`;
     const ok = digest === m.gateway.log_digest;
-    checks.push({ id: "log_bytes", label: "Receipt log bytes", ok, detail: ok ? `receipts.jsonl as supplied hashes to the digest the manifest records (${digest.slice(0, 19)}\u2026).` : `The receipt log supplied is not, byte for byte, the log the manifest digests (${m.gateway.log_digest.slice(0, 19)}\u2026): the chain may verify, but these are not the bytes the harness wrote.` });
+    checks2.push({ id: "log_bytes", label: "Receipt log bytes", ok, detail: ok ? `receipts.jsonl as supplied hashes to the digest the manifest records (${digest.slice(0, 19)}\u2026).` : `The receipt log supplied is not, byte for byte, the log the manifest digests (${m.gateway.log_digest.slice(0, 19)}\u2026): the chain may verify, but these are not the bytes the harness wrote.` });
     bound &&= ok;
   }
   const rawCalls = context.bytes?.calls;
   if (context.calls && rawCalls !== void 0 && m.gateway.calls_digest) {
     const digest = `sha256:${subjectDigest(rawCalls)}`;
     const ok = digest === m.gateway.calls_digest;
-    checks.push({ id: "calls_bytes", label: "Calls log bytes", ok, detail: ok ? `calls.jsonl as supplied hashes to the digest the manifest records (${digest.slice(0, 19)}\u2026).` : `The calls log supplied is not, byte for byte, the log the manifest digests (${m.gateway.calls_digest.slice(0, 19)}\u2026).` });
+    checks2.push({ id: "calls_bytes", label: "Calls log bytes", ok, detail: ok ? `calls.jsonl as supplied hashes to the digest the manifest records (${digest.slice(0, 19)}\u2026).` : `The calls log supplied is not, byte for byte, the log the manifest digests (${m.gateway.calls_digest.slice(0, 19)}\u2026).` });
     bound &&= ok;
   }
   const calls = context.calls ?? null;
@@ -11267,10 +11267,10 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
     const n = Math.min(calls.length, chain.receipts.length);
     const boundCalls = chain.receipts.slice(0, n).filter((r, i) => r.tool === calls[i].tool && r.input_hash === sha256Hex(canonicalize2(calls[i].input))).length;
     const callsOk = calls.length === chain.receipts.length && boundCalls === chain.receipts.length;
-    checks.push({ id: "calls_bind", label: "Calls", ok: callsOk, detail: callsOk ? `All ${calls.length} calls in the log bind to their receipts: the input digest in each receipt is the digest of the call recorded.` : `${boundCalls} of ${chain.receipts.length} receipts bind to the calls log (${calls.length} entries); the rest were not the calls recorded.` });
+    checks2.push({ id: "calls_bind", label: "Calls", ok: callsOk, detail: callsOk ? `All ${calls.length} calls in the log bind to their receipts: the input digest in each receipt is the digest of the call recorded.` : `${boundCalls} of ${chain.receipts.length} receipts bind to the calls log (${calls.length} entries); the rest were not the calls recorded.` });
     bound &&= callsOk;
   } else if (calls && !chain) {
-    checks.push({ id: "calls_bind", label: "Calls", ok: false, detail: "A calls log was supplied without the receipt log it binds to." });
+    checks2.push({ id: "calls_bind", label: "Calls", ok: false, detail: "A calls log was supplied without the receipt log it binds to." });
     bound = false;
   }
   const matt = m.environment.model_attestation ?? null;
@@ -11285,45 +11285,45 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
     const pinned = matt.reports.every((p) => digests.includes(p.digest)) && matt.reports.length === supplied.length;
     const addressesOk = modelAttestations.every((v, i) => v.signing_address !== null && matt.reports.some((p) => p.digest === digests[i] && p.signing_address.toLowerCase() === v.signing_address.toLowerCase()));
     const allValid = modelAttestations.every((v) => v.valid);
-    for (const [i, v] of modelAttestations.entries()) for (const c of v.checks) checks.push({ id: `model_attestation_${i + 1}_${c.id}`, label: `Model attestation ${i + 1}: ${c.label}`, ok: c.ok, detail: c.detail, ...c.informational ? { informational: true } : {} });
+    for (const [i, v] of modelAttestations.entries()) for (const c of v.checks) checks2.push({ id: `model_attestation_${i + 1}_${c.id}`, label: `Model attestation ${i + 1}: ${c.label}`, ok: c.ok, detail: c.detail, ...c.informational ? { informational: true } : {} });
     const ok = pinned && addressesOk && allValid;
-    checks.push({ id: "model_attestation", label: "Model attestation", ok, detail: ok ? `${modelAttestations.length} report${modelAttestations.length === 1 ? "" : "s"} from ${matt.provider}, each pinned by the manifest and verified offline: the TDX quote chains to Intel's root and binds the signing key.` : !pinned ? "The reports supplied are not the ones the manifest pins." : !addressesOk ? "A report binds a different signing address than the manifest records for it." : "A report does not verify." });
+    checks2.push({ id: "model_attestation", label: "Model attestation", ok, detail: ok ? `${modelAttestations.length} report${modelAttestations.length === 1 ? "" : "s"} from ${matt.provider}, each pinned by the manifest and verified offline: the TDX quote chains to Intel's root and binds the signing key.` : !pinned ? "The reports supplied are not the ones the manifest pins." : !addressesOk ? "A report binds a different signing address than the manifest records for it." : "A report does not verify." });
     bound &&= ok;
     const modelOk = !std?.requirements.run?.model_attestation || matt.provider === std.requirements.run.model_attestation.provider && matt.model === std.requirements.run.model_attestation.model;
-    if (std?.requirements.run?.model_attestation) checks.push({ id: "model_attestation_pin", label: "Attested model", ok: modelOk, detail: modelOk ? `The attested provider and model are the ones the standard names: ${matt.provider}, ${matt.model}.` : `The standard names ${std.requirements.run.model_attestation.provider} ${std.requirements.run.model_attestation.model}; the manifest attests ${matt.provider} ${matt.model}.` });
+    if (std?.requirements.run?.model_attestation) checks2.push({ id: "model_attestation_pin", label: "Attested model", ok: modelOk, detail: modelOk ? `The attested provider and model are the ones the standard names: ${matt.provider}, ${matt.model}.` : `The standard names ${std.requirements.run.model_attestation.provider} ${std.requirements.run.model_attestation.model}; the manifest attests ${matt.provider} ${matt.model}.` });
     bound &&= modelOk;
     if (ok && modelOk) attestedModel = { model: matt.model, calls: 0, addresses: modelAttestations.map((v) => v.signing_address), mr_td: modelAttestations[0]?.measurements?.mr_td ?? null };
   } else if (matt) {
-    checks.push({ id: "model_attestation", label: "Model attestation", ok: true, informational: true, detail: `The manifest carries ${matt.reports.length} attestation report${matt.reports.length === 1 ? "" : "s"} by digest; supply model-attestation.json to verify them here.` });
+    checks2.push({ id: "model_attestation", label: "Model attestation", ok: true, informational: true, detail: `The manifest carries ${matt.reports.length} attestation report${matt.reports.length === 1 ? "" : "s"} by digest; supply model-attestation.json to verify them here.` });
   }
   if (m.model_calls && context.modelCalls !== void 0 && context.modelCalls !== null) {
     anythingGiven = true;
-    const text3 = context.modelCalls;
-    const digestOk = fileDigest(text3) === m.model_calls.digest;
+    const text5 = context.modelCalls;
+    const digestOk = fileDigest(text5) === m.model_calls.digest;
     let parsed = null;
     let parseError = "";
     try {
-      parsed = parseModelCalls(text3);
+      parsed = parseModelCalls(text5);
     } catch (e) {
       parseError = e.message;
     }
     const countOk = parsed !== null && parsed.length === m.model_calls.count;
     const ranges = m.attempts.filter((t) => t.model_calls);
     const partition2 = parsed !== null && (ranges.length === 0 || [...ranges].sort((a, b) => a.model_calls.from - b.model_calls.from).reduce((cursor2, t) => cursor2 === t.model_calls.from ? t.model_calls.to : -1, 0) === parsed.length);
-    checks.push({ id: "model_calls_digest", label: "Model calls", ok: digestOk && countOk && partition2, detail: !digestOk ? "The model-calls log supplied is not the one the manifest digests." : !countOk ? parseError ? `The model-calls log does not parse: ${parseError}.` : `The log holds ${parsed?.length ?? 0} calls; the manifest says ${m.model_calls.count}.` : !partition2 ? "The attempts' model-call ranges do not partition the log." : `The ${parsed.length} signed model-call records are the ones the manifest digests, and the attempts account for all of them.` });
+    checks2.push({ id: "model_calls_digest", label: "Model calls", ok: digestOk && countOk && partition2, detail: !digestOk ? "The model-calls log supplied is not the one the manifest digests." : !countOk ? parseError ? `The model-calls log does not parse: ${parseError}.` : `The log holds ${parsed?.length ?? 0} calls; the manifest says ${m.model_calls.count}.` : !partition2 ? "The attempts' model-call ranges do not partition the log." : `The ${parsed.length} signed model-call records are the ones the manifest digests, and the attempts account for all of them.` });
     bound &&= digestOk && countOk && partition2;
     if (parsed && modelAttestations.length > 0) {
       const v = verifyAttestedCalls(parsed, modelAttestations, matt?.model ?? null);
-      checks.push({ id: "model_calls_bind", label: "Model call signatures", ok: v.ok, detail: v.ok ? `Every one of the ${v.count} model calls recovers to a signing key that a verified report binds, and names ${matt?.model}: the model's TEE answered each request and response as digested.` : `${v.invalid.length ? `${v.invalid.length} signature${v.invalid.length === 1 ? "" : "s"} do not verify` : ""}${v.unattested.length ? `${v.invalid.length ? "; " : ""}signed by ${v.unattested.join(", ")}, which no verified report binds` : ""}${v.other_model.length ? `${v.invalid.length || v.unattested.length ? "; " : ""}${v.other_model.length} call${v.other_model.length === 1 ? "" : "s"} name another model` : ""}.` });
+      checks2.push({ id: "model_calls_bind", label: "Model call signatures", ok: v.ok, detail: v.ok ? `Every one of the ${v.count} model calls recovers to a signing key that a verified report binds, and names ${matt?.model}: the model's TEE answered each request and response as digested.` : `${v.invalid.length ? `${v.invalid.length} signature${v.invalid.length === 1 ? "" : "s"} do not verify` : ""}${v.unattested.length ? `${v.invalid.length ? "; " : ""}signed by ${v.unattested.join(", ")}, which no verified report binds` : ""}${v.other_model.length ? `${v.invalid.length || v.unattested.length ? "; " : ""}${v.other_model.length} call${v.other_model.length === 1 ? "" : "s"} name another model` : ""}.` });
       bound &&= v.ok;
       if (attestedModel && v.ok) attestedModel.calls = v.count;
       else attestedModel = null;
     } else if (parsed && matt) {
-      checks.push({ id: "model_calls_bind", label: "Model call signatures", ok: true, informational: true, detail: "Signed model calls supplied; supply the attestation reports to bind their signing keys to hardware." });
+      checks2.push({ id: "model_calls_bind", label: "Model call signatures", ok: true, informational: true, detail: "Signed model calls supplied; supply the attestation reports to bind their signing keys to hardware." });
       attestedModel = null;
     }
   } else if (m.model_calls && matt) {
-    checks.push({ id: "model_calls_digest", label: "Model calls", ok: true, informational: true, detail: `The manifest pins ${m.model_calls.count} signed model-call records; supply model-calls.jsonl to check them.` });
+    checks2.push({ id: "model_calls_digest", label: "Model calls", ok: true, informational: true, detail: `The manifest pins ${m.model_calls.count} signed model-call records; supply model-calls.jsonl to check them.` });
     attestedModel = null;
   }
   const workspaces = context.workspaces ?? null;
@@ -11333,7 +11333,7 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
       if (!t.workspace) continue;
       const files = workspaces[t.task_id];
       const ok = Boolean(files) && workspaceDigest(files) === t.workspace.digest && files.length === t.workspace.file_count;
-      checks.push({ id: `workspace_${t.task_id}_${t.attempt}`, label: `Workspace, ${t.task_id}`, ok, detail: ok ? `The archived workspace (${t.workspace.file_count} file${t.workspace.file_count === 1 ? "" : "s"}) is the one the manifest pins.` : !files ? "No archive supplied for this task." : "The archive supplied is not the one the manifest pins." });
+      checks2.push({ id: `workspace_${t.task_id}_${t.attempt}`, label: `Workspace, ${t.task_id}`, ok, detail: ok ? `The archived workspace (${t.workspace.file_count} file${t.workspace.file_count === 1 ? "" : "s"}) is the one the manifest pins.` : !files ? "No archive supplied for this task." : "The archive supplied is not the one the manifest pins." });
       bound &&= ok;
     }
   }
@@ -11362,10 +11362,10 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
       return Boolean(r) && r.verdict === t.verdict && (!t.workspace || r.workspace_digest === t.workspace.digest);
     });
     const ok = sameRun && graderAccepted && distinct && agrees;
-    const id2 = i === 0 ? "regrade" : `regrade_${i + 1}`;
+    const id4 = i === 0 ? "regrade" : `regrade_${i + 1}`;
     const unnamed = Boolean(std) && rv.valid && sameRun && !graderAccepted;
     const profileNote = rg.results?.some((r) => r.grading?.profile === "in_process") ? " Profile: the tests import the submission, so its code ran inside the scoring interpreter (declared as the weaker profile)." : rg.results?.every((r) => r.grading?.profile === "black_box") && rg.results?.length ? " Profile: black box, the tests never import the submission." : "";
-    checks.push({ id: id2, label: i === 0 ? "Second grading" : `Grading ${i + 2}`, ok: unnamed ? agrees : ok, ...unnamed ? { informational: true } : {}, detail: !rv.valid ? rv.detail : !sameRun ? "The regrade is for a different manifest." : !std ? "Supply the standard to check the grader." : unnamed ? `A grading by ${rg.grader.name} (${rg.grader.key_id}), which the standard does not name as a grader: it ${agrees ? "agrees with every verdict" : "DISAGREES with the manifest on at least one verdict or workspace"}, and it does not bind either way. The standard names who may reconcile its verdicts.${profileNote}` : !distinct ? "The regrade was signed by the same key as the manifest; that is not a second party." : !agrees ? "This grading disagrees with the manifest on at least one verdict or workspace." : `A grading under key ${rg.grader.key_id}${graderByKey ? "" : " (accepted by its provenance identity)"}${madeBy}, from the archived workspaces with the pinned tests, agrees with every verdict.${profileNote}` });
+    checks2.push({ id: id4, label: i === 0 ? "Second grading" : `Grading ${i + 2}`, ok: unnamed ? agrees : ok, ...unnamed ? { informational: true } : {}, detail: !rv.valid ? rv.detail : !sameRun ? "The regrade is for a different manifest." : !std ? "Supply the standard to check the grader." : unnamed ? `A grading by ${rg.grader.name} (${rg.grader.key_id}), which the standard does not name as a grader: it ${agrees ? "agrees with every verdict" : "DISAGREES with the manifest on at least one verdict or workspace"}, and it does not bind either way. The standard names who may reconcile its verdicts.${profileNote}` : !distinct ? "The regrade was signed by the same key as the manifest; that is not a second party." : !agrees ? "This grading disagrees with the manifest on at least one verdict or workspace." : `A grading under key ${rg.grader.key_id}${graderByKey ? "" : " (accepted by its provenance identity)"}${madeBy}, from the archived workspaces with the pinned tests, agrees with every verdict.${profileNote}` });
     if (!unnamed) bound &&= ok;
     if (ok) {
       reconciled = true;
@@ -11376,10 +11376,10 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
   if (std) {
     const level = std.requirements.effect_evidence;
     if (level === "independently_reconciled") {
-      checks.push({ id: "verdict_evidence", label: "Verdict evidence", ok: reconciled, detail: reconciled ? "The standard asks for an independent reconciliation of the verdicts and a second grading provides it." : "The standard asks for an independent reconciliation of the verdicts; without a second grading, the verdicts are the harness's word." });
+      checks2.push({ id: "verdict_evidence", label: "Verdict evidence", ok: reconciled, detail: reconciled ? "The standard asks for an independent reconciliation of the verdicts and a second grading provides it." : "The standard asks for an independent reconciliation of the verdicts; without a second grading, the verdicts are the harness's word." });
       bound &&= reconciled;
     } else {
-      checks.push({ id: "verdict_evidence", label: "Verdict evidence", ok: true, detail: `The standard accepts the harness's own test run as the verdict evidence (${level}). The verdicts are the harness's word; the archived workspace lets anyone re-grade.`, informational: true });
+      checks2.push({ id: "verdict_evidence", label: "Verdict evidence", ok: true, detail: `The standard accepts the harness's own test run as the verdict evidence (${level}). The verdicts are the harness's word; the archived workspace lets anyone re-grade.`, informational: true });
     }
   }
   const att = m.environment.attestation;
@@ -11396,14 +11396,14 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
     const graderRepos = (std?.trust.accepted_grader_provenance ?? []).filter((g) => g.kind === "github-actions-provenance").map((g) => g.repository.toLowerCase());
     const fromAcceptedGrader = (r) => Boolean(r.identity?.repository && graderRepos.includes(r.identity.repository.toLowerCase()));
     for (const b of prov.bundles) {
-      let key;
+      let key2;
       try {
-        key = canonicalize2(b);
+        key2 = canonicalize2(b);
       } catch {
-        key = `#${results.length}`;
+        key2 = `#${results.length}`;
       }
-      if (seen.has(key)) continue;
-      seen.add(key);
+      if (seen.has(key2)) continue;
+      seen.add(key2);
       const r = verifySigstoreBundle(b, expect);
       const n = results.length + 1;
       const identity = r.checks.find((c) => c.id === "identity") ?? null;
@@ -11411,8 +11411,8 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
       const namesManifest = manifestDigest !== null && (r.statement?.subjects.some((s) => s.sha256 === manifestDigest) ?? false);
       const foreign = cryptoOk && identity !== null && !identity.ok && !namesManifest;
       for (const c of r.checks) {
-        if (c.id === "identity" && foreign) checks.push({ id: `provenance_${n}_identity`, label: `Provenance ${n}: Identity`, ok: true, informational: true, detail: fromAcceptedGrader(r) ? `Made by a grader repository the standard accepts, not by the run itself (${c.detail})` : `Made in another run, so it does not count for this manifest (${c.detail})` });
-        else checks.push({ id: `provenance_${n}_${c.id}`, label: `Provenance ${n}: ${c.label}`, ok: c.ok, detail: c.detail });
+        if (c.id === "identity" && foreign) checks2.push({ id: `provenance_${n}_identity`, label: `Provenance ${n}: Identity`, ok: true, informational: true, detail: fromAcceptedGrader(r) ? `Made by a grader repository the standard accepts, not by the run itself (${c.detail})` : `Made in another run, so it does not count for this manifest (${c.detail})` });
+        else checks2.push({ id: `provenance_${n}_${c.id}`, label: `Provenance ${n}: ${c.label}`, ok: c.ok, detail: c.detail });
       }
       const counts = cryptoOk && (identity?.ok ?? true);
       results.push({ r, counts, grader: cryptoOk && fromAcceptedGrader(r) });
@@ -11423,7 +11423,7 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
       const bytes = prov.bytes?.[role];
       const file = PROVENANCE_FILES[role];
       if (bytes === void 0) {
-        if (role === "manifest") checks.push({ id: "provenance_manifest", label: "Provenance: manifest", ok: true, detail: "The manifest bytes were not supplied, so no bundle can be tied to this manifest; the bundles are verified on their own.", informational: true });
+        if (role === "manifest") checks2.push({ id: "provenance_manifest", label: "Provenance: manifest", ok: true, detail: "The manifest bytes were not supplied, so no bundle can be tied to this manifest; the bundles are verified on their own.", informational: true });
         continue;
       }
       const digest = subjectDigest(bytes);
@@ -11434,10 +11434,10 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
       if (found) covered.push(role);
       const required = role !== "regrade" && att !== null;
       if (!found && !required) {
-        checks.push({ id: `provenance_${role}`, label: `Provenance: ${role}`, ok: true, detail: `No bundle from this run names ${file}; ${role === "regrade" ? "a second grading made outside the workflow carries no attestation" : "the manifest claims none"}.`, informational: true });
+        checks2.push({ id: `provenance_${role}`, label: `Provenance: ${role}`, ok: true, detail: `No bundle from this run names ${file}; ${role === "regrade" ? "a second grading made outside the workflow carries no attestation" : "the manifest claims none"}.`, informational: true });
         continue;
       }
-      checks.push({ id: `provenance_${role}`, label: `Provenance: ${role}`, ok: found, detail: found ? `${file} as supplied (sha256:${digest.slice(0, 16)}...) is a subject of verified bundle ${idx + 1}.` : `No verified bundle from this run names ${file} as supplied (sha256:${digest.slice(0, 16)}...)${foreignOnly ? "; a bundle made in another run does" : ""}.` });
+      checks2.push({ id: `provenance_${role}`, label: `Provenance: ${role}`, ok: found, detail: found ? `${file} as supplied (sha256:${digest.slice(0, 16)}...) is a subject of verified bundle ${idx + 1}.` : `No verified bundle from this run names ${file} as supplied (sha256:${digest.slice(0, 16)}...)${foreignOnly ? "; a bundle made in another run does" : ""}.` });
       if (!found) allOk = false;
     }
     bound &&= allOk;
@@ -11470,7 +11470,7 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
   if (!std) not_established.push("Which standard the run was under: supply the signed standard to check the pins and the policy.");
   if (!receipts) not_established.push("That the receipts the manifest names exist and verify: supply the gateway's receipt log.");
   const title = binding === "bound" ? `Verified run: ${m.summary.passed} of ${m.summary.tasks} passed under ${std?.recipient.organization ?? "the standard"}` : binding === "manifest_only" ? `Run manifest verifies: ${m.summary.passed} of ${m.summary.tasks} passed, unbound` : "Run manifest verifies, but does not bind to what was supplied";
-  return { shape_valid, digest_valid, signature_valid, cryptographically_valid: true, binding, checks, chain, title, establishes, not_established, provenance };
+  return { shape_valid, digest_valid, signature_valid, cryptographically_valid: true, binding, checks: checks2, chain, title, establishes, not_established, provenance };
 }
 function runManifestReadback(m) {
   const lines = [];
@@ -11485,12 +11485,12 @@ function runManifestReadback(m) {
   lines.push(`Result: ${m.summary.passed} of ${m.summary.tasks} passed; ${m.summary.calls} governed calls, ${m.summary.refused} refused`);
   return lines.join("\n");
 }
-function taskSetDigest(name, revision, tasks) {
-  const canonical2 = { name, revision: revision ?? null, tasks: tasks.map((t) => ({ id: t.id, files: [...t.files].sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0) })).sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0) };
+function taskSetDigest(name, revision2, tasks) {
+  const canonical2 = { name, revision: revision2 ?? null, tasks: tasks.map((t) => ({ id: t.id, files: [...t.files].sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0) })).sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0) };
   return `sha256:${sha256Hex(canonicalize2(canonical2))}`;
 }
-function fileDigest(content2) {
-  return `sha256:${shaHex(content2)}`;
+function fileDigest(content3) {
+  return `sha256:${shaHex(content3)}`;
 }
 
 // ../../protect-mcp/src/coordination-protocol.ts
@@ -11498,9 +11498,9 @@ var COORDINATION_DOMAIN = "scopeblind.coordination.v1\n";
 function bytesToHex4(bytes) {
   return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
-function hexToBytes4(hex3) {
-  if (!/^(?:[0-9a-f]{2})+$/i.test(hex3)) throw new Error("Invalid hexadecimal data");
-  return Uint8Array.from(hex3.match(/../g).map((x) => parseInt(x, 16)));
+function hexToBytes4(hex4) {
+  if (!/^(?:[0-9a-f]{2})+$/i.test(hex4)) throw new Error("Invalid hexadecimal data");
+  return Uint8Array.from(hex4.match(/../g).map((x) => parseInt(x, 16)));
 }
 function validUnicode(value) {
   for (let i = 0; i < value.length; i++) {
@@ -11529,8 +11529,8 @@ function canonical(value) {
   }
   if (typeof value === "object") {
     if (Object.getPrototypeOf(value) !== Object.prototype && Object.getPrototypeOf(value) !== null) throw new Error("Expected a plain JSON object");
-    const object3 = value;
-    return "{" + Object.keys(object3).sort().map((k) => canonical(k) + ":" + canonical(object3[k])).join(",") + "}";
+    const object4 = value;
+    return "{" + Object.keys(object4).sort().map((k) => canonical(k) + ":" + canonical(object4[k])).join(",") + "}";
   }
   throw new Error("Not a JSON value");
 }
@@ -11543,8 +11543,8 @@ async function verify(envelope2, expectedSigner) {
     if (expectedSigner && expectedSigner !== envelope2.signer) return false;
     const preimage = COORDINATION_DOMAIN + canonical(envelope2.payload);
     if (await sha2565(preimage) !== envelope2.digest) return false;
-    const key = await crypto.subtle.importKey("raw", hexToBytes4(envelope2.signer), { name: "Ed25519" }, false, ["verify"]);
-    return await crypto.subtle.verify("Ed25519", key, hexToBytes4(envelope2.signature), new TextEncoder().encode(preimage));
+    const key2 = await crypto.subtle.importKey("raw", hexToBytes4(envelope2.signer), { name: "Ed25519" }, false, ["verify"]);
+    return await crypto.subtle.verify("Ed25519", key2, hexToBytes4(envelope2.signature), new TextEncoder().encode(preimage));
   } catch {
     return false;
   }
@@ -11605,8 +11605,8 @@ async function verifyRepositoryEvidence(value, pin) {
     if (s.proposal) check(!!reviewer && validRepositoryEnvelope(s.proposal) && validRepositoryProposal(s.proposal.payload, t, s.task.digest) && await verify(s.proposal, t.receiver_key) && Date.parse(s.proposal.payload.observed_at) >= Date.parse(reviewer.issued_at) && Date.parse(s.proposal.payload.observed_at) < Date.parse(t.expires_at), "Repository snapshot is invalid");
     check(Array.isArray(s.approvals) && s.approvals.length <= 2 && new Set(s.approvals.map((a) => a.payload.role)).size === s.approvals.length, "Approval roles are invalid");
     for (const approval of s.approvals) {
-      const a = approval.payload, key = a.role === "owner" ? t.owner_key : reviewer?.reviewer_key;
-      check(!!s.proposal && validRepositoryEnvelope(approval) && validRepositoryRecord(a, "approval") && a.principal_key === key && a.task_id === t.id && a.task_digest === s.task.digest && a.proposal_digest === s.proposal.digest && await verify(approval, key) && Date.parse(a.issued_at) >= Date.parse(s.proposal.payload.observed_at) && Date.parse(a.expires_at) <= Date.parse(t.expires_at), "Exact proposal approval is invalid");
+      const a = approval.payload, key2 = a.role === "owner" ? t.owner_key : reviewer?.reviewer_key;
+      check(!!s.proposal && validRepositoryEnvelope(approval) && validRepositoryRecord(a, "approval") && a.principal_key === key2 && a.task_id === t.id && a.task_digest === s.task.digest && a.proposal_digest === s.proposal.digest && await verify(approval, key2) && Date.parse(a.issued_at) >= Date.parse(s.proposal.payload.observed_at) && Date.parse(a.expires_at) <= Date.parse(t.expires_at), "Exact proposal approval is invalid");
     }
     if (s.execution) {
       const x = s.execution.payload, owner = s.approvals.find((a) => a.payload.role === "owner"), review = s.approvals.find((a) => a.payload.role === "reviewer");
@@ -11636,7 +11636,7 @@ var DEMO_REPOSITORY = "ScopeBlind/scopeblind-repository-demo";
 var DEMO_CHECK = { name: "ScopeBlind contact validation", app_id: 4962726 };
 var CONTACT_PATH = "demo/contact.json";
 var object2 = (value) => !!value && typeof value === "object" && !Array.isArray(value);
-var shape = (value, required, optional = []) => object2(value) && required.every((key) => key in value) && Object.keys(value).every((key) => required.includes(key) || optional.includes(key));
+var shape = (value, required, optional = []) => object2(value) && required.every((key2) => key2 in value) && Object.keys(value).every((key2) => required.includes(key2) || optional.includes(key2));
 var text2 = (value, max, empty = false) => typeof value === "string" && (empty || value.trim().length > 0) && value.length <= max && !/[\u0000-\u001f\u007f]/.test(value);
 var hex2 = (value) => typeof value === "string" && REPOSITORY_HEX.test(value);
 var id = (value) => typeof value === "string" && REPOSITORY_ID.test(value);
@@ -11683,7 +11683,7 @@ function repositoryRevisionBasis(state) {
 var shape2 = (v, required, optional = []) => !!v && typeof v === "object" && !Array.isArray(v) && required.every((k) => Object.hasOwn(v, k)) && Object.keys(v).every((k) => required.includes(k) || optional.includes(k));
 var envelope = (v) => shape2(v, ["payload", "signer", "digest", "signature"]);
 var time2 = (v) => typeof v === "string" && Number.isFinite(Date.parse(v)) && new Date(v).toISOString() === v;
-var within = (at2, start, end) => Date.parse(at2) >= Date.parse(start) && Date.parse(at2) <= Date.parse(end);
+var within = (at5, start, end) => Date.parse(at5) >= Date.parse(start) && Date.parse(at5) <= Date.parse(end);
 function requireValid(condition, message) {
   if (!condition) throw new Error(message);
 }
@@ -11723,7 +11723,7 @@ async function verifyRepositoryCollaborationEvidence(input, pins) {
     }
     requireValid(Array.isArray(c.agent_grants) && c.agent_grants.length <= 100 && Array.isArray(c.requests) && c.requests.length <= 100 && Array.isArray(c.revisions) && c.revisions.length <= 100, "Collaboration collections exceed their supported bounds.");
     const incomingLinks = c.revisions.filter((link) => link?.payload?.child_task_id === task.id);
-    requireValid(incomingLinks.length <= 1 && (incomingLinks.length === 1 || !["parent", "parent_request", "parent_agent_grant"].some((key) => Object.hasOwn(bundle, key))), "Predecessor records must be consumed by exactly one incoming revision link.");
+    requireValid(incomingLinks.length <= 1 && (incomingLinks.length === 1 || !["parent", "parent_request", "parent_agent_grant"].some((key2) => Object.hasOwn(bundle, key2))), "Predecessor records must be consumed by exactly one incoming revision link.");
     const grants = /* @__PURE__ */ new Map(), requestIds = /* @__PURE__ */ new Set(), requests = /* @__PURE__ */ new Map();
     for (const entry of c.agent_grants) {
       const signed2 = entry.grant, g = signed2?.payload;
@@ -11786,6 +11786,183 @@ async function verifyRepositoryCollaborationEvidence(input, pins) {
   }
   return result;
 }
+
+// ../../protect-mcp/src/coordination-repository-review.ts
+var object3 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var shape3 = (v, required, optional = []) => object3(v) && required.every((k) => Object.prototype.hasOwnProperty.call(v, k)) && Object.keys(v).every((k) => required.includes(k) || optional.includes(k));
+var text3 = (v, max, empty = false) => typeof v === "string" && (empty || v.trim().length > 0) && v.length <= max && !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(v);
+var line = (v, max) => text3(v, max) && !/[\r\n\t]/.test(String(v));
+var hex3 = (v) => typeof v === "string" && REPOSITORY_HEX.test(v);
+var id2 = (v) => typeof v === "string" && REPOSITORY_ID.test(v);
+var num = (v) => typeof v === "number" && Number.isSafeInteger(v) && v > 0;
+var at2 = (v) => typeof v === "string" && Number.isFinite(Date.parse(v)) && new Date(v).toISOString() === v;
+var span2 = (a, b, max) => at2(a) && at2(b) && Date.parse(b) > Date.parse(a) && Date.parse(b) - Date.parse(a) <= max;
+function safeRepositoryPreviewUrl(value) {
+  if (typeof value !== "string" || value.length > 2e3 || /[\s\u0000-\u001f\u007f]/.test(value)) return false;
+  try {
+    const u = new URL(value);
+    return u.protocol === "https:" && !u.username && !u.password && u.href === value && !u.hash && !u.search && u.hostname !== "localhost" && !u.hostname.endsWith(".localhost") && u.hostname.includes(".") && !/^\d+(?:\.\d+){3}$/.test(u.hostname) && !u.hostname.includes(":");
+  } catch {
+    return false;
+  }
+}
+function content2(v) {
+  if (!text3(v.brief, 4e3) || !Array.isArray(v.success_criteria) || v.success_criteria.length < 1 || v.success_criteria.length > 20 || !v.success_criteria.every((c) => shape3(c, ["id", "text"]) && id2(c.id) && text3(c.text, 600)) || new Set(v.success_criteria.map((c) => c.id)).size !== v.success_criteria.length) return false;
+  const p = v.preview_policy;
+  return p === void 0 || shape3(p, ["environment", "check", "allowed_origins", "required"]) && line(p.environment, 100) && shape3(p.check, ["name", "app_id"]) && line(p.check.name, 100) && num(p.check.app_id) && typeof p.required === "boolean" && Array.isArray(p.allowed_origins) && p.allowed_origins.length > 0 && p.allowed_origins.length <= 8 && new Set(p.allowed_origins).size === p.allowed_origins.length && p.allowed_origins.every((origin) => typeof origin === "string" && safeRepositoryPreviewUrl(origin + "/") && new URL(origin).origin === origin);
+}
+function validRepositoryReviewContent(v) {
+  return shape3(v, ["brief", "success_criteria"], ["preview_policy"]) && content2(v);
+}
+function validRepositoryReviewBrief(v, task, taskDigest) {
+  return shape3(v, ["type", "task_id", "task_digest", "owner_key", "brief", "success_criteria", "issued_at", "expires_at"], ["preview_policy"]) && v.type === "scopeblind.repository.review-brief.v1" && v.task_id === task.id && v.task_digest === taskDigest && v.owner_key === task.owner_key && content2(v) && span2(v.issued_at, v.expires_at, 7 * 864e5) && Date.parse(String(v.issued_at)) >= Date.parse(task.issued_at) && Date.parse(String(v.expires_at)) <= Date.parse(task.expires_at);
+}
+function validRepositoryReviewPacket(v, brief, proposal) {
+  if (!shape3(v, ["type", "task_id", "task_digest", "brief_digest", "proposal_digest", "base_sha", "head_sha", "merge_sha", "preview", "observed_at", "expires_at"]) || v.type !== "scopeblind.repository.review-packet.v1" || v.task_id !== brief.payload.task_id || v.task_digest !== brief.payload.task_digest || v.brief_digest !== brief.digest || v.proposal_digest !== proposal.digest || v.base_sha !== proposal.payload.base_sha || v.head_sha !== proposal.payload.head_sha || v.merge_sha !== proposal.payload.merge_sha || !span2(v.observed_at, v.expires_at, 9e5) || Date.parse(String(v.observed_at)) < Math.max(Date.parse(brief.payload.issued_at), Date.parse(proposal.payload.observed_at)) || Date.parse(String(v.expires_at)) > Date.parse(brief.payload.expires_at)) return false;
+  const p = v.preview, policy = brief.payload.preview_policy;
+  if (!object3(p)) return false;
+  if (p.status !== "available") return shape3(p, ["status", "reason"]) && ["not_requested", "missing", "pending", "failed", "unavailable", "ambiguous"].includes(String(p.status)) && text3(p.reason, 600) && p.status === "not_requested" === !policy;
+  if (!policy || !shape3(p, ["status", "deployment"], ["artifact"])) return false;
+  const d = p.deployment;
+  if (!shape3(d, ["deployment_id", "status_id", "sha", "environment", "state", "environment_url", "deployment_creator_id", "status_creator_id", "created_at", "updated_at", "check"]) || ![d.deployment_id, d.status_id, d.deployment_creator_id, d.status_creator_id].every(num) || d.sha !== v.head_sha || d.environment !== policy.environment || d.state !== "success" || !safeRepositoryPreviewUrl(d.environment_url) || !policy.allowed_origins.includes(new URL(d.environment_url).origin) || !at2(d.created_at) || !at2(d.updated_at) || Date.parse(d.updated_at) < Date.parse(d.created_at) || Date.parse(d.updated_at) > Date.parse(String(v.observed_at)) || !shape3(d.check, ["id", "name", "app_id", "head_sha", "conclusion"]) || !num(d.check.id) || d.check.name !== policy.check.name || d.check.app_id !== policy.check.app_id || d.check.head_sha !== v.head_sha || d.check.conclusion !== "success") return false;
+  const a = p.artifact;
+  return a === void 0 || shape3(a, ["id", "name", "sha256", "workflow_run_id", "head_sha", "expires_at"]) && num(a.id) && line(a.name, 200) && hex3(a.sha256) && num(a.workflow_run_id) && a.head_sha === v.head_sha && at2(a.expires_at) && Date.parse(a.expires_at) > Date.parse(String(v.observed_at));
+}
+function validRepositoryReviewDecision(v, brief, packet, approval) {
+  return shape3(v, ["type", "task_id", "task_digest", "brief_digest", "packet_digest", "proposal_digest", "approval_digest", "principal_key", "role", "issued_at", "expires_at"]) && v.type === "scopeblind.repository.review-decision.v1" && v.task_id === brief.payload.task_id && v.task_digest === brief.payload.task_digest && v.brief_digest === brief.digest && v.packet_digest === packet.digest && v.proposal_digest === packet.payload.proposal_digest && v.approval_digest === approval.digest && v.principal_key === approval.payload.principal_key && v.role === approval.payload.role && v.issued_at === approval.payload.issued_at && v.expires_at === approval.payload.expires_at && at2(v.issued_at) && at2(v.expires_at) && Date.parse(v.issued_at) >= Date.parse(packet.payload.observed_at) && Date.parse(v.expires_at) <= Date.parse(packet.payload.expires_at) && (!brief.payload.preview_policy?.required || packet.payload.preview.status === "available" || approval.payload.decision === "reject");
+}
+function validRepositoryReviewFeedback(v, brief, packet) {
+  return shape3(v, ["type", "id", "task_id", "task_digest", "basis_digest", "packet_digest", "requester_key", "criterion_ids", "message", "requested_changes", "issued_at"], ["mandate_digest"]) && v.type === "scopeblind.repository.review-feedback.v1" && id2(v.id) && v.task_id === brief.payload.task_id && v.task_digest === brief.payload.task_digest && hex3(v.basis_digest) && v.packet_digest === packet.digest && hex3(v.requester_key) && (v.mandate_digest === void 0 || hex3(v.mandate_digest)) && Array.isArray(v.criterion_ids) && v.criterion_ids.length <= 20 && new Set(v.criterion_ids).size === v.criterion_ids.length && v.criterion_ids.every((cid) => brief.payload.success_criteria.some((c) => c.id === cid)) && text3(v.message, 2e3) && text3(v.requested_changes, 4e3, true) && at2(v.issued_at) && Date.parse(v.issued_at) >= Date.parse(packet.payload.observed_at);
+}
+function validRepositoryReviewRecommendation(v, brief, packet, proposal) {
+  if (!shape3(v, ["type", "id", "task_id", "task_digest", "packet_digest", "proposal_digest", "brief_digest", "agent_key", "mandate_digest", "recommendation", "criteria", "source", "observed_at"]) || v.type !== "scopeblind.repository.review-recommendation.v1" || !id2(v.id) || v.task_id !== brief.payload.task_id || v.task_digest !== brief.payload.task_digest || v.packet_digest !== packet.digest || v.proposal_digest !== proposal.digest || v.brief_digest !== brief.digest || !hex3(v.agent_key) || !hex3(v.mandate_digest) || !["ready_for_human_review", "changes_recommended", "insufficient_evidence"].includes(String(v.recommendation)) || !shape3(v.source, ["kind"], ["model"]) || v.source.kind !== "agent" || v.source.model !== void 0 && !line(v.source.model, 120) || !at2(v.observed_at) || Date.parse(v.observed_at) < Date.parse(packet.payload.observed_at) || !Array.isArray(v.criteria) || v.criteria.length !== brief.payload.success_criteria.length) return false;
+  if (new Set(v.criteria.map((c) => object3(c) ? c.criterion_id : null)).size !== v.criteria.length) return false;
+  return v.criteria.every((c) => shape3(c, ["criterion_id", "verdict", "evidence_refs", "explanation"]) && brief.payload.success_criteria.some((b) => b.id === c.criterion_id) && ["met", "not_met", "unknown"].includes(String(c.verdict)) && text3(c.explanation, 1e3) && Array.isArray(c.evidence_refs) && c.evidence_refs.length <= 12 && c.evidence_refs.every((r) => {
+    if (!object3(r)) return false;
+    if (r.kind === "check") return shape3(r, ["kind", "id"]) && proposal.payload.checks.some((check) => check.id === r.id);
+    if (r.kind === "file") return shape3(r, ["kind", "path"]) && proposal.payload.files.some((file) => file.path === r.path);
+    if (r.kind === "deployment") return shape3(r, ["kind", "id"]) && packet.payload.preview.status === "available" && packet.payload.preview.deployment.deployment_id === r.id;
+    return r.kind === "artifact" && shape3(r, ["kind", "sha256"]) && packet.payload.preview.status === "available" && packet.payload.preview.artifact?.sha256 === r.sha256;
+  }));
+}
+
+// ../../protect-mcp/src/coordination-repository-workspace.ts
+var obj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var exact2 = (v, req, opt = []) => req.every((k) => Object.hasOwn(v, k)) && Object.keys(v).every((k) => req.includes(k) || opt.includes(k));
+var text4 = (v, max) => typeof v === "string" && v.trim().length > 0 && v.length <= max && !/[\u0000-\u001f\u007f]/.test(v);
+var key = (v) => typeof v === "string" && REPOSITORY_HEX.test(v);
+var id3 = (v) => typeof v === "string" && REPOSITORY_ID.test(v);
+var at3 = (v) => typeof v === "string" && Number.isFinite(Date.parse(v)) && new Date(v).toISOString() === v;
+var period = (v, max) => at3(v.issued_at) && at3(v.expires_at) && Date.parse(String(v.expires_at)) > Date.parse(String(v.issued_at)) && Date.parse(String(v.expires_at)) - Date.parse(String(v.issued_at)) <= max;
+var repo = (v) => typeof v === "string" && /^[A-Za-z0-9][A-Za-z0-9-]{0,38}\/[A-Za-z0-9_.-]{1,100}$/.test(v);
+var paths2 = (v) => Array.isArray(v) && v.length > 0 && v.length <= 12 && new Set(v).size === v.length && v.every((p) => typeof p === "string" && repositoryPath(p.endsWith("/**") ? p.slice(0, -3) : p) && pathAllowed(p.endsWith("/**") ? p.slice(0, -2) + "placeholder" : p, [p]));
+var checks = (v) => Array.isArray(v) && v.length > 0 && v.length <= 12 && v.every((c) => obj(c) && exact2(c, ["name", "app_id"]) && text4(c.name, 100) && Number.isSafeInteger(c.app_id) && Number(c.app_id) > 0) && new Set(v.map((c) => c.name)).size === v.length;
+var revision = (v) => Number.isSafeInteger(v) && Number(v) > 0;
+function validWorkspaceTaskAssignment(v) {
+  return obj(v) && exact2(v, ["type", "workspace_id", "workspace_digest", "task_id", "task_digest", "owner_member_id", "owner_key", "owner_member_revision", "reviewer_member_id", "reviewer_key", "reviewer_member_revision", "review_brief_digest", "issued_at", "expires_at"], ["source_draft_digest"]) && v.type === "scopeblind.repository.workspace-task-assignment.v1" && [v.workspace_id, v.task_id, v.owner_member_id, v.reviewer_member_id].every(id3) && [v.workspace_digest, v.task_digest, v.owner_key, v.reviewer_key, v.review_brief_digest].every(key) && v.owner_key !== v.reviewer_key && v.owner_member_id !== v.reviewer_member_id && revision(v.owner_member_revision) && revision(v.reviewer_member_revision) && (v.source_draft_digest === void 0 || key(v.source_draft_digest)) && period(v, 7 * 864e5);
+}
+function validWorkspacePreparationMandate(v) {
+  return obj(v) && exact2(v, ["type", "id", "workspace_id", "workspace_digest", "mode", "owner_member_id", "owner_key", "owner_member_revision", "reviewer_member_id", "reviewer_key", "reviewer_member_revision", "agent_key", "repository", "base_branch", "allowed_paths", "required_checks", "permissions", "max_requests", "max_open_requests", "issued_at", "expires_at"]) && v.type === "scopeblind.repository.preparation-mandate.v1" && v.mode === "prepare_review" && [v.id, v.workspace_id, v.owner_member_id, v.reviewer_member_id].every(id3) && [v.workspace_digest, v.owner_key, v.reviewer_key, v.agent_key].every(key) && (/* @__PURE__ */ new Set([v.owner_key, v.reviewer_key, v.agent_key])).size === 3 && revision(v.owner_member_revision) && revision(v.reviewer_member_revision) && repo(v.repository) && repositoryBranch(v.base_branch) && paths2(v.allowed_paths) && checks(v.required_checks) && Array.isArray(v.permissions) && v.permissions.includes("prepare_review") && v.permissions.length <= 4 && new Set(v.permissions).size === v.permissions.length && v.permissions.every((p) => ["prepare_review", "read_task", "report_criteria", "request_revision"].includes(String(p))) && Number.isSafeInteger(v.max_requests) && Number(v.max_requests) > 0 && Number(v.max_requests) <= 20 && Number.isSafeInteger(v.max_open_requests) && Number(v.max_open_requests) > 0 && Number(v.max_open_requests) <= 3 && Number(v.max_open_requests) <= Number(v.max_requests) && period(v, 7 * 864e5);
+}
+function validWorkspaceReviewDraft(v) {
+  return obj(v) && exact2(v, ["type", "id", "workspace_id", "mandate_digest", "agent_key", "repository", "pull_number", "title", "content", "allowed_paths", "required_checks", "issued_at"], ["suggested_preview_url", "observed_head_sha", "source"]) && v.type === "scopeblind.repository.workspace-review-draft.v1" && [v.id, v.workspace_id].every(id3) && [v.mandate_digest, v.agent_key].every(key) && repo(v.repository) && Number.isSafeInteger(v.pull_number) && Number(v.pull_number) > 0 && text4(v.title, 140) && validRepositoryReviewContent(v.content) && paths2(v.allowed_paths) && checks(v.required_checks) && at3(v.issued_at) && (v.source === void 0 || obj(v.source) && exact2(v.source, ["task_id", "task_digest", "basis_digest", "packet_digest", "feedback_digest"]) && id3(v.source.task_id) && [v.source.task_digest, v.source.basis_digest, v.source.packet_digest, v.source.feedback_digest].every(key)) && (v.observed_head_sha === void 0 || typeof v.observed_head_sha === "string" && /^[a-f0-9]{40}$/.test(v.observed_head_sha)) && (v.suggested_preview_url === void 0 || typeof v.suggested_preview_url === "string" && v.suggested_preview_url.length <= 2e3 && safeWorkspacePreview(v.suggested_preview_url));
+}
+function safeWorkspacePreview(value) {
+  try {
+    const u = new URL(value);
+    return u.protocol === "https:" && !u.username && !u.password && !u.hash;
+  } catch {
+    return false;
+  }
+}
+
+// ../../protect-mcp/src/coordination-repository-review-evidence.ts
+var shape4 = (v, keys, optional = []) => !!v && typeof v === "object" && !Array.isArray(v) && keys.every((k) => Object.prototype.hasOwnProperty.call(v, k)) && Object.keys(v).every((k) => keys.includes(k) || optional.includes(k));
+var at4 = (v) => typeof v === "string" && Number.isFinite(Date.parse(v)) && new Date(v).toISOString() === v;
+function repositoryReviewCore(e) {
+  return e.repository.type === "scopeblind.repository.evidence.v1" ? e.repository : e.repository.repository;
+}
+async function verifyRepositoryReviewEvidence(value, pins) {
+  const errors = [], check = (condition, message) => {
+    if (!condition) errors.push(message);
+  };
+  let originVerified = false, accepted = false, packetVerified = false, decisionsVerified = false, previewAvailable = false, authorityPinned = false;
+  try {
+    const e = value;
+    check((shape4(e, ["type", "repository", "review"]) || shape4(e, ["type", "repository", "review", "origin"])) && e.type === "scopeblind.repository.review-evidence.v1", "Review evidence shape is invalid");
+    const core = repositoryReviewCore(e), base = e.repository.type === "scopeblind.repository.evidence.v1" ? await verifyRepositoryEvidence(e.repository, pins) : await verifyRepositoryCollaborationEvidence(e.repository, pins), s = core.state.payload, r = e.review.payload, t = s.task.payload, key2 = typeof pins === "string" ? pins : pins?.authority_key ?? t.authority_key;
+    check(base.valid, "Underlying repository evidence is invalid");
+    accepted = base.accepted;
+    authorityPinned = base.authorityPinned;
+    check(validRepositoryEnvelope(e.review) && shape4(r, ["type", "task_id", "task_digest", "brief", "packet", "decisions", "feedback", "recommendations", "history", "agent_uses", "observed_at"], ["origin_digest"]) && r.type === "scopeblind.repository.review-state.v1" && r.task_id === t.id && r.task_digest === s.task.digest && at4(r.observed_at) && Date.parse(r.observed_at) >= Date.parse(s.observed_at) && await verify(e.review, key2), "Review service state is invalid");
+    check(validRepositoryEnvelope(r.brief) && validRepositoryReviewBrief(r.brief.payload, t, s.task.digest) && Date.parse(r.brief.payload.issued_at) <= Date.parse(r.observed_at) && await verify(r.brief, t.owner_key), "Owner review brief is invalid");
+    check(Array.isArray(r.decisions) && r.decisions.length <= 2 && new Set(r.decisions.map((d) => d.payload.role)).size === r.decisions.length && Array.isArray(r.feedback) && r.feedback.length <= 20 && new Set(r.feedback.map((f) => f.payload.id)).size === r.feedback.length && Array.isArray(r.recommendations) && r.recommendations.length <= 20 && new Set(r.recommendations.map((f) => f.payload.id)).size === r.recommendations.length && Array.isArray(r.history) && r.history.length <= 40 && new Set(r.history.map((h) => h.state.digest + ":" + h.packet.digest)).size === r.history.length, "Review record bounds are invalid");
+    check(Array.isArray(r.agent_uses) && r.agent_uses.length <= 40 && new Set(r.agent_uses.map((u) => u.payload.record_digest)).size === r.agent_uses.length, "Agent-use record bounds are invalid");
+    if (r.packet) {
+      packetVerified = !!s.proposal && validRepositoryEnvelope(r.packet) && validRepositoryReviewPacket(r.packet.payload, r.brief, s.proposal) && Date.parse(r.packet.payload.observed_at) <= Date.parse(r.observed_at) && await verify(r.packet, t.receiver_key);
+      check(packetVerified, "Receiver review packet is invalid");
+      previewAvailable = packetVerified && r.packet.payload.preview.status === "available";
+    } else check(!r.decisions.length && !s.execution, "Exact packet decisions require a current packet");
+    for (const decision of r.decisions) {
+      const a = s.approvals.find((a2) => a2.payload.role === decision.payload.role), principal = decision.payload.role === "owner" ? t.owner_key : s.reviewer?.payload.reviewer_key;
+      check(a && r.packet && validRepositoryEnvelope(decision) && validRepositoryReviewDecision(decision.payload, r.brief, r.packet, a) && decision.payload.principal_key === principal && await verify(decision, principal) && Date.parse(decision.payload.issued_at) <= Date.parse(r.observed_at), "Exact packet decision is invalid");
+    }
+    check(r.decisions.length === s.approvals.length && s.approvals.every((a) => r.decisions.some((d) => d.payload.role === a.payload.role && d.payload.approval_digest === a.digest)), "Each ordinary approval requires its exact packet decision");
+    decisionsVerified = packetVerified && r.decisions.length === 2 && s.approvals.length === 2 && s.approvals.every((a) => a.payload.decision === "approve");
+    if (s.execution) check(decisionsVerified && r.packet && Date.parse(s.execution.payload.expires_at) <= Date.parse(r.packet.payload.expires_at), "Execution lacks both exact current packet decisions");
+    const contexts = r.packet ? [{ state: core.state, packet: r.packet }] : [];
+    for (const h of r.history) {
+      check(shape4(h, ["state", "packet", "decisions"]) && (await verifyRepositoryEvidence({ type: "scopeblind.repository.evidence.v1", state: h.state }, pins ?? key2)).valid && h.state.payload.task.digest === s.task.digest && h.state.payload.reviewer?.digest === s.reviewer?.digest && Date.parse(h.state.payload.observed_at) <= Date.parse(r.observed_at) && h.state.payload.proposal && validRepositoryEnvelope(h.packet) && validRepositoryReviewPacket(h.packet.payload, r.brief, h.state.payload.proposal) && await verify(h.packet, t.receiver_key), "Historical review basis is invalid");
+      contexts.push(h);
+      check(Array.isArray(h.decisions) && h.decisions.length <= 2 && new Set(h.decisions.map((d) => d.payload.role)).size === h.decisions.length, "Historical packet decisions are invalid");
+      for (const decision of h.decisions) {
+        const approval = h.state.payload.approvals.find((a) => a.payload.role === decision.payload.role), principal = decision.payload.role === "owner" ? t.owner_key : s.reviewer?.payload.reviewer_key;
+        check(approval && validRepositoryEnvelope(decision) && validRepositoryReviewDecision(decision.payload, r.brief, h.packet, approval) && decision.payload.principal_key === principal && await verify(decision, principal), "Historical exact packet decision is invalid");
+      }
+      check(h.decisions.length === h.state.payload.approvals.length && h.state.payload.approvals.every((a) => h.decisions.some((d) => d.payload.role === a.payload.role && d.payload.approval_digest === a.digest)), "Each historical approval requires its exact packet decision");
+      if (h.state.payload.execution) check(h.decisions.length === 2 && Date.parse(h.state.payload.execution.payload.expires_at) <= Date.parse(h.packet.payload.expires_at), "Historical execution lacks both exact packet decisions");
+      check(r.feedback.some((f) => f.payload.packet_digest === h.packet.digest && (f.payload.basis_digest === h.state.payload.proposal?.digest || f.payload.basis_digest === h.state.payload.outcome?.digest || f.payload.basis_digest === h.state.payload.acceptance?.digest)) || r.recommendations.some((a) => a.payload.packet_digest === h.packet.digest && a.payload.proposal_digest === h.state.payload.proposal?.digest), "Unreferenced review history is invalid");
+    }
+    const uses = /* @__PURE__ */ new Map();
+    for (const use of r.agent_uses) {
+      const u = use.payload, m = u.mandate?.payload, a = u.assignment?.payload, record3 = [...r.feedback, ...r.recommendations].find((x) => x.digest === u.record_digest), recordTime = record3 ? record3.payload.issued_at ?? record3.payload.observed_at : "";
+      check(validRepositoryEnvelope(use) && shape4(u, ["type", "task_id", "task_digest", "record_digest", "permission", "mandate", "adoption", "assignment", "checked_at"]) && u.type === "scopeblind.repository.review-agent-use.v1" && u.task_id === t.id && u.task_digest === s.task.digest && await verify(use, key2) && record3 && at4(u.checked_at) && Date.parse(u.checked_at) <= Date.parse(r.observed_at) && Date.parse(u.checked_at) >= Date.parse(recordTime), "Agent-use service attestation is invalid");
+      check(validRepositoryEnvelope(u.mandate) && validRepositoryEnvelope(u.adoption) && validWorkspacePreparationMandate(m) && m.owner_key === t.owner_key && m.reviewer_key === s.reviewer?.payload.reviewer_key && !["", t.owner_key, t.receiver_key, t.authority_key, s.reviewer?.payload.reviewer_key].includes(m.agent_key) && m.repository === t.repository && m.base_branch === t.base_branch && u.adoption.digest === u.mandate.digest && canonical(u.adoption.payload) === canonical(m) && await verify(u.mandate, t.owner_key) && await verify(u.adoption, m.reviewer_key) && m.permissions.includes(u.permission) && ["report_criteria", "request_revision"].includes(u.permission) && Date.parse(m.issued_at) <= Date.parse(recordTime) && Date.parse(m.expires_at) >= Date.parse(u.checked_at) && t.allowed_paths.every((p) => m.allowed_paths.includes(p) || m.allowed_paths.some((scope) => scope.endsWith("/**") && p.startsWith(scope.slice(0, -2)))) && m.required_checks.every((c) => t.required_checks.some((tc) => tc.name === c.name && tc.app_id === c.app_id)), "Dual-signed preparation mandate is invalid");
+      check(validRepositoryEnvelope(u.assignment) && validWorkspaceTaskAssignment(a) && a.task_id === t.id && a.task_digest === s.task.digest && a.review_brief_digest === r.brief.digest && a.workspace_id === m.workspace_id && a.workspace_digest === m.workspace_digest && a.owner_key === t.owner_key && a.reviewer_key === s.reviewer?.payload.reviewer_key && a.owner_member_id === m.owner_member_id && a.reviewer_member_id === m.reviewer_member_id && a.owner_member_revision === m.owner_member_revision && a.reviewer_member_revision === m.reviewer_member_revision && Date.parse(a.issued_at) <= Date.parse(recordTime) && Date.parse(a.expires_at) >= Date.parse(u.checked_at) && await verify(u.assignment, t.owner_key), "Task assignment for the agent use is invalid");
+      uses.set(u.record_digest, use);
+    }
+    for (const feedback of r.feedback) {
+      const f = feedback.payload, c = contexts.find((c2) => c2.packet.digest === f.packet_digest && [c2.state.payload.proposal?.digest, c2.state.payload.outcome?.digest, c2.state.payload.acceptance?.digest].includes(f.basis_digest));
+      check(c && validRepositoryEnvelope(feedback) && validRepositoryReviewFeedback(f, r.brief, c.packet) && await verify(feedback, f.requester_key) && Date.parse(f.issued_at) <= Date.parse(r.observed_at), "Review feedback is invalid");
+      const use = uses.get(feedback.digest)?.payload;
+      check(f.mandate_digest ? use && use.permission === "request_revision" && use.mandate.digest === f.mandate_digest && use.mandate.payload.agent_key === f.requester_key : !use && [t.owner_key, s.reviewer?.payload.reviewer_key].includes(f.requester_key), "Review feedback lacks independently verifiable human or scoped-agent authority");
+    }
+    for (const recommendation of r.recommendations) {
+      const a = recommendation.payload, c = contexts.find((c2) => c2.packet.digest === a.packet_digest && c2.state.payload.proposal?.digest === a.proposal_digest);
+      check(c && validRepositoryEnvelope(recommendation) && validRepositoryReviewRecommendation(a, r.brief, c.packet, c.state.payload.proposal) && await verify(recommendation, a.agent_key) && Date.parse(a.observed_at) <= Date.parse(r.observed_at), "Criterion recommendation is invalid");
+      const use = uses.get(recommendation.digest)?.payload;
+      check(use && use.permission === "report_criteria" && use.mandate.digest === a.mandate_digest && use.mandate.payload.agent_key === a.agent_key, "Recommendation lacks independently verifiable scoped-agent authority");
+    }
+    check(e.origin ? r.origin_digest === await sha2565(canonical(e.origin)) : r.origin_digest === void 0, "Registered origin commitment is missing or mismatched");
+    if (e.origin) {
+      const o = e.origin;
+      check(shape4(o, ["draft", "assignment", "parent_assignment", "parent", "preparation"]) && !Object.prototype.hasOwnProperty.call(o.parent, "origin") && shape4(o.preparation, ["mandate", "adoption"]), "Review origin shape or depth is invalid");
+      if (!shape4(o.parent, ["type", "repository", "review"])) throw Error("Nested origin is forbidden");
+      const parent = await verifyRepositoryReviewEvidence(o.parent, key2), ps = repositoryReviewCore(o.parent).state.payload, d = o.draft.payload, a = o.assignment.payload, m = o.preparation.mandate.payload, source = d.source;
+      check(parent.valid && validRepositoryEnvelope(o.draft) && validWorkspaceReviewDraft(d) && source && d.repository === t.repository && d.pull_number === t.pull_number && d.workspace_id === a.workspace_id && d.mandate_digest === o.preparation.mandate.digest && d.agent_key === m.agent_key && await verify(o.draft, d.agent_key), "Incoming review draft is invalid");
+      const pa = o.parent_assignment?.payload;
+      check(validRepositoryEnvelope(o.parent_assignment) && validWorkspaceTaskAssignment(pa) && pa.task_id === ps.task.payload.id && pa.task_digest === ps.task.digest && pa.review_brief_digest === o.parent.review.payload.brief.digest && pa.workspace_id === a.workspace_id && pa.workspace_digest === a.workspace_digest && pa.owner_key === ps.task.payload.owner_key && pa.reviewer_key === ps.reviewer?.payload.reviewer_key && await verify(o.parent_assignment, ps.task.payload.owner_key), "Source task project assignment is invalid");
+      const feedback = source ? o.parent.review.payload.feedback.find((f) => f.digest === source.feedback_digest) : void 0;
+      check(source && ps.task.payload.id === source.task_id && ps.task.digest === source.task_digest && ps.task.payload.repository === t.repository && ps.task.payload.authority_key === t.authority_key && ps.task.payload.receiver_key === t.receiver_key && o.parent.review.payload.packet?.digest === source.packet_digest && feedback && feedback.payload.basis_digest === source.basis_digest && feedback.payload.packet_digest === source.packet_digest && Date.parse(feedback.payload.issued_at) <= Date.parse(d.issued_at) && Date.parse(ps.observed_at) <= Date.parse(d.issued_at) && o.parent.review.payload.feedback.length === 1 && o.parent.review.payload.recommendations.length === 0, "Incoming source feedback does not match the frozen parent");
+      check(validRepositoryEnvelope(o.assignment) && validWorkspaceTaskAssignment(a) && a.task_id === t.id && a.task_digest === s.task.digest && a.review_brief_digest === r.brief.digest && a.source_draft_digest === o.draft.digest && a.owner_key === t.owner_key && a.reviewer_key === m.reviewer_key && (!s.reviewer || a.reviewer_key === s.reviewer.payload.reviewer_key) && a.workspace_id === m.workspace_id && a.workspace_digest === m.workspace_digest && a.owner_member_id === m.owner_member_id && a.reviewer_member_id === m.reviewer_member_id && a.owner_member_revision === m.owner_member_revision && a.reviewer_member_revision === m.reviewer_member_revision && Date.parse(a.issued_at) >= Date.parse(d.issued_at) && Date.parse(a.issued_at) <= Date.parse(r.observed_at) && await verify(o.assignment, t.owner_key), "Incoming task assignment is invalid");
+      check(validRepositoryEnvelope(o.preparation.mandate) && validRepositoryEnvelope(o.preparation.adoption) && validWorkspacePreparationMandate(m) && m.owner_key === t.owner_key && m.repository === t.repository && m.base_branch === t.base_branch && m.permissions.includes("prepare_review") && ![t.owner_key, t.receiver_key, t.authority_key, m.reviewer_key].includes(d.agent_key) && canonical(o.preparation.adoption.payload) === canonical(m) && o.preparation.adoption.digest === o.preparation.mandate.digest && await verify(o.preparation.mandate, m.owner_key) && await verify(o.preparation.adoption, m.reviewer_key) && Date.parse(d.issued_at) >= Date.parse(m.issued_at) && Date.parse(d.issued_at) <= Date.parse(m.expires_at) && d.allowed_paths.every((p) => m.allowed_paths.includes(p) || m.allowed_paths.some((scope) => scope.endsWith("/**") && p.startsWith(scope.slice(0, -2)))) && m.required_checks.every((c) => d.required_checks.some((dc) => dc.name === c.name && dc.app_id === c.app_id)), "Incoming draft preparation authority is invalid");
+      originVerified = true;
+    }
+  } catch {
+    errors.push("Malformed review evidence");
+  }
+  return { valid: errors.length === 0, errors, originVerified: originVerified && errors.length === 0, accepted: accepted && errors.length === 0, authorityPinned: authorityPinned && errors.length === 0, packetVerified: packetVerified && errors.length === 0, previewAvailable: previewAvailable && errors.length === 0, decisionsVerified: decisionsVerified && errors.length === 0, limitations: ["A receiver signature records GitHub API metadata; it is not a GitHub-signed receipt.", "An external preview URL is mutable. Its observed commit association does not pin the bytes the browser later receives.", "An observed artifact digest does not prove that a preview URL serves that artifact.", "A pinned check provider identifies the check issuer, not necessarily the deployment publisher.", "Agent criterion assessments are recommendations, not independent proof, human review, or execution authority.", "The service attests that membership, revocation and counters were checked atomically when each recorded agent use was accepted. This is historical authority, not a current grant.", "This controls only the installed receiver. Other repository credentials and actions remain outside its coverage.", ...!pins ? ["No independent authority key was supplied. Only consistency with the included authority was checked."] : []] };
+}
 export {
   ACTION_ASSURANCE_BUNDLE_V1,
   ADMISSION_DECISION_V1,
@@ -11826,6 +12003,7 @@ export {
   verifyProofRequest,
   verifyRepositoryCollaborationEvidence,
   verifyRepositoryEvidence,
+  verifyRepositoryReviewEvidence,
   verifyRunManifest,
   verifyRunRegrade,
   verifySigstoreBundle,

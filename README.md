@@ -100,6 +100,16 @@ A VALID result proves cryptographic authenticity, payload integrity, recognized-
 
 Legacy `scopeblind.gate.evidence-bundle/1` files are detected but fail closed because they do not contain a signed completeness manifest. Re-export them as `/2`.
 
+### Repository reviews
+
+```bash
+npx @veritasacta/verify@0.10.17 review.json --key <service-ed25519-public-key> --json
+```
+
+Repository review exports bind the owner’s brief and acceptance criteria to an exact receiver-signed pull-request proposal, preview observation, and each human’s matching approval or rejection. Scoped agent findings include their signed preparation authority and service-recorded use. A review prepared from earlier feedback carries its exact frozen source and a signed registration commitment; approvals remain specific to the new task.
+
+The verifier checks these records offline. It does not fetch or execute preview pages, prove that a mutable preview URL still serves the observed content, or prove that an agent’s assessment is correct. An artifact digest, when present, identifies the recorded artifact bytes separately from the preview URL. Pin the service key through an independent channel; the receiver’s signed GitHub observations remain assertions by that receiver. Existing repository and collaboration v1 exports remain supported.
+
 ### ScopeBlind macro track records
 
 Macro exports verify offline. An embedded key proves internal signature
