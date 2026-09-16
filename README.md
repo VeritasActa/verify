@@ -372,3 +372,7 @@ verify --pin-sigil <fingerprint> # enforce a specific release
 Apache-2.0.
 
 Patent-adjacent; covered by the Apache-2.0 patent grant (§3). See [PATENTS.md](./PATENTS.md).
+
+### Canonical JSON compatibility (0.10.15)
+
+Receipt verification uses RFC 8785 key ordering, including numeric-looking keys. Historical receipts signed using JavaScript's numeric-key insertion order fail with `legacy_non_jcs_signature`. To inspect one intentionally, use `verify receipt.json --allow-legacy-canonicalization --key PUBLIC_KEY`. The result is labeled as a historical encoding; it does not claim JCS conformance. `--strict` always disables this compatibility mode. Metadata such as `holder_binding` is reported as declared until its underlying property is actually verified.

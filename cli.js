@@ -47,6 +47,7 @@ import { verifyGateTuple, verifyGateBundle } from './src/engines/gate-receipt.js
 import { verifyMacroTrackRecord } from './src/engines/macro-snapshot.js';
 import { verifyLegateGovernedReceipt } from './src/engines/legate-governed-receipt.js';
 import { verifyLegateProofPack } from './src/engines/legate-proof-pack.js';
+import { verifyRepositoryArtifact } from './src/engines/repository-evidence.js';
 import { verifyLegateStandard } from './src/engines/legate-standard.js';
 import { verifyTrustedContextPack } from './src/engines/trusted-context-pack.js';
 import {
@@ -142,6 +143,7 @@ const MODE_LABELS = {
   'gate-evidence-bundle': 'ScopeBlind Gate evidence bundle (receipt tuples + chain links)',
   'macro-track-record': 'ScopeBlind macro-engine track-record bundle (signed snapshots + completeness manifest)',
   'legate-governed-receipt': 'Legate governed receipt (Ed25519 over canonical action payload)',
+  'repository-evidence': 'Exact repository review, receiver readback and recipient acceptance',
   'legate-proof-pack': 'Legate adherence / restraint proof pack (Ed25519 over canonical bytes, position-blind)',
   'trusted-context-pack': 'ScopeBlind Trusted Context Pack (signed parsed-context attestation)',
   'scopeblind-claims-v2.1.1': 'ScopeBlind Verifiable Claims v2.1.1 point-in-time artifact',
@@ -170,6 +172,7 @@ function parseArgs() {
     selfCheck: false,
     capabilities: false,
     allowEmbeddedKey: false,
+    allowLegacyCanonicalization: false,
     requireContext: [],
     disclose: [],
     disclosureFile: null,
@@ -237,6 +240,7 @@ function parseArgs() {
       case '--self-test': opts.selfTest = true; break;
       case '--self-check': opts.selfCheck = true; break;
       case '--capabilities': opts.capabilities = true; break;
+      case '--allow-legacy-canonicalization': opts.allowLegacyCanonicalization = true; break;
       case '--allow-embedded-key': opts.allowEmbeddedKey = true; break;
       case '--require-context': opts.requireContext.push(next()); break;
       case '--disclose': opts.disclose.push(next()); break;
@@ -382,6 +386,7 @@ ${bold('Options:')}
   --self-test              Verify bundled sample artifacts
   --self-check             Compare monitored verifier source with bundled commitment
   --capabilities           List supported modes/algorithms/tiers
+  --allow-legacy-canonicalization  Read historical non-JCS receipts, explicitly labelled.
   --allow-embedded-key     DEPRECATED. Accept keys embedded in payloads.
                            Removed in v0.6.0.
   --allow-partial-voprf    Treat a partial (structural-only) VOPRF result
@@ -628,6 +633,10 @@ async function dispatch(input, opts) {
       const r = verifyLegateGovernedReceipt(input, subOpts);
       return { ...r, modeLabel: MODE_LABELS['legate-governed-receipt'] };
     }
+    case 'repository-evidence': {
+      const r = await verifyRepositoryArtifact(input, subOpts);
+      return { ...r, modeLabel: MODE_LABELS['repository-evidence'] };
+    }
     case 'legate-proof-pack': {
       const r = verifyLegateProofPack(input, subOpts);
       return { ...r, modeLabel: MODE_LABELS['legate-proof-pack'] };
@@ -688,13 +697,14 @@ async function dispatch(input, opts) {
     }
     case 'knowledge-unit': {
       const r = await verifyKnowledgeUnit(input, subOpts);
-      const tier = detectTier({ mode: 'knowledge-unit', payloadFields: {} });
+      const tier = detectTier({ mode: 'knowledge-unit', payloadFields: {}, valid: r.valid === true });
       return { ...r, tier };
     }
     case 'voprf-token': {
       const r = await verifyVoprfToken(input, subOpts);
       const tier = detectTier({
         mode: 'voprf-token',
+        valid: r.valid === true,
         payloadFields: {
           transport_hint: r.transport_hint,
         },
@@ -772,6 +782,9 @@ async function dispatch(input, opts) {
 
       const tier = detectTier({
         mode: detected.mode,
+        valid: r.valid === true,
+        signatureVerified: r.valid === true,
+        jcsVerified: r.valid === true && r.canonicalization === 'jcs',
         payloadFields: r.payloadFields,
         disclosuresVerified: disclosureResult?.disclosuresVerified || 0,
       });
@@ -815,8 +828,8 @@ function parseDisclosures(args) {
 // ──────────────────────────────────────────────────────────────────
 
 function applyTierGate(result, minTier) {
-  if (!minTier) return result;
-  const achieved = result.tier?.tier || 1;
+  if (!minTier || result.valid !== true) return result;
+  const achieved = result.valid === true ? (result.tier?.tier ?? 0) : 0;
   if (achieved < minTier) {
     return {
       ...result,
@@ -1182,6 +1195,10 @@ async function main() {
       target: opts.proxyTarget,
       key: keyPath,
       receiptsDir: opts.proxyReceiptsDir,
+      scrubSecrets: opts.scrubSecrets,
+      bilateral: opts.proxyBilateral,
+      serverKey: opts.serverKey,
+      traceId: opts.traceId,
     });
     process.exit(code);
   }
@@ -1251,6 +1268,7 @@ async function main() {
     process.exit(2);
   }
 
+  if (opts.strict) opts.allowLegacyCanonicalization = false;
   if (opts.strict && opts.allowEmbeddedKey) {
     console.error(yellow('Warning: --strict overrides --allow-embedded-key (embedded keys always rejected in strict mode).'));
     opts.allowEmbeddedKey = false;
@@ -1363,7 +1381,7 @@ async function main() {
     else if (result.format === 'gate-tuple') console.log(formatGateTupleResult(result, opts));
     else if (result.format === 'legate-governed-receipt') console.log(formatGovernedReceiptResult(result, opts));
     else if (result.format === 'trusted-context-pack') console.log(formatTrustedContextPackResult(result, opts));
-    else if (result.artifact_type === 'scopeblind.run_manifest.v1') console.log(formatRunManifestResult(result, opts));
+    else if (result.artifact_type === 'scopeblind.run_manifest.v1' || result.format === 'repository-evidence') console.log(formatRunManifestResult(result, opts));
     else if (result.total !== undefined) console.log(formatBundleResult(result, opts));
     else console.log(formatReceiptResult(result, opts));
 

@@ -20,6 +20,11 @@ export function hexToBytes(hex) {
   // Strip common prefixes / whitespace
   const clean = hex.replace(/^0x/i, '').replace(/\s+/g, '');
   if (clean.length === 0) return new Uint8Array(0);
+  if (!/^[0-9a-f]+$/i.test(clean)) {
+    const err = new Error('hex string contains an invalid character');
+    err.code = 'malformed_hex';
+    throw err;
+  }
   if (clean.length % 2 !== 0) {
     const err = new Error('hex string has odd length');
     err.code = 'malformed_hex';

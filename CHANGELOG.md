@@ -1,3 +1,10 @@
+## 0.10.15 — 2026-09-16
+
+- Derive assurance features from successful verification, with unchecked declarations reported separately. Metadata alone never raises a conformance tier.
+- Bind proxy receipts to all nested forwarded tool arguments using JCS and SHA-256; mark the hash method explicitly.
+- Serialize numeric-looking and prototype-named JSON keys correctly. Verify exact signed payload fields and reject historical non-JCS signatures by default; `--allow-legacy-canonicalization` is an explicit, labeled compatibility option.
+- Add portable repository-task evidence verification using the same implementation as the browser, including exact dual approval and receiver-reported outcome boundaries.
+
 # Changelog
 
 ## 0.10.14 (2026-09-14)

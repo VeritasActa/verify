@@ -31,7 +31,12 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 import { sign, createPrivateKey, createHash } from 'node:crypto';
-import { canonicalize } from '../util/canonical.js';
+import { canonicalize, canonicalizeJson } from '../util/canonical.js';
+
+/** Hash every nested field of the exact arguments forwarded to the tool. */
+export function hashToolInput(args) {
+  return 'sha256:' + createHash('sha256').update(canonicalizeJson(args), 'utf8').digest('hex');
+}
 
 /**
  * Load or refuse — the proxy requires a signing key to be provided.
@@ -96,11 +101,11 @@ function isSecretKeyName(name) {
  * Walk an object tree and, for any key matching the secret-key-name set,
  * replace the value with a redacted marker. Returns { scrubbed, detected: string[] }.
  */
-function scrubSecretArgs(args) {
+export function scrubSecretArgs(args) {
   const detected = [];
   function walk(node, pathParts) {
     if (node && typeof node === 'object' && !Array.isArray(node)) {
-      const out = {};
+      const out = Object.create(null);
       for (const [k, v] of Object.entries(node)) {
         if (isSecretKeyName(k) && (typeof v === 'string' || typeof v === 'number')) {
           detected.push([...pathParts, k].join('.'));
@@ -188,11 +193,16 @@ export async function runProxy(opts) {
 
       // Is this a tools/call request?
       if (message && message.method === 'tools/call' && message.params) {
+        const suppliedArgs = message.params.arguments;
+        if (suppliedArgs !== undefined && (suppliedArgs === null || typeof suppliedArgs !== 'object' || Array.isArray(suppliedArgs))) {
+          process.stdout.write(JSON.stringify({jsonrpc:'2.0',id:message.id??null,error:{code:-32602,message:'Tool arguments must be a JSON object.'}}) + '\n');
+          continue;
+        }
         sequence++;
         const toolName = message.params.name || 'unknown';
-        let toolArgs = message.params.arguments || {};
+        let toolArgs = suppliedArgs ?? {};
         let scrubDetected = [];
-        let forwardedMessage = message;
+        let forwardedMessage = { ...message, params: { ...message.params, arguments: toolArgs } };
 
         if (opts.scrubSecrets) {
           const { scrubbed, detected } = scrubSecretArgs(toolArgs);
@@ -211,14 +221,14 @@ export async function runProxy(opts) {
 
         // Compute tool input hash over POSSIBLY-SCRUBBED args (secrets never
         // enter the receipt even as a hash of the real value).
-        const argStr = JSON.stringify(toolArgs, Object.keys(toolArgs).sort());
-        const toolInputHash = 'sha256:' + createHash('sha256').update(argStr, 'utf-8').digest('hex');
+        const toolInputHash = hashToolInput(toolArgs);
 
         const payload = {
           type: 'veritasacta:proxy:decision',
           spec: 'draft-farley-acta-signed-receipts-03',
           tool_name: toolName,
           tool_input_hash: toolInputHash,
+          tool_input_hash_method: 'jcs-sha256-v1',
           decision: 'allow',
           policy_id: policyId,
           issued_at: new Date().toISOString(),

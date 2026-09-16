@@ -40,6 +40,8 @@ export function detectFormat(input) {
     return { mode: 'unknown', signals: [], hasSelectiveDisclosure: false, isBundle: false };
   }
 
+  if (input.type === 'scopeblind.repository.evidence.v1') return { mode: 'repository-evidence', signals: ['type=scopeblind.repository.evidence.v1'], hasSelectiveDisclosure: false, isBundle: false };
+
   const signals = [];
 
   // Legacy AIP-0002 selective disclosure (per-field _commitments map).

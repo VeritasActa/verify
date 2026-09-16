@@ -139,6 +139,8 @@ export function formatReceiptResult(result, opts = {}) {
   if (result.keySource) lines.push(`  Key:        ${result.keySource}`);
   if (result.publicKey) lines.push(trustTierLine(result));
   if (result.tier) lines.push(`  Tier:       ${result.tier.label} ${dim(`(${result.tier.features.join(', ')})`)}`);
+  if (result.tier?.declaredFeatures?.length) lines.push(`  Declared:   ${result.tier.declaredFeatures.join(', ')} (not independently verified)`);
+  if (result.warning) lines.push(`  Note:       ${result.warning}`);
   if (result.nullifier) lines.push(`  Nullifier:  ${result.nullifier.slice(0, 16)}...`);
   if (result.scope) {
     if (typeof result.scope === 'string') {

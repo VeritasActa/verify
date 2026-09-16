@@ -65,3 +65,11 @@ test('sortKeysDeep: arrays inside objects preserve order', () => {
   assert.deepEqual(sorted, { a: 1, z: [3, 1, 2] });
   assert.deepEqual(Object.keys(sorted), ['a', 'z']);
 });
+
+test('numeric-looking keys use lexical order at every depth',()=>{
+ assert.equal(canonicalize({'2':{'3':3,'11':11},'10':10}),'{"10":10,"2":{"11":11,"3":3}}');
+ assert.equal(canonicalize(JSON.parse('{"__proto__":{"kept":true},"2":2,"10":10}')),'{"10":10,"2":2,"__proto__":{"kept":true}}');
+});
+test('non-JSON values and invalid Unicode are rejected',()=>{
+ for(const x of [NaN,Infinity,undefined,{x:undefined},[undefined],new Date(),String.fromCharCode(0xd800)]) assert.throws(()=>canonicalize(x));
+});

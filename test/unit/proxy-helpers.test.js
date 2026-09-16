@@ -9,51 +9,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-// scrubSecretArgs is an internal helper exposed via dynamic import of
-// the proxy module. We re-implement the same logic in the test for
-// structural coverage; if the implementation diverges, add an
-// integration test that spawns a child MCP server.
-//
-// NOTE: if you change the SECRET_KEY_NAMES set in proxy.js, update
-// this test to match.
-
-const SECRET_KEY_NAMES = new Set([
-  'api_key', 'apikey', 'api-key',
-  'token', 'access_token', 'auth_token', 'bearer',
-  'password', 'passwd', 'pwd',
-  'secret', 'client_secret',
-  'authorization', 'x-api-key',
-  'private_key', 'privatekey',
-]);
-
-function isSecretKeyName(name) {
-  return SECRET_KEY_NAMES.has(String(name).toLowerCase());
-}
-
-function scrubSecretArgs(args) {
-  const detected = [];
-  function walk(node, pathParts) {
-    if (node && typeof node === 'object' && !Array.isArray(node)) {
-      const out = {};
-      for (const [k, v] of Object.entries(node)) {
-        if (isSecretKeyName(k) && (typeof v === 'string' || typeof v === 'number')) {
-          detected.push([...pathParts, k].join('.'));
-          out[k] = 'REDACTED_BY_PROXY';
-        } else {
-          out[k] = walk(v, [...pathParts, k]);
-        }
-      }
-      return out;
-    }
-    if (Array.isArray(node)) {
-      return node.map((el, i) => walk(el, [...pathParts, String(i)]));
-    }
-    return node;
-  }
-  const scrubbed = walk(args, []);
-  return { scrubbed, detected };
-}
-
+import {scrubSecretArgs,hashToolInput} from '../../src/engines/proxy.js';
 test('scrubSecretArgs: flat object with api_key is redacted', () => {
   const r = scrubSecretArgs({ api_key: 'sk_live_abc', action: 'list' });
   assert.equal(r.scrubbed.api_key, 'REDACTED_BY_PROXY');
@@ -107,9 +63,20 @@ test('scrubSecretArgs: empty object is a no-op', () => {
 
 test('isSecretKeyName: recognizes common patterns', () => {
   for (const name of ['api_key', 'Token', 'password', 'BEARER', 'private_key']) {
-    assert.equal(isSecretKeyName(name), true);
+    assert.equal(scrubSecretArgs({[name]:'s'}).detected.length,1);
   }
   for (const name of ['username', 'email', 'path', 'arguments']) {
-    assert.equal(isSecretKeyName(name), false);
+    assert.equal(scrubSecretArgs({[name]:'s'}).detected.length,0);
   }
+});
+
+test('complete nested payment arguments affect the proxy hash',()=>{
+ const x={payment:{amount:100,beneficiary:{id:'a'}},items:[{amount:2}]};
+ for(const y of [{...x,payment:{...x.payment,amount:101}},{...x,payment:{...x.payment,beneficiary:{id:'b'}}},{...x,items:[{amount:3}]}]) assert.notEqual(hashToolInput(x),hashToolInput(y));
+ assert.equal(hashToolInput(x),hashToolInput({items:[{amount:2}],payment:{beneficiary:{id:'a'},amount:100}}));
+});
+test('hashing and scrubbing retain prototype-named and Unicode members',()=>{
+ const x=JSON.parse('{"2":2,"10":10,"__proto__":{"secret":1},"é":true}');
+ assert.notEqual(hashToolInput(x),hashToolInput({'2':2,'10':10,'é':true}));
+ const s=scrubSecretArgs(x).scrubbed;assert.ok(Object.hasOwn(s,'__proto__'));assert.equal(s.__proto__.secret,'REDACTED_BY_PROXY');
 });

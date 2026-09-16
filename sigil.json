@@ -1,15 +1,15 @@
 {
   "sigil_version": 1,
-  "fingerprint": "a75ee518",
-  "name": "Still Reed",
-  "sigil_hash": "a75ee518def4dc9453de318d8f494965fbbd683f96c83de7028debd632a31dd4",
+  "fingerprint": "f4b420bb",
+  "name": "Pale Beacon",
+  "sigil_hash": "f4b420bb0758edb4441b4677e091f6884ef58bdb21d65bb2b5a016c9c85cfb45",
   "project_public_key": "fe665e861867cec7e171c0c13bbc873c3362079faef21f54df7804b7fb9ae8af",
   "commitment_authentication": "public_recomputable_integrity_only",
   "policy": {
     "version": 3,
     "package": "@veritasacta/verify",
-    "package_version": "0.10.14",
-    "source_hash": "1c7c0d55086e6280db163788829bc77e2bc2e12c9745666cdc03c719cbaf360f",
+    "package_version": "0.10.15",
+    "source_hash": "81e3c32792ba7517c2f1089253dc099e3d43d19903ff35bdddbd525c8929027e",
     "monitored_files": [
       "README.md",
       "cli.js",
@@ -25,6 +25,7 @@
       "src/engines/legate-governed-receipt.js",
       "src/engines/legate-proof-pack.js",
       "src/engines/legate-standard.js",
+      "src/engines/repository-evidence.js",
       "src/engines/trusted-context-pack.js",
       "src/engines/commitment-mode.js",
       "src/engines/voprf-token.js",
@@ -75,6 +76,6 @@
     ],
     "created_at": 1784267169966
   },
-  "policy_hash": "5038e4a238e6a46bb79e1f9a964c4d42af33063daa5fb0d08f3ad9ca36f014ef",
+  "policy_hash": "ea7dbc88630a42fb88d58b89db46cacd0dfbdbdbb5c62d768c7084ff64a0791e",
   "derived_at": "2026-07-17T05:46:09.966Z"
 }

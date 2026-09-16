@@ -833,11 +833,11 @@ function createHmacDrbg(hashLen, qByteLen, hmacFn) {
   };
   return genUntil;
 }
-function validateObject(object, fields = {}, optFields = {}) {
-  if (!object || typeof object !== "object")
+function validateObject(object2, fields = {}, optFields = {}) {
+  if (!object2 || typeof object2 !== "object")
     throw new Error("expected valid options object");
   function checkField(fieldName, expectedType, isOpt) {
-    const val = object[fieldName];
+    const val = object2[fieldName];
     if (isOpt && val === void 0)
       return;
     const current = typeof val;
@@ -1883,7 +1883,7 @@ function eddsa(Point, cHash, eddsaOpts = {}) {
     return abytes(rs, lengths.signature, "result");
   }
   const verifyOpts = { zip215: true };
-  function verify(sig, msg, publicKey, options = verifyOpts) {
+  function verify2(sig, msg, publicKey, options = verifyOpts) {
     const { context, zip215 } = options;
     const len = lengths.signature;
     sig = abytes(sig, len, "signature");
@@ -1964,7 +1964,7 @@ function eddsa(Point, cHash, eddsaOpts = {}) {
     keygen: createKeygen(randomSecretKey, getPublicKey),
     getPublicKey,
     sign,
-    verify,
+    verify: verify2,
     utils,
     Point,
     lengths
@@ -4209,11 +4209,11 @@ function createHmacDrbg2(hashLen, qByteLen, hmacFn) {
   };
   return genUntil;
 }
-function _validateObject(object, fields, optFields = {}) {
-  if (!object || typeof object !== "object")
+function _validateObject(object2, fields, optFields = {}) {
+  if (!object2 || typeof object2 !== "object")
     throw new Error("expected valid options object");
   function checkField(fieldName, expectedType, isOpt) {
-    const val = object[fieldName];
+    const val = object2[fieldName];
     if (isOpt && val === void 0)
       return;
     const current = typeof val;
@@ -5277,7 +5277,7 @@ function eddsa2(Point, cHash, eddsaOpts = {}) {
     return _abytes2(rs, lengths.signature, "result");
   }
   const verifyOpts = { zip215: true };
-  function verify(sig, msg, publicKey, options = verifyOpts) {
+  function verify2(sig, msg, publicKey, options = verifyOpts) {
     const { context, zip215 } = options;
     const len = lengths.signature;
     sig = ensureBytes("signature", sig, len);
@@ -5368,7 +5368,7 @@ function eddsa2(Point, cHash, eddsaOpts = {}) {
     keygen,
     getPublicKey,
     sign,
-    verify,
+    verify: verify2,
     utils,
     Point,
     lengths
@@ -6618,7 +6618,7 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
       return false;
     return sig;
   }
-  function verify(signature, message, publicKey, opts = {}) {
+  function verify2(signature, message, publicKey, opts = {}) {
     const { lowS, prehash, format } = validateSigOpts(opts, defaultSigOpts);
     publicKey = ensureBytes("publicKey", publicKey);
     message = validateMsgAndHash(ensureBytes("message", message), prehash);
@@ -6658,7 +6658,7 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
     lengths,
     Point,
     sign,
-    verify,
+    verify: verify2,
     recoverPublicKey,
     Signature,
     hash
@@ -6820,12 +6820,12 @@ function canonicalize(value, depth, seen) {
     if (prototype !== Object.prototype && prototype !== null) {
       throw new Error("only plain JSON objects can be canonicalized");
     }
-    const object = value;
-    const keys = Object.keys(object).sort();
+    const object2 = value;
+    const keys = Object.keys(object2).sort();
     if (keys.length > CLAIMS_JSON_LIMITS.max_object_members) throw new Error("maximum object member count exceeded");
     return `{${keys.map((key) => {
       assertUnicodeScalars(key, "object key");
-      return `${JSON.stringify(key)}:${canonicalize(object[key], depth + 1, seen)}`;
+      return `${JSON.stringify(key)}:${canonicalize(object2[key], depth + 1, seen)}`;
     }).join(",")}}`;
   } finally {
     seen.delete(value);
@@ -7167,13 +7167,13 @@ function record(value, label) {
   return value;
 }
 function exactKeys(value, keys, label) {
-  const object = record(value, label);
-  const actual = Object.keys(object).sort();
+  const object2 = record(value, label);
+  const actual = Object.keys(object2).sort();
   const expected = [...keys].sort();
   if (actual.length !== expected.length || actual.some((key, index) => key !== expected[index])) {
     throw new Error(`${label} contains missing or unknown fields`);
   }
-  return object;
+  return object2;
 }
 function stringField(value, label, options = {}) {
   if (value === null && options.nullable) return null;
@@ -7185,9 +7185,9 @@ function stringField(value, label, options = {}) {
   return value;
 }
 function canonicalIso(value, label) {
-  const text = stringField(value, label, { max: 64 });
-  const parsed = Date.parse(text);
-  if (!Number.isFinite(parsed) || new Date(parsed).toISOString() !== text) {
+  const text2 = stringField(value, label, { max: 64 });
+  const parsed = Date.parse(text2);
+  if (!Number.isFinite(parsed) || new Date(parsed).toISOString() !== text2) {
     throw new Error(`${label} must be a canonical UTC timestamp`);
   }
   return parsed;
@@ -7848,6 +7848,58 @@ function isActionAssuranceBundleV1(value) {
   );
 }
 
+// src/clause-register.ts
+var record2 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var paths = /* @__PURE__ */ new Set(["boundary.workflow", "decision.statement", "requirements.run.allowed_tools", "requirements.run.egress_allowlist", "requirements.action_limits", "requirements.human_approval", "requirements.authority_max_age_seconds", "requirements.run.time_limit_seconds", "requirements.run.temporal", "requirements.credentials_held_by_gate", "requirements.receiver_consumes_authorization", "rejection_criteria", "hold_criteria", "disclosure.required_fields"]);
+function clauseValue(draft, path) {
+  let value = draft;
+  for (const part of path.split(".")) value = record2(value) ? value[part] : void 0;
+  return value === void 0 ? null : value;
+}
+function stable(value) {
+  return JSON.stringify(value, (_key, v) => record2(v) ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, v[k]])) : v);
+}
+function clauseMappingCurrent(entry, draft) {
+  return entry.guards.length > 0 && entry.guards.every((g) => {
+    if (!paths.has(g.path)) return false;
+    const current = clauseValue(draft, g.path);
+    if (!g.relation) return stable(current) === stable(g.value);
+    if (!Array.isArray(current)) return false;
+    if (g.relation === "contains") return current.some((v) => stable(v) === stable(g.value));
+    if (g.relation === "excludes") return !current.some((v) => stable(v) === stable(g.value));
+    return !current.some((v) => record2(v) && v.id === g.value);
+  });
+}
+function clauseRegisterErrors(value, draft) {
+  if (value === void 0) return [];
+  if (!record2(value) || value.type !== "scopeblind.clause-register.v1" || !Array.isArray(value.entries) || value.entries.length > 200 || Object.keys(value).some((k) => !["type", "entries"].includes(k))) return ["Instruction register is malformed."];
+  const errors = [];
+  const ids = /* @__PURE__ */ new Set();
+  const stringList = (v) => Array.isArray(v) && v.length <= 100 && v.every((x) => typeof x === "string" && x.length <= 16e3);
+  for (const [index, raw2] of value.entries.entries()) {
+    if (!record2(raw2) || typeof raw2.id !== "string" || !/^[a-z0-9:-]{1,100}$/.test(raw2.id) || ids.has(raw2.id) || typeof raw2.original_text !== "string" || !raw2.original_text.trim() || raw2.original_text.length > 16e3 || !stringList(raw2.interpreted_requirement) || !stringList(raw2.issues) || !Array.isArray(raw2.guards) || raw2.guards.length > 120 || raw2.guards.some((g) => !record2(g) || typeof g.path !== "string" || !paths.has(g.path) || !("value" in g) || g.relation !== void 0 && !["contains", "excludes", "excludes_id"].includes(String(g.relation)) || Object.keys(g).some((k) => !["path", "value", "relation"].includes(k))) || !Array.isArray(raw2.decisions) || raw2.decisions.length > 100 || !["unresolved", "confirmed", "withdrawn", "replaced"].includes(String(raw2.disposition)) || Object.keys(raw2).some((k) => !["id", "original_text", "interpreted_requirement", "guards", "issues", "disposition", "decisions"].includes(k))) {
+      errors.push(`Instruction ${index + 1} is malformed.`);
+      continue;
+    }
+    ids.add(raw2.id);
+    const e = raw2;
+    const decisionsValid = e.decisions.every((d) => record2(d) && ["confirmed", "withdrawn", "replaced"].includes(d.disposition) && typeof d.at === "string" && !Number.isNaN(Date.parse(d.at)) && typeof d.reason === "string" && !!d.reason.trim() && d.reason.length <= 2e3 && (d.replacement_id === void 0 || typeof d.replacement_id === "string") && Object.keys(d).every((k) => ["disposition", "at", "reason", "replacement_id"].includes(k)));
+    if (!decisionsValid) {
+      errors.push(`Instruction ${index + 1} has a malformed decision.`);
+      continue;
+    }
+    const last = e.decisions.at(-1);
+    if (e.disposition === "unresolved") errors.push(`Instruction ${index + 1} still needs your decision.`);
+    else if (last?.disposition !== e.disposition) errors.push(`Instruction ${index + 1} has no explicit author decision.`);
+    else if (e.disposition === "confirmed" && (e.issues.length || !e.interpreted_requirement.length || !clauseMappingCurrent(e, draft))) errors.push(`Instruction ${index + 1} is not fully mapped to the current terms.`);
+    else if (e.disposition === "replaced") {
+      const replacementIndex = value.entries.findIndex((candidate) => record2(candidate) && candidate.id === last.replacement_id);
+      if (replacementIndex <= index || !["confirmed", "replaced"].includes(value.entries[replacementIndex]?.disposition)) errors.push(`Instruction ${index + 1} needs a later, resolved replacement.`);
+    }
+  }
+  return errors;
+}
+
 // src/gateway-demo-key.ts
 var B58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 function base58(bytes) {
@@ -7941,12 +7993,13 @@ var REQUEST_UNSIGNED_KEYS2 = [
   "consequence",
   "claim_contract_digest",
   "enforcement",
+  "clause_register",
   "issued_at",
   "expires_at",
   "nonce"
 ];
-function shaHex(text) {
-  return bytesToHex2(sha2562(encoder.encode(text)));
+function shaHex(text2) {
+  return bytesToHex2(sha2562(encoder.encode(text2)));
 }
 function isRecord(v) {
   return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -8034,6 +8087,7 @@ function shapeErrors(v) {
   if (enf !== void 0 && enf !== null) {
     if (!isRecord(enf) || enf.compiler !== "legate-standard-compiler.v1" || enf.policy_format !== "cedar" || enf.construction !== "acta-policy-digest-v1" || typeof enf.file_name !== "string" || typeof enf.policy !== "string" || !enf.policy.trim() || typeof enf.policy_digest !== "string" || !/^sha256:[0-9a-f]{64}$/.test(enf.policy_digest) || !["mcp", "tool"].includes(enf.action_model) || typeof enf.tool !== "string" || !enf.tool.trim() || !Array.isArray(enf.gate_enforced) || !Array.isArray(enf.not_gate_enforced)) errors.push("enforcement malformed");
   }
+  errors.push(...clauseRegisterErrors(v.clause_register, v));
   const t = v.trust;
   if (!isRecord(t) || !["accepted_gate_keys", "accepted_approver_keys", "accepted_readback_sources", "accepted_anchor_witnesses"].every((k) => Array.isArray(t[k]) && t[k].every((x) => typeof x === "string" && HEX_64.test(x)))) errors.push("trust lists must be hex Ed25519 public keys");
   if (isRecord(t) && t.accepted_grader_provenance !== void 0 && !(Array.isArray(t.accepted_grader_provenance) && t.accepted_grader_provenance.every((g) => isRecord(g) && g.kind === "github-actions-provenance" && typeof g.repository === "string" && /^https:\/\/github\.com\/[^/]+\/[^/]+$/.test(g.repository)))) errors.push("accepted_grader_provenance malformed");
@@ -8105,6 +8159,14 @@ function proofRequestReadback(r) {
   lines.push(`If met: ${r.consequence.if_met}`);
   lines.push(`If not met: ${r.consequence.if_not_met}`);
   lines.push("This request states a decision path. It is not a promise to allocate, contract, or approve unconditionally.");
+  if (r.clause_register) {
+    lines.push("Instruction disposition register (included in the signature):");
+    for (const [i, entry] of r.clause_register.entries.entries()) {
+      lines.push(`${i + 1}. Original: ${entry.original_text} | ${entry.disposition}. Interpreted: ${entry.interpreted_requirement.join("; ") || "none"}.`);
+      for (const issue of entry.issues) lines.push(`Unresolved meaning recorded: ${issue}`);
+      for (const decision of entry.decisions) lines.push(`Author decision: ${decision.disposition} at ${decision.at}: ${decision.reason}${decision.replacement_id ? ` (replacement ${decision.replacement_id})` : ""}`);
+    }
+  }
   return lines.join("\n");
 }
 var READBACK_UNSIGNED_KEYS = ["type", "version", "receipt_digest", "request_digest", "source", "observed", "observed_state", "status", "observed_at", "authorization", "nonce"];
@@ -8521,8 +8583,8 @@ function canonicalize2(obj) {
     return value;
   });
 }
-function sha256Hex(text) {
-  return bytesToHex2(sha2562(utf8ToBytes(text)));
+function sha256Hex(text2) {
+  return bytesToHex2(sha2562(utf8ToBytes(text2)));
 }
 function receiptHash(obj) {
   return sha256Hex(canonicalize2(obj));
@@ -9571,7 +9633,7 @@ function ecdsa2(Point, hash, ecdsaOpts = {}) {
     const sig = drbg(seed, k2sig);
     return sig.toBytes(opts.format);
   }
-  function verify(signature, message, publicKey, opts = {}) {
+  function verify2(signature, message, publicKey, opts = {}) {
     const { lowS, prehash, format } = validateSigOpts2(opts, defaultSigOpts);
     publicKey = abytes(publicKey, void 0, "publicKey");
     message = validateMsgAndHash(message, prehash);
@@ -9612,7 +9674,7 @@ function ecdsa2(Point, hash, ecdsaOpts = {}) {
     lengths,
     Point,
     sign,
-    verify,
+    verify: verify2,
     recoverPublicKey,
     Signature,
     hash
@@ -10571,11 +10633,11 @@ var Reader = class {
     return this.b.length - this.off;
   }
 };
-function pemCertificates(text) {
+function pemCertificates(text2) {
   const out = [];
   const re = /-----BEGIN CERTIFICATE-----([\s\S]*?)-----END CERTIFICATE-----/g;
   let m;
-  while ((m = re.exec(text)) !== null) out.push(parseCertificate(fromBase64(m[1])));
+  while ((m = re.exec(text2)) !== null) out.push(parseCertificate(fromBase64(m[1])));
   return out;
 }
 function quoteBytes(input) {
@@ -10716,8 +10778,8 @@ var isRecord4 = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
 var str3 = (v) => typeof v === "string" ? v : null;
 var strip0x = (s) => s.replace(/^0x/i, "").toLowerCase();
 var HEX64 = /^[0-9a-f]{64}$/;
-function parseModelCalls(text) {
-  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+function parseModelCalls(text2) {
+  const lines = text2.split("\n").map((l) => l.trim()).filter(Boolean);
   return lines.map((line, i) => {
     let v;
     try {
@@ -10733,26 +10795,26 @@ function parseModelCalls(text) {
   });
 }
 var signedText = (c) => c.kind === "provider_tee" ? `${c.model}:${c.request_sha256}:${c.response_sha256}` : `${c.request_sha256}:${c.response_sha256}`;
-function personalSignDigest(text) {
-  const body = utf83(text);
+function personalSignDigest(text2) {
+  const body = utf83(text2);
   return keccak_256(new Uint8Array([...utf83(`Ethereum Signed Message:
 ${body.length}`), ...body]));
 }
 function recoverSigner(call) {
   try {
-    const text = signedText(call);
+    const text2 = signedText(call);
     if (call.signing_algo === "ecdsa") {
       const sig = hexToBytes2(strip0x(call.signature));
       if (sig.length !== 65) return null;
       let v = sig[64];
       if (v >= 27) v -= 27;
       if (v > 3) return null;
-      const point = secp256k1.Signature.fromBytes(sig.subarray(0, 64), "compact").addRecoveryBit(v).recoverPublicKey(personalSignDigest(text));
+      const point = secp256k1.Signature.fromBytes(sig.subarray(0, 64), "compact").addRecoveryBit(v).recoverPublicKey(personalSignDigest(text2));
       const pub2 = point.toBytes(false);
       return `0x${bytesToHex2(keccak_256(pub2.subarray(1)).subarray(12))}`;
     }
     const pub = hexToBytes2(strip0x(call.signing_address));
-    return ed25519.verify(hexToBytes2(strip0x(call.signature)), utf83(text), pub) ? strip0x(call.signing_address) : null;
+    return ed25519.verify(hexToBytes2(strip0x(call.signature)), utf83(text2), pub) ? strip0x(call.signing_address) : null;
   } catch {
     return null;
   }
@@ -11236,12 +11298,12 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
   }
   if (m.model_calls && context.modelCalls !== void 0 && context.modelCalls !== null) {
     anythingGiven = true;
-    const text = context.modelCalls;
-    const digestOk = fileDigest(text) === m.model_calls.digest;
+    const text2 = context.modelCalls;
+    const digestOk = fileDigest(text2) === m.model_calls.digest;
     let parsed = null;
     let parseError = "";
     try {
-      parsed = parseModelCalls(text);
+      parsed = parseModelCalls(text2);
     } catch (e) {
       parseError = e.message;
     }
@@ -11424,11 +11486,149 @@ function runManifestReadback(m) {
   return lines.join("\n");
 }
 function taskSetDigest(name, revision, tasks) {
-  const canonical = { name, revision: revision ?? null, tasks: tasks.map((t) => ({ id: t.id, files: [...t.files].sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0) })).sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0) };
-  return `sha256:${sha256Hex(canonicalize2(canonical))}`;
+  const canonical2 = { name, revision: revision ?? null, tasks: tasks.map((t) => ({ id: t.id, files: [...t.files].sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0) })).sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0) };
+  return `sha256:${sha256Hex(canonicalize2(canonical2))}`;
 }
 function fileDigest(content2) {
   return `sha256:${shaHex(content2)}`;
+}
+
+// ../../protect-mcp/src/coordination-protocol.ts
+var COORDINATION_DOMAIN = "scopeblind.coordination.v1\n";
+function bytesToHex4(bytes) {
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+function hexToBytes4(hex2) {
+  if (!/^(?:[0-9a-f]{2})+$/i.test(hex2)) throw new Error("Invalid hexadecimal data");
+  return Uint8Array.from(hex2.match(/../g).map((x) => parseInt(x, 16)));
+}
+function validUnicode(value) {
+  for (let i = 0; i < value.length; i++) {
+    const c = value.charCodeAt(i);
+    if (c >= 55296 && c <= 56319) {
+      const n = value.charCodeAt(++i);
+      if (!(n >= 56320 && n <= 57343)) return false;
+    } else if (c >= 56320 && c <= 57343) return false;
+  }
+  return true;
+}
+function canonical(value) {
+  if (value === null) return "null";
+  if (typeof value === "string") {
+    if (!validUnicode(value)) throw new Error("Invalid Unicode");
+    return JSON.stringify(value);
+  }
+  if (typeof value === "boolean") return value ? "true" : "false";
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) throw new Error("Non-finite number");
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) {
+    for (let i = 0; i < value.length; i++) if (!Object.hasOwn(value, i)) throw new Error("Sparse arrays are not JSON");
+    return "[" + value.map(canonical).join(",") + "]";
+  }
+  if (typeof value === "object") {
+    if (Object.getPrototypeOf(value) !== Object.prototype && Object.getPrototypeOf(value) !== null) throw new Error("Expected a plain JSON object");
+    const object2 = value;
+    return "{" + Object.keys(object2).sort().map((k) => canonical(k) + ":" + canonical(object2[k])).join(",") + "}";
+  }
+  throw new Error("Not a JSON value");
+}
+async function sha2565(value) {
+  return bytesToHex4(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value))));
+}
+async function verify(envelope, expectedSigner) {
+  try {
+    if (!envelope || !/^[0-9a-f]{64}$/.test(envelope.signer) || !/^[0-9a-f]{64}$/.test(envelope.digest) || !/^[0-9a-f]{128}$/.test(envelope.signature)) return false;
+    if (expectedSigner && expectedSigner !== envelope.signer) return false;
+    const preimage = COORDINATION_DOMAIN + canonical(envelope.payload);
+    if (await sha2565(preimage) !== envelope.digest) return false;
+    const key = await crypto.subtle.importKey("raw", hexToBytes4(envelope.signer), { name: "Ed25519" }, false, ["verify"]);
+    return await crypto.subtle.verify("Ed25519", key, hexToBytes4(envelope.signature), new TextEncoder().encode(preimage));
+  } catch {
+    return false;
+  }
+}
+
+// ../../protect-mcp/src/coordination-repository.ts
+var REPOSITORY_HEX = /^[0-9a-f]{64}$/;
+var REPOSITORY_SHA = /^[0-9a-f]{40}$/;
+var REPOSITORY_ID = /^[A-Za-z0-9_-]{8,100}$/;
+var object = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var text = (v, n) => typeof v === "string" && v.length > 0 && v.length <= n && !/[\u0000-\u001f\u007f]/.test(v);
+var time = (v) => typeof v === "string" && Number.isFinite(Date.parse(v));
+var exact = (v, required, optional = []) => required.every((k) => k in v) && Object.keys(v).every((k) => required.includes(k) || optional.includes(k));
+function repositoryPath(path) {
+  return text(path, 300) && !path.startsWith("/") && !path.endsWith("/") && !path.includes("\\") && !path.split("/").some((p) => !p || p === "." || p === ".." || p.toLowerCase() === ".git");
+}
+function repositoryBranch(branch) {
+  return text(branch, 150) && !branch.includes("..") && !/[~^:?*\[\\\s]/.test(branch) && !branch.startsWith("/") && !branch.endsWith("/") && !branch.endsWith(".lock") && !branch.includes("@{") && !branch.split("/").some((p) => !p || p.startsWith(".") || p.endsWith("."));
+}
+function pathAllowed(path, allowed) {
+  if (!repositoryPath(path) || /^\.github(?:\/|$)/i.test(path) || /(^|\/)(?:\.gitmodules|CODEOWNERS)$/i.test(path)) return false;
+  return allowed.some((rule) => rule.endsWith("/**") ? path.startsWith(rule.slice(0, -2)) : path === rule);
+}
+function validRepositoryTask(v) {
+  if (!object(v) || !exact(v, ["type", "id", "title", "repository", "pull_number", "base_branch", "owner_key", "receiver_key", "authority_key", "allowed_paths", "required_checks", "reviewer_secret_hash", "issued_at", "expires_at"])) return false;
+  return v.type === "scopeblind.repository.task.v1" && REPOSITORY_ID.test(String(v.id)) && text(v.title, 140) && typeof v.repository === "string" && /^[A-Za-z0-9][A-Za-z0-9-]{0,38}\/[A-Za-z0-9_.-]{1,100}$/.test(v.repository) && Number.isSafeInteger(v.pull_number) && Number(v.pull_number) > 0 && repositoryBranch(v.base_branch) && [v.owner_key, v.receiver_key, v.authority_key, v.reviewer_secret_hash].every((x) => typeof x === "string" && REPOSITORY_HEX.test(x)) && v.owner_key !== v.receiver_key && v.owner_key !== v.authority_key && v.receiver_key !== v.authority_key && Array.isArray(v.allowed_paths) && v.allowed_paths.length > 0 && v.allowed_paths.length <= 12 && new Set(v.allowed_paths).size === v.allowed_paths.length && v.allowed_paths.every((p) => typeof p === "string" && repositoryPath(p.endsWith("/**") ? p.slice(0, -3) : p) && pathAllowed(p.endsWith("/**") ? p.slice(0, -2) + "placeholder" : p, [p])) && Array.isArray(v.required_checks) && v.required_checks.length > 0 && v.required_checks.length <= 12 && v.required_checks.every((c) => object(c) && exact(c, ["name", "app_id"]) && text(c.name, 100) && Number.isSafeInteger(c.app_id) && Number(c.app_id) > 0) && new Set(v.required_checks.map((c) => canonical(c))).size === v.required_checks.length && time(v.issued_at) && time(v.expires_at) && Date.parse(String(v.expires_at)) > Date.parse(String(v.issued_at)) && Date.parse(String(v.expires_at)) - Date.parse(String(v.issued_at)) <= 7 * 864e5;
+}
+function validRepositoryProposal(v, task, taskDigest) {
+  if (!object(v) || !exact(v, ["type", "id", "task_id", "task_digest", "repository_id", "base_ref", "head_ref", "base_sha", "head_sha", "merge_sha", "tree_sha", "files", "checks", "observed_at"])) return false;
+  if (v.type !== "scopeblind.repository.proposal.v1" || !REPOSITORY_ID.test(String(v.id)) || v.task_id !== task.id || v.task_digest !== taskDigest || !text(v.repository_id, 100) || v.base_ref !== `refs/heads/${task.base_branch}` || typeof v.head_ref !== "string" || !v.head_ref.startsWith("refs/heads/") || !repositoryBranch(v.head_ref.slice(11)) || v.head_ref === v.base_ref || ![v.base_sha, v.head_sha, v.merge_sha, v.tree_sha].every((s) => typeof s === "string" && REPOSITORY_SHA.test(s)) || v.base_sha === v.head_sha || v.merge_sha === v.base_sha || !time(v.observed_at)) return false;
+  if (!Array.isArray(v.files) || !v.files.length || v.files.length > 50 || new Set(v.files.map((f) => object(f) ? f.path : null)).size !== v.files.length || !v.files.every((f) => object(f) && exact(f, ["path", "status", "mode", "additions", "deletions"], ["previous_path", "patch", "patch_truncated"]) && typeof f.path === "string" && pathAllowed(f.path, task.allowed_paths) && ["added", "modified", "removed", "renamed"].includes(String(f.status)) && ["100644", "100755"].includes(String(f.mode)) && Number.isSafeInteger(f.additions) && Number(f.additions) >= 0 && Number.isSafeInteger(f.deletions) && Number(f.deletions) >= 0 && (f.patch === void 0 || typeof f.patch === "string" && f.patch.length <= 400) && (f.patch_truncated === void 0 || f.patch_truncated === true) && (f.status === "renamed" ? typeof f.previous_path === "string" && pathAllowed(f.previous_path, task.allowed_paths) : f.previous_path === void 0))) return false;
+  return Array.isArray(v.checks) && v.checks.length === task.required_checks.length && v.checks.every((c) => object(c) && exact(c, ["id", "name", "app_id", "head_sha", "conclusion"]) && Number.isSafeInteger(c.id) && Number(c.id) > 0 && c.head_sha === v.head_sha && c.conclusion === "success" && task.required_checks.some((r) => r.name === c.name && r.app_id === c.app_id)) && new Set(v.checks.map((c) => `${c.name}:${c.app_id}`)).size === v.checks.length;
+}
+function validRepositoryRecord(v, kind) {
+  if (!object(v) || v.type !== `scopeblind.repository.${kind}.v1` || !REPOSITORY_ID.test(String(v.task_id)) || !REPOSITORY_HEX.test(String(v.task_digest))) return false;
+  const common = ["type", "task_id", "task_digest"];
+  if (kind === "claim") return exact(v, [...common, "reviewer_key", "name", "issued_at"]) && REPOSITORY_HEX.test(String(v.reviewer_key)) && text(v.name, 60) && time(v.issued_at);
+  const note = (v2) => typeof v2 === "string" && v2.length <= 600;
+  if (kind === "approval") return exact(v, [...common, "proposal_digest", "role", "principal_key", "decision", "issued_at", "expires_at", "note"]) && REPOSITORY_HEX.test(String(v.proposal_digest)) && REPOSITORY_HEX.test(String(v.principal_key)) && ["owner", "reviewer"].includes(String(v.role)) && ["approve", "reject"].includes(String(v.decision)) && time(v.issued_at) && time(v.expires_at) && note(v.note) && Date.parse(String(v.expires_at)) > Date.parse(String(v.issued_at)) && Date.parse(String(v.expires_at)) - Date.parse(String(v.issued_at)) <= 9e5;
+  if (kind === "execution") return exact(v, [...common, "operation_id", "receiver_attempt_id", "proposal_digest", "owner_approval_digest", "reviewer_approval_digest", "receiver_key", "action", "issued_at", "expires_at"]) && [v.operation_id, v.receiver_attempt_id].every((x) => REPOSITORY_ID.test(String(x))) && [v.proposal_digest, v.owner_approval_digest, v.reviewer_approval_digest, v.receiver_key].every((x) => REPOSITORY_HEX.test(String(x))) && v.action === "github.updateRefs" && time(v.issued_at) && time(v.expires_at) && Date.parse(String(v.expires_at)) > Date.parse(String(v.issued_at)) && Date.parse(String(v.expires_at)) - Date.parse(String(v.issued_at)) <= 12e4;
+  if (kind === "outcome") return exact(v, [...common, "operation_id", "proposal_digest", "execution_digest", "status", "observed_base_sha", "readback", "observed_at", "note"], ["github_request_id"]) && REPOSITORY_ID.test(String(v.operation_id)) && [v.proposal_digest, v.execution_digest].every((x) => REPOSITORY_HEX.test(String(x))) && ["confirmed", "failed", "unknown"].includes(String(v.status)) && (v.observed_base_sha === null || REPOSITORY_SHA.test(String(v.observed_base_sha))) && ["exact_ref", "descendant_ref", "not_confirmed"].includes(String(v.readback)) && (v.status === "confirmed" ? v.readback !== "not_confirmed" && v.observed_base_sha !== null : v.readback === "not_confirmed") && time(v.observed_at) && note(v.note) && (v.github_request_id === void 0 || text(v.github_request_id, 200));
+  return exact(v, [...common, "outcome_digest", "reviewer_key", "decision", "issued_at", "note"]) && [v.outcome_digest, v.reviewer_key].every((x) => REPOSITORY_HEX.test(String(x))) && ["accept", "request_changes"].includes(String(v.decision)) && time(v.issued_at) && note(v.note);
+}
+var validRepositoryEnvelope = (e) => object(e) && exact(e, ["payload", "signer", "digest", "signature"]);
+async function verifyRepositoryEvidence(value, pin) {
+  const pins = typeof pin === "string" ? { authority_key: pin } : pin ?? { authority_key: value?.state?.payload?.task?.payload?.authority_key };
+  const errors = [];
+  let accepted = false;
+  const check = (condition, message) => {
+    if (!condition) errors.push(message);
+  };
+  try {
+    const e = value, s = e.state?.payload, t = s?.task?.payload;
+    check(object(e) && exact(e, ["type", "state"]) && e.type === "scopeblind.repository.evidence.v1" && validRepositoryEnvelope(e.state) && !!s && s.type === "scopeblind.repository.state.v1" && exact(s, ["type", "task", "reviewer", "proposal", "approvals", "execution", "outcome", "acceptance", "status", "revision", "observed_at"]) && Number.isSafeInteger(s.revision) && s.revision > 0 && time(s.observed_at) && await verify(e.state, pins.authority_key), "Service state signature or shape is invalid");
+    check(validRepositoryEnvelope(s.task) && validRepositoryTask(t) && await verify(s.task, t.owner_key) && t.authority_key === pins.authority_key && (!pins.owner_key || pins.owner_key === t.owner_key) && (!pins.receiver_key || pins.receiver_key === t.receiver_key) && Date.parse(s.observed_at) >= Date.parse(t.issued_at), "Task or pinned owner/receiver is invalid");
+    const reviewer = s.reviewer?.payload;
+    if (s.reviewer) check(validRepositoryEnvelope(s.reviewer) && validRepositoryRecord(reviewer, "claim") && reviewer.task_id === t.id && reviewer.task_digest === s.task.digest && ![t.owner_key, t.receiver_key, t.authority_key].includes(reviewer.reviewer_key) && await verify(s.reviewer, reviewer.reviewer_key) && (!pins.reviewer_key || pins.reviewer_key === reviewer.reviewer_key) && Date.parse(reviewer.issued_at) >= Date.parse(t.issued_at) && Date.parse(reviewer.issued_at) < Date.parse(t.expires_at), "Reviewer role is invalid");
+    if (s.proposal) check(!!reviewer && validRepositoryEnvelope(s.proposal) && validRepositoryProposal(s.proposal.payload, t, s.task.digest) && await verify(s.proposal, t.receiver_key) && Date.parse(s.proposal.payload.observed_at) >= Date.parse(reviewer.issued_at) && Date.parse(s.proposal.payload.observed_at) < Date.parse(t.expires_at), "Repository snapshot is invalid");
+    check(Array.isArray(s.approvals) && s.approvals.length <= 2 && new Set(s.approvals.map((a) => a.payload.role)).size === s.approvals.length, "Approval roles are invalid");
+    for (const approval of s.approvals) {
+      const a = approval.payload, key = a.role === "owner" ? t.owner_key : reviewer?.reviewer_key;
+      check(!!s.proposal && validRepositoryEnvelope(approval) && validRepositoryRecord(a, "approval") && a.principal_key === key && a.task_id === t.id && a.task_digest === s.task.digest && a.proposal_digest === s.proposal.digest && await verify(approval, key) && Date.parse(a.issued_at) >= Date.parse(s.proposal.payload.observed_at) && Date.parse(a.expires_at) <= Date.parse(t.expires_at), "Exact proposal approval is invalid");
+    }
+    if (s.execution) {
+      const x = s.execution.payload, owner = s.approvals.find((a) => a.payload.role === "owner"), review = s.approvals.find((a) => a.payload.role === "reviewer");
+      check(!!s.proposal && !!owner && !!review && validRepositoryEnvelope(s.execution) && validRepositoryRecord(x, "execution") && x.task_id === t.id && x.task_digest === s.task.digest && x.proposal_digest === s.proposal.digest && x.receiver_key === t.receiver_key && x.owner_approval_digest === owner?.digest && x.reviewer_approval_digest === review?.digest && owner?.payload.decision === "approve" && review?.payload.decision === "approve" && [owner, review].every((a) => a && Date.parse(a.payload.expires_at) >= Date.parse(x.expires_at) && Date.parse(a.payload.issued_at) <= Date.parse(x.issued_at)) && Date.parse(x.expires_at) <= Date.parse(t.expires_at) && await verify(s.execution, pins.authority_key), "Execution authority is invalid");
+    }
+    if (s.outcome) {
+      const o = s.outcome.payload;
+      check(!!s.execution && validRepositoryEnvelope(s.outcome) && validRepositoryRecord(o, "outcome") && o.task_id === t.id && o.task_digest === s.task.digest && o.proposal_digest === s.proposal?.digest && o.execution_digest === s.execution?.digest && o.operation_id === s.execution?.payload.operation_id && await verify(s.outcome, t.receiver_key) && Date.parse(o.observed_at) >= Date.parse(s.execution.payload.issued_at), "Receiver outcome is invalid");
+      check(o.status !== "confirmed" || o.readback !== "exact_ref" || o.observed_base_sha === s.proposal?.payload.merge_sha, "Confirmed readback is invalid");
+    }
+    if (s.acceptance) {
+      const a = s.acceptance.payload;
+      check(s.outcome?.payload.status === "confirmed" && validRepositoryEnvelope(s.acceptance) && validRepositoryRecord(a, "acceptance") && a.task_id === t.id && a.task_digest === s.task.digest && a.outcome_digest === s.outcome.digest && a.reviewer_key === reviewer?.reviewer_key && await verify(s.acceptance, reviewer?.reviewer_key) && Date.parse(a.issued_at) >= Date.parse(s.outcome.payload.observed_at), "Recipient acceptance is invalid");
+      accepted = a.decision === "accept";
+    }
+    const expected = s.acceptance ? s.acceptance.payload.decision === "accept" ? "accepted" : "changes_requested" : s.outcome ? s.outcome.payload.status : s.execution ? "executing" : !reviewer ? "awaiting_reviewer" : !s.proposal ? "awaiting_snapshot" : s.approvals.some((a) => a.payload.decision === "reject") ? "rejected" : s.approvals.length === 2 && s.approvals.every((a) => Date.parse(a.payload.expires_at) > Date.parse(s.observed_at)) ? "approved" : "review";
+    check(s.status === expected || s.status === "cancelled" && !s.execution && !s.outcome && !s.acceptance, "State status is inconsistent with the signed records");
+    for (const record3 of [s.reviewer, s.proposal, ...s.approvals, s.execution, s.outcome, s.acceptance]) if (record3) check(Date.parse(record3.payload.issued_at ?? record3.payload.observed_at) <= Date.parse(s.observed_at), "A signed record is later than the state observation");
+  } catch {
+    errors.push("Malformed repository evidence");
+  }
+  return { valid: errors.length === 0, errors, accepted: accepted && errors.length === 0, authorityPinned: !!pin && errors.length === 0, limitations: ["The pinned receiver attests to GitHub API observations; this is not a GitHub-signed receipt.", "This controls the installed receiver\u2019s exact branch update. Other credentials and repository actions are outside its coverage.", "Destination readback establishes resulting repository state. After a lost reply it does not establish which actor caused that state.", "The checked files, commits and named checks do not prove the code is safe or universally correct.", "Signatures identify keys, not a person\u2019s legal identity.", ...!pin ? ["No independent authority key was supplied. Only consistency with the included authority was checked."] : []] };
 }
 export {
   ACTION_ASSURANCE_BUNDLE_V1,
@@ -11468,6 +11668,7 @@ export {
   verifyEpochBundle,
   verifyModelAttestation,
   verifyProofRequest,
+  verifyRepositoryEvidence,
   verifyRunManifest,
   verifyRunRegrade,
   verifySigstoreBundle,

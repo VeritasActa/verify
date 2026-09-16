@@ -27,8 +27,9 @@
  * @license Apache-2.0
  */
 
-import { verifyArtifact } from '@veritasacta/artifacts';
-import { canonicalize, canonicalHash } from '../util/canonical.js';
+import { ed25519 } from '@noble/curves/ed25519';
+import { utf8ToBytes } from '@noble/hashes/utils';
+import { canonicalize, canonicalHash, legacyCanonicalize } from '../util/canonical.js';
 import { hexToBytes, bytesToHex } from '../util/hex.js';
 
 const EMBEDDED_KEY_FIELDS = ['public_key', 'verification_key', 'verification_jwk'];
@@ -67,14 +68,16 @@ export async function verifyReceipt(input, detectedMode, opts = {}) {
   let kid = null;
   let issuer = null;
   let algorithm = 'ed25519';
-  let artifactToVerify = input;
+  let signedPayload = Object.fromEntries(Object.entries(input).filter(([key]) => key !== 'signature'));
+  let signature = input.signature;
 
   if (detectedMode === 'ed25519-passport') {
     format = 'passport';
     kid = input.signature.kid;
     algorithm = input.signature.alg || 'EdDSA';
     // Passport -> flat artifact for verification
-    artifactToVerify = { ...input.payload, signature: input.signature.sig };
+    signedPayload = input.payload;
+    signature = input.signature.sig;
   } else if (detectedMode === 'ed25519-receipt-v2') {
     format = 'v2';
     kid = input.kid;
@@ -148,22 +151,30 @@ export async function verifyReceipt(input, detectedMode, opts = {}) {
     };
   }
 
-  // Delegate the actual cryptographic verification to @veritasacta/artifacts.
-  // This keeps the low-level crypto in one audited module.
+  // Verify the actual wire preimage directly. The older artifacts dependency
+  // rebuilds objects and does not preserve JCS order for numeric-looking keys.
   let result;
   try {
-    result = verifyArtifact(artifactToVerify, publicKey);
+    if (!signature) result = { valid: false, error: 'missing_signature' };
+    else if (!['ed25519', 'eddsa'].includes(String(algorithm).toLowerCase())) result = { valid: false, error: 'unsupported_algorithm' };
+    else {
+      const encoded = canonicalize(signedPayload);
+      const valid = ed25519.verify(hexToBytes(signature), utf8ToBytes(encoded), hexToBytes(publicKey));
+      result = { valid, hash: canonicalHash(signedPayload), canonicalization: 'jcs', ...(valid ? {} : {error: 'invalid_signature'}) };
+      // Diagnose a historical signature, but never accept a member the old
+      // serializer ignored. Compatibility is deliberate and always labelled.
+      const hasProto = (v) => v && typeof v === 'object' && (Object.hasOwn(v, '__proto__') || Object.values(v).some(hasProto));
+      if (!valid && !hasProto(signedPayload)) {
+        const old = legacyCanonicalize(signedPayload);
+        if (old !== encoded && ed25519.verify(hexToBytes(signature), utf8ToBytes(old), hexToBytes(publicKey))) {
+          const allow = opts.allowLegacyCanonicalization === true;
+          result = {valid:allow, canonicalization:'legacy-numeric-key-order', legacySignatureValid:true,
+            error:allow?undefined:'legacy_non_jcs_signature', warning:'Historical non-JCS key order; this is not RFC 8785 conformance.'};
+        }
+      }
+    }
   } catch (e) {
-    return {
-      valid: false,
-      error: 'malformed_hex',
-      format,
-      type: input.type || input.payload?.type,
-      kid,
-      issuer,
-      algorithm,
-      detail: e.message,
-    };
+    return { valid: false, error: 'malformed_encoding', format, kid, issuer, algorithm, detail: e.message };
   }
 
   const payload = input.payload || input;
@@ -183,6 +194,8 @@ export async function verifyReceipt(input, detectedMode, opts = {}) {
   let normalizedError;
   if (!result.valid) {
     const upstream = (result.error || '').toLowerCase();
+    if (['legacy_non_jcs_signature', 'unsupported_algorithm'].includes(upstream)) normalizedError = upstream;
+    else
     if (upstream === 'verification_error' || upstream === 'sig_invalid' || upstream.includes('signature')) {
       normalizedError = 'invalid_signature';
     } else if (upstream.includes('missing')) {
@@ -208,6 +221,9 @@ export async function verifyReceipt(input, detectedMode, opts = {}) {
     entitlementAttested,
     entitlementVerifiedByRuntime,
     hash: result.hash,
+    canonicalization: result.canonicalization,
+    legacySignatureValid: result.legacySignatureValid,
+    warning: result.warning,
   };
 }
 

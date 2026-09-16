@@ -119,3 +119,5 @@ When `--json` is used, errors appear as:
 
 Consumers should branch on `error` code, not on `errorMeta.description`
 (which is informative but may evolve).
+
+- `legacy_non_jcs_signature`: a signature matches the historical numeric-key encoding, not RFC 8785. Regenerate using JCS, or explicitly inspect with `--allow-legacy-canonicalization`; strict verification does not accept it.

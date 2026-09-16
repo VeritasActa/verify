@@ -3,16 +3,15 @@
   "name": "io.github.tomjwxf/veritasacta-verify",
   "description": "Offline receipt verifier. Ed25519 signature verification without contacting any server.",
   "repository": {
-    "url": "https://github.com/scopeblind/ScopeBlindD2",
-    "source": "github",
-    "subfolder": "packages/verify-cli"
+    "url": "https://github.com/VeritasActa/verify",
+    "source": "github"
   },
-  "version": "0.9.2",
+  "version": "0.10.15",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@veritasacta/verify",
-      "version": "0.9.2",
+      "version": "0.10.15",
       "transport": {
         "type": "stdio"
       },

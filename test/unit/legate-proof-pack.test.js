@@ -17,7 +17,8 @@ const REAL = JSON.parse(readFileSync(new URL('../../samples/legate-proof-pack.js
 // Sign a pack here the same way the runtime does, for round-trip + tamper tests.
 function signPack(core, priv, pubHex) {
   const c = { ...core, type: 'scopeblind.legate.proof-pack.v1', verification_key: pubHex };
-  const canonical = canonicalize({ ...c, signature: undefined, sha256: undefined, hybrid_signature: undefined });
+  const {signature: _signature, sha256: _hash, hybrid_signature: _hybrid, ...payload} = c;
+  const canonical = canonicalize(payload);
   return {
     ...c,
     sha256: bytesToHex(sha256(utf8ToBytes(canonical))),
