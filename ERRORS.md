@@ -52,7 +52,21 @@ rather than rely on human-readable text.
 - **Description:** A cryptographically authentic Gate payload violates the semantic contract of its declared schema.
 - **Hint:** Treat the artifact as invalid even if its signature verifies; inspect the semantic error details.
 
+#### `key_outside_validity_window`
+- **Description:** The receipt was issued outside the signing key's `valid_from` / `valid_until` window, `[valid_from, valid_until)`.
+- **Spec:** `draft-farley-acta-signed-receipts-03 §9.2 Key Compromise`
+- **Hint:** The key had been rotated out, or was not yet in use, at the `issued_at` the receipt states. `issued_at` is asserted by the signer, so this catches a key used after an honest rotation, not a compromised key backdated into its window.
+
 ### Undecidable (exit 2)
+
+#### `key_window_missing`
+- **Description:** `--require-key-window` was given and the key source carries no validity window for the signing key.
+- **Spec:** `draft-farley-acta-signed-receipts-03 §9.2 Key Compromise`
+- **Hint:** Publish `valid_from` / `valid_until` on the JWK, or verify without the flag; the result then reports the key's validity at issuance as not established.
+
+#### `key_window_unverifiable`
+- **Description:** The key source carries a validity window that cannot be applied: unreadable bounds, bounds in the wrong order, or a receipt with no readable `issued_at`.
+- **Spec:** `draft-farley-acta-signed-receipts-03 §9.2 Key Compromise`
 
 #### `embedded_key_rejected`
 - **Description:** Receipt contains a verification key in its payload, which is not trusted by default.

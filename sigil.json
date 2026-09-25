@@ -1,15 +1,15 @@
 {
   "sigil_version": 1,
-  "fingerprint": "af9cabf3",
-  "name": "Pale Beacon",
-  "sigil_hash": "af9cabf380e8e2f70ee900e5d4f8fc596f1786441122047ef2c25020d25bde1e",
+  "fingerprint": "8fcf964a",
+  "name": "Wild Field",
+  "sigil_hash": "8fcf964abbc0564d238e9d004713d24705ed0fbeb38a6cb72ff644baf31b8e40",
   "project_public_key": "fe665e861867cec7e171c0c13bbc873c3362079faef21f54df7804b7fb9ae8af",
   "commitment_authentication": "public_recomputable_integrity_only",
   "policy": {
     "version": 3,
     "package": "@veritasacta/verify",
-    "package_version": "0.10.18",
-    "source_hash": "6b726b798e76f38a86cfdbb68be496856fc8b2651be0b610c6094da9ef424d09",
+    "package_version": "0.10.20",
+    "source_hash": "991875254a2aaac8ed11f911b96530ba65dde6a5ed4346628e87fe4f710c4571",
     "monitored_files": [
       "README.md",
       "cli.js",
@@ -28,6 +28,7 @@
       "src/engines/repository-evidence.js",
       "src/engines/trusted-context-pack.js",
       "src/engines/commitment-mode.js",
+      "src/engines/connector-action.js",
       "src/engines/voprf-token.js",
       "src/engines/knowledge-unit.js",
       "src/engines/selective-disclosure.js",
@@ -59,6 +60,7 @@
       "src/util/canonical.js",
       "src/util/hex.js",
       "src/util/jwks.js",
+      "src/util/key-window.js",
       "src/util/audit-log.js",
       "src/util/fips.js",
       "src/util/known-issuers.js",
@@ -76,6 +78,6 @@
     ],
     "created_at": 1784267169966
   },
-  "policy_hash": "19abff64d4af622f5fc400fc490250463dbc68d445b4666091bd848b2c166daa",
+  "policy_hash": "5f0495fa6b68e0bbe53cc1c30e85611a8668a08c19c4399c8100a6073ef04a60",
   "derived_at": "2026-07-17T05:46:09.966Z"
 }

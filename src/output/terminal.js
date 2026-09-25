@@ -9,6 +9,7 @@
  * @license Apache-2.0
  */
 
+import { keyWindowLine } from '../util/key-window.js';
 import { deriveFilteredSigil } from '../engines/sigil.js';
 import { getError } from '../errors.js';
 
@@ -137,6 +138,7 @@ export function formatReceiptResult(result, opts = {}) {
   if (result.kid) lines.push(`  Kid:        ${result.kid}`);
   if (result.issuer) lines.push(`  Issuer:     ${result.issuer}`);
   if (result.keySource) lines.push(`  Key:        ${result.keySource}`);
+  if (keyWindowLine(result.keyStatus)) lines.push(keyWindowLine(result.keyStatus));
   if (result.publicKey) lines.push(trustTierLine(result));
   if (result.tier) lines.push(`  Tier:       ${result.tier.label} ${dim(`(${result.tier.features.join(', ')})`)}`);
   if (result.tier?.declaredFeatures?.length) lines.push(`  Declared:   ${result.tier.declaredFeatures.join(', ')} (not independently verified)`);
@@ -191,6 +193,13 @@ export function formatReceiptResult(result, opts = {}) {
     for (const lim of (result.evidenceLimitations || [])) {
       lines.push(`    ${yellow('!')} ${dim(lim)}`);
     }
+  }
+  if (result.connectorAction) {
+    const c = result.connectorAction;
+    lines.push(`  ${bold('Connector:')}  ${c.platform || '?'} · agent ${c.agent || '?'} · grant ${c.grant_type || '?'}${c.purpose ? ` · ${dim(c.purpose)}` : ''}`);
+    lines.push(`    context recorded as ${c.context_check}; platform signature ${c.platform_signature}${c.effect ? `; effect ${c.effect}` : ''}`);
+    for (const e of c.errors) lines.push(`    ${red('✗')} ${e}`);
+    for (const w of c.warnings) lines.push(`    ${yellow('!')} ${dim(w)}`);
   }
   if (result.entitlementVerifiedByRuntime) {
     lines.push(`  ${bold('Entitlement:')} pinned issuer proof verified by the receipt runtime ${dim('(full blinded proof withheld from normal receipt sync)')}`);
@@ -380,6 +389,7 @@ export function formatGateTupleResult(result, opts = {}) {
   if (result.recomputedDigest) lines.push(`  Recomputed: ${red(result.recomputedDigest)}`);
   if (result.publicKey) lines.push(`  Signer:     ${result.signerLabel ? bold(result.signerLabel) + ' ' : ''}${dim(result.publicKey)}`);
   if (result.keySource) lines.push(`  Key:        ${result.keySource}`);
+  if (keyWindowLine(result.keyStatus)) lines.push(keyWindowLine(result.keyStatus));
   if (result.publicKey) lines.push(trustTierLine(result));
 
   const pf = result.payloadFields || {};
@@ -461,6 +471,7 @@ export function formatGovernedReceiptResult(result, opts = {}) {
   if (result.algorithm) lines.push(`  Algorithm:  ${result.algorithm} ${dim('(over the canonical action payload, not a digest)')}`);
   if (result.publicKey) lines.push(`  Signer:     ${result.signerLabel ? bold(result.signerLabel) + ' ' : ''}${dim(result.publicKey)}`);
   if (result.keySource) lines.push(`  Key:        ${result.keySource}`);
+  if (keyWindowLine(result.keyStatus)) lines.push(keyWindowLine(result.keyStatus));
   if (result.publicKey) lines.push(trustTierLine(result));
 
   // Restraint receipts: surface WHAT was prevented and re-verify that the
@@ -562,6 +573,7 @@ export function formatTrustedContextPackResult(result, opts = {}) {
   if (result.recomputedDigest) lines.push(`  Recomputed: ${red(result.recomputedDigest)}`);
   if (result.publicKey) lines.push(`  Signer:     ${result.signerLabel ? bold(result.signerLabel) + ' ' : ''}${dim(result.publicKey)}`);
   if (result.keySource) lines.push(`  Key:        ${result.keySource}`);
+  if (keyWindowLine(result.keyStatus)) lines.push(keyWindowLine(result.keyStatus));
   if (result.publicKey) lines.push(trustTierLine(result));
 
   if (result.error && !result.valid) {

@@ -21,6 +21,7 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { base64urlToBytes, bytesToHex } from './hex.js';
+import { windowOf } from './key-window.js';
 
 /**
  * @typedef {Object} JwksResolveResult
@@ -28,6 +29,7 @@ import { base64urlToBytes, bytesToHex } from './hex.js';
  * @property {string|null} error
  * @property {string} [kid]
  * @property {{type: 'file'|'url', resolved: string}} [source]
+ * @property {{valid_from: string|null, valid_until: string|null}|null} [window]  the key's validity window, when the JWK carries one (§9.2)
  */
 
 async function loadJwks(source) {
@@ -88,7 +90,7 @@ export async function resolveFromJwks(url, kid) {
     }
 
     const raw = base64urlToBytes(jwk.x);
-    return { key: bytesToHex(raw), error: null, kid: jwk.kid, source };
+    return { key: bytesToHex(raw), error: null, kid: jwk.kid, source, window: windowOf(jwk) };
   } catch (e) {
     return { key: null, error: `JWKS fetch error: ${e.message}` };
   }

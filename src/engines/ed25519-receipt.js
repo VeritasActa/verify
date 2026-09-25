@@ -31,6 +31,7 @@ import { ed25519 } from '@noble/curves/ed25519';
 import { utf8ToBytes } from '@noble/hashes/utils';
 import { canonicalize, canonicalHash, legacyCanonicalize } from '../util/canonical.js';
 import { hexToBytes, bytesToHex } from '../util/hex.js';
+import { checkConnectorAction } from './connector-action.js';
 
 const EMBEDDED_KEY_FIELDS = ['public_key', 'verification_key', 'verification_jwk'];
 
@@ -106,22 +107,27 @@ export async function verifyReceipt(input, detectedMode, opts = {}) {
 
   if (!publicKey) {
     const payload = input.payload || input;
-    const embeddedFields = EMBEDDED_KEY_FIELDS.filter((f) =>
-      typeof payload[f] === 'string' || (payload[f] && typeof payload[f] === 'object'),
-    );
+    // A key can be carried inside the payload or, in the v2 and flat shapes, beside it at the top level. Either way it
+    // is inside the signed bytes, so it is found and refused the same way in every shape (draft §9.5).
+    const carriers = [input.payload && typeof input.payload === 'object' ? input.payload : null, input].filter(Boolean);
+    const carried = (f) => carriers.map((c) => c[f]).find((v) => typeof v === 'string' || (v && typeof v === 'object'));
+    const embeddedFields = EMBEDDED_KEY_FIELDS.filter((f) => carried(f) !== undefined);
 
     if (embeddedFields.length > 0) {
       if (opts.allowEmbeddedKey) {
         // Deprecated path; extract the first embedded key form we recognize.
-        if (typeof payload.public_key === 'string' && payload.public_key.length === 64) {
-          publicKey = payload.public_key;
+        const pk = carried('public_key');
+        const vk = carried('verification_key');
+        const jwk = carried('verification_jwk');
+        if (typeof pk === 'string' && pk.length === 64) {
+          publicKey = pk;
           keySource = 'embedded-deprecated';
-        } else if (typeof payload.verification_key === 'string' && payload.verification_key.length === 64) {
-          publicKey = payload.verification_key;
+        } else if (typeof vk === 'string' && vk.length === 64) {
+          publicKey = vk;
           keySource = 'embedded-deprecated';
-        } else if (payload.verification_jwk?.x) {
+        } else if (jwk?.x) {
           // base64url(raw) -> hex
-          const raw = Buffer.from(payload.verification_jwk.x.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
+          const raw = Buffer.from(jwk.x.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
           publicKey = raw.toString('hex');
           keySource = 'embedded-deprecated';
         }
@@ -180,6 +186,11 @@ export async function verifyReceipt(input, detectedMode, opts = {}) {
   const payload = input.payload || input;
   const payloadFields = collectPayloadFields(payload);
 
+  // Connector-action profile: the grant a platform presented with the call,
+  // checked as a whole and, given a platform key from outside the receipt,
+  // re-verified rather than taken on the gate's word.
+  const connectorAction = checkConnectorAction(payload, { platformKeys: opts.platformKeys });
+
   // Evidence grade: a Legate governed receipt carries an honest grade and its
   // limitations. Surface them so a valid signature is never mistaken for proof
   // that the underlying action actually happened.
@@ -205,9 +216,15 @@ export async function verifyReceipt(input, detectedMode, opts = {}) {
     }
   }
 
+  if (connectorAction && !connectorAction.valid && result.valid) {
+    result = { ...result, valid: false };
+    normalizedError = connectorAction.platform_signature === 'invalid' ? 'connector_context_signature_invalid' : 'connector_schema_invalid';
+  }
+
   return {
     valid: Boolean(result.valid),
     error: normalizedError,
+    connectorAction,
     format,
     type: payload.type || input.type,
     kid,

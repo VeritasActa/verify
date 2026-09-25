@@ -383,6 +383,16 @@ Apache-2.0.
 
 Patent-adjacent; covered by the Apache-2.0 patent grant (§3). See [PATENTS.md](./PATENTS.md).
 
+### Key validity windows (0.10.20)
+
+When the JWKS gives the signing key a `valid_from` / `valid_until` window (draft §9.2), the verifier applies it to the receipt's `issued_at`. The window is `[valid_from, valid_until)`, so a receipt issued exactly at `valid_until` is outside it. A receipt outside the window fails with `key_outside_validity_window`. Every receipt result carries `keyStatus`: `inside`, `outside`, `no_window` (validity at issuance not established), `unverifiable`, or `not_applicable` for a key pinned with `--key`. Add `--require-key-window` to fail when the key source gives no window:
+
+```bash
+npx @veritasacta/verify receipt.json --jwks ./jwks.json --require-key-window --json
+```
+
+`issued_at` is asserted by the signer, so a window catches a key still in use after an honest rotation, not a compromised key backdated into the window.
+
 ### Canonical JSON compatibility (0.10.15)
 
 Receipt verification uses RFC 8785 key ordering, including numeric-looking keys. Historical receipts signed using JavaScript's numeric-key insertion order fail with `legacy_non_jcs_signature`. To inspect one intentionally, use `verify receipt.json --allow-legacy-canonicalization --key PUBLIC_KEY`. The result is labeled as a historical encoding; it does not claim JCS conformance. `--strict` always disables this compatibility mode. Metadata such as `holder_binding` is reported as declared until its underlying property is actually verified.

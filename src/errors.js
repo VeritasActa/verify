@@ -133,6 +133,26 @@ export const ERROR_REGISTRY = {
     class: 'undecidable',
     hint: 'Valid formats: v1 receipt, v2 receipt, Passport envelope, audit bundle, KU bundle, VOPRF token.',
   },
+  key_outside_validity_window: {
+    code: 'key_outside_validity_window',
+    description: 'The receipt was issued outside the signing key\'s valid_from / valid_until window, [valid_from, valid_until).',
+    class: 'tampered',
+    spec: 'draft-farley-acta-signed-receipts-03 §9.2 Key Compromise',
+    hint: 'The key had been rotated out (or was not yet in use) when the receipt says it was issued.',
+  },
+  key_window_missing: {
+    code: 'key_window_missing',
+    description: '--require-key-window was given, and the key source carries no validity window for the signing key.',
+    class: 'undecidable',
+    spec: 'draft-farley-acta-signed-receipts-03 §9.2 Key Compromise',
+    hint: 'Publish valid_from / valid_until on the JWK, or verify without --require-key-window (the result then reports key validity as not established).',
+  },
+  key_window_unverifiable: {
+    code: 'key_window_unverifiable',
+    description: 'The key source carries a validity window that cannot be applied: unreadable bounds, or a receipt with no readable issued_at.',
+    class: 'undecidable',
+    spec: 'draft-farley-acta-signed-receipts-03 §9.2 Key Compromise',
+  },
   jwks_fetch_failed: {
     code: 'jwks_fetch_failed',
     description: 'JWKS endpoint did not return a valid key set.',

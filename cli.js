@@ -84,6 +84,7 @@ import { verifyCosignatures } from './src/engines/cosign.js';
 import { parseContextArgs } from './src/context/live-context.js';
 import { detectTier } from './src/conformance.js';
 import { resolveFromJwks } from './src/util/jwks.js';
+import { checkKeyWindow, receiptIssuedAt } from './src/util/key-window.js';
 import { loadKnownIssuers, labelFor } from './src/util/known-issuers.js';
 import { appendAuditEntry } from './src/util/audit-log.js';
 import { fipsStatus } from './src/util/fips.js';
@@ -159,7 +160,9 @@ function parseArgs() {
   const opts = {
     file: null,
     publicKey: null,
+    platformKeys: {},
     jwksUrl: null,
+    requireKeyWindow: false,
     trustAnchor: null,
     stdin: false,
     mode: 'auto',
@@ -218,8 +221,16 @@ function parseArgs() {
       case '-V': opts.version = true; break;
       case '--key':
       case '-k': opts.publicKey = next(); break;
+      case '--platform-key': {
+        const v = next() || '';
+        const eq = v.indexOf('=');
+        if (eq < 1 || eq === v.length - 1) { console.error('--platform-key expects <kid>=<hex public key>'); process.exit(2); }
+        opts.platformKeys[v.slice(0, eq)] = v.slice(eq + 1);
+        break;
+      }
       case '--known-issuers': opts.knownIssuers = next(); break;
       case '--jwks': opts.jwksUrl = next(); break;
+      case '--require-key-window': opts.requireKeyWindow = true; break;
       case '--trust-anchor': opts.trustAnchor = next(); break;
       case '--history-head': opts.historyHead = next(); break;
       case '--anchor-head': opts.anchorHead = next(); break;
@@ -361,7 +372,10 @@ ${bold('Subcommands:')}
 
 ${bold('Options:')}
   --key, -k <hex>          Ed25519 public key (64 hex chars)
+  --platform-key <kid>=<hex>  Platform key for a connector context (repeatable)
   --jwks <url>             JWKS endpoint to fetch signing key
+  --require-key-window     Fail unless the key source gives the key a valid_from /
+                           valid_until window (applied to issued_at either way)
   --trust-anchor <file>    Local trust-anchor JSON with public keys
   --history-head <hex>     Pin the expected macro track-record history head
   --anchor-head <hex>      Pin the expected signed macro anchor digest
@@ -453,6 +467,7 @@ function printCapabilities() {
       'sigil-live-context-claim-2',
       'conformance-tier-detection',
       'embedded-key-rejection',
+      'key-validity-window-draft-9.2',
       'scopeblind-gate-tuple-verification',
       'scopeblind-gate-evidence-bundle-chain-checks',
       'scopeblind-claims-v2.1.1-point-in-time-artifact-verification',
@@ -593,12 +608,14 @@ async function dispatch(input, opts) {
   // Resolve JWKS if needed
   let publicKey = opts.publicKey;
   let keySource = publicKey ? 'provided' : null;
+  let keyWindow = null;
   if (!publicKey && opts.jwksUrl) {
     const kid = input.kid || input.signature?.kid;
     const resolved = await resolveFromJwks(opts.jwksUrl, kid);
     if (resolved.key) {
       publicKey = resolved.key;
       keySource = 'jwks';
+      keyWindow = resolved.window || null;
     } else {
       const result = {
         valid: false,
@@ -716,6 +733,16 @@ async function dispatch(input, opts) {
     case 'ed25519-receipt-v2':
     case 'ed25519-passport': {
       const r = await verifyReceipt(input, detected.mode, subOpts);
+
+      // Key validity window (draft §9.2): applied whenever the key source carries one, and reported either way,
+      // so an unchecked window is never read as a valid key.
+      const kw = checkKeyWindow({ window: keyWindow, issuedAt: receiptIssuedAt(input), keySource: keySource || r.keySource, require: opts.requireKeyWindow });
+      r.keyStatus = kw.report;
+      if (kw.error && r.valid !== false) {
+        r.valid = false;
+        r.error = kw.error;
+        r.detail = kw.detail;
+      }
 
       // Selective disclosure: attach if commitments present.
       // Two formats supported:

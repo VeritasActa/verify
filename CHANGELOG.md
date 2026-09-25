@@ -1,3 +1,16 @@
+## 0.10.20: Key validity windows
+
+- Apply the signing key's `valid_from` / `valid_until` window from the JWKS to a receipt's `issued_at` (draft-farley-acta-signed-receipts-03 §9.2). The window is `[valid_from, valid_until)`: a receipt issued exactly at `valid_until` is outside it, as RFC 7519 treats `exp`. A receipt issued outside the window fails with `key_outside_validity_window` (exit 1). Until this release the receipt path ignored the window; the claims path already applied its own.
+- Report the key status for every receipt, in `keyStatus` (JSON) and in the terminal: `inside`, `outside`, `no_window` (the key source carried no window, so the key's validity at issuance is not established, never reported as valid), `unverifiable` (unreadable bounds or no readable `issued_at`: `key_window_unverifiable`, exit 2), or `not_applicable` (a key pinned with `--key`).
+- `--require-key-window` fails a receipt whose key source gives the key no window (`key_window_missing`, exit 2).
+- Found by @giskard09 and @robertolocatelli81-dev with the `farley-receipt-signature` vectors in argentum-core. 0.10.20 matches all four at `541ce84` on their strict verdicts.
+- Refuse a verification key carried at the top level of the v2 and flat shapes the same way as one carried inside the payload (`embedded_key_rejected`, draft §9.5). The v2 path looked only inside `payload`, so a top-level `public_key` fell through to `no_public_key`: still refused, but without naming the cause. Found by @arian-gogani's embedded-key vectors (ScopeBlind/agent-governance-testvectors#24), which 0.10.20 passes 4/4.
+
+## 0.10.19 — Connector actions
+
+- Check the `connector` member of a decision receipt (draft-farley-acta-connector-action-00): schema, the consistency of the recorded check with the presented signature, and, given `--platform-key <kid>=<hex>`, the platform's signature over the context itself. A receipt whose recorded context is not what the platform signed is `connector_context_signature_invalid`; a malformed member is `connector_schema_invalid`; a signature the verifier holds no key for is reported unverifiable and is never a failure by itself.
+- Report the platform, agent, grant, recorded check, signature result and effect in the terminal and JSON output. Receipts without the member are unchanged.
+
 ## 0.10.18 — Coding work and project devices
 
 - Recognize `scopeblind.repository.coding-evidence.v1`: check separate dual authority, exact recorded feedback, bounded work, publication admission and worker-attested PR/preview result.
