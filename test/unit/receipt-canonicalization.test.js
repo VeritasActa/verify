@@ -6,10 +6,25 @@ import {canonicalize,legacyCanonicalize} from '../../src/util/canonical.js';
 import {verifyReceipt} from '../../src/engines/ed25519-receipt.js';
 const secret=new Uint8Array(32).fill(7),publicKey=bytesToHex(ed25519.getPublicKey(secret));
 const envelope=(payload,encoding=canonicalize)=>({payload,signature:{alg:'EdDSA',kid:'test',sig:bytesToHex(ed25519.sign(utf8ToBytes(encoding(payload)),secret))}});
-test('actual verifier checks JCS numeric keys and nested signature member',async()=>{
- const e=envelope({type:'test',nested:{'2':2,'10':10},signature:'payload field'});
+test('actual verifier checks JCS numeric keys',async()=>{
+ const e=envelope({type:'test',nested:{'2':2,'10':10}});
  assert.equal((await verifyReceipt(e,'ed25519-passport',{publicKey})).valid,true);
- e.payload.signature='changed';assert.equal((await verifyReceipt(e,'ed25519-passport',{publicKey})).valid,false);
+ e.payload.nested['10']=11;assert.equal((await verifyReceipt(e,'ed25519-passport',{publicKey})).valid,false);
+});
+test('a signature member in the signed payload is refused even when the signature over it verifies (draft §6.6)',async()=>{
+ for(const value of [null,'','payload field',{sig:'x'}]){
+  const e=envelope({type:'test',nested:{'2':2,'10':10},signature:value});
+  assert.equal(ed25519.verify(e.signature.sig,utf8ToBytes(canonicalize(e.payload)),publicKey),true,'the bytes are genuinely signed');
+  const r=await verifyReceipt(e,'ed25519-passport',{publicKey});
+  assert.equal(r.valid,false);assert.equal(r.error,'signature_in_signing_input');
+  assert.equal((await verifyReceipt(e,'ed25519-passport',{publicKey,allowLegacyCanonicalization:true})).error,'signature_in_signing_input');
+ }
+ const twin=envelope({type:'test',nested:{'2':2,'10':10}});assert.equal((await verifyReceipt(twin,'ed25519-passport',{publicKey})).valid,true);
+});
+test('a flat receipt drops its own signature member before canonicalizing, so the refusal never touches it',async()=>{
+ const fields={type:'test',issued_at:'2026-07-15T12:00:00Z',decision:'allow'};
+ const flat={...fields,signature:bytesToHex(ed25519.sign(utf8ToBytes(canonicalize(fields)),secret))};
+ const r=await verifyReceipt(flat,'ed25519-receipt-v1',{publicKey});assert.equal(r.valid,true);
 });
 test('historical non-JCS signatures require explicit labelled compatibility',async()=>{
  const e=envelope({type:'test',nested:{'2':2,'10':10}},legacyCanonicalize);

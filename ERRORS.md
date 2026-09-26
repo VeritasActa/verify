@@ -21,6 +21,11 @@ rather than rely on human-readable text.
 - **Spec:** `draft-farley-acta-signed-receipts-03 §6.1`
 - **Hint:** The receipt has been modified, or was signed by a different key than the one provided.
 
+#### `signature_in_signing_input`
+- **Description:** The object canonicalized for the signature carries a `signature` member (`null` and the empty string included), which the signing input must never contain.
+- **Spec:** `draft-farley-acta-signed-receipts-03 §6.6 Signature Scope`
+- **Hint:** Sign `JCS(payload)` over a payload with no signature member. A signature over bytes that contain one is refused even when it verifies.
+
 #### `chain_break`
 - **Description:** `previousReceiptHash` does not match the hash of the preceding receipt.
 - **Spec:** `draft-farley-acta-signed-receipts-03 §5.4 Chain Linkage`

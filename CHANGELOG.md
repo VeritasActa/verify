@@ -1,3 +1,8 @@
+## 0.10.21: No signature member in the signing input
+
+- Refuse an envelope receipt whose payload carries a `signature` member, including `null` and the empty string, with `signature_in_signing_input` (exit 1), even when a signature over those bytes verifies. Draft-farley-acta-signed-receipts-03 §6.6 requires that the object canonicalized for the signature never contain one. Until this release the envelope path verified `JCS(payload)` without checking, so such a receipt was reported valid. Flat receipts are unaffected: their own signature member is removed before canonicalizing, as §6.6 describes.
+- Found by @astrogilda with `vectors-receipt-signature` in probityai/agent-evidence-vectors 0.13.0 (member `v5397adb77c3e6754`). 0.10.21 passes all 13 members in both passes, with and without the key windows.
+
 ## 0.10.20: Key validity windows
 
 - Apply the signing key's `valid_from` / `valid_until` window from the JWKS to a receipt's `issued_at` (draft-farley-acta-signed-receipts-03 §9.2). The window is `[valid_from, valid_until)`: a receipt issued exactly at `valid_until` is outside it, as RFC 7519 treats `exp`. A receipt issued outside the window fails with `key_outside_validity_window` (exit 1). Until this release the receipt path ignored the window; the claims path already applied its own.

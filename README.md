@@ -383,6 +383,10 @@ Apache-2.0.
 
 Patent-adjacent; covered by the Apache-2.0 patent grant (§3). See [PATENTS.md](./PATENTS.md).
 
+### No signature member in the signing input (0.10.21)
+
+Draft §6.6 says the object canonicalized for the signature never contains a `signature` member, not even as `null` or the empty string. An envelope receipt whose payload carries one fails with `signature_in_signing_input` (exit 1), even when the signature over those bytes verifies.
+
 ### Key validity windows (0.10.20)
 
 When the JWKS gives the signing key a `valid_from` / `valid_until` window (draft §9.2), the verifier applies it to the receipt's `issued_at`. The window is `[valid_from, valid_until)`, so a receipt issued exactly at `valid_until` is outside it. A receipt outside the window fails with `key_outside_validity_window`. Every receipt result carries `keyStatus`: `inside`, `outside`, `no_window` (validity at issuance not established), `unverifiable`, or `not_applicable` for a key pinned with `--key`. Add `--require-key-window` to fail when the key source gives no window:

@@ -88,6 +88,20 @@ export async function verifyReceipt(input, detectedMode, opts = {}) {
     format = 'v1';
   }
 
+  // Draft §6.6: the object canonicalized never carries a signature member, not even as null or the empty string. A
+  // signature over such bytes can still verify, so the receipt is refused before the signature is checked.
+  if (signedPayload && typeof signedPayload === 'object' && Object.hasOwn(signedPayload, 'signature')) {
+    return {
+      valid: false,
+      error: 'signature_in_signing_input',
+      format,
+      type: signedPayload.type,
+      kid,
+      issuer,
+      algorithm,
+    };
+  }
+
   // Algorithm agility: detect hybrid post-quantum variants early.
   if (typeof algorithm === 'string' && algorithm.toLowerCase().includes('ml-dsa')) {
     return {

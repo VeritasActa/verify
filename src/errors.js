@@ -35,6 +35,13 @@ export const ERROR_REGISTRY = {
     spec: 'draft-farley-acta-signed-receipts-03 §6.6 Signature Scope',
     hint: 'The receipt has been modified or signed by a different key than the one provided.',
   },
+  signature_in_signing_input: {
+    code: 'signature_in_signing_input',
+    description: 'The object canonicalized for the signature carries a signature member (null and the empty string included), which the signing input must never contain.',
+    class: 'tampered',
+    spec: 'draft-farley-acta-signed-receipts-03 §6.6 Signature Scope',
+    hint: 'Sign JCS(payload) over a payload with no signature member. A signature over bytes that contain one is refused even when it verifies.',
+  },
   chain_break: {
     code: 'chain_break',
     description: 'previousReceiptHash does not match the hash of the preceding receipt.',

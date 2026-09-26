@@ -1,15 +1,15 @@
 {
   "sigil_version": 1,
-  "fingerprint": "8fcf964a",
-  "name": "Wild Field",
-  "sigil_hash": "8fcf964abbc0564d238e9d004713d24705ed0fbeb38a6cb72ff644baf31b8e40",
+  "fingerprint": "b5a81477",
+  "name": "Gilded Stone",
+  "sigil_hash": "b5a814774893be479a08a90c9a9dd37739b93d9f7eeb2d39c42811095d7e46a7",
   "project_public_key": "fe665e861867cec7e171c0c13bbc873c3362079faef21f54df7804b7fb9ae8af",
   "commitment_authentication": "public_recomputable_integrity_only",
   "policy": {
     "version": 3,
     "package": "@veritasacta/verify",
-    "package_version": "0.10.20",
-    "source_hash": "991875254a2aaac8ed11f911b96530ba65dde6a5ed4346628e87fe4f710c4571",
+    "package_version": "0.10.21",
+    "source_hash": "7f6ef6082639f12ce2152034638a34ff2406893a4d17d283a8b48c0e33de8b5e",
     "monitored_files": [
       "README.md",
       "cli.js",
@@ -78,6 +78,6 @@
     ],
     "created_at": 1784267169966
   },
-  "policy_hash": "5f0495fa6b68e0bbe53cc1c30e85611a8668a08c19c4399c8100a6073ef04a60",
+  "policy_hash": "49ddd955e4bb0a11422a9c43368b25d2781f15b01c2e6479a2a29583fa359694",
   "derived_at": "2026-07-17T05:46:09.966Z"
 }
