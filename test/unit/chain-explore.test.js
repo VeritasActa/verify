@@ -4,21 +4,21 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { writeFileSync, mkdtempSync } from 'node:fs';
+import { writeFileSync, mkdtempSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { createHash } from 'node:crypto';
 
-import { exploreChain, renderChainTree, groupByTrace } from '../../src/engines/chain-explore.js';
+import { exploreChain, renderChainTree, groupByTrace, chainLinkOf } from '../../src/engines/chain-explore.js';
 import { canonicalize } from '../../src/util/canonical.js';
 
+// Draft §6.7, computed here rather than by the engine: "sha256:" and the lowercase hex SHA-256 of the JCS of the
+// whole receipt, signature included.
 function receiptHash(env) {
-  const bytes = canonicalize(env);
-  return createHash('sha256').update(bytes).digest('base64')
-    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return 'sha256:' + createHash('sha256').update(canonicalize(env)).digest('hex');
 }
 
-function mkReceipt(action, previousReceiptHash) {
+function mkReceipt(action, previousReceiptHash, extra = {}) {
   return {
     payload: {
       type: 'decision-receipt',
@@ -26,24 +26,39 @@ function mkReceipt(action, previousReceiptHash) {
       issuer_id: 'test-issuer',
       agent_id: 'test-agent',
       issued_at: '2026-04-20T00:00:00Z',
-      ...(previousReceiptHash ? { previousReceiptHash } : {}),
+      ...extra,
+      ...(previousReceiptHash !== null && previousReceiptHash !== undefined ? { previousReceiptHash } : {}),
     },
     signature: { alg: 'ed25519', kid: 'test-kid', sig: 'deadbeef' },
   };
 }
 
-function mkChain(dir, actions) {
+// link(r) is the previousReceiptHash the next receipt carries for r; the default is the §6.7 value.
+function mkChain(dir, actions, link = receiptHash, extra = {}) {
   let prev = null;
   const paths = [];
   for (let i = 0; i < actions.length; i++) {
-    const r = mkReceipt(actions[i], prev);
+    const r = mkReceipt(actions[i], prev, extra);
     const p = join(dir, `${String(i).padStart(2, '0')}-${actions[i]}.json`);
     writeFileSync(p, JSON.stringify(r));
     paths.push(p);
-    prev = receiptHash(r);
+    prev = link(r);
   }
   return paths;
 }
+
+// A genesis receipt on disk, and a tip whose link names it in the given form.
+function tipLinkingGenesis(link) {
+  const dir = mkdtempSync(join(tmpdir(), 'chain-'));
+  const genesis = mkReceipt('root', null);
+  writeFileSync(join(dir, '00-root.json'), JSON.stringify(genesis));
+  const p = join(dir, '01-tip.json');
+  writeFileSync(p, JSON.stringify(mkReceipt('tip', link(genesis))));
+  return p;
+}
+
+const digestOf = (env, algorithm = 'sha256', encoding = 'hex') =>
+  createHash(algorithm).update(canonicalize(env)).digest(encoding);
 
 test('exploreChain: 3-receipt chain walks to root with no breaks', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'chain-'));
@@ -54,11 +69,34 @@ test('exploreChain: 3-receipt chain walks to root with no breaks', async () => {
   assert.equal(r.valid, true);
   assert.equal(r.depth, 3);
   assert.equal(r.links_broken, 0);
+  assert.equal(r.legacy_links, 0);
   assert.equal(r.nodes.length, 3);
   assert.equal(r.nodes[0].action, 'tip');
   assert.equal(r.nodes[2].action, 'root');
   assert.equal(r.nodes[2].previousHash, null);
   assert.equal(r.warnings.length, 0);
+});
+
+test('exploreChain: every node carries its §6.7 value, and each link names the next node (draft §6.7)', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'chain-'));
+  const paths = mkChain(dir, ['root', 'middle', 'tip']);
+  const r = await exploreChain({ receiptPath: paths[2] });
+  assert.equal(r.valid, true);
+  for (let i = 0; i < r.nodes.length; i++) {
+    const onDisk = JSON.parse(readFileSync(r.nodes[i].path, 'utf-8'));
+    assert.equal(r.nodes[i].hash, receiptHash(onDisk));
+    assert.match(r.nodes[i].hash, /^sha256:[0-9a-f]{64}$/);
+    if (i < r.nodes.length - 1) {
+      assert.equal(r.nodes[i].previousHash, r.nodes[i + 1].hash);
+      assert.equal(r.nodes[i].link_form, 'sha256');
+    }
+  }
+  assert.equal(r.nodes[2].link_form, null);
+});
+
+test('chainLinkOf: the §6.7 value of a receipt', () => {
+  const r = mkReceipt('solo', null);
+  assert.equal(chainLinkOf(r), receiptHash(r));
 });
 
 test('exploreChain: single root receipt', async () => {
@@ -74,9 +112,7 @@ test('exploreChain: tampered middle receipt invalidates chain', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'chain-'));
   const paths = mkChain(dir, ['root', 'middle', 'tip']);
   // Tamper with the middle receipt so its hash changes.
-  const tampered = JSON.parse(
-    (await import('node:fs')).readFileSync(paths[1], 'utf-8')
-  );
+  const tampered = JSON.parse(readFileSync(paths[1], 'utf-8'));
   tampered.payload.action = 'tampered';
   writeFileSync(paths[1], JSON.stringify(tampered));
 
@@ -90,7 +126,7 @@ test('exploreChain: tampered middle receipt invalidates chain', async () => {
 test('exploreChain: missing ancestor reports broken link', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'chain-'));
   // Write only the tip; its previousReceiptHash points to nothing in the dir.
-  const orphan = mkReceipt('orphan-tip', 'Zm9v'.repeat(11).slice(0, 43));
+  const orphan = mkReceipt('orphan-tip', `sha256:${'ab'.repeat(32)}`);
   const p = join(dir, 'tip.json');
   writeFileSync(p, JSON.stringify(orphan));
 
@@ -98,6 +134,78 @@ test('exploreChain: missing ancestor reports broken link', async () => {
   assert.equal(r.valid, false);
   assert.equal(r.links_broken, 1);
   assert.equal(r.depth, 1);
+  assert.equal(r.code, undefined);
+  assert.ok(r.warnings.some((w) => /not found in searchDir/.test(w)));
+});
+
+test('exploreChain: the bare digest of earlier revisions resolves, and is named (draft §6.7)', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'chain-'));
+  const paths = mkChain(dir, ['root', 'tip'], (r) => digestOf(r));
+  const r = await exploreChain({ receiptPath: paths[1] });
+  assert.equal(r.valid, true);
+  assert.equal(r.depth, 2);
+  assert.equal(r.nodes[0].link_form, 'legacy-bare-hex');
+});
+
+test('exploreChain: a payload-only link resolves only from an ancestor citing an earlier revision, as --replay-chain does', async () => {
+  const payloadLink = (r) => `sha256:${digestOf(r.payload)}`;
+
+  const earlier = mkdtempSync(join(tmpdir(), 'chain-'));
+  const old = mkChain(earlier, ['root', 'tip'], payloadLink, { spec: 'draft-farley-acta-signed-receipts-02' });
+  const r = await exploreChain({ receiptPath: old[1] });
+  assert.equal(r.valid, true);
+  assert.equal(r.legacy_links, 1);
+  assert.equal(r.nodes[0].link_form, 'legacy-payload');
+  assert.ok(r.warnings.some((w) => /payload alone/.test(w)));
+
+  const current = mkdtempSync(join(tmpdir(), 'chain-'));
+  const now = mkChain(current, ['root', 'tip'], payloadLink, { spec: 'draft-farley-acta-signed-receipts-03' });
+  const r3 = await exploreChain({ receiptPath: now[1] });
+  assert.equal(r3.valid, false);
+  assert.equal(r3.links_broken, 1);
+  assert.equal(r3.legacy_links, 0);
+});
+
+test('exploreChain: a malformed link is refused with the receipt verifier\'s code, though its ancestor is present (draft §6.7)', async () => {
+  const forms = {
+    'not a digest': () => 'sha256:not-a-digest',
+    'uppercase hex': (g) => `sha256:${digestOf(g).toUpperCase()}`,
+    // The unprefixed base64url digest that chain explore itself looked ancestors up by before 0.10.23.
+    'unprefixed base64url': (g) => digestOf(g, 'sha256', 'base64url'),
+    'empty string': () => '',
+    'not a string': () => 42,
+  };
+  for (const [name, link] of Object.entries(forms)) {
+    const r = await exploreChain({ receiptPath: tipLinkingGenesis(link) });
+    assert.equal(r.valid, false, name);
+    assert.equal(r.code, 'malformed_chain_link', name);
+    assert.equal(r.nodes[0].link_error, 'malformed_chain_link', name);
+    assert.equal(r.nodes[0].link_valid, false, name);
+    assert.equal(r.depth, 1, name);
+  }
+});
+
+test('exploreChain: a link naming another algorithm is refused rather than read as SHA-256 (draft §6.7)', async () => {
+  for (const link of [(g) => `sha512:${digestOf(g, 'sha512')}`, (g) => `sha3-256:${digestOf(g, 'sha3-256')}`]) {
+    const r = await exploreChain({ receiptPath: tipLinkingGenesis(link) });
+    assert.equal(r.valid, false);
+    assert.equal(r.code, 'unsupported_chain_hash_algorithm');
+    assert.equal(r.nodes[0].link_error, 'unsupported_chain_hash_algorithm');
+  }
+});
+
+test('exploreChain: a null link is a root, named with a §2.2 warning', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'chain-'));
+  const root = mkReceipt('root', null);
+  root.payload.previousReceiptHash = null;
+  writeFileSync(join(dir, '00-root.json'), JSON.stringify(root));
+  const tipPath = join(dir, '01-tip.json');
+  writeFileSync(tipPath, JSON.stringify(mkReceipt('tip', receiptHash(root))));
+
+  const r = await exploreChain({ receiptPath: tipPath });
+  assert.equal(r.valid, true);
+  assert.equal(r.depth, 2);
+  assert.ok(r.warnings.some((w) => /§2\.2/.test(w)));
 });
 
 test('exploreChain: unreadable starting receipt', async () => {
@@ -120,7 +228,7 @@ test('exploreChain: searchDir override locates ancestors elsewhere', async () =>
   const paths = mkChain(dir, ['a', 'b']);
   // Move the tip to a different directory and pass searchDir for the ancestor.
   const elsewhere = mkdtempSync(join(tmpdir(), 'other-'));
-  const tipContent = (await import('node:fs')).readFileSync(paths[1], 'utf-8');
+  const tipContent = readFileSync(paths[1], 'utf-8');
   const tipElsewhere = join(elsewhere, 'tip.json');
   writeFileSync(tipElsewhere, tipContent);
 
@@ -140,6 +248,7 @@ test('renderChainTree: human tree contains tip arrow and ascend glyph', async ()
   assert.match(out, /Chain: depth=2/);
   assert.match(out, /▶/);
   assert.match(out, /↑/);
+  assert.ok(out.includes(`${r.nodes[0].hash.slice(7, 19)}...`));
 });
 
 test('renderChainTree: failed chain renders error', () => {
@@ -155,17 +264,12 @@ test('renderChainTree: failed chain renders error', () => {
 });
 
 test('exploreChain: surfaces trace_id and parent_receipt_id when present', async () => {
-  const { createHash } = await import('node:crypto');
-  const { canonicalize } = await import('../../src/util/canonical.js');
   const dir = mkdtempSync(join(tmpdir(), 'chain-'));
   const root = mkReceipt('root', null);
   root.payload.trace_id = 'trace-abc';
   const rootPath = join(dir, '01-root.json');
   writeFileSync(rootPath, JSON.stringify(root));
-  const rootHash = createHash('sha256')
-    .update(canonicalize(root))
-    .digest('base64')
-    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const rootHash = receiptHash(root);
 
   const tip = mkReceipt('tip', rootHash);
   tip.payload.trace_id = 'trace-abc';

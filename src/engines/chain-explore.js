@@ -10,6 +10,12 @@
  * A and comparing to B.previousReceiptHash. The walker validates every
  * link on the way up.
  *
+ * A link is the draft-farley-acta-signed-receipts-03 §6.7 value: "sha256:"
+ * and the lowercase hex SHA-256 of the JCS of the whole previous receipt,
+ * signature included. Each link is read by the rules the receipt verifier
+ * applies (checkChainLinkSyntax) and resolved the way --replay-chain
+ * resolves it, so the two agree about every chain.
+ *
  * @module verify-cli/src/engines/chain-explore
  * @license Apache-2.0
  */
@@ -19,6 +25,7 @@ import { join, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 
 import { canonicalize } from '../util/canonical.js';
+import { checkChainLinkSyntax } from './ed25519-receipt.js';
 
 /**
  * @typedef {Object} ChainExploreOptions
@@ -34,8 +41,16 @@ import { canonicalize } from '../util/canonical.js';
 /**
  * @typedef {Object} ChainNode
  * @property {string} path                Path the receipt was loaded from.
- * @property {string} hash                SHA-256 of the canonicalized envelope.
- * @property {string|null} previousHash   payload.previousReceiptHash, or null.
+ * @property {string} hash                The receipt's §6.7 chain value, the one a
+ *                                        successor's previousReceiptHash holds.
+ * @property {*} previousHash             payload.previousReceiptHash as written, or
+ *                                        null at the root.
+ * @property {string|null} link_form      How previousHash named the ancestor:
+ *                                        'sha256' (§6.7), 'legacy-bare-hex', or
+ *                                        'legacy-payload' (the pre-03 payload-only
+ *                                        link); null at the root or when refused.
+ * @property {string} [link_error]        malformed_chain_link or
+ *                                        unsupported_chain_hash_algorithm.
  * @property {string} action              payload.action, for display.
  * @property {string} issued_at
  * @property {string} kid
@@ -50,8 +65,12 @@ import { canonicalize } from '../util/canonical.js';
  * @property {number} depth               Number of receipts walked.
  * @property {number} links_broken        Number of broken previousReceiptHash
  *                                        links encountered.
+ * @property {number} legacy_links        Links resolved by the pre-03
+ *                                        payload-only rule.
  * @property {ChainNode[]} nodes          Tip first, root last.
  * @property {string[]} warnings
+ * @property {string} [code]              The verifier's error code when a link
+ *                                        was refused for its form.
  * @property {string} [error]
  */
 
@@ -75,6 +94,7 @@ export async function exploreChain(opts) {
       valid: false,
       depth: 0,
       links_broken: 0,
+      legacy_links: 0,
       nodes: [],
       warnings: [],
       error: `cannot_read_starting_receipt:${err.code || err.message}`,
@@ -82,51 +102,75 @@ export async function exploreChain(opts) {
   }
 
   const dir = searchDir ? resolve(searchDir) : resolve(startPath, '..');
-  const hashToPath = buildReceiptIndex(dir);
+  const index = buildReceiptIndex(dir);
 
   const nodes = [];
   const warnings = [];
   let linksBroken = 0;
+  let legacyLinks = 0;
+  let code;
 
   let current = startReceipt;
   let currentPath = startPath;
   let depth = 0;
 
   while (current && depth < maxDepth) {
-    const nodeHash = receiptHash(current);
+    const payload = current.payload && typeof current.payload === 'object' ? current.payload : {};
+    const hasLink = Object.hasOwn(payload, 'previousReceiptHash');
+    const link = hasLink ? payload.previousReceiptHash : null;
     const node = {
       path: currentPath,
-      hash: nodeHash,
-      previousHash:
-        (current.payload && current.payload.previousReceiptHash) || null,
-      action:
-        (current.payload && (current.payload.action || current.payload.tool_name)) ||
-        '(unknown)',
-      issued_at:
-        (current.payload && current.payload.issued_at) || '(unknown)',
+      hash: chainLinkOf(current),
+      previousHash: link,
+      link_form: null,
+      action: payload.action || payload.tool_name || '(unknown)',
+      issued_at: payload.issued_at || '(unknown)',
       kid:
         (current.signature && current.signature.kid) || '(unknown)',
       // Optional trace / causal-DAG fields (AIP-0001 extension).
-      trace_id:
-        (current.payload && current.payload.trace_id) || null,
-      parent_receipt_id:
-        (current.payload && current.payload.parent_receipt_id) || null,
+      trace_id: payload.trace_id || null,
+      parent_receipt_id: payload.parent_receipt_id || null,
       link_valid: true,
     };
     nodes.push(node);
     depth++;
+    const at = `receipt[${depth - 1}]`;
 
-    if (!node.previousHash) {
-      // We've reached the root.
+    if (link === null) {
+      // We've reached the root. Draft §2.2 has the first receipt omit the member; earlier tools wrote null instead.
+      if (hasLink) warnings.push(`${at}: previousReceiptHash is null; draft §2.2 says the first receipt in a chain omits the member.`);
       break;
     }
 
-    const ancestorPath = hashToPath.get(node.previousHash);
+    const syntax = checkChainLinkSyntax({ previousReceiptHash: link });
+    if (syntax.error) {
+      node.link_valid = false;
+      node.link_error = syntax.error;
+      linksBroken++;
+      code = code || syntax.error;
+      warnings.push(
+        syntax.error === 'unsupported_chain_hash_algorithm'
+          ? `${at}: unsupported_chain_hash_algorithm: previousReceiptHash ${preview(link)} names a hash algorithm other than sha256 (draft §6.7)`
+          : `${at}: malformed_chain_link: previousReceiptHash ${preview(link)} is not "sha256:" and 64 lowercase hex characters, nor the bare digest of earlier revisions (draft §6.7)`
+      );
+      break;
+    }
+    node.link_form = syntax.form;
+
+    const digest = link.startsWith('sha256:') ? link.slice(7) : link;
+    let ancestorPath = index.byReceipt.get(digest);
+    if (!ancestorPath && index.byPayload.has(digest)) {
+      // The payload-only link of earlier revisions, taken only from an ancestor that cites one, as --replay-chain does.
+      ancestorPath = index.byPayload.get(digest);
+      node.link_form = 'legacy-payload';
+      legacyLinks++;
+      warnings.push(`${at}: previousReceiptHash hashes its ancestor's payload alone, the rule before draft-03 §6.7; taken because that ancestor cites an earlier revision`);
+    }
     if (!ancestorPath) {
       node.link_valid = false;
       linksBroken++;
       warnings.push(
-        `Chain ends at receipt[${depth - 1}]: previousReceiptHash ${node.previousHash.slice(0, 16)}... ` +
+        `Chain ends at ${at}: previousReceiptHash ${preview(link)} ` +
           `not found in searchDir ${dir}`
       );
       break;
@@ -145,15 +189,15 @@ export async function exploreChain(opts) {
     }
 
     if (verify) {
-      const computed = receiptHash(ancestor);
-      if (computed !== node.previousHash) {
-        // Shouldn't happen because we keyed hashToPath by computed hash, but
+      const computed = node.link_form === 'legacy-payload' ? payloadDigest(ancestor) : receiptDigest(ancestor);
+      if (computed !== digest) {
+        // Shouldn't happen because the index is keyed by the computed hash, but
         // retain as a defensive check.
         node.link_valid = false;
         linksBroken++;
         warnings.push(
-          `Hash mismatch at ancestor of receipt[${depth - 1}]: ` +
-            `expected ${node.previousHash.slice(0, 16)}... got ${computed.slice(0, 16)}...`
+          `Hash mismatch at ancestor of ${at}: ` +
+            `expected ${digest.slice(0, 16)}... got ${computed.slice(0, 16)}...`
         );
         break;
       }
@@ -171,31 +215,56 @@ export async function exploreChain(opts) {
     valid: linksBroken === 0,
     depth,
     links_broken: linksBroken,
+    legacy_links: legacyLinks,
     nodes,
     warnings,
+    ...(code ? { code } : {}),
   };
 }
 
 /**
- * Compute SHA-256 of the canonical envelope, base64url-encoded.
- * Matches receipt_hash() in receipts.py across the ecosystem.
+ * The value a successor's previousReceiptHash holds for this receipt: "sha256:" and the lowercase hex SHA-256 of the
+ * JCS of the whole envelope, signature included (draft-03 §6.7).
+ *
+ * @param {Object} envelope
+ * @returns {string}
  */
-function receiptHash(envelope) {
-  const bytes = canonicalize(envelope);
-  const digest = createHash('sha256').update(bytes).digest();
-  return digest.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+export function chainLinkOf(envelope) {
+  return `sha256:${receiptDigest(envelope)}`;
+}
+
+function receiptDigest(envelope) {
+  return createHash('sha256').update(canonicalize(envelope), 'utf-8').digest('hex');
+}
+
+/** The link of revisions before -03, over the payload alone. */
+function payloadDigest(envelope) {
+  return createHash('sha256').update(canonicalize(envelope.payload), 'utf-8').digest('hex');
+}
+
+/** --replay-chain's rule: a receipt citing -02 or earlier, or no revision, may be linked by its payload digest. */
+function citesPre03(payload) {
+  const spec = typeof payload.spec === 'string' ? payload.spec : null;
+  return spec === null || /-0[12]$/.test(spec);
+}
+
+function preview(link) {
+  const text = typeof link === 'string' ? link : JSON.stringify(link);
+  return text.length > 23 ? `${text.slice(0, 23)}...` : text;
 }
 
 /**
- * Scan a directory for receipt files and build a hash→path index.
+ * Scan a directory for receipt files and index each by the digests a successor's link may carry: the SHA-256 of the
+ * whole receipt (§6.7), and, for a receipt citing an earlier revision, the SHA-256 of its payload.
  */
 function buildReceiptIndex(dir) {
-  const index = new Map();
+  const byReceipt = new Map();
+  const byPayload = new Map();
   let entries;
   try {
     entries = readdirSync(dir);
   } catch {
-    return index;
+    return { byReceipt, byPayload };
   }
 
   for (const entry of entries) {
@@ -210,14 +279,14 @@ function buildReceiptIndex(dir) {
     try {
       const receipt = JSON.parse(readFileSync(p, 'utf-8'));
       if (!receipt.payload || !receipt.signature) continue;
-      const hash = receiptHash(receipt);
-      index.set(hash, p);
+      byReceipt.set(receiptDigest(receipt), p);
+      if (typeof receipt.payload === 'object' && citesPre03(receipt.payload)) byPayload.set(payloadDigest(receipt), p);
     } catch {
       continue;
     }
   }
 
-  return index;
+  return { byReceipt, byPayload };
 }
 
 /**
@@ -260,7 +329,8 @@ export function renderChainTree(result, opts = {}) {
     const n = result.nodes[i];
     const prefix = i === 0 ? '▶' : '↑';
     const statusMark = n.link_valid ? ' ' : '✗';
-    const line = `${prefix} ${statusMark} ${n.hash.slice(0, 12)}...  ${n.action}  (${n.issued_at})`;
+    const shortHash = String(n.hash).replace(/^sha256:/, '').slice(0, 12);
+    const line = `${prefix} ${statusMark} ${shortHash}...  ${n.action}  (${n.issued_at})`;
     lines.push(line.length > maxLineWidth ? line.slice(0, maxLineWidth - 1) + '…' : line);
     if (i < result.nodes.length - 1) lines.push('  │');
   }

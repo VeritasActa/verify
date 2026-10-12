@@ -36,22 +36,34 @@ function jcs(value) {
   return `{${keys.map((k) => `${JSON.stringify(k)}:${jcs(value[k])}`).join(',')}}`;
 }
 
-async function sha256b64url(str) {
+// Draft-farley-acta-signed-receipts-03 §6.7: the value a successor's previousReceiptHash holds is "sha256:" and the
+// lowercase hex SHA-256 of the JCS of the whole receipt, signature included.
+async function chainLink(str) {
   const enc = new TextEncoder().encode(str);
-  const hash = await crypto.subtle.digest('SHA-256', enc);
-  const bytes = new Uint8Array(hash);
-  let b64 = btoa(String.fromCharCode(...bytes));
-  return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const bytes = new Uint8Array(await crypto.subtle.digest('SHA-256', enc));
+  return 'sha256:' + Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
 }
+
+// The receipt a link names: a §6.7 value as written, or the bare hex digest of earlier revisions with the prefix
+// restored. Any other form names no receipt, so it shows as a break.
+function linkTarget(link) {
+  if (typeof link !== 'string') return null;
+  if (/^sha256:[0-9a-f]{64}$/.test(link)) return link;
+  if (/^[0-9a-f]{64}$/.test(link)) return `sha256:${link}`;
+  return null;
+}
+
+const shortHash = (h, n) => String(h).replace(/^sha256:/, '').slice(0, n);
 
 // ───── State + rendering ─────
 
-async function ingestReceipts(receipts) {
+// hashes, when given, are the receipts' §6.7 values as `verify chain explore --json` reported them.
+async function ingestReceipts(receipts, hashes = []) {
   // Receipts: [{ payload, signature }, ...] — sort by issued_at, compute hashes, detect chain.
   const decorated = [];
-  for (const r of receipts) {
+  for (const [i, r] of receipts.entries()) {
     const issued = (r.payload && r.payload.issued_at) || '';
-    const hash = await sha256b64url(jcs(r));
+    const hash = hashes[i] || await chainLink(jcs(r));
     decorated.push({
       raw: r,
       issued_at: issued,
@@ -71,7 +83,7 @@ async function ingestReceipts(receipts) {
   const hashIndex = new Map(decorated.map((d) => [d.hash, d]));
   let broken = 0;
   for (const d of decorated) {
-    if (d.previousHash && !hashIndex.has(d.previousHash)) {
+    if (d.previousHash && !hashIndex.has(linkTarget(d.previousHash))) {
       d.chainBreak = true;
       broken++;
     }
@@ -115,7 +127,7 @@ function render(rows, stats) {
       <td>${escapeHtml(r.issued_at)}</td>
       <td>${escapeHtml(r.action)}</td>
       <td class="status-cell">${escapeHtml(r.decision)}</td>
-      <td class="hash">${escapeHtml(r.hash.slice(0, 12))}…</td>
+      <td class="hash">${escapeHtml(shortHash(r.hash, 12))}…</td>
       <td class="hash">${escapeHtml(r.kid)}</td>
       <td>${traceCell}</td>
       <td>${r.chainBreak
@@ -187,14 +199,14 @@ function renderDag(rows) {
   for (const r of rows) {
     if (r.previousHash) {
       const from = nodePositions.get(r.hash);
-      const to = nodePositions.get(r.previousHash);
+      const to = nodePositions.get(linkTarget(r.previousHash));
       if (from && to) {
         svg.appendChild(mkEdge(from, to, r.chainBreak ? 'edge-break' : 'edge-chain'));
       }
     }
     if (r.parent_receipt_id && r.parent_receipt_id !== r.previousHash) {
       const from = nodePositions.get(r.hash);
-      const to = nodePositions.get(r.parent_receipt_id);
+      const to = nodePositions.get(linkTarget(r.parent_receipt_id) || r.parent_receipt_id);
       if (from && to) {
         svg.appendChild(mkEdge(from, to, 'edge-parent'));
       }
@@ -217,7 +229,7 @@ function renderDag(rows) {
     label.setAttribute('x', 14);
     label.setAttribute('y', 4);
     label.setAttribute('class', 'node-label');
-    label.textContent = `${r.action} · ${r.hash.slice(0, 6)}`;
+    label.textContent = `${r.action} · ${shortHash(r.hash, 6)}`;
     g.appendChild(label);
 
     const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
@@ -295,6 +307,7 @@ paste.addEventListener('input', () => {
     const parsed = JSON.parse(text);
     // Accept either a raw array, a single receipt, or verify --json output.
     const receipts = [];
+    const hashes = [];
     if (Array.isArray(parsed)) {
       receipts.push(...parsed.filter((r) => r.payload && r.signature));
     } else if (parsed.receipts) {
@@ -302,8 +315,10 @@ paste.addEventListener('input', () => {
     } else if (parsed.payload && parsed.signature) {
       receipts.push(parsed);
     } else if (parsed.nodes) {
-      // `verify chain explore --json` output shape.
+      // `verify chain explore --json` output shape. A reconstructed row cannot reproduce its receipt's hash, so it
+      // keeps the §6.7 value explore reported.
       for (const n of parsed.nodes) {
+        hashes.push(n.hash);
         receipts.push({
           payload: {
             issued_at: n.issued_at,
@@ -314,7 +329,7 @@ paste.addEventListener('input', () => {
         });
       }
     }
-    ingestReceipts(receipts);
+    ingestReceipts(receipts, hashes);
   } catch {
     /* ignore — user still typing */
   }

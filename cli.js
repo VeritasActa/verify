@@ -1044,7 +1044,8 @@ async function runChainExplore(opts) {
   } else {
     console.log(renderChainTree(result));
   }
-  process.exit(exitOk(result) ? 0 : 1);
+  // A link refused for its form exits as the receipt verifier would: 1 malformed, 2 an unimplemented algorithm.
+  process.exit(exitOk(result) ? 0 : result.code ? exitCodeFor(result.code) : 1);
 }
 
 /**

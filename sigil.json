@@ -1,15 +1,15 @@
 {
   "sigil_version": 1,
-  "fingerprint": "a4f4490f",
-  "name": "Slow Stone",
-  "sigil_hash": "a4f4490fdf8388c2ec591bfa1fae77b886b49af7ed82b656a728e40b35e8558f",
+  "fingerprint": "c7bea1cf",
+  "name": "Old Thread",
+  "sigil_hash": "c7bea1cf497adde63692ac681e047e1ddea3dd05dd7884900b372f6eeb5b5c1f",
   "project_public_key": "fe665e861867cec7e171c0c13bbc873c3362079faef21f54df7804b7fb9ae8af",
   "commitment_authentication": "public_recomputable_integrity_only",
   "policy": {
     "version": 3,
     "package": "@veritasacta/verify",
-    "package_version": "0.10.22",
-    "source_hash": "55e86e59a12dc2e8150818d567cccefc42186f2bf62fe9bd7c9e8bca8005f934",
+    "package_version": "0.10.23",
+    "source_hash": "275d118de7b2d1d532824a8d539001d8976e2b28ee9f1afc7393c76d6b3d9f45",
     "monitored_files": [
       "README.md",
       "cli.js",
@@ -78,6 +78,6 @@
     ],
     "created_at": 1784267169966
   },
-  "policy_hash": "70a2a1a80f1ae35e7b2a1dbfc932a37f9aa1655bc84ccb5af6f9d2b7b3a959e7",
+  "policy_hash": "05f8b85aace207baec68d6029d170dc0d2beb6c52c9508f53360050df79bbd95",
   "derived_at": "2026-07-17T05:46:09.966Z"
 }

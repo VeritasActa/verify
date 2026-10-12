@@ -84,6 +84,8 @@ verify chain explore ./receipts/tip.json
 verify chain explore ./receipts/tip.json --search-dir ./audit/ --max-depth 200 --json
 ```
 
+Links are read by the rules of draft §6.7 that the receipt verifier applies: `sha256:` and the lowercase hex SHA-256 of the JCS of the whole previous receipt, or the bare digest of earlier revisions. A malformed link stops the walk with `malformed_chain_link` (exit 1), and one naming another algorithm with `unsupported_chain_hash_algorithm` (exit 2). Before 0.10.23 the explorer looked ancestors up by an unprefixed base64url hash, so it did not walk §6.7 chains.
+
 ### ScopeBlind Gate receipts
 
 Verifies the receipt tuples emitted by the ScopeBlind Gate (the pre-trade mandate gate): single decisions, batch decisions and their exact signed legs, PM co-sign approvals, execution fills, held-remainder states, and issuer-signed mandate delegations. Version 2 evidence bundles add a gate-signed completeness manifest that enumerates every exported digest. Tuples sign the SHA-256 of the deep-key-sorted payload; the Ed25519 signature covers the digest bytes and verifies against the `verification_key` carried in the tuple.
