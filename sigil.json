@@ -1,15 +1,15 @@
 {
   "sigil_version": 1,
-  "fingerprint": "b5a81477",
-  "name": "Gilded Stone",
-  "sigil_hash": "b5a814774893be479a08a90c9a9dd37739b93d9f7eeb2d39c42811095d7e46a7",
+  "fingerprint": "a4f4490f",
+  "name": "Slow Stone",
+  "sigil_hash": "a4f4490fdf8388c2ec591bfa1fae77b886b49af7ed82b656a728e40b35e8558f",
   "project_public_key": "fe665e861867cec7e171c0c13bbc873c3362079faef21f54df7804b7fb9ae8af",
   "commitment_authentication": "public_recomputable_integrity_only",
   "policy": {
     "version": 3,
     "package": "@veritasacta/verify",
-    "package_version": "0.10.21",
-    "source_hash": "7f6ef6082639f12ce2152034638a34ff2406893a4d17d283a8b48c0e33de8b5e",
+    "package_version": "0.10.22",
+    "source_hash": "55e86e59a12dc2e8150818d567cccefc42186f2bf62fe9bd7c9e8bca8005f934",
     "monitored_files": [
       "README.md",
       "cli.js",
@@ -78,6 +78,6 @@
     ],
     "created_at": 1784267169966
   },
-  "policy_hash": "49ddd955e4bb0a11422a9c43368b25d2781f15b01c2e6479a2a29583fa359694",
+  "policy_hash": "70a2a1a80f1ae35e7b2a1dbfc932a37f9aa1655bc84ccb5af6f9d2b7b3a959e7",
   "derived_at": "2026-07-17T05:46:09.966Z"
 }

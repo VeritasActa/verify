@@ -31,6 +31,11 @@ rather than rely on human-readable text.
 - **Spec:** `draft-farley-acta-signed-receipts-03 §5.4 Chain Linkage`
 - **Hint:** A receipt has been inserted, removed, or reordered in the chain.
 
+#### `malformed_chain_link`
+- **Description:** `previousReceiptHash` is not `sha256:` followed by 64 lowercase hex characters, nor the bare 64-character digest of earlier revisions.
+- **Spec:** `draft-farley-acta-signed-receipts-03 §6.7 Chain Hash Scope`
+- **Hint:** The signature may be authentic, but the link cannot name any receipt. It is refused whether or not the predecessor is supplied.
+
 #### `commitment_mismatch`
 - **Description:** Selective-disclosure commitment does not match the revealed salt+value.
 - **Spec:** `AIP-0002 §Disclosure Package Verification`
@@ -91,6 +96,11 @@ rather than rely on human-readable text.
 #### `unsupported_algorithm`
 - **Description:** The declared signature algorithm is not supported by this verifier version.
 - **Hint:** Hybrid post-quantum algorithms like `ed25519+ml-dsa-65` require v0.6+ for full PQ verification.
+
+#### `unsupported_chain_hash_algorithm`
+- **Description:** `previousReceiptHash` names a hash algorithm other than sha256, which this verifier does not implement.
+- **Spec:** `draft-farley-acta-signed-receipts-03 §6.7 Chain Hash Scope`
+- **Hint:** Draft §6.7 requires refusing a link whose prefix names an unimplemented algorithm rather than assuming SHA-256 from its length.
 
 #### `non_ascii_key`
 - **Description:** An object key contains a non-ASCII character, violating AIP-0001.

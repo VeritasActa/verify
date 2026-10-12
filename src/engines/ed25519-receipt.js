@@ -35,6 +35,43 @@ import { checkConnectorAction } from './connector-action.js';
 
 const EMBEDDED_KEY_FIELDS = ['public_key', 'verification_key', 'verification_jwk'];
 
+// Draft §6.7: a chain link is "sha256:" followed by 64 lowercase hex characters. A prefix naming another algorithm
+// is refused rather than read as SHA-256 from its length, and the bare 64-character digest of earlier revisions is
+// accepted on read. Anything else is malformed, and is refused whether or not the predecessor is at hand.
+const CHAIN_LINK = /^sha256:[0-9a-f]{64}$/;
+const LEGACY_CHAIN_LINK = /^[0-9a-f]{64}$/;
+const ALGORITHM_PREFIX = /^([A-Za-z0-9][A-Za-z0-9._+-]*):/;
+
+/**
+ * Check the syntax of every previousReceiptHash inside the signed bytes: the signed object itself and, in the v2
+ * shape, its payload.
+ *
+ * @param {Object} signed the object the signature covers
+ * @returns {{error?: string, form?: 'sha256' | 'legacy-bare-hex' | 'null', warning?: string}}
+ */
+export function checkChainLinkSyntax(signed) {
+  const carriers = [signed, signed && typeof signed === 'object' ? signed.payload : null]
+    .filter((c) => c && typeof c === 'object' && !Array.isArray(c) && Object.hasOwn(c, 'previousReceiptHash'));
+  let form;
+  let warning;
+  for (const carrier of carriers) {
+    const link = carrier.previousReceiptHash;
+    if (link === null) {
+      // Draft §2.2: the first receipt omits the member. Earlier tools wrote null instead, so null is accepted and named.
+      form = form || 'null';
+      warning = 'previousReceiptHash is null; draft §2.2 says the first receipt in a chain omits the member.';
+      continue;
+    }
+    if (typeof link !== 'string') return { error: 'malformed_chain_link' };
+    if (CHAIN_LINK.test(link)) { form = 'sha256'; continue; }
+    if (LEGACY_CHAIN_LINK.test(link)) { form = form === 'sha256' ? form : 'legacy-bare-hex'; continue; }
+    const prefix = ALGORITHM_PREFIX.exec(link);
+    if (prefix && prefix[1].toLowerCase() !== 'sha256') return { error: 'unsupported_chain_hash_algorithm' };
+    return { error: 'malformed_chain_link' };
+  }
+  return { form, warning };
+}
+
 /**
  * @typedef {Object} VerifyReceiptOptions
  * @property {string} [publicKey]    hex-encoded Ed25519 public key (64 chars)
@@ -230,6 +267,13 @@ export async function verifyReceipt(input, detectedMode, opts = {}) {
     }
   }
 
+  // Draft §6.7, checked once the signature holds, so a tampered receipt still reports invalid_signature.
+  const chainLink = checkChainLinkSyntax(signedPayload);
+  if (chainLink.error && result.valid) {
+    result = { ...result, valid: false };
+    normalizedError = chainLink.error;
+  }
+
   if (connectorAction && !connectorAction.valid && result.valid) {
     result = { ...result, valid: false };
     normalizedError = connectorAction.platform_signature === 'invalid' ? 'connector_context_signature_invalid' : 'connector_schema_invalid';
@@ -254,7 +298,8 @@ export async function verifyReceipt(input, detectedMode, opts = {}) {
     hash: result.hash,
     canonicalization: result.canonicalization,
     legacySignatureValid: result.legacySignatureValid,
-    warning: result.warning,
+    chainLink: chainLink.form,
+    warning: [result.warning, chainLink.warning].filter(Boolean).join(' ') || undefined,
   };
 }
 

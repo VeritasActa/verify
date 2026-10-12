@@ -49,6 +49,13 @@ export const ERROR_REGISTRY = {
     spec: 'draft-farley-acta-signed-receipts-03 §6.7 Chain Hash Scope',
     hint: 'A receipt has been inserted, removed, or reordered in the chain.',
   },
+  malformed_chain_link: {
+    code: 'malformed_chain_link',
+    description: 'previousReceiptHash is not "sha256:" followed by 64 lowercase hex characters, nor the bare 64-character digest of earlier revisions.',
+    class: 'tampered',
+    spec: 'draft-farley-acta-signed-receipts-03 §6.7 Chain Hash Scope',
+    hint: 'The signature may be authentic, but the link cannot name any receipt. It is refused whether or not the predecessor is supplied.',
+  },
   commitment_mismatch: {
     code: 'commitment_mismatch',
     description: 'Selective-disclosure commitment does not match the revealed salt+value.',
@@ -117,6 +124,13 @@ export const ERROR_REGISTRY = {
     description: 'The declared signature algorithm is not supported by this verifier version.',
     class: 'undecidable',
     hint: 'Hybrid post-quantum algorithms like ed25519+ml-dsa-65 require v0.6+ for full PQ verification.',
+  },
+  unsupported_chain_hash_algorithm: {
+    code: 'unsupported_chain_hash_algorithm',
+    description: 'previousReceiptHash names a hash algorithm other than sha256, which this verifier does not implement.',
+    class: 'undecidable',
+    spec: 'draft-farley-acta-signed-receipts-03 §6.7 Chain Hash Scope',
+    hint: 'Draft §6.7 requires refusing a link whose prefix names an unimplemented algorithm rather than assuming SHA-256 from its length.',
   },
   non_ascii_key: {
     code: 'non_ascii_key',

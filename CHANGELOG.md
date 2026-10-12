@@ -1,3 +1,9 @@
+## 0.10.22: Chain link syntax
+
+- Refuse a receipt whose `previousReceiptHash` is malformed with `malformed_chain_link` (exit 1), and one whose prefix names an algorithm other than sha256 with `unsupported_chain_hash_algorithm` (exit 2), once its signature holds and whether or not the predecessor is supplied. Draft-farley-acta-signed-receipts-03 §6.7 requires the link to be `sha256:` followed by 64 lowercase hex characters, and requires refusing a prefix that names an algorithm the verifier does not implement. Until this release a single receipt's link was not read, so a correctly signed receipt carrying `sha256:not-a-digest`, a `sha512:` link, uppercase hex or a string that is not a digest was reported valid. A chain check already refused a link that does not name its predecessor.
+- The bare 64-character digest of earlier revisions is still accepted on read, as §6.7 allows. A `null` link, which the 0.9.3 proxy and daemon wrote on a chain's first receipt, still verifies, with a warning citing §2.2. Each receipt result reports the link form it accepted in `chainLink`: `sha256`, `legacy-bare-hex` or `null`.
+- 0.10.22 still passes all 25 members of `vectors-receipt-signature` in probityai/agent-evidence-vectors 0.17.4, with and without the key windows, and verifies all 51 receipts of VeritasActa/e6-fixture `v1.0.0`.
+
 ## 0.10.21: No signature member in the signing input
 
 - Refuse an envelope receipt whose payload carries a `signature` member, including `null` and the empty string, with `signature_in_signing_input` (exit 1), even when a signature over those bytes verifies. Draft-farley-acta-signed-receipts-03 §6.6 requires that the object canonicalized for the signature never contain one. Until this release the envelope path verified `JCS(payload)` without checking, so such a receipt was reported valid. Flat receipts are unaffected: their own signature member is removed before canonicalizing, as §6.6 describes.
@@ -11,29 +17,29 @@
 - Found by @giskard09 and @robertolocatelli81-dev with the `farley-receipt-signature` vectors in argentum-core. 0.10.20 matches all four at `541ce84` on their strict verdicts.
 - Refuse a verification key carried at the top level of the v2 and flat shapes the same way as one carried inside the payload (`embedded_key_rejected`, draft §9.5). The v2 path looked only inside `payload`, so a top-level `public_key` fell through to `no_public_key`: still refused, but without naming the cause. Found by @arian-gogani's embedded-key vectors (ScopeBlind/agent-governance-testvectors#24), which 0.10.20 passes 4/4.
 
-## 0.10.19 — Connector actions
+## 0.10.19: Connector actions
 
 - Check the `connector` member of a decision receipt (draft-farley-acta-connector-action-00): schema, the consistency of the recorded check with the presented signature, and, given `--platform-key <kid>=<hex>`, the platform's signature over the context itself. A receipt whose recorded context is not what the platform signed is `connector_context_signature_invalid`; a malformed member is `connector_schema_invalid`; a signature the verifier holds no key for is reported unverifiable and is never a failure by itself.
 - Report the platform, agent, grant, recorded check, signature result and effect in the terminal and JSON output. Receipts without the member are unchanged.
 
-## 0.10.18 — Coding work and project devices
+## 0.10.18: Coding work and project devices
 
 - Recognize `scopeblind.repository.coding-evidence.v1`: check separate dual authority, exact recorded feedback, bounded work, publication admission and worker-attested PR/preview result.
 - Verify fresh review origins from coding work and project-scoped device statements, including the service's recorded authority check. Old valid history remains verifiable after device revocation.
 - Keep publication, merge approval, recipient acceptance and independent key pinning distinct in the report. Verification does not execute the build, fetch preview bytes or establish code correctness.
 
-## 0.10.17 — 2026-09-16
+## 0.10.17 (2026-09-16)
 
 - Verify signed repository review briefs, exact proposal-bound preview observations, and the matching packet decision for every ordinary approval or rejection. Historical repository evidence stays supported.
 - Verify scoped agent findings and feedback against dual-signed preparation authority and service-recorded use; verify a fresh review’s registered origin against the exact frozen source feedback. Preparation never substitutes for human merge approval.
 - Distinguish mutable external preview links, provider observations, artifact digests when present, and recipient acceptance. No preview code is executed during verification.
 
-## 0.10.16 — 2026-09-16
+## 0.10.16 (2026-09-16)
 
 - Verify repository collaboration evidence offline: exact visual model hashes, Git blob identities, scoped agent suggestions and signed feedback linking fresh tasks.
 - Keep approval, observed destination effect, rendered preview and recipient acceptance distinct. Existing repository v1 evidence remains supported.
 
-## 0.10.15 — 2026-09-16
+## 0.10.15 (2026-09-16)
 
 - Derive assurance features from successful verification, with unchecked declarations reported separately. Metadata alone never raises a conformance tier.
 - Bind proxy receipts to all nested forwarded tool arguments using JCS and SHA-256; mark the hash method explicitly.

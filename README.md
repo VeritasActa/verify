@@ -383,6 +383,10 @@ Apache-2.0.
 
 Patent-adjacent; covered by the Apache-2.0 patent grant (§3). See [PATENTS.md](./PATENTS.md).
 
+### Chain link syntax (0.10.22)
+
+Draft §6.7 says `previousReceiptHash` is `sha256:` followed by 64 lowercase hex characters. Once a receipt's signature holds, a malformed link fails with `malformed_chain_link` (exit 1) and a prefix naming another algorithm with `unsupported_chain_hash_algorithm` (exit 2), whether or not the predecessor is supplied. The bare digest of earlier revisions is accepted on read, and a `null` link, which earlier tools wrote on a chain's first receipt, verifies with a warning. The result's `chainLink` names the form accepted.
+
 ### No signature member in the signing input (0.10.21)
 
 Draft §6.6 says the object canonicalized for the signature never contains a `signature` member, not even as `null` or the empty string. An envelope receipt whose payload carries one fails with `signature_in_signing_input` (exit 1), even when the signature over those bytes verifies.
