@@ -1,0 +1,15 @@
+{
+  "receipt_id": "rec_8f92a3b1",
+  "receipt_version": "1.0",
+  "issuer_id": "gateway:protect-mcp:demo",
+  "event_time": "2026-03-28T14:32:07.891Z",
+  "tool_name": "file_system:read_file",
+  "decision": "allow",
+  "reason": "Policy 'autoresearch-safe' permits read_file for evidenced-tier agents",
+  "trust_tier": "evidenced",
+  "policy_id": "autoresearch-safe",
+  "agent_id": "agent:research-bot:a1b2c3",
+  "disclosure_mode": "scoped",
+  "public_key": "4437ca56815c0516b9872dbd5cdc4785aa80b47e9215538a39d258ef84062a29",
+  "signature": "4cde814b7889e987381925a7781e947624b06de66cf274a6911ca104999d077e13e0cd7bc5d4fe3be2a474857d23edb071c9b1ca344b9aea559f9074c3c86003"
+}

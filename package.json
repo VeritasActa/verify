@@ -1,8 +1,8 @@
 {
   "name": "@veritasacta/verify",
-  "version": "0.10.23",
+  "version": "0.10.24",
   "mcpName": "io.github.tomjwxf/veritasacta-verify",
-  "description": "Offline verifier for Veritas Acta signed receipts. Powers protect-mcp, ScopeBlind cold-chain hardware, and Microsoft AGT Lesson 18.",
+  "description": "Offline verification of signed receipts and artifacts, with explicit formats and independently supplied keys.",
   "license": "Apache-2.0",
   "type": "module",
   "bin": {
@@ -21,7 +21,12 @@
     "ROADMAP.md",
     "samples/",
     "test/conformance.js",
-    "known-issuers.json"
+    "known-issuers.json",
+    "browser/",
+    "release-manifest.json",
+    "LICENSE",
+    "PATENTS.md",
+    "docs/"
   ],
   "dependencies": {
     "@noble/curves": "^1.9.7",
@@ -57,7 +62,10 @@
     "self-check": "node cli.js --self-check",
     "check:sigil": "node generate-sigil.mjs --check",
     "capabilities": "node cli.js --capabilities",
-    "generate-sigil": "node generate-sigil.mjs"
+    "generate-sigil": "node generate-sigil.mjs",
+    "build:browser": "node scripts/build-browser.mjs",
+    "check:browser": "node scripts/build-browser.mjs --check",
+    "check:public": "node scripts/sync-public-metadata.mjs --check"
   },
   "repository": {
     "type": "git",
@@ -66,5 +74,8 @@
   "homepage": "https://veritasacta.com",
   "bugs": {
     "url": "https://github.com/VeritasActa/verify/issues"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
   }
 }

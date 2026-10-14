@@ -199,6 +199,14 @@ export function detectFormat(input) {
     return { mode: 'voprf-token', signals, hasSelectiveDisclosure: false, isBundle: false };
   }
 
+  // The original website demo signed a flat payload excluding public_key.
+  // Keep this explicitly versioned; never guess this preimage for other receipts.
+  if (input.receipt_version === '1.0' && input.receipt_id && input.issuer_id
+      && input.event_time && input.tool_name && input.decision
+      && typeof input.signature === 'string' && input.payload === undefined) {
+    return { mode: 'ed25519-browser-legacy', signals: ['receipt_version=1.0'], hasSelectiveDisclosure, isBundle: false };
+  }
+
   // Passport envelope: { payload, signature: { alg, kid, sig } }
   if (input.payload && input.signature && typeof input.signature === 'object'
       && typeof input.signature.sig === 'string'

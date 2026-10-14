@@ -1,20 +1,24 @@
 {
   "sigil_version": 1,
-  "fingerprint": "c7bea1cf",
-  "name": "Old Thread",
-  "sigil_hash": "c7bea1cf497adde63692ac681e047e1ddea3dd05dd7884900b372f6eeb5b5c1f",
+  "fingerprint": "5435f83f",
+  "name": "Warm Thread",
+  "sigil_hash": "5435f83ff95335ee45d1a7c3a224ee9cb5ebf6d2ee932ffde59b10667b7d4323",
   "project_public_key": "fe665e861867cec7e171c0c13bbc873c3362079faef21f54df7804b7fb9ae8af",
   "commitment_authentication": "public_recomputable_integrity_only",
   "policy": {
     "version": 3,
     "package": "@veritasacta/verify",
-    "package_version": "0.10.23",
-    "source_hash": "275d118de7b2d1d532824a8d539001d8976e2b28ee9f1afc7393c76d6b3d9f45",
+    "package_version": "0.10.24",
+    "source_hash": "857316a986e45bba582b92a0241ecf5390786f2d944869e156261750cacc96fa",
     "monitored_files": [
       "README.md",
+      "browser/receipt-verifier.js",
+      "browser/build.json",
+      "release-manifest.json",
       "cli.js",
       "src/sigil-policy.js",
       "src/detect.js",
+      "src/browser.js",
       "src/conformance.js",
       "src/errors.js",
       "src/engines/ed25519-receipt.js",
@@ -58,6 +62,7 @@
       "src/output/json.js",
       "src/output/html-report.js",
       "src/util/canonical.js",
+      "src/util/strict-json.js",
       "src/util/hex.js",
       "src/util/jwks.js",
       "src/util/key-window.js",
@@ -78,6 +83,6 @@
     ],
     "created_at": 1784267169966
   },
-  "policy_hash": "05f8b85aace207baec68d6029d170dc0d2beb6c52c9508f53360050df79bbd95",
+  "policy_hash": "e79b41d01cc9b1051e8ac8d80189491ec2361132f2638c713ceb31863ed7375b",
   "derived_at": "2026-07-17T05:46:09.966Z"
 }
