@@ -42,6 +42,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { detectFormat } from './src/detect.js';
+import { parseReceiptJson } from './src/util/strict-json.js';
 import { verifyReceipt, verifyBundle } from './src/engines/ed25519-receipt.js';
 import { verifyGateTuple, verifyGateBundle } from './src/engines/gate-receipt.js';
 import { verifyMacroTrackRecord } from './src/engines/macro-snapshot.js';
@@ -134,6 +135,7 @@ function legateModeLabel(r) {
 }
 
 const MODE_LABELS = {
+  'ed25519-browser-legacy': 'Historical browser receipt 1.0 (not draft-03)',
   'ed25519-receipt-v1': 'Ed25519 receipt v1 (RFC 8032)',
   'ed25519-receipt-v2': 'Ed25519 receipt v2 (RFC 8032 + draft-farley-acta-signed-receipts)',
   'ed25519-passport': 'Ed25519 Passport envelope (RFC 8032)',
@@ -729,6 +731,7 @@ async function dispatch(input, opts) {
       });
       return { ...r, tier, modeLabel: MODE_LABELS['voprf-token'] };
     }
+    case 'ed25519-browser-legacy':
     case 'ed25519-receipt-v1':
     case 'ed25519-receipt-v2':
     case 'ed25519-passport': {
@@ -1290,7 +1293,7 @@ async function main() {
   try {
     input = [...CLAIMS_V211_TYPES].some((type) => raw.includes(type))
       ? parseClaimsJsonV211Independent(raw)
-      : JSON.parse(raw);
+      : parseReceiptJson(raw, { maxBytes: 50 * 1024 * 1024, maxDepth: 128 });
   } catch (e) {
     console.error(red(`Error: invalid JSON: ${e.message}`));
     process.exit(2);

@@ -22,7 +22,7 @@ npx @veritasacta/verify <path.json> --key <hex-pubkey>
 ```
 
 - Exit 0 → valid.
-- Exit 1 → invalid signature OR broken chain: **proven tampering**.
+- Exit 1 → invalid signature OR broken chain: **failed verification, not proof of tampering**.
 - Exit 2 → undecidable: malformed JSON, missing key, unsupported algorithm. Not a failure of the receipt; a failure of inputs.
 
 ### For a chain

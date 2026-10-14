@@ -120,7 +120,7 @@ Any receipt verifies with `@veritasacta/verify`, with no dependency on `scopebli
 npx @veritasacta/verify receipt.json --key operator-public.pem
 ```
 
-Exit code `0` is proven valid; exit `1` is proven tampering; exit `2` is undecidable (malformed, missing key).
+Exit code `0` is proven valid; exit `1` is failed verification (not proof of tampering); exit `2` is undecidable (malformed, missing key).
 
 Your operator public key is published out-of-band (JWKS URL, DID document service endpoint, pinned trust anchor, or GitHub-backed SBOM artifact). Never embedded in the receipt. Per draft-farley-acta-signed-receipts-02 §9.
 

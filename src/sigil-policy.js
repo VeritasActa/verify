@@ -5,9 +5,13 @@ import { join } from 'node:path';
 // commitment, so the generator and runtime must share this exact list.
 export const SIGIL_MONITORED_FILES = Object.freeze([
   'README.md',
+  'browser/receipt-verifier.js',
+  'browser/build.json',
+  'release-manifest.json',
   'cli.js',
   'src/sigil-policy.js',
   'src/detect.js',
+  'src/browser.js',
   'src/conformance.js',
   'src/errors.js',
   'src/engines/ed25519-receipt.js',
@@ -51,6 +55,7 @@ export const SIGIL_MONITORED_FILES = Object.freeze([
   'src/output/json.js',
   'src/output/html-report.js',
   'src/util/canonical.js',
+  'src/util/strict-json.js',
   'src/util/hex.js',
   'src/util/jwks.js',
   'src/util/key-window.js',

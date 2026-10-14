@@ -1,417 +1,121 @@
 # @veritasacta/verify
 
-**Offline verifier for signed machine-decision receipts and artifacts.**
+**Check signed records yourself, without contacting the issuing service.**
 
-Apache-2.0 · Ed25519 + VOPRF · Offline · Locally recomputable integrity commitment · Auto-onboarding · MCP proxy · Sidecar daemon
+An offline CLI and a shared browser receipt engine. Supply a receipt and a public
+key obtained through a separate trusted channel, then apply your own trust policy.
+No account, proxy, signing daemon or onboarding step is required to verify a receipt.
 
-> **Receipt format:** ScopeBlind emits Veritas Acta receipts. Legacy ScopeBlind
-> receipts remain verifiable; Acta receipts (draft-farley-acta-signed-receipts-03)
-> are the canonical format. Spec: [`@veritasacta/protocol`](https://www.npmjs.com/package/@veritasacta/protocol)
-> · IETF: [draft-farley-acta-signed-receipts](https://datatracker.ietf.org/doc/draft-farley-acta-signed-receipts/).
+[Try the browser sample](https://www.veritasacta.com/verify?sample=current) ·
+[Receipt specification](https://datatracker.ietf.org/doc/draft-farley-acta-signed-receipts/) ·
+[Conformance evidence](https://www.veritasacta.com/conformance)
+
+## Verify an existing receipt
 
 ```bash
-# Install
 npm install -g @veritasacta/verify
-# Or
-brew install veritasacta/tap/veritasacta-verify
-
-# Compare installed bytes with the bundled integrity commitment
-npx @veritasacta/verify --self-check
-
-# Zero-config onboarding (auto-detects framework)
-npx @veritasacta/verify init
-
-# Verify any receipt format
-npx @veritasacta/verify receipt.json --key <pubkey>
+verify receipt.json --key YOUR_INDEPENDENTLY_OBTAINED_PUBLIC_KEY
 ```
 
-Part of the [Veritas Acta](https://veritasacta.com) protocol for machine-decision evidence.
+The key is 64 hexadecimal characters. Do not treat a key supplied with an unknown
+receipt as an independent trust pin. This verification path runs offline once the
+package is installed; installation and explicitly requested URL/JWKS lookups use
+the network.
 
-## What it verifies
-
-| Mode | Input | Conformance tier |
-|---|---|---|
-| Ed25519 receipt | Signed decision receipts (v1, v2, Passport envelope) | T1 |
-| Ed25519 + AIP-0002 | Selective-disclosure receipts with `_commitments` | T2 |
-| Ed25519 + attestation | Receipts with `attestation_mode` or `anchor_uri` | T3 |
-| VOPRF token | Anonymous credential tokens (RFC 9497, BRASS wire format). Full Schnorr DLEQ verification for both πI (issuer) and πC (client). | T4 |
-| Knowledge Unit | Multi-model deliberation bundles (draft-farley-acta-knowledge-units-00) | varies |
-| Audit bundle | Multiple receipts with embedded signing keys | varies |
-| Gate receipt / bundle | ScopeBlind Gate receipt tuples (`scopeblind.gate.*`) and signed-manifest `scopeblind.gate.evidence-bundle/2` exports with semantic and exact chain checks | T1 |
-| Macro track record | Signed macro snapshots, append-only manifest sequence, and signed history checkpoints | T1 |
-| ScopeBlind standard files | A signed standard (`scopeblind.proof_request.v1`), a recipient decision (`scopeblind.admission_decision.v1`), or an action assurance bundle (`scopeblind.action_assurance_bundle.v1`), verified by the same core the Legate site runs, bundled here | T1 |
-| ScopeBlind run manifest | A harness's signed account of a governed run (`scopeblind.run_manifest.v1`): a benchmark submission made with every tool call through the gateway. Alone it verifies as intact but unbound. Add the files beside it to bind it: `--standard` (the pins, the policy, the tool list, the attempts, the time limit), `--receipts` (the chain head and every receipt), `--calls` (each call behind its receipt), `--regrade` (a second grading; repeat it for gradings made elsewhere), `--provenance` (the run's Sigstore bundles, verified offline against the pinned trust root and tied to the exact bytes given), `--model-calls` with `--model-attestation` (every model call signed inside the provider's TEE, each key bound in an Intel TDX quote chained to the pinned Intel root), and `--maintainer-key` (pin the key that must have signed the standard). With companion files the exit status is 0 only when the run binds to all of them. Example: `npx @veritasacta/verify manifest.json --standard standard.json --receipts receipts.jsonl --calls calls.jsonl --regrade regrade.json --provenance provenance` | T1 |
-
-## Subcommands
-
-The CLI is a dispatcher: one binary, eight modes.
+To try the public example, download [this receipt](samples/current-receipt.json)
+and use its **demonstration-only** key:
 
 ```bash
-verify                          # verify a single file (default)
-verify init                     # zero-config onboarding, auto-detects framework
-verify proxy --target "..."     # transparent MCP proxy, signs every tool call
-verify daemon                   # unix-socket sidecar, language-agnostic signing API
-verify prompt <file>            # verify provenance of a CLAUDE.md / SKILL.md / system prompt
-verify chain explore <r.json>   # walk a receipt chain to its root, validate every hash link
-verify --replay-chain ...       # bulk verification with chain-linkage check
-verify --self-check             # compare monitored source with bundled commitment
-verify --attest                 # emit a signed local-verifier attestation
+verify current-receipt.json --key ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225
 ```
 
-### Prompt provenance
+A valid signature is not proof of claim truth, complete action coverage, signer
+authority or recipient acceptance. A signed timestamp is an issuer assertion,
+not an independent timestamp.
 
-Closes the supply-chain vector where an attacker modifies `CLAUDE.md`, `SKILLS.md`, or a system prompt between authoring time and agent runtime.
+## Read the outcome correctly
+
+| Outcome | Meaning | Next step |
+| --- | --- | --- |
+| Verified / exit 0 | The checks implemented for this profile passed | Apply identity, authority and reliance policies; read warnings and binding scope |
+| Failed / exit 1 | A verification check failed | Check the expected key, signature, structure and reported error |
+| Not checked / exit 2 | The verifier could not decide | Supply missing material or use a supported format/algorithm |
+
+**Exit 1 does not prove tampering.** Supplying the wrong expected key can produce
+the same result. Some legacy JSON error categories use the name `tampered` for
+compatibility; it denotes failed verification, not a forensic conclusion.
+See [error codes](ERRORS.md) and the profile-specific output.
+
+## Browser and CLI
+
+Both use `src/detect.js`, `src/engines/ed25519-receipt.js` and the same canonicalizer.
+The browser bundle is published in `browser/`, with a SHA-256 build manifest.
+
+The browser accepts individual Ed25519 envelopes, v2 structured receipts, v1 flat
+receipts and historical website `receipt_version: "1.0"` receipts. That historical
+profile excluded `public_key` from signing and is explicitly labelled; it is not
+silently promoted to draft-03 conformance. All browser profiles require an external
+key. Unsupported formats are **not checked**, not reported as bad signatures.
+
+Both entry points reject duplicate JSON members before parsing. The browser limits
+input to 1 MiB and depth 64; the CLI file parser allows 50 MiB and depth 128.
+Bundles and specialist profiles, including selective disclosure, VOPRF, Knowledge
+Units, Gate evidence and governed-run manifests, require the CLI. Profile success
+only establishes the checks named in that output, not universal completeness.
+
+## Choose a guide
+
+| Task | Guide |
+| --- | --- |
+| Verify bundles, chains, prompts or specialist artifacts | [Advanced reference](docs/reference.md) |
+| Issue receipts or configure a proxy/daemon | [Issuance and adapters](docs/issuance.md) |
+| Understand threats and limitations | [Threat model](THREAT-MODEL.md) |
+| Report a vulnerability | [Security policy](SECURITY.md) |
+| Inspect exact release changes | [Changelog](CHANGELOG.md) |
+
+## Release integrity, not publisher authentication
+
+`verify --self-check` recomputes monitored source hashes against a **bundled integrity
+commitment** (the Sigil). It detects drift from that commitment. Someone replacing
+both the code and commitment can create a new internally consistent package.
+
+It does **not** independently authenticate the publisher or establish a canonical
+release. Pin a reference obtained independently and inspect release provenance.
+`--attest` is a local, self-signed integrity statement; separately pin its key before
+relying on it.
+
+## Release and standards status
+
+<!-- release-manifest:start -->
+Verifier: **[0.10.24](https://github.com/VeritasActa/verify/releases/tag/v0.10.24)**. Status reviewed 2026-10-13.
+
+- [draft-farley-acta-signed-receipts-03](https://datatracker.ietf.org/doc/draft-farley-acta-signed-receipts/): active individual Internet-Draft.
+- [draft-farley-acta-knowledge-units-00](https://datatracker.ietf.org/doc/draft-farley-acta-knowledge-units/): expired individual Internet-Draft (expired 2026-10-08).
+
+Internet-Drafts are proposals, not adopted IETF standards or endorsements.
+<!-- release-manifest:end -->
+
+[`release-manifest.json`](release-manifest.json) is the source for version/status
+blocks in this README, the website, the organisation profile and draft index.
+`node scripts/sync-public-metadata.mjs --check` checks sibling repository copies.
+No draft is revised or resubmitted by this synchronization.
+
+## Development and maintainership
+
+Maintained by Tom Farley / ScopeBlind. Independent verification does not imply
+independent organizational governance. Contributions should include reproducible
+fixtures and negative cases. [Open an issue](https://github.com/VeritasActa/verify/issues)
+for interoperability questions.
 
 ```bash
-# Against a Veritas Acta receipt asserting the prompt hash
-verify prompt SKILL.md --prompt-receipt prompt-receipt.json
-
-# Against a Sigstore bundle (DSSE + in-toto statement)
-verify prompt CLAUDE.md --sigstore-bundle bundle.json
-
-# Fast path: caller knows the expected hash
-verify prompt SKILL.md --expected-hash <sha256-hex>
+npm ci
+npm run build:browser
+npm test
+npm run check:browser
+npm run check:sigil
+npm run test:conformance
 ```
 
-### Chain exploration
-
-Walks the `previousReceiptHash` chain from a chain tip back to its root, validating every link's SHA-256.
-
-```bash
-verify chain explore ./receipts/tip.json
-# → ASCII tree, depth, links_broken, warnings
-
-verify chain explore ./receipts/tip.json --search-dir ./audit/ --max-depth 200 --json
-```
-
-Links are read by the rules of draft §6.7 that the receipt verifier applies: `sha256:` and the lowercase hex SHA-256 of the JCS of the whole previous receipt, or the bare digest of earlier revisions. A malformed link stops the walk with `malformed_chain_link` (exit 1), and one naming another algorithm with `unsupported_chain_hash_algorithm` (exit 2). Before 0.10.23 the explorer looked ancestors up by an unprefixed base64url hash, so it did not walk §6.7 chains.
-
-### ScopeBlind Gate receipts
-
-Verifies the receipt tuples emitted by the ScopeBlind Gate (the pre-trade mandate gate): single decisions, batch decisions and their exact signed legs, PM co-sign approvals, execution fills, held-remainder states, and issuer-signed mandate delegations. Version 2 evidence bundles add a gate-signed completeness manifest that enumerates every exported digest. Tuples sign the SHA-256 of the deep-key-sorted payload; the Ed25519 signature covers the digest bytes and verifies against the `verification_key` carried in the tuple.
-
-```bash
-verify gate-receipt.json                      # auto-detected tuple
-verify gate-bundle.json                       # schemas, exact links, and signed manifest checked
-verify gate-receipt.json --key <gate-pubkey>  # pin the expected signer
-verify gate-bundle.json --key <gate-pubkey>   # pin the bundle trust anchor
-verify samples/sample-gate-bundle.json        # try it (deterministic demo keys)
-```
-
-A VALID result proves cryptographic authenticity, payload integrity, recognized-schema validity, exact parent-child consistency, fail-closed partial-fill handling, and that the signed manifest exactly covers the records in the export. It does NOT prove the risk inputs were correct, that a demo fill came from an independent production custodian, or that records outside the manifest's declared history scope do not exist. Verification keys travel inside the records, so pin the expected gate signer with `--key` for identity assurance. Crypto and chain failures are reported separately (`[crypto]` vs `[chain]`): a record can be individually authentic while its semantic or cross-record relationship is invalid.
-
-Legacy `scopeblind.gate.evidence-bundle/1` files are detected but fail closed because they do not contain a signed completeness manifest. Re-export them as `/2`.
-
-### Repository reviews
-
-```bash
-npx @veritasacta/verify@0.10.18 review.json --key <service-ed25519-public-key> --json
-```
-
-Repository review exports bind the owner’s brief and acceptance criteria to an exact receiver-signed pull-request proposal, preview observation, and each human’s matching approval or rejection. Scoped agent findings include their signed preparation authority and service-recorded use. A review prepared from earlier feedback carries its exact frozen source and a signed registration commitment; approvals remain specific to the new task.
-
-The verifier checks these records offline. It does not fetch or execute preview pages, prove that a mutable preview URL still serves the observed content, or prove that an agent’s assessment is correct. An artifact digest, when present, identifies the recorded artifact bytes separately from the preview URL. Pin the service key through an independent channel; the receiver’s signed GitHub observations remain assertions by that receiver. Existing repository and collaboration v1 exports remain supported.
-
-### ScopeBlind macro track records
-
-Macro exports verify offline. An embedded key proves internal signature
-integrity, not who controls that key. Pin the operator key and an independently
-retained anti-rollback head for identity and historical assurance:
-
-```bash
-npx @veritasacta/verify@0.10.4 legate-macro-track-record.json \
-  --key <operator-ed25519-public-key> \
-  --history-head <expected-history-head> \
-  --anchor-head <expected-anchor-digest>
-```
-
-The verifier checks every record, the exact current manifest inventory, prior
-manifest links, retention of previously manifested records, and the signed
-checkpoint chain. Publication at a mutable URL is not itself a transparency
-log; retain or independently timestamp checkpoint heads.
-
-### Pre-built sandbox profiles
-
-`ecosystem/profiles/` ships sandboxing profiles (Cedar policy + nono capabilities + README) for common agent runtimes: Claude Code, Cursor, Codex, Gemini CLI, OpenClaw. Compose with `sb-runtime --ring 3 --policy ./policy.cedar` + `nono run --caps ./nono-capabilities.yaml`.
-
-## Verification properties
-
-- **Offline.** No network contacted unless `--jwks <url>` is explicitly passed.
-- **Tamper-evident.** Exit 1 is proven tampering; exit 2 is undecidable (malformed, missing key, unsupported algorithm).
-- **No vendor trust.** Only Ed25519 (RFC 8032) and JCS (RFC 8785) in the verification path.
-- **Locally integrity-checkable.** `--self-check` recomputes the bundled
-  commitment over the verifier surface. This detects byte drift relative to
-  that copy; it is not a publisher signature or independent supply-chain
-  attestation unless the fingerprint is separately pinned.
-- **Algorithm-agile.** Hybrid PQ (`ed25519+ml-dsa-65`) recognized; full PQ in v0.6+.
-- **Zero telemetry.** The verifier never phones home.
-
-## Quick start: frictionless onboarding
-
-```bash
-$ cd my-agent-project
-$ npx @veritasacta/verify init
-
-[Sigil ASCII art]
-  sigil: 956f2e88
-
-✓ Veritas Acta initialized
-  Directory: ./.veritasacta
-  Kid:       project:956f2e8895fd
-  Framework: crewai (python)
-
-Next steps:
-  Install: pip install veritasacta-crewai
-  Wrap your agent with the adapter as shown in the adapter README.
-
-Verify:
-  npx @veritasacta/verify .veritasacta/receipts/*.json --key 956f2e88...
-```
-
-Init auto-detects your framework from `package.json` / `pyproject.toml` / `requirements.txt` across 13 supported frameworks (Claude Code, Claude Agent SDK, Google ADK, CrewAI, Pydantic AI, AutoGen, Smolagents, LangChain JS/Python, LangGraph JS/Python, OpenAI Agents SDK, Vercel AI SDK).
-
-## Universal MCP proxy: zero code changes
-
-```bash
-$ verify proxy --target "node my-mcp-server.js"
-[veritasacta proxy] rcpt_1 signed (web_search) kid=project:956f2e8895fd
-[veritasacta proxy] rcpt_2 signed (read_file) kid=project:956f2e8895fd
-...
-```
-
-Wraps any MCP server with signing. No changes in the server. No changes in the agent. Every `tools/call` gets a chain-linked Ed25519 receipt.
-
-## Sidecar daemon: language-agnostic signing
-
-Run once; any process in the same user context signs receipts by POST.
-
-```bash
-$ verify daemon &
-
-# Any language, any process:
-$ curl --unix-socket /tmp/veritasacta-$UID.sock -X POST http://_/sign \
-    -d '{"tool":"web_search","args":{"q":"..."},"decision":"allow"}'
-
-{ "payload": {...}, "signature": {"alg":"EdDSA","kid":"...","sig":"..."} }
-```
-
-One daemon, N agents, zero SDK embedding.
-
-## Local-integrity attestation
-
-Every user who runs `--self-check` can emit a **local-integrity attestation**:
-a self-signed statement that the declared monitored source on that machine
-matched the bundled public commitment. The monitored runtime includes
-`cli.js` and every shipped executable JavaScript module under `src/`; a release
-test fails if a module is omitted. This does not authenticate the package
-publisher, prove an independently canonical release, or establish trust in
-the attester unless the recipient separately pins the commitment and attester
-key.
-
-```bash
-$ verify --attest --attest-org "Acme Corp" --output attestation.json
-```
-
-Output:
-
-```json
-{
-  "payload": {
-    "type": "veritasacta:verifier-attestation",
-    "sigil_fingerprint": "<from sigil.json>",
-    "sigil_name": "<from sigil.json>",
-    "integrity_matches": true,
-    "publisher_authenticated": false,
-    "assurance": "self_signed_operator_statement",
-    "canonical": true,
-    "attester_org": "Acme Corp",
-    "issued_at": "2026-04-19T...",
-    "expires_at": "2026-04-26T...",
-    "attester_kid": "attester:..."
-  },
-  "signature": { "alg": "EdDSA", ... },
-  "verification": { "attester_pubkey": "..." }
-}
-```
-
-Offline and user-signed. The legacy `canonical` field is retained for wire
-compatibility and aliases `integrity_matches`. Neither field authenticates the
-publisher. Missing monitored files fail closed rather than sealing a reduced
-verification surface.
-
-## Verification receipts
-
-```bash
-$ verify receipt.json --key <pubkey> --emit-verification-receipt
-```
-
-Produces a signed "this local verifier checked this receipt and reported it
-valid" artifact. The attester key and any independently pinned verifier
-fingerprint determine whether a recipient should trust it.
-
-## Enterprise features
-
-| Flag | Purpose |
-|---|---|
-| `--pin-sigil <hex>` | Require the installed Sigil fingerprint to match (supply-chain enforcement) |
-| `--audit-log <file>` | Append every verification event to a chain-hashed JSONL log |
-| `--audit-report` | Render an HTML audit report (self-contained, auditor-ready) |
-| `--fips` | Enforce FIPS-approved algorithms only |
-| `--strict` | Disable all deprecated fallbacks |
-| `--tier N` | Require minimum conformance tier (1-5) |
-| `--replay-chain <file>` | Bulk-verify a JSONL chain with parallel workers |
-| `--diff <other>` | Structural diff between two receipts |
-
-## Live-context verification (Sigil claim 2)
-
-```bash
-$ verify receipt.json \
-    --require-context clock:±5s \
-    --require-context sensor:temp<18
-```
-
-Gates verification on live context (NTP, sensors, feeds). Predicate fails → verification fails. Operationalizes patent #5 claim 2.
-
-## Algorithms supported
-
-- `Ed25519` / `EdDSA` (RFC 8032)
-- `voprf-p256-sha256` (RFC 9497, structural; full DLEQ extraction in progress)
-- Hybrid PQ recognized: `ed25519+ml-dsa-65`, `ed25519+dilithium3` (v0.6+)
-
-## Conformance tiers
-
-| Tier | Requirements |
-|---|---|
-| T1 Basic | Ed25519 + JCS + chain linkage |
-| T2 Disclosure | T1 + AIP-0002 selective disclosure |
-| T3 Attestation | T2 + `attestation_mode` + `anchor_uri` |
-| T4 Privacy | T3 + VOPRF + `holder_binding` |
-| T5 Full | T4 + ZK compliance proofs (v1.0+) |
-
-Pass `--tier N` to require a minimum tier.
-
-## Framework adapters
-
-Published packages:
-
-| Framework | Package | Language |
-|---|---|---|
-| Claude Code, Codex, Cursor, Gemini, Hermes (hooks) and any MCP server (gateway) | [`protect-mcp`](https://www.npmjs.com/package/protect-mcp) | JS |
-| Google ADK | [`protect-mcp-adk`](https://pypi.org/project/protect-mcp-adk/) | Python |
-| LangChain | [`@scopeblind/langchain`](https://www.npmjs.com/package/@scopeblind/langchain) | JS |
-| Swarms | [`scopeblind-swarms`](https://pypi.org/project/scopeblind-swarms/) | Python |
-| Any MCP server | `verify proxy --target "<cmd>"` | language-agnostic |
-| Anything else | `verify daemon` + HTTP POST | language-agnostic |
-
-Source adapters for LangGraph, CrewAI, Pydantic AI, AutoGen, Smolagents, the
-OpenAI Agents SDK and the Vercel AI SDK live under
-[`ecosystem/adapters/`](./ecosystem/adapters/) and are not published as
-packages.
-
-## SDK
-
-Tiny signing helpers for custom integrations ship as source in
-[`ecosystem/sdk-js/`](./ecosystem/sdk-js/) and [`ecosystem/sdk-py/`](./ecosystem/sdk-py/).
-They are not published as packages; copy the file you need. Receipts they
-produce verify with this CLI.
-
-## Release names (Sigil brand convention)
-
-Every committed verifier surface gets a unique deterministic name from its
-cryptographic fingerprint. The bundled `sigil.json` is the authoritative name
-and fingerprint for the installed copy; `verify --self-check` recomputes it.
-See
-[ecosystem/RELEASE-NAMING.md](./ecosystem/RELEASE-NAMING.md) for the derivation.
-
-## Ecosystem artifacts
-
-The `ecosystem/` directory ships source, not deployed services:
-
-- **GitHub Action** (`ecosystem/github-action/`): a CI step that verifies receipts
-- **Claude Code plugin** (`ecosystem/claude-code-plugin/`)
-- **Homebrew tap** (`ecosystem/homebrew-tap/`): the formula behind `brew install veritasacta/tap/veritasacta-verify`
-- **Registry and badge workers** (`ecosystem/registry-worker/`, `ecosystem/badge-worker/`): Cloudflare Worker source; no public instance is running
-- **Interop leaderboard** (`ecosystem/interop-leaderboard/`): cross-implementation CI design
-- **Language SDKs** (`ecosystem/sdk-js/`, `ecosystem/sdk-py/`): signing helpers, unpublished
-- **Framework adapters** (`ecosystem/adapters/*`): see the table above
-- **Design docs** (`ecosystem/rollback/`, `ecosystem/supervisor/`, `ecosystem/dashboard/`)
-
-See [`ecosystem/README.md`](./ecosystem/README.md) for the full map.
-
-## Relationship to the Veritas Acta stack
-
-- **Protocol:** [veritasacta.com](https://veritasacta.com): open IETF drafts, AIP specs, Apache-2.0.
-- **Verifier:** this package. Open, offline, fully user-controlled.
-- **Managed issuance (commercial):** [scopeblind.com](https://scopeblind.com): managed receipt infrastructure + VOPRF issuance API.
-
-Open verifier + closed issuer. The verifier is always free. The commercial product is the managed service.
-
-## Supply chain
-
-Releases are published from the source of record after the bundled integrity
-commitment is regenerated and `--self-check` passes on the exact bytes
-shipped. The dependency tree is small: `@veritasacta/artifacts`, `@noble/curves`,
-`@noble/hashes`, `ajv` and `ajv-formats`. npm registry signatures apply to every
-version; Sigstore provenance attestations are not currently published.
-
-Verify your installation:
-
-```bash
-npm audit signatures             # registry signatures
-verify --self-check              # matches the bundled integrity commitment
-verify --pin-sigil <fingerprint> # enforce a specific release
-```
-
-## Specifications
-
-- [draft-farley-acta-signed-receipts-03](https://datatracker.ietf.org/doc/draft-farley-acta-signed-receipts/)
-- [draft-farley-acta-knowledge-units-00](https://datatracker.ietf.org/doc/draft-farley-acta-knowledge-units/)
-- AIP-0001 (receipt format + ASCII-only JCS)
-- AIP-0002 (selective disclosure)
-- AIP-0003 (holder binding)
-- RFC 8032, 8785, 9497, 9380, 7517, 7638
-
-## Documentation
-
-- [CHANGELOG.md](./CHANGELOG.md): release history
-- [THREAT-MODEL.md](./THREAT-MODEL.md): what the verifier protects against and what it doesn't
-- [SECURITY.md](./SECURITY.md): disclosure policy + supported versions
-- [ERRORS.md](./ERRORS.md): complete error-code registry
-- [ecosystem/RELEASE-NAMING.md](./ecosystem/RELEASE-NAMING.md): Sigil naming convention
-
-## License
-
-Apache-2.0.
-
-Patent-adjacent; covered by the Apache-2.0 patent grant (§3). See [PATENTS.md](./PATENTS.md).
-
-### Chain link syntax (0.10.22)
-
-Draft §6.7 says `previousReceiptHash` is `sha256:` followed by 64 lowercase hex characters. Once a receipt's signature holds, a malformed link fails with `malformed_chain_link` (exit 1) and a prefix naming another algorithm with `unsupported_chain_hash_algorithm` (exit 2), whether or not the predecessor is supplied. The bare digest of earlier revisions is accepted on read, and a `null` link, which earlier tools wrote on a chain's first receipt, verifies with a warning. The result's `chainLink` names the form accepted.
-
-### No signature member in the signing input (0.10.21)
-
-Draft §6.6 says the object canonicalized for the signature never contains a `signature` member, not even as `null` or the empty string. An envelope receipt whose payload carries one fails with `signature_in_signing_input` (exit 1), even when the signature over those bytes verifies.
-
-### Key validity windows (0.10.20)
-
-When the JWKS gives the signing key a `valid_from` / `valid_until` window (draft §9.2), the verifier applies it to the receipt's `issued_at`. The window is `[valid_from, valid_until)`, so a receipt issued exactly at `valid_until` is outside it. A receipt outside the window fails with `key_outside_validity_window`. Every receipt result carries `keyStatus`: `inside`, `outside`, `no_window` (validity at issuance not established), `unverifiable`, or `not_applicable` for a key pinned with `--key`. Add `--require-key-window` to fail when the key source gives no window:
-
-```bash
-npx @veritasacta/verify receipt.json --jwks ./jwks.json --require-key-window --json
-```
-
-`issued_at` is asserted by the signer, so a window catches a key still in use after an honest rotation, not a compromised key backdated into the window.
-
-### Canonical JSON compatibility (0.10.15)
-
-Receipt verification uses RFC 8785 key ordering, including numeric-looking keys. Historical receipts signed using JavaScript's numeric-key insertion order fail with `legacy_non_jcs_signature`. To inspect one intentionally, use `verify receipt.json --allow-legacy-canonicalization --key PUBLIC_KEY`. The result is labeled as a historical encoding; it does not claim JCS conformance. `--strict` always disables this compatibility mode. Metadata such as `holder_binding` is reported as declared until its underlying property is actually verified.
-
-
-Code-work exports (`scopeblind.repository.coding-evidence.v1`) use the same command:
-
-```sh
-npx @veritasacta/verify@0.10.18 coding-work.json --key <service-ed25519-public-key> --json
-```
-
-The report checks the separate coding mandate, exact source feedback, recorded limits and worker's publication statement. A published PR is not a merge approval or recipient acceptance. Tests, build results and GitHub readbacks are attributed attestations; offline verification does not rerun code or fetch the preview. Project-device records additionally carry the principal's scoped grant and a service-signed authority check at recording time; this proves recorded history, not current device access.
+Apache-2.0. See [LICENSE](LICENSE) and [PATENTS.md](PATENTS.md) for the actual terms.
+The Acta public record is a [separate reference application](https://github.com/VeritasActa/Acta).
+ScopeBlind / Legate are commercial applications, not prerequisites for verification.

@@ -17,7 +17,8 @@
  * @license Apache-2.0
  */
 
-import { createHash } from 'node:crypto';
+import { sha256 } from '@noble/hashes/sha256';
+import { bytesToHex, utf8ToBytes } from '@noble/hashes/utils';
 
 /**
  * Assert that every object key in the given value is ASCII-only.
@@ -150,7 +151,7 @@ export function legacyCanonicalize(obj) {
  * @returns {string}
  */
 export function canonicalHash(obj) {
-  return createHash('sha256').update(canonicalize(obj), 'utf8').digest('hex');
+  return bytesToHex(sha256(utf8ToBytes(canonicalize(obj))));
 }
 
 /**
@@ -160,5 +161,5 @@ export function canonicalHash(obj) {
  * @returns {string}
  */
 export function sha256Hex(s) {
-  return createHash('sha256').update(s, 'utf8').digest('hex');
+  return bytesToHex(sha256(utf8ToBytes(s)));
 }

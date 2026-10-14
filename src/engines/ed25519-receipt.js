@@ -109,7 +109,10 @@ export async function verifyReceipt(input, detectedMode, opts = {}) {
   let signedPayload = Object.fromEntries(Object.entries(input).filter(([key]) => key !== 'signature'));
   let signature = input.signature;
 
-  if (detectedMode === 'ed25519-passport') {
+  if (detectedMode === 'ed25519-browser-legacy') {
+    format = 'legacy-browser-1.0';
+    signedPayload = Object.fromEntries(Object.entries(input).filter(([key]) => !['signature', 'public_key'].includes(key)));
+  } else if (detectedMode === 'ed25519-passport') {
     format = 'passport';
     kid = input.signature.kid;
     algorithm = input.signature.alg || 'EdDSA';
@@ -299,7 +302,8 @@ export async function verifyReceipt(input, detectedMode, opts = {}) {
     canonicalization: result.canonicalization,
     legacySignatureValid: result.legacySignatureValid,
     chainLink: chainLink.form,
-    warning: [result.warning, chainLink.warning].filter(Boolean).join(' ') || undefined,
+    warning: [result.warning, chainLink.warning, format === 'legacy-browser-1.0'
+      ? 'Historical website format: public_key is outside the signed payload. Not draft-03 conformance.' : null].filter(Boolean).join(' ') || undefined,
   };
 }
 

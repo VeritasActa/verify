@@ -1,3 +1,14 @@
+## 0.10.24: Shared browser verification and public release contract
+
+- Browser bundle built from the CLI detector, canonicalizer and Ed25519 receipt engine.
+- Current protect-mcp envelope parity, external-key-only browser checks, and explicit unsupported outcomes.
+- Versioned historical website receipt verification, without elevating unsigned key metadata or claiming draft-03 conformance.
+- Duplicate-member JSON rejection and bounded input parsing in browser and CLI.
+- Shared release/status manifest; verification-first docs; corrected self-check and failure semantics.
+- Regression coverage for wrong/missing keys, mutation, legacy receipts, malformed input and bundle parity.
+
+No automatic trust installation, changes to patent terms, or Internet-Draft resubmission.
+
 ## 0.10.23: Chain explore reads section 6.7 links
 
 - `verify chain explore` now follows draft-farley-acta-signed-receipts-03 §6.7 chains. It looked ancestors up by an unprefixed base64url SHA-256 of each receipt, a form no revision of the draft defines, so it never found the ancestor named by a `sha256:` link and reported every conformant chain as broken at its first link. It now indexes each receipt by the hex SHA-256 of the JCS of the whole receipt, signature included, and reads each link by the rules the receipt verifier applies since 0.10.22. A link in the bare 64-character form of earlier revisions resolves too, and so does a payload-only link from an ancestor that cites -02 or earlier, as `--replay-chain` allows.

@@ -34,7 +34,7 @@ jobs:
         run: node -e "const p=require('./package.json');if(p.version!==process.env.RELEASE_VERSION)throw Error('Requested version differs from source');"
       - run: npm ci
       - run: npm test
-      - run: npm run check:sigil && npm run self-check && npm run test:conformance
+      - run: npm run check:browser && npm run check:sigil && npm run self-check && npm run test:conformance
       - name: Pack the checked source
         run: npm pack --json > packed.json
       - name: Verify a clean installation
