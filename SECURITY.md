@@ -4,7 +4,8 @@
 
 | Version | Status         | Support through |
 |---------|----------------|-----------------|
-| 0.9.x   | Current        | Next major      |
+| 0.10.x  | Current        | Next major      |
+| 0.9.x   | Previous line  | Upgrade to the current release for current-format fixes. |
 | < 0.9   | End of life    | Upgrade. 0.9.6 pins the chain link to draft-farley-acta-signed-receipts-03 section 6.7. |
 
 Receipts verified with an EOL version should be re-verified with a
