@@ -1,6 +1,6 @@
 {
-  "version": "0.10.25",
-  "sha256": "a4bd602beb262f98a704c45557b0a980c6512efb6c36e00ff89becbd08a6c55a",
+  "version": "0.10.26",
+  "sha256": "97995c5829423b959fd1f9939608310b8b4057b7996efc2425269ff7d830392c",
   "entry": "src/browser.js",
   "engine": "src/engines/ed25519-receipt.js"
 }

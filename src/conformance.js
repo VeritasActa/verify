@@ -5,7 +5,7 @@
 export function detectTier(input) {
   const features = [], declaredFeatures = [];
   const p = input.payloadFields || {};
-  if (p.previousReceiptHash !== undefined) declaredFeatures.push('chain-linkage');
+  if (p.previousReceiptHash !== undefined && input.chainVerified !== true) declaredFeatures.push('chain-linkage');
   if (p.attestation_mode) declaredFeatures.push(`attestation:${p.attestation_mode}`);
   if (p.anchor_uri) declaredFeatures.push('anchor-uri');
   if (p.holder_binding) declaredFeatures.push('holder-binding');

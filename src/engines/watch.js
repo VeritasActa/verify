@@ -1,5 +1,5 @@
 /**
- * @veritasacta/verify — receipt watcher + webhook dispatcher.
+ * @veritasacta/verify: receipt watcher + webhook dispatcher.
  *
  * Watches a receipt directory in real time. On each new receipt, runs
  * a configurable set of rules and, if any rule fires, POSTs a JSON
@@ -78,7 +78,7 @@ export function evaluateRules(receipt, rules, now = new Date()) {
         break;
       }
       case 'chain_break': {
-        // Presence-only signal — chain break detection is typically
+        // Presence-only signal: chain break detection is typically
         // upstream of the watcher; this rule fires when a chain
         // explorer has marked this receipt.
         if (p.link_valid === false || p.chain_break === true) {
@@ -138,7 +138,7 @@ export function formatWebhookPayload(fired, receipt, format = 'generic') {
   };
   if (format === 'slack') {
     return {
-      text: `:rotating_light: Veritas Acta alert — ${fired.message}`,
+      text: `:rotating_light: Veritas Acta alert: ${fired.message}`,
       blocks: [
         {
           type: 'section',
@@ -155,7 +155,7 @@ export function formatWebhookPayload(fired, receipt, format = 'generic') {
   }
   if (format === 'discord') {
     return {
-      content: `🚨 **Veritas Acta alert** — ${fired.rule_id}: ${fired.message}`,
+      content: `🚨 **Veritas Acta alert** (${fired.rule_id}): ${fired.message}`,
       embeds: [
         {
           title: fired.rule_id,

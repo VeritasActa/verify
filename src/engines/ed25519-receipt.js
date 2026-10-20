@@ -20,7 +20,7 @@
  *   - RFC 8032 (EdDSA / Ed25519)
  *   - RFC 8785 (JCS)
  *   - AIP-0001 (receipt format, ASCII-only keys)
- *   - AIP-0002 (selective disclosure — verified in separate engine)
+ *   - AIP-0002 (selective disclosure, verified in separate engine)
  *   - draft-farley-acta-signed-receipts-03
  *
  * @module verify-cli/src/engines/ed25519-receipt
@@ -32,6 +32,7 @@ import { utf8ToBytes } from '@noble/hashes/utils';
 import { canonicalize, canonicalHash, legacyCanonicalize } from '../util/canonical.js';
 import { hexToBytes, bytesToHex } from '../util/hex.js';
 import { checkConnectorAction } from './connector-action.js';
+import { exitCodeFor } from '../errors.js';
 
 const EMBEDDED_KEY_FIELDS = ['public_key', 'verification_key', 'verification_jwk'];
 
@@ -71,6 +72,39 @@ export function checkChainLinkSyntax(signed) {
   }
   return { form, warning };
 }
+
+/**
+ * The checks one receipt can be put through, in the order a result names them. A failure reported is the first in
+ * this order, and so is a check that could not run when none failed.
+ */
+export const CHECK_ORDER = Object.freeze(['signing_input', 'signature', 'chain_link', 'connector', 'key_window', 'previous']);
+
+/**
+ * Combine the checks a verification made into one outcome, as §5.3 of the -04 editor's copy (VeritasActa/drafts) has it: invalid if any check ran and failed,
+ * even when another could not run; undecidable if none failed and at least one could not run; valid only when every
+ * check that applies ran and passed. A check whose result is anything else (not_run, absent, not_established) does
+ * not move the outcome: it did not apply, or it was not reached because of a result already counted.
+ *
+ * @param {Record<string, {result: string, code?: string}>} checks
+ * @returns {{ valid: boolean, outcome: 'valid'|'invalid'|'undecidable', error?: string, check?: string }}
+ */
+export function combineChecks(checks) {
+  const ran = CHECK_ORDER.filter((name) => checks[name]).map((name) => [name, checks[name]]);
+  const failed = ran.find(([, c]) => c.result === 'fail');
+  if (failed) return { valid: false, outcome: 'invalid', error: failed[1].code, check: failed[0] };
+  const open = ran.find(([, c]) => c.result === 'undecidable');
+  if (open) return { valid: false, outcome: 'undecidable', error: open[1].code, check: open[0] };
+  return { valid: true, outcome: 'valid' };
+}
+
+/** The chain-link syntax result as a check: absent when there is no link (or a null one, warned), else pass or not. */
+function chainLinkCheck(syntax) {
+  if (syntax.error) return { result: syntax.error === 'unsupported_chain_hash_algorithm' ? 'undecidable' : 'fail', code: syntax.error };
+  return { result: syntax.form && syntax.form !== 'null' ? 'pass' : 'absent' };
+}
+
+/** A result that is not valid, as a check: failed when the registry classes its code as tampering, else undecidable. */
+const signatureCheck = (code) => ({ result: exitCodeFor(code) === 1 ? 'fail' : 'undecidable', code });
 
 /**
  * @typedef {Object} VerifyReceiptOptions
@@ -128,31 +162,29 @@ export async function verifyReceipt(input, detectedMode, opts = {}) {
     format = 'v1';
   }
 
+  // Draft §6.7: the syntax of the link is a property of the bytes, so it is checked on every receipt, whatever else can
+  // or cannot be checked; combineChecks decides what it means beside the rest.
+  const chainLink = checkChainLinkSyntax(signedPayload);
+  const linkCheck = chainLinkCheck(chainLink);
+  // An outcome reached before the signature could be checked, with the link's syntax beside it.
+  const early = (signature, fields, signingInput = { result: 'pass' }) => {
+    const checks = { signing_input: signingInput, signature, chain_link: linkCheck };
+    const combined = combineChecks(checks);
+    return {
+      valid: false, error: combined.error, outcome: combined.outcome, checks, format, kid, issuer, algorithm, ...fields,
+      chainLink: chainLink.form, ...(chainLink.warning ? { warning: chainLink.warning } : {}),
+    };
+  };
+
   // Draft §6.6: the object canonicalized never carries a signature member, not even as null or the empty string. A
   // signature over such bytes can still verify, so the receipt is refused before the signature is checked.
   if (signedPayload && typeof signedPayload === 'object' && Object.hasOwn(signedPayload, 'signature')) {
-    return {
-      valid: false,
-      error: 'signature_in_signing_input',
-      format,
-      type: signedPayload.type,
-      kid,
-      issuer,
-      algorithm,
-    };
+    return early({ result: 'not_run' }, { type: signedPayload.type }, { result: 'fail', code: 'signature_in_signing_input' });
   }
 
   // Algorithm agility: detect hybrid post-quantum variants early.
   if (typeof algorithm === 'string' && algorithm.toLowerCase().includes('ml-dsa')) {
-    return {
-      valid: false,
-      error: 'unsupported_algorithm',
-      format,
-      type: input.type || input.payload?.type,
-      kid,
-      issuer,
-      algorithm,
-    };
+    return early(signatureCheck('unsupported_algorithm'), { type: input.type || input.payload?.type });
   }
 
   // Key resolution with embedded-key rejection.
@@ -186,29 +218,13 @@ export async function verifyReceipt(input, detectedMode, opts = {}) {
           keySource = 'embedded-deprecated';
         }
       } else {
-        return {
-          valid: false,
-          error: 'embedded_key_rejected',
-          format,
-          type: payload.type,
-          kid,
-          issuer,
-          algorithm,
-        };
+        return early(signatureCheck('embedded_key_rejected'), { type: payload.type });
       }
     }
   }
 
   if (!publicKey) {
-    return {
-      valid: false,
-      error: 'no_public_key',
-      format,
-      type: input.type || input.payload?.type,
-      kid,
-      issuer,
-      algorithm,
-    };
+    return early(signatureCheck('no_public_key'), { type: input.type || input.payload?.type });
   }
 
   // Verify the actual wire preimage directly. The older artifacts dependency
@@ -234,7 +250,7 @@ export async function verifyReceipt(input, detectedMode, opts = {}) {
       }
     }
   } catch (e) {
-    return { valid: false, error: 'malformed_encoding', format, kid, issuer, algorithm, detail: e.message };
+    return early(signatureCheck('malformed_encoding'), { detail: e.message });
   }
 
   const payload = input.payload || input;
@@ -270,20 +286,26 @@ export async function verifyReceipt(input, detectedMode, opts = {}) {
     }
   }
 
-  // Draft §6.7, checked once the signature holds, so a tampered receipt still reports invalid_signature.
-  const chainLink = checkChainLinkSyntax(signedPayload);
-  if (chainLink.error && result.valid) {
-    result = { ...result, valid: false };
-    normalizedError = chainLink.error;
+  // The checks combine as -04 §5.3 has them (combineChecks): the link's syntax counts whatever the signature's
+  // result, and the first failure in CHECK_ORDER is the one reported, so a tampered receipt still reports
+  // invalid_signature. The connector-action profile is checked once the receipt's own checks pass.
+  const checks = {
+    signing_input: { result: 'pass' },
+    signature: result.valid ? { result: 'pass' } : signatureCheck(normalizedError),
+    chain_link: linkCheck,
+  };
+  if (connectorAction) {
+    checks.connector = !combineChecks(checks).valid ? { result: 'not_run' }
+      : connectorAction.valid ? { result: 'pass' }
+        : signatureCheck(connectorAction.platform_signature === 'invalid' ? 'connector_context_signature_invalid' : 'connector_schema_invalid');
   }
-
-  if (connectorAction && !connectorAction.valid && result.valid) {
-    result = { ...result, valid: false };
-    normalizedError = connectorAction.platform_signature === 'invalid' ? 'connector_context_signature_invalid' : 'connector_schema_invalid';
-  }
+  const combined = combineChecks(checks);
+  if (!combined.valid) normalizedError = combined.error;
 
   return {
-    valid: Boolean(result.valid),
+    valid: combined.valid,
+    outcome: combined.outcome,
+    checks,
     error: normalizedError,
     connectorAction,
     format,

@@ -32,9 +32,11 @@ function run(issuedAt, { window = WINDOW, extra = [], key = false } = {}) {
   return { code: p.status, out: JSON.parse(p.stdout) };
 }
 
-test('windowOf reads the JWK window and ignores keys without one', () => {
+test('windowOf reads the JWK window as written and ignores keys without one', () => {
   assert.deepEqual(windowOf({ kid: 'a', ...WINDOW }), WINDOW);
-  assert.deepEqual(windowOf({ kid: 'a', valid_until: '2026-06-01T00:00:00Z' }), { valid_from: null, valid_until: '2026-06-01T00:00:00Z' });
+  // An absent bound is left out (open on that side); a null one is kept, and cannot be applied (0.10.26).
+  assert.deepEqual(windowOf({ kid: 'a', valid_until: '2026-06-01T00:00:00Z' }), { valid_until: '2026-06-01T00:00:00Z' });
+  assert.deepEqual(windowOf({ kid: 'a', valid_from: null }), { valid_from: null });
   assert.equal(windowOf({ kid: 'a' }), null);
 });
 
@@ -94,10 +96,11 @@ test('CLI: no window in the key source reports validity as not established, and 
   assert.equal(required.out.error, 'key_window_missing');
 });
 
-test('CLI: a key pinned with --key carries no window; requiring one fails', () => {
+test('CLI: a key pinned with --key carries no window, so validity at issuance is not established; requiring one fails', () => {
   const pinned = run('2026-07-15T00:00:00Z', { key: true });
   assert.equal(pinned.code, 0);
-  assert.equal(pinned.out.keyStatus.result, 'not_applicable');
+  assert.equal(pinned.out.keyStatus.result, 'not_established');
+  assert.equal(pinned.out.checks.key_window.result, 'not_established');
   const required = run('2026-03-15T00:00:00Z', { key: true, extra: ['--require-key-window'] });
   assert.equal(required.out.error, 'key_window_missing');
 });

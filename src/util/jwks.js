@@ -76,17 +76,13 @@ async function loadJwks(source) {
 }
 
 /**
- * Fetch a JWKS endpoint and return the Ed25519 public key matching kid.
- * If kid is not supplied, returns the first Ed25519 key found.
+ * The Ed25519 key a loaded key set gives for kid, or the first Ed25519 key when no kid is given.
  *
- * @param {string} url
- * @param {string} [kid]
- * @returns {Promise<JwksResolveResult>}
+ * @returns {JwksResolveResult}
  */
-export async function resolveFromJwks(url, kid) {
+function keyFromSet(jwks, source, kid) {
   try {
-    const { jwks, source } = await loadJwks(url);
-    const keys = Array.isArray(jwks.keys) ? jwks.keys : [];
+    const keys = Array.isArray(jwks?.keys) ? jwks.keys : [];
 
     let jwk;
     if (kid) {
@@ -106,4 +102,39 @@ export async function resolveFromJwks(url, kid) {
   } catch (e) {
     return { key: null, error: `JWKS fetch error: ${e.message}` };
   }
+}
+
+/**
+ * Fetch a JWKS endpoint and return the Ed25519 public key matching kid.
+ * If kid is not supplied, returns the first Ed25519 key found.
+ *
+ * @param {string} url
+ * @param {string} [kid]
+ * @returns {Promise<JwksResolveResult>}
+ */
+export async function resolveFromJwks(url, kid) {
+  let loaded;
+  try {
+    loaded = await loadJwks(url);
+  } catch (e) {
+    return { key: null, error: `JWKS fetch error: ${e.message}` };
+  }
+  return keyFromSet(loaded.jwks, loaded.source, kid);
+}
+
+/**
+ * Load a JWKS once, from a URL or a file, and return a resolver that gives the key for each kid, with its validity
+ * window, as resolveFromJwks does for one receipt. For --replay-chain, so a file of receipts reads the key set once.
+ *
+ * @param {string} url
+ * @returns {Promise<{ error: string|null, source?: Object, resolve: ((kid?: string) => JwksResolveResult) | null }>}
+ */
+export async function loadJwksResolver(url) {
+  let loaded;
+  try {
+    loaded = await loadJwks(url);
+  } catch (e) {
+    return { error: `JWKS fetch error: ${e.message}`, resolve: null };
+  }
+  return { error: null, source: loaded.source, resolve: (kid) => keyFromSet(loaded.jwks, loaded.source, kid) };
 }

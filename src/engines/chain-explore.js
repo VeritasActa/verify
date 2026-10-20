@@ -1,5 +1,5 @@
 /**
- * @veritasacta/verify — chain explorer
+ * @veritasacta/verify: chain explorer
  *
  * Given a starting receipt (the chain tip) and a directory of receipts,
  * walk the ancestry via previousReceiptHash and produce a structured
@@ -29,6 +29,7 @@ import { createHash } from 'node:crypto';
 
 import { canonicalize } from '../util/canonical.js';
 import { checkChainLinkSyntax } from './ed25519-receipt.js';
+import { COMPATIBILITY_NOTE } from './bulk.js';
 
 /**
  * @typedef {Object} ChainExploreOptions
@@ -77,6 +78,10 @@ import { checkChainLinkSyntax } from './ed25519-receipt.js';
  *                                        links encountered.
  * @property {number} legacy_links        Payload-only links read as legacy
  *                                        links, only with allowPayloadOnlyLinks.
+ * @property {false} [conformant]         Present, and false, when a legacy
+ *                                        link was read: that reading is a
+ *                                        compatibility mode, not conformant to
+ *                                        draft §6.7.
  * @property {ChainNode[]} nodes          Tip first, root last.
  * @property {string[]} warnings
  * @property {string} [code]              The verifier's error code when a link
@@ -184,7 +189,7 @@ export async function exploreChain(opts) {
         warnings.push(
           `${at}: chain_break: previousReceiptHash ${preview(link)} is the SHA-256 of the payload alone of ${named}. ` +
             'Draft-03 §6.7 links the whole receipt, signature included, and no revision defines a payload-only link. ' +
-            '--allow-payload-only-links reads it as a legacy link.'
+            `--allow-payload-only-links reads it as a legacy link, ${COMPATIBILITY_NOTE}.`
         );
         break;
       }
@@ -193,7 +198,7 @@ export async function exploreChain(opts) {
       legacyLinks++;
       warnings.push(
         `${at}: previousReceiptHash hashes the payload alone of ${named}, read as a legacy link because ` +
-          '--allow-payload-only-links was given. A re-signed copy of that receipt would carry the same link; draft-03 §6.7 links the whole receipt.'
+          `--allow-payload-only-links was given: ${COMPATIBILITY_NOTE}. A re-signed copy of that receipt would carry the same link; draft-03 §6.7 links the whole receipt.`
       );
     }
     if (!ancestorPath) {
@@ -246,6 +251,7 @@ export async function exploreChain(opts) {
     depth,
     links_broken: linksBroken,
     legacy_links: legacyLinks,
+    ...(legacyLinks ? { conformant: false } : {}),
     nodes,
     warnings,
     ...(code ? { code } : {}),
@@ -347,7 +353,7 @@ export function renderChainTree(result, opts = {}) {
   }
 
   lines.push('');
-  lines.push(`Chain: depth=${result.depth}  links_broken=${result.links_broken}${result.legacy_links ? `  legacy_links=${result.legacy_links}` : ''}  valid=${result.valid}`);
+  lines.push(`Chain: depth=${result.depth}  links_broken=${result.links_broken}${result.legacy_links ? `  legacy_links=${result.legacy_links} (${COMPATIBILITY_NOTE})` : ''}  valid=${result.valid}`);
   lines.push('');
 
   for (let i = 0; i < result.nodes.length; i++) {
