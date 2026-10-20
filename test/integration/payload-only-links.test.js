@@ -84,15 +84,19 @@ test('cli: --allow-payload-only-links reads it as a legacy link, counted and sho
   assert.equal(json.status, 0, json.stdout);
   const report = JSON.parse(json.stdout);
   assert.equal(report.legacyLinks, 1);
-  assert.match(report.warnings[0], /^Line 2: payload-only link to line 1, read as a legacy link/);
+  // §6.7.1 of the -04 editor's copy (VeritasActa/drafts) says a verifier must not accept one, so reading it is marked as
+  // a compatibility mode (0.10.26).
+  assert.equal(report.conformant, false);
+  assert.match(report.warnings[0], /^Line 2: payload-only link to line 1, read as a legacy link because --allow-payload-only-links was given: read under a compatibility mode, not conformant to draft §6\.7/);
   const text = replay(dir, '--allow-payload-only-links');
   assert.equal(text.status, 0);
-  assert.match(text.stdout, /Legacy links: 1 \(payload-only, read because --allow-payload-only-links was given\)/);
+  assert.match(text.stdout, /Legacy links: 1 \(payload-only, read because --allow-payload-only-links was given: read under a compatibility mode, not conformant to draft §6\.7\)/);
   assert.match(text.stdout, /Warnings:\n\s+• Line 2: payload-only link to line 1/);
   const walked = explore(dir, '--allow-payload-only-links');
   assert.equal(walked.status, 0);
-  assert.match(walked.stdout, /legacy_links=1/);
-  assert.match(walked.stdout, /read as a legacy link because --allow-payload-only-links was given/);
+  assert.match(walked.stdout, /legacy_links=1 \(read under a compatibility mode, not conformant to draft §6\.7\)/);
+  assert.match(walked.stdout, /read as a legacy link because --allow-payload-only-links was given: read under a compatibility mode/);
+  assert.equal(JSON.parse(explore(dir, '--allow-payload-only-links', '--json').stdout).conformant, false);
   const html = replay(dir, '--allow-payload-only-links', '--audit-report');
   assert.equal(html.status, 0);
   assert.match(html.stdout, /<th>Legacy links<\/th><td>1 payload-only/);
@@ -137,12 +141,14 @@ test('cli: --strict also disables the legacy canonicalization on the replay path
   const dir = mkdtempSync(join(tmpdir(), 'acta-payload-only-'));
   const legacy = envelope({ ...fields(1), nested: { '2': 2, '10': 10 } }, legacyCanonicalize);
   writeFileSync(join(dir, 'receipts.jsonl'), `${JSON.stringify(legacy)}\n`);
-  assert.equal(replay(dir).status, 1);
+  assert.equal(replay(dir).status, 2);
   const allowed = replay(dir, '--allow-legacy-canonicalization', '--json');
   assert.equal(allowed.status, 0, allowed.stdout);
   assert.match(JSON.parse(allowed.stdout).warnings[0], /not RFC 8785/);
   const strict = replay(dir, '--allow-legacy-canonicalization', '--strict', '--json');
-  assert.equal(strict.status, 1);
+  // A historical encoding is undecidable, as on a single file, and replay exits 2 for it from 0.10.26 (-04 §5.3).
+  assert.equal(strict.status, 2);
+  assert.equal(JSON.parse(strict.stdout).outcome, 'undecidable');
   assert.deepEqual(JSON.parse(strict.stdout).errors, ['Line 1: legacy_non_jcs_signature']);
 });
 
@@ -153,7 +159,9 @@ test('cli: --strict also refuses an embedded key on the replay path, as on a sin
   const file = join(dir, 'receipts.jsonl');
   assert.equal(run(['--replay-chain', file, '--allow-embedded-key']).status, 0);
   const strict = run(['--replay-chain', file, '--allow-embedded-key', '--strict', '--json']);
-  assert.equal(strict.status, 1);
+  // An embedded key refused leaves the signature unchecked: undecidable, exit 2 from 0.10.26 (-04 §5.3).
+  assert.equal(strict.status, 2);
+  assert.equal(JSON.parse(strict.stdout).outcome, 'undecidable');
   assert.deepEqual(JSON.parse(strict.stdout).errors, ['Line 1: embedded_key_rejected']);
   assert.match(strict.stderr, /--strict overrides --allow-embedded-key/);
 });

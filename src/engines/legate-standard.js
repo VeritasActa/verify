@@ -105,7 +105,7 @@ export async function verifyLegateStandard(input, opts = {}) {
       summary: input.summary,
       signer: input.signer ? { name: input.signer.name, key_id: input.signer.key_id, verification_key: input.signer.verification_key, demo: m.isDemoRunSignerKey(input.signer.verification_key) } : undefined,
       checks: checksOf(v.checks),
-      chain: v.chain ? { count: v.chain.count, all_signatures_valid: v.chain.all_signatures_valid, chain_unbroken: v.chain.chain_unbroken, allow: v.chain.summary.allow, deny: v.chain.summary.deny } : null,
+      chain: v.chain ? { count: v.chain.count, all_signatures_valid: v.chain.all_signatures_valid, chain_unbroken: v.chain.chain_unbroken, chain_outcome: v.chain.chain_outcome, allow: v.chain.summary.allow, deny: v.chain.summary.deny } : null,
       in_plain_words: v.cryptographically_valid ? m.runManifestReadback(input) : undefined,
       establishes: v.establishes,
       not_established: v.not_established,

@@ -21,7 +21,8 @@ function runtimeJavascriptFiles(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const absolute = join(directory, entry.name);
     if (entry.isDirectory()) return runtimeJavascriptFiles(absolute);
-    return entry.isFile() && entry.name.endsWith('.js') ? [absolute] : [];
+    // An ES module bundle (.mjs, such as the bundled verifier core) is executable code as much as a .js file.
+    return entry.isFile() && (entry.name.endsWith('.js') || entry.name.endsWith('.mjs')) ? [absolute] : [];
   });
 }
 

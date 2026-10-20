@@ -1,5 +1,5 @@
 /**
- * Init wizard — framework auto-detection + zero-config onboarding.
+ * Init wizard: framework auto-detection + zero-config onboarding.
  *
  * `npx @veritasacta/verify init` inspects the current directory,
  * detects the agent framework in use, generates Ed25519 signing keys,
@@ -325,7 +325,7 @@ export async function runInit(opts = {}) {
 
   // Write gitignore entry
   const gitignorePath = join(cwd, '.gitignore');
-  const gitignoreEntry = '\n# Veritas Acta — do NOT commit signing keys\n.veritasacta/attester.json\n.veritasacta/receipts.jsonl\n.veritasacta/audit.jsonl\n';
+  const gitignoreEntry = '\n# Veritas Acta: do NOT commit signing keys\n.veritasacta/attester.json\n.veritasacta/receipts.jsonl\n.veritasacta/audit.jsonl\n';
   try {
     const existing = existsSync(gitignorePath) ? readFileSync(gitignorePath, 'utf-8') : '';
     if (!existing.includes('.veritasacta/attester.json')) {
@@ -369,7 +369,7 @@ export function buildNextSteps(detection, config) {
         'Setup:',
         '  1. npx protect-mcp init-hooks',
         '  2. Your .claude/settings.json now wires receipt-signing hooks.',
-        '  3. Open Claude Code in this project — tool calls produce receipts in .veritasacta/receipts/.',
+        '  3. Open Claude Code in this project: tool calls produce receipts in .veritasacta/receipts/.',
         '',
         'Verify:',
         '  npx @veritasacta/verify .veritasacta/receipts/*.json --key ' + (config.signer.pubkey || '<pubkey>'),

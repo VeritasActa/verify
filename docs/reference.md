@@ -84,7 +84,7 @@ verify chain explore ./receipts/tip.json
 verify chain explore ./receipts/tip.json --search-dir ./audit/ --max-depth 200 --json
 ```
 
-Links are read by the rules of draft §6.7 that the receipt verifier applies: `sha256:` and the lowercase hex SHA-256 of the JCS of the whole previous receipt, or the bare digest of earlier revisions. A malformed link stops the walk with `malformed_chain_link` (exit 1), and one naming another algorithm with `unsupported_chain_hash_algorithm` (exit 2). A link over the ancestor's payload alone stops it with `chain_break` (exit 1), whatever the ancestor's `spec` says; `--allow-payload-only-links` reads one as a legacy link instead (see [0.10.25](#chain-links-over-the-whole-receipt-01025)). Before 0.10.23 the explorer looked ancestors up by an unprefixed base64url hash, so it did not walk §6.7 chains.
+Links are read by the rules of draft §6.7 that the receipt verifier applies: `sha256:` and the lowercase hex SHA-256 of the JCS of the whole previous receipt, or the bare digest of earlier revisions. A malformed link stops the walk with `malformed_chain_link` (exit 1), and one naming another algorithm with `unsupported_chain_hash_algorithm` (exit 2). A link over the ancestor's payload alone stops it with `chain_break` (exit 1), whatever the ancestor's `spec` says; `--allow-payload-only-links` reads one as a legacy link instead, a compatibility mode that is not conformant to draft §6.7 (see [0.10.25](#chain-links-over-the-whole-receipt-01025)). Before 0.10.23 the explorer looked ancestors up by an unprefixed base64url hash, so it did not walk §6.7 chains.
 
 ### ScopeBlind Gate receipts
 
@@ -202,8 +202,9 @@ One daemon, N agents, zero SDK embedding.
 Every user who runs `--self-check` can emit a **local-integrity attestation**:
 a self-signed statement that the declared monitored source on that machine
 matched the bundled public commitment. The monitored runtime includes
-`cli.js` and every shipped executable JavaScript module under `src/`; a release
-test fails if a module is omitted. This does not authenticate the package
+`cli.js` and every shipped executable JavaScript module under `src/`, the
+bundled verifier core `src/engines/legate-core.mjs` included from 0.10.26; a
+release test fails if a module is omitted. This does not authenticate the package
 publisher, prove an independently canonical release, or establish trust in
 the attester unless the recipient separately pins the commitment and attester
 key.
@@ -259,8 +260,9 @@ fingerprint determine whether a recipient should trust it.
 | `--fips` | Enforce FIPS-approved algorithms only |
 | `--strict` | Disable all deprecated fallbacks |
 | `--tier N` | Require minimum conformance tier (1-5) |
-| `--replay-chain <file>` | Verify every receipt in a JSONL file in turn, and each §6.7 link to the receipt before it; reports the chains the file holds |
-| `--allow-payload-only-links` | Read a chain link over the previous receipt's payload alone as a legacy link, counted and warned (disabled by `--strict`) |
+| `--replay-chain <file>` | Verify every receipt in a JSONL file in turn, and each §6.7 link to the receipt before it; reports the chains the file holds. Keys come from `--key`, or from `--jwks` by each receipt's `kid`. Exits 1 if a line is invalid or a link breaks, else 2 if a line could not be checked, else 0 |
+| `--allow-payload-only-links` | Read a chain link over the previous receipt's payload alone as a legacy link, counted and warned: a compatibility mode for 0.9.3-era chains, not conformant to draft §6.7, marked `conformant: false` (disabled by `--strict`) |
+| `--previous <file>` | Check one receipt against the receipt it follows: its link must be that receipt's §6.7 hash, and an absent or `null` link fails too (`chain_break`, exit 1) |
 | `--diff <other>` | Structural diff between two receipts |
 
 ## Live-context verification (Sigil claim 2)
@@ -386,6 +388,32 @@ Apache-2.0.
 
 Patent-adjacent; covered by the Apache-2.0 patent grant (§3). See [PATENTS.md](.././PATENTS.md).
 
+### A receipt and the one before it (0.10.26)
+
+`--previous <file>` checks one receipt against the receipt the caller says it follows. Its `previousReceiptHash` must be the draft §6.7 link of that receipt: `sha256:` and the lowercase hex SHA-256 of the JCS of the whole receipt, signature included, or the bare hex of earlier revisions. Anything else is a `chain_break` (exit 1), and the result's `previous` member says which: `absent` (the receipt has no `previousReceiptHash`), `null`, `mismatch` (it names another receipt) or `payload-only` (it hashes that receipt's payload alone). Supplying the predecessor asserts the succession, so a receipt that names no predecessor does not follow the one supplied. `--replay-chain` reads the order from the file instead and asserts none, so there a receipt with no link still starts a new chain (§2.2).
+
+```bash
+verify receipt.json --jwks acta-keys.json --previous before.json --json
+```
+
+One run checks the signature, the key window and the link, each whatever the others found; the first failure in that order is the one reported, so a tampered receipt still reports `invalid_signature`. A payload-only link is refused unless `--allow-payload-only-links` is given, and `--strict` disables that flag. A link in no §6.7 form is `malformed_chain_link` (exit 1), and one naming another algorithm is `unsupported_chain_hash_algorithm` (exit 2), as without `--previous`. The receipt given with `--previous` is hashed, not verified: verify it with its own invocation. The flag applies to a single receipt, and is refused (exit 2) with `--replay-chain`, `--bundle`, `--diff`, a subcommand, or a file that is not an Ed25519 receipt.
+
+In the JSON result, `previous` carries `file`, `expected` (the §6.7 link of the receipt supplied), `link` (as written), `result` (`linked`, `legacy-payload`, `absent`, `null`, `mismatch`, `payload-only`, `malformed` or `unsupported`), `form` (`sha256` or `legacy-bare-hex`, when the link has one of those forms) and `detail`. A link `--previous` matched is reported as a verified feature (`chain-linkage`) rather than a declared one. A link naming another hash algorithm is undecidable (exit 2), as §6.7.1 of the -04 editor's copy (VeritasActa/drafts) has it, and a payload-only link read under `--allow-payload-only-links` sets `conformant: false`.
+
+### Three outcomes (0.10.26)
+
+A verification has one of three outcomes, as §5.3 of the -04 editor's copy (VeritasActa/drafts) has them, and the exit status tells them apart: valid (exit 0), invalid (exit 1), undecidable (exit 2). A single receipt goes through several checks: the signing input (§6.6), the signature, the link's syntax (§6.7), the key window (§5.5 of the -04 editor's copy, §9.2 of -03) and, with `--previous`, the link against the receipt supplied. Each runs whatever the others found, except that a signature is not checked over a signing input that carries a signature member, and they combine this way: invalid if any check ran and failed, even when another could not run; undecidable if none failed and at least one could not run (no key, an unsupported algorithm, a link naming another hash algorithm, a window that cannot be applied); valid only when every check that applies passed. The code reported is the first failure in that order, or the first check that could not run when none failed. So a receipt whose link names another algorithm and whose `issued_at` falls outside its key's window is invalid with `key_outside_validity_window`, where 0.10.25 reported it undecidable; and a receipt with a malformed link is invalid with `malformed_chain_link` even when no key was supplied, where 0.10.25 reported `no_public_key`. The JSON result carries `outcome` and `checks`, each check's `result` (`pass`, `fail`, `undecidable`, or one that moves nothing: `absent`, `not_established`, `not_run`) and its `code`. The connector-action profile is checked once the receipt's own checks pass.
+
+`--replay-chain` applies the same rule to each line, with the link to the line before it as one of the checks, and to the file: it exits 1 if any line is invalid or any link breaks, else 2 if any line could not be checked, else 0. A link naming another hash algorithm is undecided, not a break. A line that is not well-formed JSON is undecidable. The summary carries `outcome`, and `verified`, `failed` and `undecidable` count lines by outcome; `failed` used to count a line once for its link and again for its signature, and to include lines that could not be checked. The terminal names the outcome and the exit status.
+
+`--replay-chain` takes keys from `--jwks` as well as `--key`. The key set, a URL or a file, is read once; each receipt's key is the one its `kid` names, and that key's `valid_from` / `valid_until` window is applied to the receipt's `issued_at`, as for a single file. A receipt whose `kid` the key set does not have is undecidable (`jwks_fetch_failed`, naming the `kid`), and a key set that cannot be read stops the replay before anything is verified (exit 2). `--key` takes precedence over `--jwks`. Before 0.10.26 replay ignored `--jwks` and failed every line with `no_public_key`. Each line's result carries `keyStatus` and `checks`.
+
+Key windows read only RFC 3339 date-times that write their UTC offset out: `Z`, or `+hh:mm` / `-hh:mm`. Earlier releases read a time with `Date.parse`, which takes a time with no offset in the machine's own time zone, so `issued_at` `2026-05-31T23:30:00` against a window ending `2026-06-01T00:00:00Z` was inside it on a machine set to UTC and outside it on one set to New York. A time without an offset, a date alone, prose, or a day that does not exist (30 February) now makes the window undecidable (`key_window_unverifiable`, exit 2), and the detail names the value and the cause. A bound the key set writes as `null` is not a timestamp and cannot be applied; only a bound the key set leaves out leaves the window open on that side, and `keyStatus.window` now leaves such a bound out rather than writing it as `null`.
+
+A key given with `--key` comes from no key source, so nothing gives it a window: `keyStatus.result` is `not_established` (it was `not_applicable`), and the terminal says the key's validity at issuance is not established. That is not a failure, and the exit status does not change. When no key is resolved at all, the result is `not_run`.
+
+`--allow-payload-only-links` stays, for the chains the proxy and daemon of 0.9.3 and earlier wrote, but §6.7.1 of the -04 editor's copy (VeritasActa/drafts) says a verifier must not accept a payload-only link, so reading one is a compatibility mode, not conformance. Wherever a link was read that way (`--replay-chain`, `chain explore`, `--previous`), the JSON carries `conformant: false`, and the terminal summary and the warnings say the link was read under a compatibility mode, not conformant to draft §6.7. The exit status is as before.
+
 ### Chain links over the whole receipt (0.10.25)
 
 Draft §6.7 defines `previousReceiptHash` as the SHA-256 of the JCS of the whole previous receipt, signature included, and -02 §5.7 defined the same preimage. No revision defines a link over the payload alone, which would give a re-signed receipt the same link as the original. `--replay-chain` and `verify chain explore` refuse such a link with `chain_break` (exit 1), whatever the previous receipt's `spec` says. The proxy and daemon of 0.9.3 and earlier wrote payload-only links. To read one of their chains, add `--allow-payload-only-links`:
@@ -411,7 +439,7 @@ Draft §6.6 says the object canonicalized for the signature never contains a `si
 
 ### Key validity windows (0.10.20)
 
-When the JWKS gives the signing key a `valid_from` / `valid_until` window (draft §9.2), the verifier applies it to the receipt's `issued_at`. The window is `[valid_from, valid_until)`, so a receipt issued exactly at `valid_until` is outside it. A receipt outside the window fails with `key_outside_validity_window`. Every receipt result carries `keyStatus`: `inside`, `outside`, `no_window` (validity at issuance not established), `unverifiable`, or `not_applicable` for a key pinned with `--key`. Add `--require-key-window` to fail when the key source gives no window:
+When the JWKS gives the signing key a `valid_from` / `valid_until` window (draft §9.2), the verifier applies it to the receipt's `issued_at`. The window is `[valid_from, valid_until)`, so a receipt issued exactly at `valid_until` is outside it. A receipt outside the window fails with `key_outside_validity_window`. Every receipt result carries `keyStatus`: `inside`, `outside`, `no_window` (validity at issuance not established), `unverifiable`, or, from 0.10.26, `not_established` for a key pinned with `--key` (it was `not_applicable`) and `not_run` when no key was resolved. Add `--require-key-window` to fail when the key source gives no window:
 
 ```bash
 npx @veritasacta/verify receipt.json --jwks ./jwks.json --require-key-window --json

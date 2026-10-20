@@ -3,7 +3,7 @@
  *
  * Renders verification results with ANSI colors, Sigil art, and
  * conformance tier labels. Subtle ecosystem wayfinding (Protocol /
- * Managed URL lines) is included — factual, not promotional.
+ * Managed URL lines) is included: factual, not promotional.
  *
  * @module verify-cli/src/output/terminal
  * @license Apache-2.0
@@ -114,6 +114,96 @@ const WAYFINDING = `  ${dim('Protocol:')} ${dim('https://veritasacta.com')}
   ${dim('No servers were contacted.')}`;
 
 /**
+ * One line for --previous: whether the receipt follows the receipt supplied, and if not, why.
+ *
+ * @param {{ file?: string, result?: string, detail?: string } | undefined} p
+ * @returns {string|null}
+ */
+export function previousLine(p) {
+  if (!p || !p.result) return null;
+  const verdict = p.result === 'linked' ? green('follows it')
+    : p.result === 'legacy-payload' ? yellow('follows it by a legacy payload-only link')
+      : red('does not follow it');
+  return `  Previous:   ${p.file || 'the receipt supplied'}: ${verdict}. ${dim(p.detail || '')}`.trimEnd();
+}
+
+/**
+ * What the code that decided an outcome says, in the words of a headline: "INVALID: <this> (<code>)". A code not
+ * listed is shown as it is.
+ */
+const OUTCOME_PHRASES = {
+  invalid_signature: 'the signature does not verify under the key used',
+  signature_in_signing_input: 'the signing input carries a signature member',
+  malformed_chain_link: 'the chain link is malformed',
+  chain_break: 'chain link does not follow the previous receipt',
+  key_outside_validity_window: 'key outside its validity window',
+  commitment_mismatch: 'a disclosed value does not match its commitment',
+  unsupported_chain_hash_algorithm: 'the chain link names a hash algorithm other than SHA-256',
+  no_public_key: 'no key was given to check the signature',
+  embedded_key_rejected: 'the only key on offer is inside the receipt',
+  jwks_fetch_failed: 'the key set gives no key for this receipt',
+  key_window_unverifiable: 'the key window cannot be applied',
+  key_window_missing: 'the key source gives the key no validity window',
+  unsupported_algorithm: 'the signature algorithm is not supported',
+  legacy_non_jcs_signature: 'the signature matches only a historical non-JCS encoding',
+  malformed_encoding: 'the signature or the key cannot be decoded',
+  missing_signature: 'the receipt carries no signature',
+  connector_schema_invalid: 'the connector-action grant is not valid',
+  connector_context_signature_invalid: 'the connector context signature does not verify',
+  context_requirement_unmet: 'a live-context requirement is not met',
+  tier_not_achieved: 'the required conformance tier is not reached',
+  malformed_json: 'the line is not JSON',
+};
+const outcomePhrase = (code) => (code ? `${OUTCOME_PHRASES[code] || code} (${code})` : 'not verified');
+const outcomeMark = (outcome) => (outcome === 'valid' ? { icon: green('✓'), word: green('VALID') }
+  : outcome === 'invalid' ? { icon: red('✗'), word: red('INVALID') } : { icon: yellow('?'), word: yellow('NOT CHECKED') });
+
+/**
+ * The headline of a receipt result: its outcome and, when that is not valid, the check that decided it, such as
+ * "INVALID: key outside its validity window (key_outside_validity_window)". It never says the signature is invalid
+ * when another check failed; signatureLine says what the signature check found.
+ *
+ * @param {{ outcome: string, error?: string }} result
+ * @returns {string}
+ */
+export function outcomeHeadline(result) {
+  const { icon, word } = outcomeMark(result.outcome);
+  return `${icon} ${word}: ${result.outcome === 'valid' ? 'every check that applies passed' : outcomePhrase(result.error)}`;
+}
+
+/**
+ * The Signature line of a receipt result: what the signature check itself found, whatever decided the outcome.
+ *
+ * @param {Record<string, {result: string, code?: string}> | undefined} checks
+ * @returns {string|null}
+ */
+export function signatureLine(checks) {
+  const s = checks?.signature;
+  if (!s) return null;
+  const text = s.result === 'pass' ? green('valid') : s.result === 'fail' ? red('invalid')
+    : s.result === 'not_run' ? dim('not checked (the signing input was refused first)') : yellow(`not checked (${s.code})`);
+  return `  Signature:  ${text}`;
+}
+
+/**
+ * The headline of a --replay-chain result: the file's outcome and, when that is not valid, the first line with that
+ * outcome and the code that decided it, such as "INVALID: line 2: chain link does not follow the previous receipt
+ * (chain_break)".
+ *
+ * @param {{ outcome: string, verified: number, chains: number, receipts: Array<{index: number, outcome?: string, error?: string}> }} result
+ * @returns {string}
+ */
+export function replayHeadline(result) {
+  const { icon, word } = outcomeMark(result.outcome);
+  if (result.outcome === 'valid') {
+    const n = result.verified;
+    return `${icon} ${word}: ${n} receipt${n === 1 ? '' : 's'} in ${result.chains} chain${result.chains === 1 ? '' : 's'}, every check passed`;
+  }
+  const first = (result.receipts || []).find((r) => r.outcome === result.outcome);
+  return `${icon} ${word}: ${first ? `line ${first.index + 1}: ${outcomePhrase(first.error)}` : 'a link breaks'}`;
+}
+
+/**
  * Format a single-receipt verification result.
  *
  * @param {Object} result from any engine, normalized by cli.js
@@ -128,8 +218,14 @@ export function formatReceiptResult(result, opts = {}) {
     lines.push(renderTerminalSigil(result.publicKey));
   }
 
-  const { icon, status } = verdictWord(result);
-  lines.push(`\n${icon} Signature: ${status}`);
+  // A receipt's checks name what decided its outcome (0.10.26); a result without them keeps the signature verdict.
+  if (result.checks && result.outcome) {
+    lines.push(`\n${outcomeHeadline(result)}`);
+    if (signatureLine(result.checks)) lines.push(signatureLine(result.checks));
+  } else {
+    const { icon, status } = verdictWord(result);
+    lines.push(`\n${icon} Signature: ${status}`);
+  }
 
   if (result.format) lines.push(`  Format:     ${result.format}${result.specVersion ? ` (${result.specVersion})` : ''}`);
   if (result.modeLabel) lines.push(`  Mode:       ${result.modeLabel}`);
@@ -139,6 +235,7 @@ export function formatReceiptResult(result, opts = {}) {
   if (result.issuer) lines.push(`  Issuer:     ${result.issuer}`);
   if (result.keySource) lines.push(`  Key:        ${result.keySource}`);
   if (keyWindowLine(result.keyStatus)) lines.push(keyWindowLine(result.keyStatus));
+  if (previousLine(result.previous)) lines.push(previousLine(result.previous));
   if (result.publicKey) lines.push(trustTierLine(result));
   if (result.tier) lines.push(`  Tier:       ${result.tier.label} ${dim(`(${result.tier.features.join(', ')})`)}`);
   if (result.tier?.declaredFeatures?.length) lines.push(`  Declared:   ${result.tier.declaredFeatures.join(', ')} (not independently verified)`);
@@ -242,7 +339,7 @@ export function formatRunManifestResult(result, opts = {}) {
   if (result.model_attestation) lines.push(`  Model route: ${result.model_attestation.verified ? green(`attested: ${result.model_attestation.calls} calls signed inside ${result.model_attestation.provider}'s TEE for ${result.model_attestation.model}, ${result.model_attestation.reports} report(s) verified to Intel's root`) : yellow(`attested by ${result.model_attestation.provider} (${result.model_attestation.calls} signed calls); add --model-calls and --model-attestation to verify`)}`);
   if (result.signer) lines.push(`  Signer:     ${result.signer.name} (${result.signer.key_id})${result.signer.demo ? dim(' demonstration key') : ''}`);
   if (result.summary) lines.push(`  Result:     ${result.summary.passed} of ${result.summary.tasks} passed; ${result.summary.calls} governed call(s), ${result.summary.refused} refused`);
-  if (result.chain) lines.push(`  Receipts:   ${result.chain.count} (${result.chain.allow} allowed, ${result.chain.deny} refused), ${result.chain.all_signatures_valid && result.chain.chain_unbroken ? green('chain intact') : red('chain not intact')}`);
+  if (result.chain) lines.push(`  Receipts:   ${result.chain.count} (${result.chain.allow} allowed, ${result.chain.deny} refused), ${result.chain.all_signatures_valid && result.chain.chain_unbroken ? green('chain intact') : result.chain.all_signatures_valid && result.chain.chain_outcome === 'undecidable' ? yellow('chain not decided (a link names another hash algorithm)') : red('chain not intact')}`);
   if (Array.isArray(result.checks) && result.checks.length) {
     lines.push(`  ${bold('Checks:')}`);
     for (const c of result.checks) lines.push(`    ${c.ok ? green('✓') : red('✗')} ${c.label}: ${c.detail}`);
@@ -501,7 +598,7 @@ export function formatGovernedReceiptResult(result, opts = {}) {
 
   if (result.error && !result.valid) {
     lines.push(`  Error:      ${red(result.error)}`);
-    if (result.error === 'invalid_signature') lines.push(`  Detail:     ${yellow('the signed bytes were altered or the key does not match — this receipt was tampered with')}`);
+    if (result.error === 'invalid_signature') lines.push(`  Detail:     ${yellow('the signed bytes were altered or the key does not match: this receipt was tampered with')}`);
     else if (result.detail) lines.push(`  Detail:     ${yellow(result.detail)}`);
     if (result.expectedKey) lines.push(`  Expected:   ${yellow(result.expectedKey)} ${dim('(--key)')}`);
   }
@@ -672,7 +769,7 @@ export function formatMacroTrackRecordResult(result, opts = {}) {
   if (result.exportedAt) lines.push(`  Exported:    ${dim(result.exportedAt)}`);
   if (result.period) lines.push(`  Period:      ${dim(`${result.period.from} → ${result.period.to}`)}`);
   if (result.custody) lines.push(`  Custody:     ${dim(result.custody)}`);
-  lines.push(`  Identity:    ${result.signerPinned ? green('pinned expected key') : yellow('embedded key only — integrity, not operator identity')}`);
+  lines.push(`  Identity:    ${result.signerPinned ? green('pinned expected key') : yellow('embedded key only: integrity, not operator identity')}`);
   if (result.sequence) lines.push(`  Sequence:    ${result.sequence}`);
   lines.push(`  Snapshots:   ${result.snapshotCount}`);
   lines.push(`  Journal:     ${result.journalCount}`);
@@ -752,10 +849,10 @@ export function formatSelfCheckResult(r) {
   const lines = [];
   if (r.canonical) {
     lines.push('');
-    lines.push(`  ${green('✓')} Monitored verifier source matches bundled commitment — ${green(r.name || 'unnamed')}`);
-    lines.push(`    Sigil:    ${teal(r.fingerprint || '—')}`);
-    lines.push(`    Version:  ${r.version || '—'}`);
-    lines.push(`    Package:  ${r.pkg || '—'}`);
+    lines.push(`  ${green('✓')} Monitored verifier source matches bundled commitment: ${green(r.name || 'unnamed')}`);
+    lines.push(`    Sigil:    ${teal(r.fingerprint || '-')}`);
+    lines.push(`    Version:  ${r.version || '-'}`);
+    lines.push(`    Package:  ${r.pkg || '-'}`);
     lines.push(`    Source:   ${dim((r.installedSourceHash || '').slice(0, 16) + '...')} ${green('matches commitment')}`);
     lines.push(`    Policy:   ${green('matches commitment')}`);
     lines.push(`    Sigil:    ${green('matches commitment')}`);
@@ -769,8 +866,8 @@ export function formatSelfCheckResult(r) {
       lines.push(`      Installed: ${(r.installedSourceHash || '').slice(0, 32)}...`);
       lines.push(`      Expected:  ${(r.committedSourceHash || '').slice(0, 32)}...`);
     }
-    if (!r.policyMatches) lines.push(`    Policy:   ${red('MISMATCH')} — sigil.json may have been tampered with`);
-    if (!r.sigilMatches) lines.push(`    Sigil:    ${red('MISMATCH')} — the commitment chain is broken`);
+    if (!r.policyMatches) lines.push(`    Policy:   ${red('MISMATCH')}: sigil.json may have been tampered with`);
+    if (!r.sigilMatches) lines.push(`    Sigil:    ${red('MISMATCH')}: the commitment chain is broken`);
     lines.push('');
     lines.push(`  ${yellow('The installed bytes differ from the commitment bundled with this copy.')}`);
     lines.push(`  ${yellow('It may be a fork, a development build, or a tampered copy.')}`);

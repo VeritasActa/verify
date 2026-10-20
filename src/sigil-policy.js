@@ -23,6 +23,8 @@ export const SIGIL_MONITORED_FILES = Object.freeze([
   'src/engines/legate-proof-pack.js',
   'src/engines/legate-standard.js',
   'src/engines/repository-evidence.js',
+  // The website's verifier core, bundled: legate-standard.js and repository-evidence.js run it (0.10.26).
+  'src/engines/legate-core.mjs',
   'src/engines/trusted-context-pack.js',
   'src/engines/commitment-mode.js',
   'src/engines/connector-action.js',

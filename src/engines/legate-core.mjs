@@ -6774,7 +6774,7 @@ var CLAIMS_JSON_LIMITS = {
   max_object_members: 1e5
 };
 var textEncoder = new TextEncoder();
-var textDecoder = new TextDecoder("utf-8", { fatal: true });
+var textDecoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: false });
 function assertUnicodeScalars(value, label) {
   for (let index = 0; index < value.length; index += 1) {
     const code = value.charCodeAt(index);
@@ -8594,6 +8594,16 @@ function chainLink(receipt) {
 }
 var HEX_642 = /^[0-9a-f]{64}$/i;
 var isRecord2 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var CHAIN_LINK = /^sha256:[0-9a-f]{64}$/;
+var LEGACY_CHAIN_LINK = /^[0-9a-f]{64}$/;
+var ALGORITHM_PREFIX = /^([A-Za-z0-9][A-Za-z0-9._+-]*):/;
+function readChainLink(link) {
+  if (typeof link !== "string") return { error: "malformed_chain_link" };
+  if (CHAIN_LINK.test(link)) return { form: "sha256", hex: link.slice("sha256:".length) };
+  if (LEGACY_CHAIN_LINK.test(link)) return { form: "legacy-bare-hex", hex: link };
+  const prefix = ALGORITHM_PREFIX.exec(link);
+  return { error: prefix && prefix[1].toLowerCase() !== "sha256" ? "unsupported_chain_hash_algorithm" : "malformed_chain_link" };
+}
 function receiptPayload(receipt) {
   if (!isRecord2(receipt)) return {};
   if (isRecord2(receipt.payload) && isRecord2(receipt.signature)) return receipt.payload;
@@ -8647,16 +8657,10 @@ function resolveReceiptKey(receipt, suppliedHex) {
 }
 var str = (v) => typeof v === "string" ? v : null;
 function linkOf(receipt) {
-  const payload = receiptPayload(receipt);
-  const v = payload.previousReceiptHash ?? (isRecord2(receipt) ? receipt.previousReceiptHash : void 0);
-  return typeof v === "string" ? v : null;
-}
-function citesPre03(receipt) {
-  const spec = str(receiptPayload(receipt).spec);
-  return !spec || /-0[12]$/.test(spec);
+  const v = receiptPayload(receipt).previousReceiptHash;
+  return v === void 0 ? null : v;
 }
 function verifyActaChain(receipts, options = {}) {
-  const acceptLegacy = options.acceptLegacyLinks ?? true;
   const checks2 = [];
   let keySource = "none";
   for (let i = 0; i < receipts.length; i++) {
@@ -8666,14 +8670,18 @@ function verifyActaChain(receipts, options = {}) {
     if (i === 0) keySource = source;
     const sigResult = key4 ? verifyReceipt2(receipt, key4) : null;
     let link;
+    let linkError;
     const stored = linkOf(receipt);
-    if (i === 0) link = stored ? "dangling" : "genesis";
-    else if (!stored) link = "missing";
+    const read = stored === null ? null : readChainLink(stored);
+    if (read && "error" in read) {
+      link = read.error === "unsupported_chain_hash_algorithm" ? "unsupported" : "malformed";
+      linkError = read.error;
+    } else if (i === 0) link = read ? "dangling" : "genesis";
+    else if (!read) link = "missing";
     else {
       const prev = receipts[i - 1];
-      const storedHex = stored.startsWith("sha256:") ? stored.slice(7) : stored;
-      if (storedHex.toLowerCase() === receiptHash(prev)) link = "linked";
-      else if (acceptLegacy && citesPre03(prev) && storedHex.toLowerCase() === sha256Hex(canonicalize2(receiptPayload(prev)))) link = "linked_legacy";
+      if (read.hex === receiptHash(prev)) link = "linked";
+      else if (read.hex === sha256Hex(canonicalize2(receiptPayload(prev)))) link = "payload_only";
       else link = "broken";
     }
     const digest = str(payload.payload_digest) ?? (isRecord2(payload.payload_digest) ? str(payload.payload_digest.input_hash) : null);
@@ -8685,6 +8693,7 @@ function verifyActaChain(receipts, options = {}) {
       keySource: source,
       error: sigResult && !sigResult.valid ? sigResult.error : void 0,
       link,
+      ...linkError ? { link_error: linkError } : {},
       hash: receiptHash(receipt),
       tool: str(payload.tool_name) ?? str(payload.tool),
       decision: str(payload.decision),
@@ -8699,7 +8708,11 @@ function verifyActaChain(receipts, options = {}) {
   }
   const signaturesChecked = checks2.length > 0 && checks2.every((c) => c.signature !== "unchecked");
   const allValid = signaturesChecked && checks2.every((c) => c.signature === "valid");
-  const chainUnbroken = checks2.every((c) => c.link === "genesis" || c.link === "linked" || c.link === "linked_legacy");
+  const payloadOnly = checks2.filter((c) => c.link === "payload_only").length;
+  const malformed = checks2.filter((c) => c.link === "malformed").length;
+  const unsupported = checks2.filter((c) => c.link === "unsupported").length;
+  const chainOutcome = checks2.some((c) => c.link !== "genesis" && c.link !== "linked" && c.link !== "unsupported") ? "broken" : unsupported ? "undecidable" : "unbroken";
+  const chainUnbroken = chainOutcome === "unbroken";
   const uniq = (xs) => [...new Set(xs.filter((x) => !!x))];
   const allow = checks2.filter((c) => c.decision === "allow").length;
   const deny = checks2.filter((c) => c.decision === "deny").length;
@@ -8709,9 +8722,12 @@ function verifyActaChain(receipts, options = {}) {
   else if (!signaturesChecked) not_established.push("Signatures were not checked: no key was supplied and the file carries none. Paste the issuer's public key to check them.");
   else not_established.push("At least one signature does not verify. Treat the log as altered or signed by a different key.");
   if (checks2.length > 1) {
-    if (chainUnbroken) established.push(`The ${checks2.length} receipts form one unbroken chain: none was inserted, removed, or reordered between the first and the last shown.${checks2.some((c) => c.link === "linked_legacy") ? " Some links use the older payload-only rule from before draft -03." : ""}`);
-    else not_established.push("The chain is broken: a receipt was inserted, removed, reordered, or re-signed between the first and the last shown.");
+    if (chainUnbroken) established.push(`The ${checks2.length} receipts form one unbroken chain: none was inserted, removed, or reordered between the first and the last shown.`);
+    else if (checks2.some((c) => c.link === "broken" || c.link === "missing" || c.link === "dangling")) not_established.push("The chain is broken: a receipt was inserted, removed, reordered, or re-signed between the first and the last shown.");
   }
+  if (payloadOnly) not_established.push(`${payloadOnly === 1 ? "A link hashes" : `${payloadOnly} links hash`} the previous receipt's payload alone, a form no revision of the draft defines: a re-signed copy of that receipt would carry the same link. Draft -03 section 6.7 links the whole receipt, signature included.`);
+  if (malformed) not_established.push(`${malformed === 1 ? "A link is" : `${malformed} links are`} not "sha256:" and 64 lowercase hex characters, nor the bare digest of earlier revisions, so ${malformed === 1 ? "it names" : "they name"} no receipt under draft -03 section 6.7.`);
+  if (unsupported) not_established.push(`${unsupported === 1 ? "A link names" : `${unsupported} links name`} a hash algorithm other than SHA-256, which draft -03 section 6.7 defines no link under, so whether ${checks2.length > 1 ? "the receipts form one chain" : "the receipt follows the one before it"} is not decided.`);
   not_established.push("Who holds the signing key. A receipt proves possession of the key that signed it, not the organisation behind it; that comes from a key you pin out of band.");
   not_established.push("Anything about calls that did not pass through this gateway. Coverage is declared per route, never assumed.");
   return {
@@ -8720,7 +8736,7 @@ function verifyActaChain(receipts, options = {}) {
     all_signatures_valid: allValid,
     signatures_checked: signaturesChecked,
     chain_unbroken: chainUnbroken,
-    legacy_links: checks2.filter((c) => c.link === "linked_legacy").length,
+    chain_outcome: chainOutcome,
     key_source: keySource,
     summary: {
       allow,
@@ -11195,7 +11211,7 @@ function verifyRunManifest(value, context = {}, now = /* @__PURE__ */ new Date()
     anythingGiven = true;
     chain = verifyActaChain(receipts, { publicKeyHex: m.gateway.verification_key });
     const intact = chain.all_signatures_valid && chain.chain_unbroken && chain.signatures_checked;
-    checks2.push({ id: "chain", label: "Receipt chain", ok: intact, detail: intact ? `${chain.count} receipt${chain.count === 1 ? "" : "s"} verify against the gateway key and link without a gap.` : "The receipts do not all verify against the gateway key, or the chain is broken." });
+    checks2.push({ id: "chain", label: "Receipt chain", ok: intact, detail: intact ? `${chain.count} receipt${chain.count === 1 ? "" : "s"} verify against the gateway key and link without a gap.` : chain.all_signatures_valid && chain.chain_outcome === "undecidable" ? "A receipt link names a hash algorithm other than SHA-256, so whether the receipts form one chain is not decided." : "The receipts do not all verify against the gateway key, or the chain is broken." });
     const head = receipts.length ? chainLink(receipts[receipts.length - 1]) : null;
     const headOk = chain.count === m.gateway.receipt_count && head === m.gateway.chain_head;
     checks2.push({ id: "chain_head", label: "Chain head", ok: headOk, detail: headOk ? "The receipt count and the hash of the last receipt equal what the manifest names: nothing was added or removed after signing." : "The receipt log differs from the one the manifest names (count or head hash)." });
@@ -11649,7 +11665,8 @@ function validRepositoryRecord(v, kind) {
   const common = ["type", "task_id", "task_digest"];
   if (kind === "claim") return exact2(v, [...common, "reviewer_key", "name", "issued_at"]) && REPOSITORY_HEX.test(String(v.reviewer_key)) && text(v.name, 60) && time2(v.issued_at);
   const note = (v2) => typeof v2 === "string" && v2.length <= 600;
-  if (kind === "approval") return exact2(v, [...common, "proposal_digest", "role", "principal_key", "decision", "issued_at", "expires_at", "note"]) && REPOSITORY_HEX.test(String(v.proposal_digest)) && REPOSITORY_HEX.test(String(v.principal_key)) && ["owner", "reviewer"].includes(String(v.role)) && ["approve", "reject"].includes(String(v.decision)) && time2(v.issued_at) && time2(v.expires_at) && note(v.note) && Date.parse(String(v.expires_at)) > Date.parse(String(v.issued_at)) && Date.parse(String(v.expires_at)) - Date.parse(String(v.issued_at)) <= 9e5;
+  if (kind === "approval") return exact2(v, [...common, "proposal_digest", "role", "principal_key", "decision", "issued_at", "expires_at", "note"]) && REPOSITORY_HEX.test(String(v.proposal_digest)) && REPOSITORY_HEX.test(String(v.principal_key)) && ["owner", "reviewer"].includes(String(v.role)) && ["approve", "reject"].includes(String(v.decision)) && time2(v.issued_at) && time2(v.expires_at) && note(v.note) && Date.parse(String(v.expires_at)) > Date.parse(String(v.issued_at)) && Date.parse(String(v.expires_at)) - Date.parse(String(v.issued_at)) <= 7 * 864e5;
+  if (kind === "revocation") return exact2(v, [...common, "proposal_digest", "approval_digest", "role", "principal_key", "issued_at", "note"]) && REPOSITORY_HEX.test(String(v.proposal_digest)) && REPOSITORY_HEX.test(String(v.approval_digest)) && REPOSITORY_HEX.test(String(v.principal_key)) && ["owner", "reviewer"].includes(String(v.role)) && time2(v.issued_at) && note(v.note);
   if (kind === "execution") return exact2(v, [...common, "operation_id", "receiver_attempt_id", "proposal_digest", "owner_approval_digest", "reviewer_approval_digest", "receiver_key", "action", "issued_at", "expires_at"]) && [v.operation_id, v.receiver_attempt_id].every((x) => REPOSITORY_ID.test(String(x))) && [v.proposal_digest, v.owner_approval_digest, v.reviewer_approval_digest, v.receiver_key].every((x) => REPOSITORY_HEX.test(String(x))) && v.action === "github.updateRefs" && time2(v.issued_at) && time2(v.expires_at) && Date.parse(String(v.expires_at)) > Date.parse(String(v.issued_at)) && Date.parse(String(v.expires_at)) - Date.parse(String(v.issued_at)) <= 12e4;
   if (kind === "outcome") return exact2(v, [...common, "operation_id", "proposal_digest", "execution_digest", "status", "observed_base_sha", "readback", "observed_at", "note"], ["github_request_id"]) && REPOSITORY_ID.test(String(v.operation_id)) && [v.proposal_digest, v.execution_digest].every((x) => REPOSITORY_HEX.test(String(x))) && ["confirmed", "failed", "unknown"].includes(String(v.status)) && (v.observed_base_sha === null || REPOSITORY_SHA.test(String(v.observed_base_sha))) && ["exact_ref", "descendant_ref", "not_confirmed"].includes(String(v.readback)) && (v.status === "confirmed" ? v.readback !== "not_confirmed" && v.observed_base_sha !== null : v.readback === "not_confirmed") && time2(v.observed_at) && note(v.note) && (v.github_request_id === void 0 || text(v.github_request_id, 200));
   return exact2(v, [...common, "outcome_digest", "reviewer_key", "decision", "issued_at", "note"]) && [v.outcome_digest, v.reviewer_key].every((x) => REPOSITORY_HEX.test(String(x))) && ["accept", "request_changes"].includes(String(v.decision)) && time2(v.issued_at) && note(v.note);
@@ -11664,7 +11681,7 @@ async function verifyRepositoryEvidence(value, pin) {
   };
   try {
     const e = value, s = e.state?.payload, t = s?.task?.payload;
-    check(object(e) && exact2(e, ["type", "state"]) && e.type === "scopeblind.repository.evidence.v1" && validRepositoryEnvelope(e.state) && !!s && s.type === "scopeblind.repository.state.v1" && exact2(s, ["type", "task", "reviewer", "proposal", "approvals", "execution", "outcome", "acceptance", "status", "revision", "observed_at"]) && Number.isSafeInteger(s.revision) && s.revision > 0 && time2(s.observed_at) && await verify(e.state, pins.authority_key), "Service state signature or shape is invalid");
+    check(object(e) && exact2(e, ["type", "state"]) && e.type === "scopeblind.repository.evidence.v1" && validRepositoryEnvelope(e.state) && !!s && s.type === "scopeblind.repository.state.v1" && exact2(s, ["type", "task", "reviewer", "proposal", "approvals", "execution", "outcome", "acceptance", "status", "revision", "observed_at"], ["revocations"]) && Number.isSafeInteger(s.revision) && s.revision > 0 && time2(s.observed_at) && await verify(e.state, pins.authority_key), "Service state signature or shape is invalid");
     check(validRepositoryEnvelope(s.task) && validRepositoryTask(t) && await verify(s.task, t.owner_key) && t.authority_key === pins.authority_key && (!pins.owner_key || pins.owner_key === t.owner_key) && (!pins.receiver_key || pins.receiver_key === t.receiver_key) && Date.parse(s.observed_at) >= Date.parse(t.issued_at), "Task or pinned owner/receiver is invalid");
     const reviewer = s.reviewer?.payload;
     if (s.reviewer) check(validRepositoryHumanEnvelope(s.reviewer) && validRepositoryRecord(reviewer, "claim") && reviewer.task_id === t.id && reviewer.task_digest === s.task.digest && ![t.owner_key, t.receiver_key, t.authority_key].includes(reviewer.reviewer_key) && await verifyRepositoryHuman(s.reviewer, reviewer.reviewer_key, { authorityKey: pins.authority_key, task: s.task, requireRecordedUse: true }) && (!pins.reviewer_key || pins.reviewer_key === reviewer.reviewer_key) && Date.parse(reviewer.issued_at) >= Date.parse(t.issued_at) && Date.parse(reviewer.issued_at) < Date.parse(t.expires_at), "Reviewer role is invalid");
@@ -11673,6 +11690,13 @@ async function verifyRepositoryEvidence(value, pin) {
     for (const approval of s.approvals) {
       const a = approval.payload, key4 = a.role === "owner" ? t.owner_key : reviewer?.reviewer_key;
       check(!!s.proposal && validRepositoryHumanEnvelope(approval) && validRepositoryRecord(a, "approval") && a.principal_key === key4 && a.task_id === t.id && a.task_digest === s.task.digest && a.proposal_digest === s.proposal.digest && await verifyRepositoryHuman(approval, key4, { authorityKey: pins.authority_key, task: s.task, requireRecordedUse: true }) && Date.parse(a.issued_at) >= Date.parse(s.proposal.payload.observed_at) && Date.parse(a.expires_at) <= Date.parse(t.expires_at), "Exact proposal approval is invalid");
+    }
+    if (s.revocations !== void 0) {
+      check(Array.isArray(s.revocations) && s.revocations.length >= 1 && s.revocations.length <= 64, "Revocation list is invalid");
+      for (const revocation of s.revocations ?? []) {
+        const r = revocation.payload, key4 = r.role === "owner" ? t.owner_key : reviewer?.reviewer_key;
+        check(validRepositoryHumanEnvelope(revocation) && validRepositoryRecord(r, "revocation") && r.task_id === t.id && r.task_digest === s.task.digest && r.principal_key === key4 && !!key4 && await verifyRepositoryHuman(revocation, key4, { authorityKey: pins.authority_key, task: s.task, requireRecordedUse: true }) && Date.parse(r.issued_at) >= Date.parse(t.issued_at) && !s.approvals.some((a) => a.digest === r.approval_digest), "A withdrawn approval is invalid or still counted");
+      }
     }
     if (s.execution) {
       const x = s.execution.payload, owner = s.approvals.find((a) => a.payload.role === "owner"), review = s.approvals.find((a) => a.payload.role === "reviewer");
@@ -11872,8 +11896,16 @@ function safeRepositoryPreviewUrl(value) {
     return false;
   }
 }
+function validCriterionLink(e) {
+  if (!e || typeof e !== "object") return false;
+  const v = e;
+  if (v.kind === "preview") return shape3(v, ["kind"]);
+  if (v.kind === "file") return shape3(v, ["kind", "path"]) && typeof v.path === "string" && v.path.length >= 1 && v.path.length <= 400 && !v.path.includes("..") && !v.path.startsWith("/") && !/[\u0000-\u001f]/.test(v.path);
+  if (v.kind === "check") return shape3(v, ["kind", "name", "app_id"]) && line(v.name, 100) && num(v.app_id);
+  return false;
+}
 function content2(v) {
-  if (!text3(v.brief, 4e3) || !Array.isArray(v.success_criteria) || v.success_criteria.length < 1 || v.success_criteria.length > 20 || !v.success_criteria.every((c) => shape3(c, ["id", "text"]) && id3(c.id) && text3(c.text, 600)) || new Set(v.success_criteria.map((c) => c.id)).size !== v.success_criteria.length) return false;
+  if (!text3(v.brief, 4e3) || !Array.isArray(v.success_criteria) || v.success_criteria.length < 1 || v.success_criteria.length > 20 || !v.success_criteria.every((c) => shape3(c, ["id", "text"], ["evidence"]) && id3(c.id) && text3(c.text, 600) && (c.evidence === void 0 || Array.isArray(c.evidence) && c.evidence.length <= 12 && c.evidence.every(validCriterionLink) && new Set(c.evidence.map((e) => JSON.stringify(e))).size === c.evidence.length)) || new Set(v.success_criteria.map((c) => c.id)).size !== v.success_criteria.length) return false;
   const p = v.preview_policy;
   return p === void 0 || shape3(p, ["environment", "check", "allowed_origins", "required"]) && line(p.environment, 100) && shape3(p.check, ["name", "app_id"]) && line(p.check.name, 100) && num(p.check.app_id) && typeof p.required === "boolean" && Array.isArray(p.allowed_origins) && p.allowed_origins.length > 0 && p.allowed_origins.length <= 8 && new Set(p.allowed_origins).size === p.allowed_origins.length && p.allowed_origins.every((origin) => typeof origin === "string" && safeRepositoryPreviewUrl(origin + "/") && new URL(origin).origin === origin);
 }
@@ -11895,7 +11927,7 @@ function validRepositoryReviewPacket(v, brief, proposal) {
   return a === void 0 || shape3(a, ["id", "name", "sha256", "workflow_run_id", "head_sha", "expires_at"]) && num(a.id) && line(a.name, 200) && hex3(a.sha256) && num(a.workflow_run_id) && a.head_sha === v.head_sha && at2(a.expires_at) && Date.parse(a.expires_at) > Date.parse(String(v.observed_at));
 }
 function validRepositoryReviewDecision(v, brief, packet, approval) {
-  return shape3(v, ["type", "task_id", "task_digest", "brief_digest", "packet_digest", "proposal_digest", "approval_digest", "principal_key", "role", "issued_at", "expires_at"]) && v.type === "scopeblind.repository.review-decision.v1" && v.task_id === brief.payload.task_id && v.task_digest === brief.payload.task_digest && v.brief_digest === brief.digest && v.packet_digest === packet.digest && v.proposal_digest === packet.payload.proposal_digest && v.approval_digest === approval.digest && v.principal_key === approval.payload.principal_key && v.role === approval.payload.role && v.issued_at === approval.payload.issued_at && v.expires_at === approval.payload.expires_at && at2(v.issued_at) && at2(v.expires_at) && Date.parse(v.issued_at) >= Date.parse(packet.payload.observed_at) && Date.parse(v.expires_at) <= Date.parse(packet.payload.expires_at) && (!brief.payload.preview_policy?.required || packet.payload.preview.status === "available" || approval.payload.decision === "reject");
+  return shape3(v, ["type", "task_id", "task_digest", "brief_digest", "packet_digest", "proposal_digest", "approval_digest", "principal_key", "role", "issued_at", "expires_at"]) && v.type === "scopeblind.repository.review-decision.v1" && v.task_id === brief.payload.task_id && v.task_digest === brief.payload.task_digest && v.brief_digest === brief.digest && v.packet_digest === packet.digest && v.proposal_digest === packet.payload.proposal_digest && v.approval_digest === approval.digest && v.principal_key === approval.payload.principal_key && v.role === approval.payload.role && v.issued_at === approval.payload.issued_at && v.expires_at === approval.payload.expires_at && at2(v.issued_at) && at2(v.expires_at) && Date.parse(v.issued_at) >= Date.parse(packet.payload.observed_at) && Date.parse(v.issued_at) <= Date.parse(packet.payload.expires_at) && (!brief.payload.preview_policy?.required || packet.payload.preview.status === "available" || approval.payload.decision === "reject");
 }
 function validRepositoryReviewFeedback(v, brief, packet) {
   return shape3(v, ["type", "id", "task_id", "task_digest", "basis_digest", "packet_digest", "requester_key", "criterion_ids", "message", "requested_changes", "issued_at"], ["mandate_digest"]) && v.type === "scopeblind.repository.review-feedback.v1" && id3(v.id) && v.task_id === brief.payload.task_id && v.task_digest === brief.payload.task_digest && hex3(v.basis_digest) && v.packet_digest === packet.digest && hex3(v.requester_key) && (v.mandate_digest === void 0 || hex3(v.mandate_digest)) && Array.isArray(v.criterion_ids) && v.criterion_ids.length <= 20 && new Set(v.criterion_ids).size === v.criterion_ids.length && v.criterion_ids.every((cid) => brief.payload.success_criteria.some((c) => c.id === cid)) && text3(v.message, 2e3) && text3(v.requested_changes, 4e3, true) && at2(v.issued_at) && Date.parse(v.issued_at) >= Date.parse(packet.payload.observed_at);
@@ -12132,8 +12164,16 @@ function validRepositoryCodingStop(v) {
 function validRepositoryCodingPlan(v, m) {
   return object4(v) && exact4(v, ["type", "job_id", "request_digest", "mandate_digest", "source_head_sha", "source_base_sha", "branch", "commit_sha", "tree_sha", "files", "tests", "build", "preview_digest", "model_calls", "reserved_tokens", "issued_at"]) && v.type === "scopeblind.repository.coding-plan.v1" && id5(v.job_id) && [v.request_digest, v.mandate_digest, v.preview_digest].every(key3) && [v.source_head_sha, v.source_base_sha, v.commit_sha, v.tree_sha].every(hex40) && v.branch === "scopeblind/code/" + v.job_id && Array.isArray(v.files) && v.files.length > 0 && v.files.length <= m.max_changed_files && new Set(v.files.map((f) => object4(f) ? f.path : null)).size === v.files.length && v.files.every((f) => object4(f) && exact4(f, ["path", "before_sha", "after_sha", "bytes"]) && codingSafePath(f.path) && pathAllowed(f.path, m.allowed_paths) && (f.before_sha === null || hex40(f.before_sha)) && (f.after_sha === null || hex40(f.after_sha)) && f.before_sha !== f.after_sha && number(f.bytes, 0, m.max_changed_bytes)) && v.files.reduce((n, f) => n + Number(f.bytes), 0) <= m.max_changed_bytes && [v.tests, v.build].every((t) => object4(t) && exact4(t, ["command_digest", "exit_code", "output_sha256", "duration_ms"]) && key3(t.command_digest) && key3(t.output_sha256) && t.exit_code === 0 && number(t.duration_ms, 0, m.max_seconds * 1e3)) && number(v.model_calls, 1, m.max_model_calls) && number(v.reserved_tokens, 4096, m.max_tokens) && at4(v.issued_at);
 }
+var WORKFLOW_FILE = /^[A-Za-z0-9_.-]+\.ya?ml$/;
+function validRepositoryCodingWorkflowRun(v, repository) {
+  if (!object4(v) || !exact4(v, ["id", "attempt", "workflow_ref", "workflow_sha", "repository"]) || !number(v.id, 1, Number.MAX_SAFE_INTEGER) || !number(v.attempt, 1, 1e4) || !hex40(v.workflow_sha) || v.repository !== repository || typeof v.workflow_ref !== "string" || v.workflow_ref.length > 300) return false;
+  const at7 = v.workflow_ref.indexOf("@");
+  if (at7 < 0) return false;
+  const path = v.workflow_ref.slice(0, at7), ref = v.workflow_ref.slice(at7 + 1);
+  return path.startsWith(`${repository}/.github/workflows/`) && WORKFLOW_FILE.test(path.slice(`${repository}/.github/workflows/`.length)) && /^refs\/(heads|tags)\/[^\s]{1,200}$/.test(ref);
+}
 function validRepositoryCodingResult(v) {
-  return object4(v) && exact4(v, ["type", "job_id", "plan_digest", "publication_digest", "repository", "branch", "head_sha", "pull_number", "pull_url", "preview_url", "preview_digest", "deployment_id", "deployment_status_id", "deployment_environment", "check", "observed_at"]) && v.type === "scopeblind.repository.coding-result.v1" && id5(v.job_id) && [v.plan_digest, v.publication_digest, v.preview_digest].every(key3) && hex40(v.head_sha) && typeof v.repository === "string" && typeof v.branch === "string" && number(v.pull_number, 1, Number.MAX_SAFE_INTEGER) && v.pull_url === `https://github.com/${v.repository}/pull/${v.pull_number}` && typeof v.preview_url === "string" && v.preview_url.startsWith("https://") && number(v.deployment_id, 1, Number.MAX_SAFE_INTEGER) && number(v.deployment_status_id, 1, Number.MAX_SAFE_INTEGER) && v.deployment_environment === "ScopeBlind coding preview" && object4(v.check) && exact4(v.check, ["id", "name", "app_id", "head_sha", "conclusion"]) && number(v.check.id, 1, Number.MAX_SAFE_INTEGER) && v.check.name === "ScopeBlind isolated coding checks" && v.check.app_id === 15368 && v.check.head_sha === v.head_sha && v.check.conclusion === "success" && at4(v.observed_at);
+  return object4(v) && exact4(v, ["type", "job_id", "plan_digest", "publication_digest", "repository", "branch", "head_sha", "pull_number", "pull_url", "preview_url", "preview_digest", "deployment_id", "deployment_status_id", "deployment_environment", "check", "observed_at"], ["workflow_run"]) && (v.workflow_run === void 0 || typeof v.repository === "string" && validRepositoryCodingWorkflowRun(v.workflow_run, v.repository)) && v.type === "scopeblind.repository.coding-result.v1" && id5(v.job_id) && [v.plan_digest, v.publication_digest, v.preview_digest].every(key3) && hex40(v.head_sha) && typeof v.repository === "string" && typeof v.branch === "string" && number(v.pull_number, 1, Number.MAX_SAFE_INTEGER) && v.pull_url === `https://github.com/${v.repository}/pull/${v.pull_number}` && typeof v.preview_url === "string" && v.preview_url.startsWith("https://") && number(v.deployment_id, 1, Number.MAX_SAFE_INTEGER) && number(v.deployment_status_id, 1, Number.MAX_SAFE_INTEGER) && v.deployment_environment === "ScopeBlind coding preview" && object4(v.check) && exact4(v.check, ["id", "name", "app_id", "head_sha", "conclusion"]) && number(v.check.id, 1, Number.MAX_SAFE_INTEGER) && v.check.name === "ScopeBlind isolated coding checks" && v.check.app_id === 15368 && v.check.head_sha === v.head_sha && v.check.conclusion === "success" && at4(v.observed_at);
 }
 
 // ../../protect-mcp/src/coordination-repository-coding-evidence.ts
@@ -12190,7 +12230,8 @@ async function verifyRepositoryCodingEvidence(value, authorityKey) {
   } catch (error) {
     errors.push(error instanceof Error ? error.message : "Malformed coding evidence");
   }
-  return { valid: errors.length === 0, errors, published: errors.length === 0 && published, authorityPinned: !!authorityKey, limitations: ["Code-edit authority permits only bounded work and a new pull request; no merge or recipient acceptance is inherited.", "The service attests live membership, revocation, spending reservations and the publication gate. The worker attests model work, isolated test results and GitHub readbacks.", "A content-addressed preview identifies the published bundle; verification does not execute it or prove that the code satisfies the brief."] };
+  const unnamedRun = !!(object5(value) && object5(value.job) && object5(value.job.payload) && value.job.payload.result && !value.job.payload.result.payload.workflow_run);
+  return { valid: errors.length === 0, errors, published: errors.length === 0 && published, authorityPinned: !!authorityKey, limitations: [...unnamedRun ? ["The result does not name the workflow run and attempt that produced it; results from protect-mcp 0.29.0 onward do."] : [], "Code-edit authority permits only bounded work and a new pull request; no merge or recipient acceptance is inherited.", "The service attests live membership, revocation, spending reservations and the publication gate. The worker attests model work, isolated test results and GitHub readbacks.", "A content-addressed preview identifies the published bundle; verification does not execute it or prove that the code satisfies the brief."] };
 }
 
 // ../../protect-mcp/src/coordination-repository-review-evidence.ts

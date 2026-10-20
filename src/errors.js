@@ -48,7 +48,7 @@ export const ERROR_REGISTRY = {
     description: 'previousReceiptHash does not match the hash of the preceding receipt.',
     class: 'tampered',
     spec: 'draft-farley-acta-signed-receipts-03 §6.7 Chain Hash Scope',
-    hint: 'A receipt has been inserted, removed, reordered or re-signed. A link over the previous receipt\'s payload alone is refused too; --allow-payload-only-links reads one as a legacy link.',
+    hint: 'A receipt has been inserted, removed, reordered or re-signed. With --previous, the receipt does not name the one supplied, or names none. A link over the previous receipt\'s payload alone is refused too; --allow-payload-only-links reads one as a legacy link.',
   },
   malformed_chain_link: {
     code: 'malformed_chain_link',
@@ -171,20 +171,20 @@ export const ERROR_REGISTRY = {
   },
   key_window_unverifiable: {
     code: 'key_window_unverifiable',
-    description: 'The key source carries a validity window that cannot be applied: unreadable bounds, or a receipt with no readable issued_at.',
+    description: 'The key source carries a validity window that cannot be applied: a bound that is not an RFC 3339 date-time with its UTC offset written out (null included), bounds in the wrong order, or a receipt whose issued_at is missing or is not such a date-time.',
     class: 'undecidable',
     spec: 'draft-farley-acta-signed-receipts-03 §9.2 Key Compromise',
   },
   jwks_fetch_failed: {
     code: 'jwks_fetch_failed',
-    description: 'JWKS endpoint did not return a valid key set.',
+    description: 'JWKS endpoint did not return a valid key set, or the key set has no key for the receipt\'s kid.',
     class: 'undecidable',
   },
   context_requirement_unmet: {
     code: 'context_requirement_unmet',
     description: 'One or more --require-context predicates evaluated false at verification time.',
     class: 'undecidable',
-    spec: 'Patent #5 claim 2 — Live-context verification',
+    spec: 'Patent #5 claim 2: Live-context verification',
   },
   tier_not_achieved: {
     code: 'tier_not_achieved',
@@ -203,9 +203,9 @@ export function getError(code) {
 
 /**
  * Map an error code to its process exit code.
- *   0 — valid (caller; not in registry)
- *   1 — tampered
- *   2 — undecidable or unknown error
+ *   0: valid (caller; not in registry)
+ *   1: tampered
+ *   2: undecidable or unknown error
  *
  * @param {string | undefined} code
  * @returns {1 | 2}

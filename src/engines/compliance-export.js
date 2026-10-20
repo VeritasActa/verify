@@ -1,12 +1,12 @@
 /**
- * @veritasacta/verify — compliance export engine
+ * @veritasacta/verify: compliance export engine
  *
  * Given a directory of signed decision receipts, produce evidence
  * bundles shaped for three compliance frameworks:
  *
  *   - SOC 2 Trust Services Criteria (CC6 Logical Access,
  *     CC7 System Operations, CC8 Change Management)
- *   - ISO/IEC 42001 (AI Management System) — A.6, A.8 controls
+ *   - ISO/IEC 42001 (AI Management System): A.6, A.8 controls
  *   - EU AI Act Article 12 (record-keeping) + Article 13 (transparency)
  *
  * The engine does NOT verify receipts itself; it assumes they have
@@ -141,8 +141,8 @@ const FRAMEWORKS = {
  * @typedef {Object} ExportOptions
  * @property {string} receiptsDir           Path to directory of *.json receipts.
  * @property {'soc2'|'iso42001'|'eu-ai-act'|'all'} framework
- * @property {string} [startDate]           ISO-8601 date-time — inclusive lower bound.
- * @property {string} [endDate]             ISO-8601 date-time — exclusive upper bound.
+ * @property {string} [startDate]           ISO-8601 date-time, inclusive lower bound.
+ * @property {string} [endDate]             ISO-8601 date-time, exclusive upper bound.
  * @property {string} [organizationName]    Appears in the manifest and HTML header.
  */
 
@@ -239,7 +239,7 @@ export function renderComplianceHTML(result) {
 
   let html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
-<title>Compliance Evidence Bundle — ${esc(manifest.organization)}</title>
+<title>Compliance Evidence Bundle: ${esc(manifest.organization)}</title>
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
          max-width: 960px; margin: 2rem auto; padding: 0 1rem; color: #111; line-height: 1.5; }
@@ -280,7 +280,7 @@ export function renderComplianceHTML(result) {
       const zero = ctrl.evidence_count === 0 ? ' zero' : '';
       html += `<div class="control">
         <div class="ctrl-head">
-          <h3>${esc(ctrlId)} — ${esc(ctrl.name)}</h3>
+          <h3>${esc(ctrlId)}: ${esc(ctrl.name)}</h3>
           <div class="count${zero}">${ctrl.evidence_count} receipt(s)</div>
         </div>
         <div class="desc">${esc(ctrl.description)}</div>`;

@@ -2,7 +2,7 @@
  * Legate governed-receipt verifier.
  *
  * The Legate runtime (desktop daemon) and the iPhone co-sign sign a FLAT,
- * pipe-delimited canonical payload — NOT a JSON tuple with a digest field —
+ * pipe-delimited canonical payload (NOT a JSON tuple with a digest field)
  * so the gate-receipt engine does not recognize it. This engine closes that
  * gap so a third party (an allocator, an LP, a counterparty) can re-verify the
  * exact bytes the daemon and phone co-signed with the OPEN tool, holding no
@@ -62,7 +62,7 @@ const isObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v)
  * binds the disclosed denial outcome into result_sha256 and the (optionally
  * withheld) proposed order into input_sha256, both via the same canonical
  * hashing the runtime used. Re-hashing here proves the disclosed detail is
- * exactly what was signed — so the receipt proves WHAT was prevented and WHY,
+ * exactly what was signed, so the receipt proves WHAT was prevented and WHY,
  * not merely that some deny was signed.
  *
  * @param {object} receipt a governed receipt with a `restraint` detail block
@@ -92,14 +92,14 @@ export function legateReceiptPayload(r) {
 
 export const GOVERNED_PROVES = [
   'Authenticity: the receipt was signed by the Ed25519 key it carries (the Legate runtime or phone co-sign key).',
-  'Integrity: the action identity — tool, decision, the input and result SHA-256 hashes, and the timestamp — is bound by the signature and unmodified.',
+  'Integrity: the action identity (tool, decision, the input and result SHA-256 hashes, and the timestamp) is bound by the signature and unmodified.',
   'Recognition: the receipt declares a known governed-action kind.',
 ];
 
 export const GOVERNED_LIMITATIONS = [
-  'Whether the embedded verification_key is the key your counterparty expects — pin it with --key to bind trust to a known signer.',
+  'Whether the embedded verification_key is the key your counterparty expects: pin it with --key to bind trust to a known signer.',
   'Correctness of the inputs and results behind input_sha256 / result_sha256 unless those preimages are separately disclosed and re-hashed.',
-  'Independent execution corroboration — only a recipe.reconcile receipt carries the custodian-corroborated grade.',
+  'Independent execution corroboration: only a recipe.reconcile receipt carries the custodian-corroborated grade.',
 ];
 
 /**

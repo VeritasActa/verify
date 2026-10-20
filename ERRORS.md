@@ -12,6 +12,8 @@ rather than rely on human-readable text.
 | `tampered` | Signature was tested and failed. Proof of modification. | 1 |
 | `undecidable` | Signature could not be tested (malformed, missing key, unsupported algorithm). | 2 |
 
+A verification that makes several checks combines them as §5.3 of the -04 editor's copy (VeritasActa/drafts) has it (from 0.10.26): invalid (exit 1) if any check ran and failed, even when another could not run; undecidable (exit 2) if none failed and at least one could not run; valid (exit 0) only when every check that applies passed. The `error` reported is the first failure, in the order signing input, signature, chain link, connector action, key window, link to the previous receipt; or, when none failed, the first check that could not run. `--json` gives each check's result in `checks`, and the outcome in `outcome`. `--replay-chain` exits 1 if any line is invalid or any link breaks, else 2 if any line could not be checked, else 0.
+
 ## Codes
 
 ### Tampered (exit 1)
@@ -29,7 +31,7 @@ rather than rely on human-readable text.
 #### `chain_break`
 - **Description:** `previousReceiptHash` does not match the hash of the preceding receipt: the SHA-256 of the JCS of the whole receipt, signature included.
 - **Spec:** `draft-farley-acta-signed-receipts-03 §6.7 Chain Hash Scope`
-- **Hint:** A receipt has been inserted, removed, reordered or re-signed. A link over the previous receipt's payload alone is refused too, whatever that receipt's `spec` says: no revision of the draft defines one. `--allow-payload-only-links` reads one as a legacy link, counted and warned, for chains written by `verify proxy` and `verify daemon` in 0.9.3 and earlier. `--replay-chain` and `verify chain explore` report this code; a receipt after the first with no `previousReceiptHash` starts a new chain (§2.2) and is not a `chain_break`.
+- **Hint:** A receipt has been inserted, removed, reordered or re-signed. A link over the previous receipt's payload alone is refused too, whatever that receipt's `spec` says: no revision of the draft defines one. `--allow-payload-only-links` reads one as a legacy link, counted and warned, for chains written by `verify proxy` and `verify daemon` in 0.9.3 and earlier. `--replay-chain` and `verify chain explore` report this code; there a receipt after the first with no `previousReceiptHash` starts a new chain (§2.2) and is not a `chain_break`. `verify <receipt> --previous <receipt>` reports it for one receipt checked against the receipt the caller says it follows: its link must be that receipt's §6.7 hash, and an absent or `null` link fails too, since a receipt that names no predecessor does not follow the one supplied.
 
 #### `malformed_chain_link`
 - **Description:** `previousReceiptHash` is not `sha256:` followed by 64 lowercase hex characters, nor the bare 64-character digest of earlier revisions.
@@ -75,7 +77,7 @@ rather than rely on human-readable text.
 - **Hint:** Publish `valid_from` / `valid_until` on the JWK, or verify without the flag; the result then reports the key's validity at issuance as not established.
 
 #### `key_window_unverifiable`
-- **Description:** The key source carries a validity window that cannot be applied: unreadable bounds, bounds in the wrong order, or a receipt with no readable `issued_at`.
+- **Description:** The key source carries a validity window that cannot be applied: a bound that is not an RFC 3339 date-time with its UTC offset written out (`Z` or `±hh:mm`; `null`, a date alone and a time with no offset included), bounds in the wrong order, or a receipt whose `issued_at` is missing or is not such a date-time. The detail names the value and the cause. From 0.10.26 a time with no offset is refused rather than read in the machine's own time zone.
 - **Spec:** `draft-farley-acta-signed-receipts-03 §9.2 Key Compromise`
 
 #### `embedded_key_rejected`
@@ -117,7 +119,7 @@ rather than rely on human-readable text.
 - **Hint:** Valid formats: v1 receipt, v2 receipt, Passport envelope, audit bundle, KU bundle, VOPRF token.
 
 #### `jwks_fetch_failed`
-- **Description:** JWKS endpoint did not return a valid key set.
+- **Description:** JWKS endpoint did not return a valid key set, or the key set has no key for the receipt's `kid`. With `--replay-chain`, a key set that cannot be read stops the replay (exit 2); a line whose `kid` it does not have is undecidable.
 
 #### `context_requirement_unmet`
 - **Description:** One or more `--require-context` predicates evaluated false at verification time.

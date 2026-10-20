@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 /**
- * @veritasacta/verify — unified verifier CLI (v0.5.4)
+ * @veritasacta/verify: unified verifier CLI (v0.5.4)
  *
  * Verifies Ed25519 signed receipts, VOPRF anonymous-credential tokens,
- * Knowledge Unit bundles, and selective-disclosure receipts — all offline,
+ * Knowledge Unit bundles, and selective-disclosure receipts, all offline,
  * all under one binary with one Sigil commitment.
  *
  * Architecture is modular: this file is the entry point + dispatcher.
@@ -43,7 +43,7 @@ import { fileURLToPath } from 'node:url';
 
 import { detectFormat } from './src/detect.js';
 import { parseReceiptJson } from './src/util/strict-json.js';
-import { verifyReceipt, verifyBundle } from './src/engines/ed25519-receipt.js';
+import { verifyReceipt, verifyBundle, combineChecks } from './src/engines/ed25519-receipt.js';
 import { verifyGateTuple, verifyGateBundle } from './src/engines/gate-receipt.js';
 import { verifyMacroTrackRecord } from './src/engines/macro-snapshot.js';
 import { verifyLegateGovernedReceipt } from './src/engines/legate-governed-receipt.js';
@@ -71,7 +71,7 @@ import {
   buildCanonicalAttestation,
   buildVerificationReceipt,
 } from './src/engines/attestation.js';
-import { replayChain } from './src/engines/bulk.js';
+import { replayChain, checkPreviousLink, COMPATIBILITY_NOTE } from './src/engines/bulk.js';
 import { diffReceipts } from './src/engines/diff.js';
 import { runInit, buildNextSteps } from './src/engines/init.js';
 import { runProxy } from './src/engines/proxy.js';
@@ -84,8 +84,8 @@ import { verifyDelegationChain } from './src/engines/delegation.js';
 import { verifyCosignatures } from './src/engines/cosign.js';
 import { parseContextArgs } from './src/context/live-context.js';
 import { detectTier } from './src/conformance.js';
-import { resolveFromJwks } from './src/util/jwks.js';
-import { checkKeyWindow, receiptIssuedAt } from './src/util/key-window.js';
+import { resolveFromJwks, loadJwksResolver } from './src/util/jwks.js';
+import { checkKeyWindow, receiptIssuedAt, keyWindowCheck } from './src/util/key-window.js';
 import { loadKnownIssuers, labelFor } from './src/util/known-issuers.js';
 import { appendAuditEntry } from './src/util/audit-log.js';
 import { fipsStatus } from './src/util/fips.js';
@@ -110,6 +110,7 @@ import {
   bold,
   teal,
   renderTerminalSigil,
+  replayHeadline,
 } from './src/output/terminal.js';
 import { formatAsJson } from './src/output/json.js';
 
@@ -133,6 +134,9 @@ function legateModeLabel(r) {
   if (t === 'scopeblind.run_regrade.v1') return 'Legate second grading (run regrade), checked offline';
   return MODE_LABELS['legate-standard'];
 }
+
+/** The single-receipt modes, the only ones --previous applies to. */
+const RECEIPT_MODES = ['ed25519-browser-legacy', 'ed25519-receipt-v1', 'ed25519-receipt-v2', 'ed25519-passport'];
 
 const MODE_LABELS = {
   'ed25519-browser-legacy': 'Historical browser receipt 1.0 (not draft-03)',
@@ -179,6 +183,7 @@ function parseArgs() {
     allowEmbeddedKey: false,
     allowLegacyCanonicalization: false,
     allowPayloadOnlyLinks: false,
+    previousFile: null,
     requireContext: [],
     disclose: [],
     disclosureFile: null,
@@ -256,6 +261,7 @@ function parseArgs() {
       case '--capabilities': opts.capabilities = true; break;
       case '--allow-legacy-canonicalization': opts.allowLegacyCanonicalization = true; break;
       case '--allow-payload-only-links': opts.allowPayloadOnlyLinks = true; break;
+      case '--previous': opts.previousFile = next() ?? ''; break;
       case '--allow-embedded-key': opts.allowEmbeddedKey = true; break;
       case '--require-context': opts.requireContext.push(next()); break;
       case '--disclose': opts.disclose.push(next()); break;
@@ -333,13 +339,14 @@ function parseArgs() {
 
 function printHelp() {
   console.log(`
-${bold('@veritasacta/verify')} ${PKG.version} — unified verifier for signed receipts, VOPRF tokens, and Knowledge Units
+${bold('@veritasacta/verify')} ${PKG.version}: unified verifier for signed receipts, VOPRF tokens, and Knowledge Units
 
 ${bold('Usage:')}
   npx @veritasacta/verify <file.json>                        Auto-detect format, verify
   (exactly one file per invocation; extra positionals exit 2 rather than being ignored)
   npx @veritasacta/verify <file.json> --key <hex>            Provide verification key
   npx @veritasacta/verify <file.json> --jwks <url>           Fetch key from JWKS
+  npx @veritasacta/verify <file.json> --previous <prev.json> Also check it follows the receipt before it
   npx @veritasacta/verify <file.json> --mode receipt|claims|voprf|ku|gate|gate-bundle
   npx @veritasacta/verify <bundle.json> --bundle             Verify audit bundle
   cat receipt.json | npx @veritasacta/verify --stdin         Read from stdin
@@ -378,7 +385,11 @@ ${bold('Subcommands:')}
 ${bold('Options:')}
   --key, -k <hex>          Ed25519 public key (64 hex chars)
   --platform-key <kid>=<hex>  Platform key for a connector context (repeatable)
-  --jwks <url>             JWKS endpoint to fetch signing key
+  --jwks <url|file>        JWKS endpoint or file to take the signing key from, by kid
+  --previous <file>        The receipt this one follows. Fails with chain_break (exit 1)
+                           unless previousReceiptHash is that receipt's draft §6.7 link;
+                           an absent or null link fails too. Checked beside the signature
+                           and the key window, with --key or --jwks
   --require-key-window     Fail unless the key source gives the key a valid_from /
                            valid_until window (applied to issued_at either way)
   --trust-anchor <file>    Not implemented, so refused (exit 2): no key was ever read
@@ -408,8 +419,9 @@ ${bold('Options:')}
   --capabilities           List supported modes/algorithms/tiers
   --allow-legacy-canonicalization  Read historical non-JCS receipts, explicitly labelled.
   --allow-payload-only-links  Read a chain link over the previous receipt's payload
-                           alone as a legacy link, counted and warned. Draft §6.7
-                           refuses it; verify 0.9.3 and earlier wrote it.
+                           alone as a legacy link, counted and warned: a
+                           compatibility mode for chains verify 0.9.3 and earlier
+                           wrote, not conformant to draft §6.7. --strict disables it
   --allow-embedded-key     DEPRECATED. Accept keys embedded in payloads.
                            Removed in v0.6.0.
   --allow-partial-voprf    Treat a partial (structural-only) VOPRF result
@@ -421,7 +433,10 @@ ${bold('Options:')}
 
 ${bold('Bulk / replay / diff:')}
   --replay-chain <file>    Verify every receipt in a JSONL chain file and the links
-                           between them; a later receipt with no link starts a new chain
+                           between them; a later receipt with no link starts a new chain.
+                           Keys come from --key, or from --jwks by each receipt's kid.
+                           Exits 1 if a line fails or a link breaks, else 2 if a line
+                           could not be checked, else 0
   --emit-eat               Re-emit the verified receipt as an RFC 9711 EAT claims-set (JSON)
   --emit-eat-cbor          Same, as CBOR with integer claim keys
   --diff <other-file>      Show structural diff between two receipts
@@ -442,10 +457,13 @@ ${bold('Supported formats:')}
   ScopeBlind Gate receipt tuples and evidence bundles (chain-link checks).
 
 ${bold('Exit codes:')}
-  0  Valid — proven authentic
-  1  Invalid — proven tampered
-  2  Undecidable — malformed input, missing key, unsupported algorithm,
-                   or --tier requirement not achieved
+  0  Valid: proven authentic
+  1  Invalid: proven tampered
+  2  Undecidable: malformed input, missing key, unsupported algorithm,
+                  or --tier requirement not achieved
+  A check that ran and failed makes the result invalid (1) even when another
+  could not run; it is undecidable (2) only when nothing failed, as §5.3 of
+  the -04 editor's copy (VeritasActa/drafts) has it.
 
 ${bold('Standards:')}
   RFC 8032 (Ed25519), RFC 8785 (JCS), RFC 9497 (VOPRF),
@@ -505,7 +523,7 @@ async function runSelfCheck() {
   try {
     sigil = JSON.parse(readFileSync(sigilPath, 'utf-8'));
   } catch {
-    console.log(`\n  ${red('✗')} No sigil.json found — this verifier has no Sigil commitment.`);
+    console.log(`\n  ${red('✗')} No sigil.json found: this verifier has no Sigil commitment.`);
     console.log(`    This may be a development build or a fork.\n`);
     process.exit(2);
   }
@@ -514,7 +532,7 @@ async function runSelfCheck() {
   try {
     installedSourceBytes = readSigilMonitoredSource(__dirname);
   } catch (error) {
-    console.log(bold('@veritasacta/verify — self-check'));
+    console.log(bold('@veritasacta/verify self-check'));
     console.log(`\n  ${red('✗')} ${error.message}`);
     console.log('    Refusing to compare a reduced verifier surface.\n');
     process.exit(1);
@@ -522,7 +540,7 @@ async function runSelfCheck() {
 
   const r = selfCheck({ sigil, installedSourceBytes });
   r.projectPublicKey = sigil.project_public_key;
-  console.log(bold('@veritasacta/verify — self-check'));
+  console.log(bold('@veritasacta/verify self-check'));
   console.log(formatSelfCheckResult(r));
   process.exit(r.canonical ? 0 : 1);
 }
@@ -536,7 +554,7 @@ async function runSelfTest(opts) {
   const testKey = 'd75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a';
   let allPassed = true;
 
-  console.log(`\n${bold('@veritasacta/verify — self-test')}\n`);
+  console.log(`\n${bold('@veritasacta/verify self-test')}\n`);
   if (!process.env.CI && !process.env.NO_COLOR) {
     console.log(renderTerminalSigil(testKey));
     console.log('');
@@ -615,10 +633,18 @@ async function dispatch(input, opts) {
   }
   if (opts.bundle) detected.mode = 'ed25519-bundle';
 
+  // --previous asserts that one receipt follows another: it applies to a single receipt, never silently to anything else.
+  if (opts.previousReceipt && !RECEIPT_MODES.includes(detected.mode)) {
+    console.error(red(`verify: --previous checks the link of one Ed25519 receipt. This file reads as ${MODE_LABELS[detected.mode] || 'no format this verifier knows'}, so it does not apply.`));
+    console.error('  Nothing was verified (exit 2).');
+    process.exit(2);
+  }
+
   // Resolve JWKS if needed
   let publicKey = opts.publicKey;
   let keySource = publicKey ? 'provided' : null;
   let keyWindow = null;
+  let jwksFailure = null;
   if (!publicKey && opts.jwksUrl) {
     const kid = input.kid || input.signature?.kid;
     const resolved = await resolveFromJwks(opts.jwksUrl, kid);
@@ -626,6 +652,10 @@ async function dispatch(input, opts) {
       publicKey = resolved.key;
       keySource = 'jwks';
       keyWindow = resolved.window || null;
+    } else if (RECEIPT_MODES.includes(detected.mode)) {
+      // A single receipt still has the checks that need no key run on it, with the key undecidable (§5.3 of the -04
+      // editor's copy, VeritasActa/drafts).
+      jwksFailure = resolved.error;
     } else {
       const result = {
         valid: false,
@@ -637,7 +667,7 @@ async function dispatch(input, opts) {
     }
   }
 
-  const subOpts = { ...opts, publicKey };
+  const subOpts = { ...opts, publicKey, ...(jwksFailure ? { allowEmbeddedKey: false } : {}) };
 
   // Route to engine
   switch (detected.mode) {
@@ -744,16 +774,40 @@ async function dispatch(input, opts) {
     case 'ed25519-receipt-v2':
     case 'ed25519-passport': {
       const r = await verifyReceipt(input, detected.mode, subOpts);
+      const details = { signature: jwksFailure || r.detail };
+      if (jwksFailure) r.checks.signature = { result: 'undecidable', code: 'jwks_fetch_failed' };
 
-      // Key validity window (draft §9.2): applied whenever the key source carries one, and reported either way,
-      // so an unchecked window is never read as a valid key.
-      const kw = checkKeyWindow({ window: keyWindow, issuedAt: receiptIssuedAt(input), keySource: keySource || r.keySource, require: opts.requireKeyWindow });
+      // Key validity window (-04 §5.5, -03 §9.2): applied whenever the key source carries one, whatever the signature's
+      // result, and reported either way, so an unchecked window is never read as a valid key.
+      const kw = checkKeyWindow({ window: keyWindow, issuedAt: receiptIssuedAt(input), keySource: jwksFailure ? null : keySource || r.keySource, require: opts.requireKeyWindow });
       r.keyStatus = kw.report;
-      if (kw.error && r.valid !== false) {
-        r.valid = false;
-        r.error = kw.error;
-        r.detail = kw.detail;
+      r.checks.key_window = keyWindowCheck(kw);
+      details.key_window = kw.detail;
+
+      // --previous (-04 §6.7.1): the caller asserts this receipt follows the one supplied, so its link must be that
+      // receipt's hash. The result says what the link was, whatever the other checks found.
+      if (opts.previousReceipt) {
+        let p;
+        try {
+          p = checkPreviousLink(input, opts.previousReceipt, { allowPayloadOnlyLinks: opts.allowPayloadOnlyLinks });
+        } catch (e) {
+          console.error(red(`verify: --previous ${opts.previousFile}: the receipt does not canonicalize (${e.message}), so it has no draft §6.7 link.`));
+          console.error('  Nothing was verified (exit 2).');
+          process.exit(2);
+        }
+        r.previous = { file: opts.previousFile, ...p };
+        r.checks.previous = !p.error ? { result: 'pass' } : { result: exitCodeFor(p.error) === 1 ? 'fail' : 'undecidable', code: p.error };
+        details.previous = p.detail;
+        if (p.warning) r.warning = [r.warning, p.warning].filter(Boolean).join(' ');
+        if (p.result === 'legacy-payload') r.conformant = false;
       }
+
+      // -04 §5.3: invalid if any check ran and failed, undecidable if none failed and one could not run.
+      const combined = combineChecks(r.checks);
+      r.valid = combined.valid;
+      r.outcome = combined.outcome;
+      r.error = combined.error;
+      if (combined.check && details[combined.check]) r.detail = details[combined.check];
 
       // Selective disclosure: attach if commitments present.
       // Two formats supported:
@@ -823,6 +877,8 @@ async function dispatch(input, opts) {
         valid: r.valid === true,
         signatureVerified: r.valid === true,
         jcsVerified: r.valid === true && r.canonicalization === 'jcs',
+        // A link is verified only against a receipt the caller supplied with --previous; otherwise it is declared.
+        chainVerified: r.valid === true && r.previous?.result === 'linked',
         payloadFields: r.payloadFields,
         disclosuresVerified: disclosureResult?.disclosuresVerified || 0,
       });
@@ -914,7 +970,20 @@ function enforcePinSigil(expected) {
  */
 async function runReplayChain(opts) {
   const sigil = loadSigil();
-  const result = await replayChain(opts.replayChain, opts);
+  // Keys from --jwks: the key set is read once, and each receipt's key is the one its kid names, with its window.
+  let keyResolver = null;
+  if (!opts.publicKey && opts.jwksUrl) {
+    const loaded = await loadJwksResolver(opts.jwksUrl);
+    if (loaded.error) {
+      console.error(red(`verify: --jwks ${opts.jwksUrl}: ${loaded.error}`));
+      console.error('  Nothing was verified (exit 2).');
+      process.exit(2);
+    }
+    keyResolver = loaded.resolve;
+  }
+  const result = await replayChain(opts.replayChain, { ...opts, keyResolver });
+  // -04 §5.3: exit 1 if any line is invalid or any link breaks, else 2 if any line could not be checked, else 0.
+  const replayExit = result.outcome === 'valid' ? 0 : result.outcome === 'invalid' ? 1 : 2;
 
   if (opts.auditReport) {
     let attestation = null;
@@ -931,19 +1000,22 @@ async function runReplayChain(opts) {
     } else {
       console.log(html);
     }
-    process.exit(exitOk(result) ? 0 : 1);
+    process.exit(replayExit);
   }
 
   if (opts.json) {
     console.log(JSON.stringify(result, null, 2));
   } else {
+    console.log(`\n${replayHeadline(result)}`);
     console.log(`\n${bold('Chain replay result')}`);
+    console.log(`  Outcome:     ${result.outcome === 'valid' ? green('valid') : result.outcome === 'invalid' ? red('invalid') : yellow('not checked (undecidable)')} (exit ${replayExit})`);
     console.log(`  Total:       ${result.total}`);
     console.log(`  Verified:    ${green(String(result.verified))}`);
     console.log(`  Failed:      ${result.failed > 0 ? red(String(result.failed)) : '0'}`);
+    console.log(`  Not checked: ${result.undecidable > 0 ? yellow(String(result.undecidable)) : '0'}`);
     console.log(`  Chain breaks: ${result.chainBreaks > 0 ? red(String(result.chainBreaks)) : '0'}`);
     console.log(`  Chains:      ${result.chains}`);
-    if (result.legacyLinks > 0) console.log(`  Legacy links: ${yellow(String(result.legacyLinks))} (payload-only, read because --allow-payload-only-links was given)`);
+    if (result.legacyLinks > 0) console.log(`  Legacy links: ${yellow(String(result.legacyLinks))} (payload-only, read because --allow-payload-only-links was given: ${COMPATIBILITY_NOTE})`);
     if (result.errors.length > 0) {
       console.log(`\n  ${red('Errors:')}`);
       for (const e of result.errors.slice(0, 20)) console.log(`    ${red('•')} ${e}`);
@@ -956,7 +1028,7 @@ async function runReplayChain(opts) {
     }
     console.log('');
   }
-  process.exit(exitOk(result) ? 0 : 1);
+  process.exit(replayExit);
 }
 
 /**
@@ -1167,7 +1239,7 @@ async function runDashboard(opts) {
   if (receiptsDir) {
     console.log(`  Receipts:   ${receiptsDir}`);
   } else {
-    console.log(dim(`  Receipts:   (none — paste JSON or drop files in the UI)`));
+    console.log(dim(`  Receipts:   (none: paste JSON or drop files in the UI)`));
   }
   console.log(dim('  Loopback-only. No TLS, no auth, no telemetry.'));
   console.log(dim('  Press Ctrl+C to stop.'));
@@ -1223,6 +1295,33 @@ async function main() {
     }
   }
 
+  // --previous names the receipt this one follows. It is read before anything is verified, and refused where it would
+  // otherwise be dropped: --replay-chain reads the order from the file, and the subcommands verify other things.
+  if (opts.previousFile !== null) {
+    const other = opts.replayChain ? '--replay-chain' : opts.subcommand ? `verify ${opts.subcommand}` : opts.diff ? '--diff'
+      : opts.bundle ? '--bundle' : opts.selfCheck ? '--self-check' : opts.selfTest ? '--self-test' : null;
+    if (!opts.previousFile || other) {
+      console.error(red(!opts.previousFile
+        ? 'verify: --previous needs the file of the receipt this one follows.'
+        : `verify: --previous checks one receipt against the receipt before it, and does not apply to ${other}.`));
+      if (opts.replayChain) console.error('  --replay-chain reads the order from the file and checks every link in it.');
+      console.error('  Nothing was verified (exit 2).');
+      process.exit(2);
+    }
+    try {
+      opts.previousReceipt = parseReceiptJson(readFileSync(opts.previousFile, 'utf-8'), { maxBytes: 50 * 1024 * 1024, maxDepth: 128 });
+    } catch (e) {
+      console.error(red(`verify: --previous ${opts.previousFile}: ${e.message}`));
+      console.error('  Nothing was verified (exit 2).');
+      process.exit(2);
+    }
+    if (!opts.previousReceipt || typeof opts.previousReceipt !== 'object' || Array.isArray(opts.previousReceipt)) {
+      console.error(red(`verify: --previous ${opts.previousFile} holds no receipt: a receipt is one JSON object.`));
+      console.error('  Nothing was verified (exit 2).');
+      process.exit(2);
+    }
+  }
+
   if (opts.pinSigil) enforcePinSigil(opts.pinSigil);
 
   // Subcommands
@@ -1244,7 +1343,7 @@ async function main() {
     if (result.detection) {
       console.log(`  Framework: ${green(result.detection.framework)} (${result.detection.language})`);
     } else {
-      console.log(`  Framework: ${yellow('not auto-detected')} — see manual setup below`);
+      console.log(`  Framework: ${yellow('not auto-detected')}; see manual setup below`);
     }
     console.log('');
     console.log(bold('Next steps:'));
@@ -1359,6 +1458,12 @@ async function main() {
 
   let result = await dispatch(input, opts);
   result = applyTierGate(result, opts.tier);
+  // The checks made after a receipt's own (a disclosure, a live-context predicate, --tier) can still fail it, so the
+  // outcome is read again from the final result: a failure of any of them is invalid, one that could not run is
+  // undecidable (-04 §5.3).
+  if (result && typeof result.outcome === 'string') {
+    result.outcome = result.valid === true ? 'valid' : exitCodeFor(result.error) === 1 ? 'invalid' : 'undecidable';
+  }
 
   // Attach error metadata
   if (result.error) {
@@ -1495,7 +1600,8 @@ async function main() {
     }
     process.exit(0);
   }
-  process.exit(exitCodeFor(result.error));
+  // -04 §5.3: the exit status tells the three outcomes apart.
+  process.exit(result.outcome === 'invalid' ? 1 : result.outcome === 'undecidable' ? 2 : exitCodeFor(result.error));
 }
 
 main().catch((e) => {

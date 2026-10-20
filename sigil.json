@@ -1,15 +1,15 @@
 {
   "sigil_version": 1,
-  "fingerprint": "29edf781",
-  "name": "Warm Harbor",
-  "sigil_hash": "29edf7810ea2647e0af724086555c83b29203e407d83a67ff7b56f001d0f8309",
+  "fingerprint": "fe738faa",
+  "name": "Bold Tide",
+  "sigil_hash": "fe738faac96001e3ca38436ba1343d21f5614ec6b394f50f85606d21adc590ce",
   "project_public_key": "fe665e861867cec7e171c0c13bbc873c3362079faef21f54df7804b7fb9ae8af",
   "commitment_authentication": "public_recomputable_integrity_only",
   "policy": {
     "version": 3,
     "package": "@veritasacta/verify",
-    "package_version": "0.10.25",
-    "source_hash": "42fcf32b00be7beed343ef9dddd529cf2014a5af5f8de33ce7ea0a95b73da830",
+    "package_version": "0.10.26",
+    "source_hash": "8f02450f82381fd5ca066798a091a0a202c019a7cdd8966be930c7219961703b",
     "monitored_files": [
       "README.md",
       "browser/receipt-verifier.js",
@@ -30,6 +30,7 @@
       "src/engines/legate-proof-pack.js",
       "src/engines/legate-standard.js",
       "src/engines/repository-evidence.js",
+      "src/engines/legate-core.mjs",
       "src/engines/trusted-context-pack.js",
       "src/engines/commitment-mode.js",
       "src/engines/connector-action.js",
@@ -83,6 +84,6 @@
     ],
     "created_at": 1784267169966
   },
-  "policy_hash": "c9c2d2d44fe89a97db46738f6d68f2885dcc30aaebe2817f2afdcc3957e38d41",
+  "policy_hash": "a4865945e6297ae7bc0164f9f1c432c1d4cbf8a69c0936edfc7358449d27706c",
   "derived_at": "2026-07-17T05:46:09.966Z"
 }

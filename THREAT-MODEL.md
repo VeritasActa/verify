@@ -20,7 +20,10 @@ The verifier provides, for any artifact it reports as VALID:
   `previousReceiptHash` matches the draft §6.7 hash of the preceding
   receipt, the SHA-256 of the JCS of the whole receipt with its
   signature. A link over the payload alone is refused unless
-  `--allow-payload-only-links` reads it, counted and warned.
+  `--allow-payload-only-links` reads it, counted and warned, as a
+  compatibility mode that is not conformant to draft §6.7 and is marked
+  `conformant: false`. For one receipt, `--previous` checks its link
+  against the receipt the caller says it follows.
 - **Algorithm conformance**: the signature algorithm is explicitly
   supported; unrecognized algorithms are reported as `undecidable`
   rather than silently accepted.

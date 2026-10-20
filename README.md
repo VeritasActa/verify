@@ -68,6 +68,7 @@ only establishes the checks named in that output, not universal completeness.
 | Task | Guide |
 | --- | --- |
 | Verify bundles, chains, prompts or specialist artifacts | [Advanced reference](docs/reference.md) |
+| See this CLI's results on TRACE's Acta fixtures | [TRACE fixture results](docs/trace-fixtures.md) |
 | Issue receipts or configure a proxy/daemon | [Issuance and adapters](docs/issuance.md) |
 | Understand threats and limitations | [Threat model](THREAT-MODEL.md) |
 | Report a vulnerability | [Security policy](SECURITY.md) |
@@ -87,7 +88,7 @@ relying on it.
 ## Release and standards status
 
 <!-- release-manifest:start -->
-Verifier: **[0.10.25](https://github.com/VeritasActa/verify/releases/tag/v0.10.25)**. Status reviewed 2026-10-19.
+Verifier: **[0.10.26](https://github.com/VeritasActa/verify/releases/tag/v0.10.26)**. Status reviewed 2026-10-20.
 
 - [draft-farley-acta-signed-receipts-03](https://datatracker.ietf.org/doc/draft-farley-acta-signed-receipts/): active individual Internet-Draft.
 - [draft-farley-acta-knowledge-units-00](https://datatracker.ietf.org/doc/draft-farley-acta-knowledge-units/): expired individual Internet-Draft (expired 2026-10-08).

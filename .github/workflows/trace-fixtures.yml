@@ -1,0 +1,30 @@
+name: TRACE Acta fixtures
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  trace-fixtures:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # The fixtures this checks, 07 to 11 among them, exist only on the head of agentrust-io/trace-spec#592 for now.
+      # Once #592 merges, move the pin to the trace-spec main commit that holds them (TRACE_SPEC_REF: main and that
+      # commit's SHA), then run scripts/trace-fixtures.mjs --write and commit docs/trace-fixtures.md.
+      TRACE_SPEC_REF: refs/pull/592/head
+      TRACE_SPEC_SHA: 0e2457d748959530fc5a793a106e9e1a4c5feb9a
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: agentrust-io/trace-spec
+          ref: ${{ env.TRACE_SPEC_REF }}
+          path: trace-spec
+          persist-credentials: false
+      - name: The trace-spec checkout is the pinned commit
+        run: test "$(git -C trace-spec rev-parse HEAD)" = "$TRACE_SPEC_SHA"
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.22.3'
+      - run: npm ci
+      - name: Run every fixture through cli.js and compare with docs/trace-fixtures.md
+        run: node scripts/trace-fixtures.mjs --trace-spec trace-spec --commit "$TRACE_SPEC_SHA" --ref "$TRACE_SPEC_REF" --check
