@@ -7,17 +7,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      # The fixtures this checks, 07 to 11 among them, exist only on the head of agentrust-io/trace-spec#592 for now.
-      # Once #592 merges, move the pin to the trace-spec main commit that holds them (TRACE_SPEC_REF: main and that
-      # commit's SHA), then run scripts/trace-fixtures.mjs --write and commit docs/trace-fixtures.md.
-      TRACE_SPEC_REF: refs/pull/592/head
-      TRACE_SPEC_SHA: 0e2457d748959530fc5a793a106e9e1a4c5feb9a
+      # The fixtures this checks, 07 to 11 among them, are on agentrust-io/trace-spec main since #592 merged on
+      # 20 October 2026, as commit b8d2ce61. The checkout is that commit itself, not a branch, so a later change to
+      # trace-spec cannot move the check without a commit here. To move it: set TRACE_SPEC_SHA to the new commit, run
+      # scripts/trace-fixtures.mjs --write, and commit docs/trace-fixtures.md.
+      TRACE_SPEC_SHA: b8d2ce6161e57d41dd0b49be78efc05e86baeca5
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: agentrust-io/trace-spec
-          ref: ${{ env.TRACE_SPEC_REF }}
+          ref: ${{ env.TRACE_SPEC_SHA }}
           path: trace-spec
           persist-credentials: false
       - name: The trace-spec checkout is the pinned commit
@@ -27,4 +27,4 @@ jobs:
           node-version: '22.22.3'
       - run: npm ci
       - name: Run every fixture through cli.js and compare with docs/trace-fixtures.md
-        run: node scripts/trace-fixtures.mjs --trace-spec trace-spec --commit "$TRACE_SPEC_SHA" --ref "$TRACE_SPEC_REF" --check
+        run: node scripts/trace-fixtures.mjs --trace-spec trace-spec --commit "$TRACE_SPEC_SHA" --check

@@ -3,7 +3,7 @@
 This package's `cli.js` against the Acta action-receipt fixtures that [agentrust-io/trace-spec](https://github.com/agentrust-io/trace-spec) publishes, run by [`scripts/trace-fixtures.mjs`](../scripts/trace-fixtures.mjs) and checked on every push by [`.github/workflows/trace-fixtures.yml`](../.github/workflows/trace-fixtures.yml), which fails when this page differs from a new run. TRACE's Project Lead asked, on agentrust-io/trace-spec#469, that each implementation run such checks from its own repository and publish the results there.
 
 - Repository: [agentrust-io/trace-spec](https://github.com/agentrust-io/trace-spec)
-- Commit: [`0e2457d748959530fc5a793a106e9e1a4c5feb9a`](https://github.com/agentrust-io/trace-spec/tree/0e2457d748959530fc5a793a106e9e1a4c5feb9a), checked out as `refs/pull/592/head`
+- Commit: [`b8d2ce6161e57d41dd0b49be78efc05e86baeca5`](https://github.com/agentrust-io/trace-spec/tree/b8d2ce6161e57d41dd0b49be78efc05e86baeca5)
 - Fixtures: `examples/action-receipts/acta`, the 11 that `expected.json` lists
 - Run: `node cli.js <fixture> --jwks acta-keys.json --json`, adding `--previous <predecessor>` for each fixture `expected.json` gives a predecessor in `chain`
 - Result: 11 fixtures, 35 checks compared, no differences
