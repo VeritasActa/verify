@@ -18,7 +18,7 @@ rather than rely on human-readable text.
 
 #### `invalid_signature`
 - **Description:** Cryptographic signature verification failed over the canonical payload.
-- **Spec:** `draft-farley-acta-signed-receipts-03 §6.1`
+- **Spec:** `draft-farley-acta-signed-receipts-03 §6.6 Signature Scope`
 - **Hint:** The receipt has been modified, or was signed by a different key than the one provided.
 
 #### `signature_in_signing_input`
@@ -27,9 +27,9 @@ rather than rely on human-readable text.
 - **Hint:** Sign `JCS(payload)` over a payload with no signature member. A signature over bytes that contain one is refused even when it verifies.
 
 #### `chain_break`
-- **Description:** `previousReceiptHash` does not match the hash of the preceding receipt.
-- **Spec:** `draft-farley-acta-signed-receipts-03 §5.4 Chain Linkage`
-- **Hint:** A receipt has been inserted, removed, or reordered in the chain.
+- **Description:** `previousReceiptHash` does not match the hash of the preceding receipt: the SHA-256 of the JCS of the whole receipt, signature included.
+- **Spec:** `draft-farley-acta-signed-receipts-03 §6.7 Chain Hash Scope`
+- **Hint:** A receipt has been inserted, removed, reordered or re-signed. A link over the previous receipt's payload alone is refused too, whatever that receipt's `spec` says: no revision of the draft defines one. `--allow-payload-only-links` reads one as a legacy link, counted and warned, for chains written by `verify proxy` and `verify daemon` in 0.9.3 and earlier. `--replay-chain` and `verify chain explore` report this code; a receipt after the first with no `previousReceiptHash` starts a new chain (§2.2) and is not a `chain_break`.
 
 #### `malformed_chain_link`
 - **Description:** `previousReceiptHash` is not `sha256:` followed by 64 lowercase hex characters, nor the bare 64-character digest of earlier revisions.
@@ -43,7 +43,7 @@ rather than rely on human-readable text.
 
 #### `dleq_verification_failed`
 - **Description:** VOPRF DLEQ proof verification failed (issuer or client proof invalid).
-- **Spec:** `draft-farley-acta-signed-receipts-03 §VOPRF Token Verification`
+- **Spec:** `RFC 9497 (VOPRF DLEQ proofs)`
 - **Hint:** The VOPRF token was not produced by a valid issuer, or the proof is malformed.
 
 #### `digest_mismatch`
@@ -80,12 +80,12 @@ rather than rely on human-readable text.
 
 #### `embedded_key_rejected`
 - **Description:** Receipt contains a verification key in its payload, which is not trusted by default.
-- **Spec:** `draft-farley-acta-signed-receipts-03 §Security Considerations: Key Distribution`
-- **Hint:** Provide `--key`, `--jwks`, or `--trust-anchor` externally. The deprecated `--allow-embedded-key` restores pre-0.4.0 behaviour for one release cycle.
+- **Spec:** `draft-farley-acta-signed-receipts-03 §9.5 Key Distribution and Trust Anchors`
+- **Hint:** Provide `--key` or `--jwks` externally. The deprecated `--allow-embedded-key` restores pre-0.4.0 behaviour for one release cycle.
 
 #### `no_public_key`
 - **Description:** Verification key could not be resolved from `--key`, `--jwks`, or a bundle verification block.
-- **Hint:** Provide `--key <hex>`, `--jwks <url>`, or `--trust-anchor <file>`.
+- **Hint:** Provide `--key <hex>`, or `--jwks <url|file>`. `--trust-anchor` was never implemented and is refused (exit 2) since 0.10.25.
 
 #### `missing_signature`
 - **Description:** Input does not contain a `signature` field.
@@ -138,8 +138,8 @@ When `--json` is used, errors appear as:
     "code": "embedded_key_rejected",
     "description": "Receipt contains a verification key in its payload, which is not trusted by default.",
     "class": "undecidable",
-    "spec": "draft-farley-acta-signed-receipts-03 §Security Considerations: Key Distribution",
-    "hint": "Provide --key, --jwks, or --trust-anchor externally."
+    "spec": "draft-farley-acta-signed-receipts-03 §9.5 Key Distribution and Trust Anchors",
+    "hint": "Provide --key or --jwks externally."
   },
   "format": "ed25519-passport",
   "kid": "..."

@@ -14,7 +14,10 @@
  * and the lowercase hex SHA-256 of the JCS of the whole previous receipt,
  * signature included. Each link is read by the rules the receipt verifier
  * applies (checkChainLinkSyntax) and resolved the way --replay-chain
- * resolves it, so the two agree about every chain.
+ * resolves it, so the two agree about every chain. A link over the
+ * ancestor's payload alone, which no revision of the draft defines, is
+ * refused with chain_break unless allowPayloadOnlyLinks reads it as a
+ * legacy link.
  *
  * @module verify-cli/src/engines/chain-explore
  * @license Apache-2.0
@@ -36,6 +39,10 @@ import { checkChainLinkSyntax } from './ed25519-receipt.js';
  *                                        receiptPath.
  * @property {number} [maxDepth=100]      Stop walking after this many ancestors.
  * @property {boolean} [verify=true]      Verify each hash link.
+ * @property {boolean} [allowPayloadOnlyLinks=false]  Read a link over the
+ *                                        ancestor's payload alone as a legacy
+ *                                        link, counted and warned, instead of
+ *                                        refusing it with chain_break.
  */
 
 /**
@@ -47,10 +54,13 @@ import { checkChainLinkSyntax } from './ed25519-receipt.js';
  *                                        null at the root.
  * @property {string|null} link_form      How previousHash named the ancestor:
  *                                        'sha256' (§6.7), 'legacy-bare-hex', or
- *                                        'legacy-payload' (the pre-03 payload-only
- *                                        link); null at the root or when refused.
- * @property {string} [link_error]        malformed_chain_link or
- *                                        unsupported_chain_hash_algorithm.
+ *                                        'legacy-payload' (a link over the
+ *                                        ancestor's payload alone, read only with
+ *                                        allowPayloadOnlyLinks); null at the root
+ *                                        or when refused for its form.
+ * @property {string} [link_error]        malformed_chain_link,
+ *                                        unsupported_chain_hash_algorithm, or
+ *                                        chain_break for a payload-only link.
  * @property {string} action              payload.action, for display.
  * @property {string} issued_at
  * @property {string} kid
@@ -65,12 +75,13 @@ import { checkChainLinkSyntax } from './ed25519-receipt.js';
  * @property {number} depth               Number of receipts walked.
  * @property {number} links_broken        Number of broken previousReceiptHash
  *                                        links encountered.
- * @property {number} legacy_links        Links resolved by the pre-03
- *                                        payload-only rule.
+ * @property {number} legacy_links        Payload-only links read as legacy
+ *                                        links, only with allowPayloadOnlyLinks.
  * @property {ChainNode[]} nodes          Tip first, root last.
  * @property {string[]} warnings
  * @property {string} [code]              The verifier's error code when a link
- *                                        was refused for its form.
+ *                                        was refused: for its form, or as a
+ *                                        payload-only link (chain_break).
  * @property {string} [error]
  */
 
@@ -83,6 +94,7 @@ export async function exploreChain(opts) {
     searchDir,
     maxDepth = 100,
     verify = true,
+    allowPayloadOnlyLinks = false,
   } = opts;
 
   const startPath = resolve(receiptPath);
@@ -160,11 +172,29 @@ export async function exploreChain(opts) {
     const digest = link.startsWith('sha256:') ? link.slice(7) : link;
     let ancestorPath = index.byReceipt.get(digest);
     if (!ancestorPath && index.byPayload.has(digest)) {
-      // The payload-only link of earlier revisions, taken only from an ancestor that cites one, as --replay-chain does.
-      ancestorPath = index.byPayload.get(digest);
+      // A link over the ancestor's payload alone. No revision of the draft defines one, and §6.7 hashes the whole
+      // receipt so that a re-signed copy cannot keep the original's link. Refused whatever the ancestor's spec says,
+      // as --replay-chain refuses it, unless the caller reads it as a legacy link.
+      const named = index.byPayload.get(digest);
+      if (!allowPayloadOnlyLinks) {
+        node.link_valid = false;
+        node.link_error = 'chain_break';
+        linksBroken++;
+        code = code || 'chain_break';
+        warnings.push(
+          `${at}: chain_break: previousReceiptHash ${preview(link)} is the SHA-256 of the payload alone of ${named}. ` +
+            'Draft-03 §6.7 links the whole receipt, signature included, and no revision defines a payload-only link. ' +
+            '--allow-payload-only-links reads it as a legacy link.'
+        );
+        break;
+      }
+      ancestorPath = named;
       node.link_form = 'legacy-payload';
       legacyLinks++;
-      warnings.push(`${at}: previousReceiptHash hashes its ancestor's payload alone, the rule before draft-03 §6.7; taken because that ancestor cites an earlier revision`);
+      warnings.push(
+        `${at}: previousReceiptHash hashes the payload alone of ${named}, read as a legacy link because ` +
+          '--allow-payload-only-links was given. A re-signed copy of that receipt would carry the same link; draft-03 §6.7 links the whole receipt.'
+      );
     }
     if (!ancestorPath) {
       node.link_valid = false;
@@ -237,15 +267,9 @@ function receiptDigest(envelope) {
   return createHash('sha256').update(canonicalize(envelope), 'utf-8').digest('hex');
 }
 
-/** The link of revisions before -03, over the payload alone. */
+/** A link over the payload alone, as the proxy and daemon of @veritasacta/verify 0.9.3 and earlier wrote it. */
 function payloadDigest(envelope) {
   return createHash('sha256').update(canonicalize(envelope.payload), 'utf-8').digest('hex');
-}
-
-/** --replay-chain's rule: a receipt citing -02 or earlier, or no revision, may be linked by its payload digest. */
-function citesPre03(payload) {
-  const spec = typeof payload.spec === 'string' ? payload.spec : null;
-  return spec === null || /-0[12]$/.test(spec);
 }
 
 function preview(link) {
@@ -255,7 +279,8 @@ function preview(link) {
 
 /**
  * Scan a directory for receipt files and index each by the digests a successor's link may carry: the SHA-256 of the
- * whole receipt (§6.7), and, for a receipt citing an earlier revision, the SHA-256 of its payload.
+ * whole receipt (§6.7), and the SHA-256 of its payload, so that a payload-only link is named when it is refused and
+ * found when the caller reads it as a legacy link.
  */
 function buildReceiptIndex(dir) {
   const byReceipt = new Map();
@@ -280,7 +305,7 @@ function buildReceiptIndex(dir) {
       const receipt = JSON.parse(readFileSync(p, 'utf-8'));
       if (!receipt.payload || !receipt.signature) continue;
       byReceipt.set(receiptDigest(receipt), p);
-      if (typeof receipt.payload === 'object' && citesPre03(receipt.payload)) byPayload.set(payloadDigest(receipt), p);
+      if (typeof receipt.payload === 'object') byPayload.set(payloadDigest(receipt), p);
     } catch {
       continue;
     }
@@ -322,7 +347,7 @@ export function renderChainTree(result, opts = {}) {
   }
 
   lines.push('');
-  lines.push(`Chain: depth=${result.depth}  links_broken=${result.links_broken}  valid=${result.valid}`);
+  lines.push(`Chain: depth=${result.depth}  links_broken=${result.links_broken}${result.legacy_links ? `  legacy_links=${result.legacy_links}` : ''}  valid=${result.valid}`);
   lines.push('');
 
   for (let i = 0; i < result.nodes.length; i++) {

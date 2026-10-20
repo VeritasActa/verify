@@ -1,15 +1,15 @@
 {
   "sigil_version": 1,
-  "fingerprint": "5435f83f",
-  "name": "Warm Thread",
-  "sigil_hash": "5435f83ff95335ee45d1a7c3a224ee9cb5ebf6d2ee932ffde59b10667b7d4323",
+  "fingerprint": "29edf781",
+  "name": "Warm Harbor",
+  "sigil_hash": "29edf7810ea2647e0af724086555c83b29203e407d83a67ff7b56f001d0f8309",
   "project_public_key": "fe665e861867cec7e171c0c13bbc873c3362079faef21f54df7804b7fb9ae8af",
   "commitment_authentication": "public_recomputable_integrity_only",
   "policy": {
     "version": 3,
     "package": "@veritasacta/verify",
-    "package_version": "0.10.24",
-    "source_hash": "857316a986e45bba582b92a0241ecf5390786f2d944869e156261750cacc96fa",
+    "package_version": "0.10.25",
+    "source_hash": "42fcf32b00be7beed343ef9dddd529cf2014a5af5f8de33ce7ea0a95b73da830",
     "monitored_files": [
       "README.md",
       "browser/receipt-verifier.js",
@@ -83,6 +83,6 @@
     ],
     "created_at": 1784267169966
   },
-  "policy_hash": "e79b41d01cc9b1051e8ac8d80189491ec2361132f2638c713ceb31863ed7375b",
+  "policy_hash": "c9c2d2d44fe89a97db46738f6d68f2885dcc30aaebe2817f2afdcc3957e38d41",
   "derived_at": "2026-07-17T05:46:09.966Z"
 }

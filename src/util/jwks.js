@@ -32,25 +32,37 @@ import { windowOf } from './key-window.js';
  * @property {{valid_from: string|null, valid_until: string|null}|null} [window]  the key's validity window, when the JWK carries one (§9.2)
  */
 
-async function loadJwks(source) {
+/**
+ * Decide whether a --jwks argument names a local file or a URL. A Windows path such as C:\keys\acta-keys.json parses
+ * as a URL whose scheme is "c:", so a single letter and a colon at the start are read as a drive letter: no URL scheme
+ * in use is one letter long. Anything else that does not parse as a URL is a path, and a file: URL is a path too.
+ *
+ * @param {string} source
+ * @returns {{type: 'file', path: string} | {type: 'url', url: URL}}
+ */
+export function classifyJwksSource(source) {
+  if (/^[A-Za-z]:/.test(source)) return { type: 'file', path: source };
   let parsed;
   try {
     parsed = new URL(source);
   } catch {
-    const resolved = resolve(source);
+    return { type: 'file', path: source };
+  }
+  if (parsed.protocol === 'file:') return { type: 'file', path: fileURLToPath(parsed) };
+  return { type: 'url', url: parsed };
+}
+
+async function loadJwks(source) {
+  const target = classifyJwksSource(source);
+  if (target.type === 'file') {
+    const resolved = resolve(target.path);
     return {
       jwks: JSON.parse(await readFile(resolved, 'utf8')),
       source: { type: 'file', resolved },
     };
   }
 
-  if (parsed.protocol === 'file:') {
-    const resolved = fileURLToPath(parsed);
-    return {
-      jwks: JSON.parse(await readFile(resolved, 'utf8')),
-      source: { type: 'file', resolved },
-    };
-  }
+  const parsed = target.url;
   if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
     throw new Error(`Unsupported JWKS URL scheme: ${parsed.protocol}`);
   }

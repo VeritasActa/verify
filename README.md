@@ -87,7 +87,7 @@ relying on it.
 ## Release and standards status
 
 <!-- release-manifest:start -->
-Verifier: **[0.10.24](https://github.com/VeritasActa/verify/releases/tag/v0.10.24)**. Status reviewed 2026-10-13.
+Verifier: **[0.10.25](https://github.com/VeritasActa/verify/releases/tag/v0.10.25)**. Status reviewed 2026-10-19.
 
 - [draft-farley-acta-signed-receipts-03](https://datatracker.ietf.org/doc/draft-farley-acta-signed-receipts/): active individual Internet-Draft.
 - [draft-farley-acta-knowledge-units-00](https://datatracker.ietf.org/doc/draft-farley-acta-knowledge-units/): expired individual Internet-Draft (expired 2026-10-08).

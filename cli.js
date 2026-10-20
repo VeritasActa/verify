@@ -178,6 +178,7 @@ function parseArgs() {
     capabilities: false,
     allowEmbeddedKey: false,
     allowLegacyCanonicalization: false,
+    allowPayloadOnlyLinks: false,
     requireContext: [],
     disclose: [],
     disclosureFile: null,
@@ -233,7 +234,7 @@ function parseArgs() {
       case '--known-issuers': opts.knownIssuers = next(); break;
       case '--jwks': opts.jwksUrl = next(); break;
       case '--require-key-window': opts.requireKeyWindow = true; break;
-      case '--trust-anchor': opts.trustAnchor = next(); break;
+      case '--trust-anchor': opts.trustAnchor = next() ?? ''; break;
       case '--history-head': opts.historyHead = next(); break;
       case '--anchor-head': opts.anchorHead = next(); break;
       case '--stdin': opts.stdin = true; break;
@@ -254,6 +255,7 @@ function parseArgs() {
       case '--self-check': opts.selfCheck = true; break;
       case '--capabilities': opts.capabilities = true; break;
       case '--allow-legacy-canonicalization': opts.allowLegacyCanonicalization = true; break;
+      case '--allow-payload-only-links': opts.allowPayloadOnlyLinks = true; break;
       case '--allow-embedded-key': opts.allowEmbeddedKey = true; break;
       case '--require-context': opts.requireContext.push(next()); break;
       case '--disclose': opts.disclose.push(next()); break;
@@ -362,6 +364,7 @@ ${bold('Subcommands:')}
                               [--prompt-receipt <r.json> | --sigstore-bundle <b.json> | --expected-hash <hex>]
   chain explore <r.json>    Walk a receipt chain to its root; verify every hash link
                               [--search-dir <dir>] [--max-depth N] [--json]
+                              [--allow-payload-only-links]
   compliance                SOC 2 / ISO 42001 / EU AI Act evidence bundle from a receipt directory
                               --receipts-dir <dir> [--framework soc2|iso42001|eu-ai-act|all]
                               [--start-date ISO] [--end-date ISO] [--org "<name>"] [--output audit.html|bundle.json]
@@ -378,7 +381,8 @@ ${bold('Options:')}
   --jwks <url>             JWKS endpoint to fetch signing key
   --require-key-window     Fail unless the key source gives the key a valid_from /
                            valid_until window (applied to issued_at either way)
-  --trust-anchor <file>    Local trust-anchor JSON with public keys
+  --trust-anchor <file>    Not implemented, so refused (exit 2): no key was ever read
+                           from the file. Pin the key with --key or --jwks <url|file>
   --history-head <hex>     Pin the expected macro track-record history head
   --anchor-head <hex>      Pin the expected signed macro anchor digest
   --mode <m>               Force mode: receipt|claims|voprf|ku|auto (default: auto)
@@ -403,6 +407,9 @@ ${bold('Options:')}
   --self-check             Compare monitored verifier source with bundled commitment
   --capabilities           List supported modes/algorithms/tiers
   --allow-legacy-canonicalization  Read historical non-JCS receipts, explicitly labelled.
+  --allow-payload-only-links  Read a chain link over the previous receipt's payload
+                           alone as a legacy link, counted and warned. Draft §6.7
+                           refuses it; verify 0.9.3 and earlier wrote it.
   --allow-embedded-key     DEPRECATED. Accept keys embedded in payloads.
                            Removed in v0.6.0.
   --allow-partial-voprf    Treat a partial (structural-only) VOPRF result
@@ -413,7 +420,8 @@ ${bold('Options:')}
   --version, -V
 
 ${bold('Bulk / replay / diff:')}
-  --replay-chain <file>    Verify every receipt in a JSONL chain file
+  --replay-chain <file>    Verify every receipt in a JSONL chain file and the links
+                           between them; a later receipt with no link starts a new chain
   --emit-eat               Re-emit the verified receipt as an RFC 9711 EAT claims-set (JSON)
   --emit-eat-cbor          Same, as CBOR with integer claim keys
   --diff <other-file>      Show structural diff between two receipts
@@ -934,10 +942,17 @@ async function runReplayChain(opts) {
     console.log(`  Verified:    ${green(String(result.verified))}`);
     console.log(`  Failed:      ${result.failed > 0 ? red(String(result.failed)) : '0'}`);
     console.log(`  Chain breaks: ${result.chainBreaks > 0 ? red(String(result.chainBreaks)) : '0'}`);
+    console.log(`  Chains:      ${result.chains}`);
+    if (result.legacyLinks > 0) console.log(`  Legacy links: ${yellow(String(result.legacyLinks))} (payload-only, read because --allow-payload-only-links was given)`);
     if (result.errors.length > 0) {
       console.log(`\n  ${red('Errors:')}`);
       for (const e of result.errors.slice(0, 20)) console.log(`    ${red('•')} ${e}`);
       if (result.errors.length > 20) console.log(`    ${dim(`... ${result.errors.length - 20} more`)}`);
+    }
+    if (result.warnings.length > 0) {
+      console.log(`\n  ${yellow('Warnings:')}`);
+      for (const w of result.warnings.slice(0, 20)) console.log(`    ${yellow('•')} ${w}`);
+      if (result.warnings.length > 20) console.log(`    ${dim(`... ${result.warnings.length - 20} more`)}`);
     }
     console.log('');
   }
@@ -1040,6 +1055,7 @@ async function runChainExplore(opts) {
     receiptPath: opts.file,
     searchDir: opts.chainSearchDir,
     maxDepth: opts.chainMaxDepth,
+    allowPayloadOnlyLinks: opts.allowPayloadOnlyLinks,
   });
 
   if (opts.json) {
@@ -1185,6 +1201,28 @@ async function main() {
   if (opts.help) { printHelp(); process.exit(0); }
   if (opts.version) { console.log(PKG.version); process.exit(0); }
   if (opts.capabilities) { printCapabilities(); process.exit(0); }
+
+  // --trust-anchor was parsed and never read, so no key was ever taken from the file: a receipt was then refused for
+  // want of a key, and a bundle, a Gate record or an embedded key verified against the keys it carried itself. A trust
+  // input the verifier cannot apply is refused rather than dropped.
+  if (opts.trustAnchor !== null) {
+    console.error(red(`verify: --trust-anchor is not implemented, so no key would be read from ${opts.trustAnchor || 'the file'}.`));
+    console.error('  Earlier releases accepted the flag and ignored it. Pin the key with --key <hex>, or with --jwks <url|file>');
+    console.error('  for a single file. Nothing was verified (exit 2).');
+    process.exit(2);
+  }
+
+  // --strict disables every compatibility fallback, on every path. It is applied before any subcommand or replay
+  // runs: earlier releases applied it to a single file only, so --replay-chain kept the fallbacks it was given to drop.
+  if (opts.strict) {
+    opts.allowLegacyCanonicalization = false;
+    opts.allowPayloadOnlyLinks = false;
+    if (opts.allowEmbeddedKey) {
+      console.error(yellow('Warning: --strict overrides --allow-embedded-key (embedded keys always rejected in strict mode).'));
+      opts.allowEmbeddedKey = false;
+    }
+  }
+
   if (opts.pinSigil) enforcePinSigil(opts.pinSigil);
 
   // Subcommands
@@ -1297,12 +1335,6 @@ async function main() {
   } catch (e) {
     console.error(red(`Error: invalid JSON: ${e.message}`));
     process.exit(2);
-  }
-
-  if (opts.strict) opts.allowLegacyCanonicalization = false;
-  if (opts.strict && opts.allowEmbeddedKey) {
-    console.error(yellow('Warning: --strict overrides --allow-embedded-key (embedded keys always rejected in strict mode).'));
-    opts.allowEmbeddedKey = false;
   }
 
   // FIPS enforcement (if set, checks algorithm compliance before verify)

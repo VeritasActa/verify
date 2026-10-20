@@ -6,7 +6,8 @@
  * drives the process exit code.
  *
  * References:
- *   - draft-farley-acta-signed-receipts-03 §Error Codes (informative)
+ *   - draft-farley-acta-signed-receipts-03 (each spec below names the section a code enforces; the draft
+ *     defines no error registry of its own)
  *
  * @module verify-cli/src/errors
  * @license Apache-2.0
@@ -47,7 +48,7 @@ export const ERROR_REGISTRY = {
     description: 'previousReceiptHash does not match the hash of the preceding receipt.',
     class: 'tampered',
     spec: 'draft-farley-acta-signed-receipts-03 §6.7 Chain Hash Scope',
-    hint: 'A receipt has been inserted, removed, or reordered in the chain.',
+    hint: 'A receipt has been inserted, removed, reordered or re-signed. A link over the previous receipt\'s payload alone is refused too; --allow-payload-only-links reads one as a legacy link.',
   },
   malformed_chain_link: {
     code: 'malformed_chain_link',
@@ -67,7 +68,7 @@ export const ERROR_REGISTRY = {
     code: 'dleq_verification_failed',
     description: 'VOPRF DLEQ proof verification failed (issuer or client proof invalid).',
     class: 'tampered',
-    spec: 'draft-farley-acta-signed-receipts-03 §VOPRF Token Verification',
+    spec: 'RFC 9497 (VOPRF DLEQ proofs)',
     hint: 'The VOPRF token was not produced by a valid issuer, or the proof is malformed.',
   },
   digest_mismatch: {
@@ -100,14 +101,14 @@ export const ERROR_REGISTRY = {
     code: 'embedded_key_rejected',
     description: 'Receipt contains a verification key in its payload, which is not trusted by default.',
     class: 'undecidable',
-    spec: 'draft-farley-acta-signed-receipts-03 §Security Considerations — Key Distribution',
-    hint: 'Provide --key, --jwks, or --trust-anchor externally. Pass --allow-embedded-key (deprecated, removed in 0.6) to restore pre-0.4.0 behaviour.',
+    spec: 'draft-farley-acta-signed-receipts-03 §9.5 Key Distribution and Trust Anchors',
+    hint: 'Provide --key or --jwks externally. Pass --allow-embedded-key (deprecated, removed in 0.6) to restore pre-0.4.0 behaviour.',
   },
   no_public_key: {
     code: 'no_public_key',
     description: 'Verification key could not be resolved from --key, --jwks, or bundle verification block.',
     class: 'undecidable',
-    hint: 'Provide --key <hex>, --jwks <url>, or --trust-anchor <file>.',
+    hint: 'Provide --key <hex>, or --jwks <url|file>.',
   },
   missing_signature: {
     code: 'missing_signature',

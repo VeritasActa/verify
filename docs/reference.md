@@ -84,7 +84,7 @@ verify chain explore ./receipts/tip.json
 verify chain explore ./receipts/tip.json --search-dir ./audit/ --max-depth 200 --json
 ```
 
-Links are read by the rules of draft §6.7 that the receipt verifier applies: `sha256:` and the lowercase hex SHA-256 of the JCS of the whole previous receipt, or the bare digest of earlier revisions. A malformed link stops the walk with `malformed_chain_link` (exit 1), and one naming another algorithm with `unsupported_chain_hash_algorithm` (exit 2). Before 0.10.23 the explorer looked ancestors up by an unprefixed base64url hash, so it did not walk §6.7 chains.
+Links are read by the rules of draft §6.7 that the receipt verifier applies: `sha256:` and the lowercase hex SHA-256 of the JCS of the whole previous receipt, or the bare digest of earlier revisions. A malformed link stops the walk with `malformed_chain_link` (exit 1), and one naming another algorithm with `unsupported_chain_hash_algorithm` (exit 2). A link over the ancestor's payload alone stops it with `chain_break` (exit 1), whatever the ancestor's `spec` says; `--allow-payload-only-links` reads one as a legacy link instead (see [0.10.25](#chain-links-over-the-whole-receipt-01025)). Before 0.10.23 the explorer looked ancestors up by an unprefixed base64url hash, so it did not walk §6.7 chains.
 
 ### ScopeBlind Gate receipts
 
@@ -259,7 +259,8 @@ fingerprint determine whether a recipient should trust it.
 | `--fips` | Enforce FIPS-approved algorithms only |
 | `--strict` | Disable all deprecated fallbacks |
 | `--tier N` | Require minimum conformance tier (1-5) |
-| `--replay-chain <file>` | Bulk-verify a JSONL chain with parallel workers |
+| `--replay-chain <file>` | Verify every receipt in a JSONL file in turn, and each §6.7 link to the receipt before it; reports the chains the file holds |
+| `--allow-payload-only-links` | Read a chain link over the previous receipt's payload alone as a legacy link, counted and warned (disabled by `--strict`) |
 | `--diff <other>` | Structural diff between two receipts |
 
 ## Live-context verification (Sigil claim 2)
@@ -384,6 +385,21 @@ verify --pin-sigil <fingerprint> # enforce a specific release
 Apache-2.0.
 
 Patent-adjacent; covered by the Apache-2.0 patent grant (§3). See [PATENTS.md](.././PATENTS.md).
+
+### Chain links over the whole receipt (0.10.25)
+
+Draft §6.7 defines `previousReceiptHash` as the SHA-256 of the JCS of the whole previous receipt, signature included, and -02 §5.7 defined the same preimage. No revision defines a link over the payload alone, which would give a re-signed receipt the same link as the original. `--replay-chain` and `verify chain explore` refuse such a link with `chain_break` (exit 1), whatever the previous receipt's `spec` says. The proxy and daemon of 0.9.3 and earlier wrote payload-only links. To read one of their chains, add `--allow-payload-only-links`:
+
+```bash
+verify --replay-chain receipts.jsonl --key PUBLIC_KEY --allow-payload-only-links
+verify chain explore tip.json --allow-payload-only-links
+```
+
+Each link read that way is counted (`legacyLinks` in replay, `legacy_links` in explore) and named in the warnings. The flag changes nothing else: a link over the whole receipt is read as before, and any other mismatch is still a `chain_break`. `--strict` disables it, and since this release `--strict` applies to `--replay-chain` and `chain explore` as well as to a single file.
+
+`--replay-chain` reads a file as one or more chains. A receipt after the first with no `previousReceiptHash`, or with a `null` one as 0.9.3 wrote on a first receipt, starts a new chain: draft §2.2 says such a receipt is a chain genesis or an unchained receipt, so it is neither checked against the receipt before it nor a break. The result counts the chains in `chains` and names each new start in `warnings`, beside the receipt verifier's own warnings. A `receipts.jsonl` the proxy appended to over several sessions holds one chain per session.
+
+`--trust-anchor` was listed as a key source but never implemented: no key was read from the file, so a bundle or Gate record verified against the keys it carried. It is now refused (exit 2). Pin the key with `--key`, or with `--jwks` and a URL or a local JWKS file.
 
 ### Chain link syntax (0.10.22)
 

@@ -51,7 +51,14 @@ export function renderHtmlReport({ result, sigil, attestation, title }) {
       <tr><th>Verified</th><td class="pass">${result.verified || result.passed || 0}</td></tr>
       <tr><th>Failed</th><td class="fail">${result.failed || 0}</td></tr>
       <tr><th>Chain breaks</th><td>${result.chainBreaks || 0}</td></tr>
+      ${result.chains !== undefined ? `<tr><th>Chains</th><td>${esc(result.chains)}</td></tr>` : ''}
+      ${result.legacyLinks ? `<tr><th>Legacy links</th><td>${esc(result.legacyLinks)} payload-only, read because --allow-payload-only-links was given</td></tr>` : ''}
     </table>
+    ${Array.isArray(result.warnings) && result.warnings.length ? `
+    <h2>Warnings</h2>
+    <ul>${result.warnings.slice(0, 500).map((w) => `<li>${esc(w)}</li>`).join('')}</ul>
+    ${result.warnings.length > 500 ? `<p class="truncated">… ${result.warnings.length - 500} more warnings truncated from report (full data in raw JSON section below).</p>` : ''}
+    ` : ''}
   ` : `
     <table>
       <tr><th>Valid</th><td class="${result.valid ? 'pass' : 'fail'}">${result.valid ? 'YES' : 'NO'}</td></tr>

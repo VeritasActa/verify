@@ -16,8 +16,11 @@ The verifier provides, for any artifact it reports as VALID:
   `policy_id`): the decision was made under the identified policy
   version, not a later-substituted policy.
 - **Chain integrity** (for chained receipts): no receipt in the chain
-  has been inserted, removed, or reordered; every `previousReceiptHash`
-  matches the canonical hash of the preceding receipt.
+  has been inserted, removed, reordered or re-signed; every
+  `previousReceiptHash` matches the draft §6.7 hash of the preceding
+  receipt, the SHA-256 of the JCS of the whole receipt with its
+  signature. A link over the payload alone is refused unless
+  `--allow-payload-only-links` reads it, counted and warned.
 - **Algorithm conformance**: the signature algorithm is explicitly
   supported; unrecognized algorithms are reported as `undecidable`
   rather than silently accepted.
@@ -78,8 +81,8 @@ For a verification to be trustworthy, the following must hold:
 
 ### 3.1 The caller must authentically obtain the verification key
 
-The verifier takes a public key as input (via `--key`, `--jwks`, or
-`--trust-anchor`). The authenticity of that key is the caller's
+The verifier takes a public key as input (via `--key`, or `--jwks` with
+a URL or a local file). The authenticity of that key is the caller's
 responsibility. The verifier does NOT accept keys embedded in the
 receipt payload itself (this was the `embedded_key_rejected` issue
 fixed in 0.4.0).
