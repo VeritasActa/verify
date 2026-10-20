@@ -147,23 +147,73 @@ test('exploreChain: the bare digest of earlier revisions resolves, and is named 
   assert.equal(r.nodes[0].link_form, 'legacy-bare-hex');
 });
 
-test('exploreChain: a payload-only link resolves only from an ancestor citing an earlier revision, as --replay-chain does', async () => {
-  const payloadLink = (r) => `sha256:${digestOf(r.payload)}`;
+// The ancestor cites -03, -02, -01, or no revision at all: spec is optional, so it decides nothing about the link.
+const CITES = [
+  ['-03', { spec: 'draft-farley-acta-signed-receipts-03' }],
+  ['-02', { spec: 'draft-farley-acta-signed-receipts-02' }],
+  ['-01', { spec: 'draft-farley-acta-signed-receipts-01' }],
+  ['no spec member', {}],
+];
+const PAYLOAD_LINKS = [
+  ['prefixed', (r) => `sha256:${digestOf(r.payload)}`],
+  ['bare hex', (r) => digestOf(r.payload)],
+];
 
-  const earlier = mkdtempSync(join(tmpdir(), 'chain-'));
-  const old = mkChain(earlier, ['root', 'tip'], payloadLink, { spec: 'draft-farley-acta-signed-receipts-02' });
-  const r = await exploreChain({ receiptPath: old[1] });
-  assert.equal(r.valid, true);
-  assert.equal(r.legacy_links, 1);
-  assert.equal(r.nodes[0].link_form, 'legacy-payload');
-  assert.ok(r.warnings.some((w) => /payload alone/.test(w)));
+test('exploreChain: a payload-only link is refused with chain_break whatever the ancestor cites (draft §6.7)', async () => {
+  for (const [cites, extra] of CITES) {
+    for (const [form, payloadLink] of PAYLOAD_LINKS) {
+      const dir = mkdtempSync(join(tmpdir(), 'chain-'));
+      const paths = mkChain(dir, ['root', 'tip'], payloadLink, extra);
+      const r = await exploreChain({ receiptPath: paths[1] });
+      const name = `${cites}, ${form}`;
+      assert.equal(r.valid, false, name);
+      assert.equal(r.links_broken, 1, name);
+      assert.equal(r.legacy_links, 0, name);
+      assert.equal(r.code, 'chain_break', name);
+      assert.equal(r.depth, 1, name);
+      assert.equal(r.nodes[0].link_valid, false, name);
+      assert.equal(r.nodes[0].link_error, 'chain_break', name);
+      assert.ok(r.warnings.some((w) => w.includes(paths[0]) && /payload alone/.test(w) && /--allow-payload-only-links/.test(w)), name);
+    }
+  }
+});
 
-  const current = mkdtempSync(join(tmpdir(), 'chain-'));
-  const now = mkChain(current, ['root', 'tip'], payloadLink, { spec: 'draft-farley-acta-signed-receipts-03' });
-  const r3 = await exploreChain({ receiptPath: now[1] });
-  assert.equal(r3.valid, false);
-  assert.equal(r3.links_broken, 1);
-  assert.equal(r3.legacy_links, 0);
+test('exploreChain: allowPayloadOnlyLinks reads a payload-only link as a legacy link, counted and warned, whatever the ancestor cites', async () => {
+  for (const [cites, extra] of CITES) {
+    for (const [form, payloadLink] of PAYLOAD_LINKS) {
+      const dir = mkdtempSync(join(tmpdir(), 'chain-'));
+      const paths = mkChain(dir, ['root', 'middle', 'tip'], payloadLink, extra);
+      const r = await exploreChain({ receiptPath: paths[2], allowPayloadOnlyLinks: true });
+      const name = `${cites}, ${form}`;
+      assert.equal(r.valid, true, name);
+      assert.equal(r.depth, 3, name);
+      assert.equal(r.legacy_links, 2, name);
+      assert.equal(r.code, undefined, name);
+      assert.equal(r.nodes[0].link_form, 'legacy-payload', name);
+      assert.equal(r.nodes[1].link_form, 'legacy-payload', name);
+      assert.equal(r.warnings.filter((w) => /read as a legacy link because --allow-payload-only-links was given/.test(w)).length, 2, name);
+      assert.match(renderChainTree(r), /legacy_links=2/, name);
+    }
+  }
+});
+
+test('exploreChain: allowPayloadOnlyLinks leaves whole-receipt links, bare hex and missing ancestors as they were', async () => {
+  for (const link of [receiptHash, (r) => digestOf(r)]) {
+    const dir = mkdtempSync(join(tmpdir(), 'chain-'));
+    const paths = mkChain(dir, ['root', 'tip'], link);
+    const r = await exploreChain({ receiptPath: paths[1], allowPayloadOnlyLinks: true });
+    assert.equal(r.valid, true);
+    assert.equal(r.legacy_links, 0);
+    assert.deepEqual(r.warnings, []);
+  }
+  const dir = mkdtempSync(join(tmpdir(), 'chain-'));
+  const p = join(dir, 'tip.json');
+  writeFileSync(p, JSON.stringify(mkReceipt('orphan-tip', `sha256:${'ab'.repeat(32)}`)));
+  const orphan = await exploreChain({ receiptPath: p, allowPayloadOnlyLinks: true });
+  assert.equal(orphan.valid, false);
+  assert.equal(orphan.legacy_links, 0);
+  assert.equal(orphan.code, undefined);
+  assert.ok(orphan.warnings.some((w) => /not found in searchDir/.test(w)));
 });
 
 test('exploreChain: a malformed link is refused with the receipt verifier\'s code, though its ancestor is present (draft §6.7)', async () => {
