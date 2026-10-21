@@ -37,9 +37,29 @@ import { createHash } from 'node:crypto';
  */
 
 /**
- * Verify a receipt with selective-disclosure commitments.
+ * The `_commitments` map a receipt's signature covers, and the object that carries it. An envelope
+ * ({ payload, signature: { alg, kid, sig } }) signs its payload alone, so its map is the payload's; one beside the
+ * payload is outside the signature and is not read. A flat receipt (a signature that is a string) signs the receipt
+ * less its signature, so its map is at the top level, or in a v2 receipt's payload. Before 0.10.27 the CLI read the
+ * top level of every receipt, so an envelope's disclosures were checked against a map nobody signed.
  *
  * @param {Object} receipt
+ * @returns {{ commitments: Record<string, unknown>, carrier: Object } | null}
+ */
+export function signedLegacyCommitments(receipt) {
+  const isObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+  if (!isObject(receipt)) return null;
+  const carriers = isObject(receipt.signature) ? [receipt.payload] : [receipt, receipt.payload];
+  for (const carrier of carriers) {
+    if (isObject(carrier) && isObject(carrier._commitments)) return { commitments: carrier._commitments, carrier };
+  }
+  return null;
+}
+
+/**
+ * Verify a receipt with selective-disclosure commitments.
+ *
+ * @param {Object} receipt the object that carries `_commitments` (signedLegacyCommitments' carrier)
  * @param {DisclosurePackage[]} disclosures
  * @returns {SelectiveDisclosureResult}
  */
@@ -50,8 +70,8 @@ export function verifySelectiveDisclosure(receipt, disclosures = []) {
 
   for (const d of disclosures) {
     const expected = commitments[d.field];
-    if (!expected) {
-      checks.push({ field: d.field, ok: false, reason: 'field not in _commitments' });
+    if (!expected || typeof expected !== 'string') {
+      checks.push({ field: d.field, ok: false, reason: expected ? 'commitment is not a string' : 'field not in _commitments' });
       allValid = false;
       continue;
     }

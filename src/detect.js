@@ -2,17 +2,17 @@
  * Input format detection.
  *
  * Classifies a parsed JSON object into one of the supported modes:
- *   - 'ed25519-receipt-v1'   — v1 flat artifact (legacy)
- *   - 'ed25519-receipt-v2'   — v2 structured envelope
- *   - 'ed25519-passport'     — Passport envelope ({ payload, signature })
- *   - 'voprf-token'          — VOPRF anonymous credential token
- *   - 'knowledge-unit'       — KU bundle with multiple receipts
- *   - 'ed25519-bundle'       — Audit bundle with signing_keys
- *   - 'selective-disclosure' — receipt with _commitments field
- *   - 'gate-receipt-tuple'   — ScopeBlind Gate tuple ({ payload, digest, signature, verification_key })
- *   - 'gate-evidence-bundle' — ScopeBlind Gate evidence bundle (scopeblind.gate.evidence-bundle/2)
- *   - 'macro-track-record'   — ScopeBlind macro-engine track-record bundle (scopeblind.macro.track-record-bundle/1)
- *   - 'legate-standard'      — Legate signed standard, recipient decision, action assurance bundle, or run manifest
+ *   - 'ed25519-receipt-v1':   v1 flat artifact (legacy)
+ *   - 'ed25519-receipt-v2':   v2 structured envelope
+ *   - 'ed25519-passport':     Passport envelope ({ payload, signature })
+ *   - 'voprf-token':          VOPRF anonymous credential token
+ *   - 'knowledge-unit':       KU bundle with multiple receipts
+ *   - 'ed25519-bundle':       Audit bundle with signing_keys
+ *   - 'selective-disclosure': receipt with _commitments field
+ *   - 'gate-receipt-tuple':   ScopeBlind Gate tuple ({ payload, digest, signature, verification_key })
+ *   - 'gate-evidence-bundle': ScopeBlind Gate evidence bundle (scopeblind.gate.evidence-bundle/2)
+ *   - 'macro-track-record':   ScopeBlind macro-engine track-record bundle (scopeblind.macro.track-record-bundle/1)
+ *   - 'legate-standard':      ScopeBlind signed standard, recipient decision, action assurance bundle, or run manifest
  *   - 'unknown'
  *
  * Detection is structural: checks for marker fields without trying to

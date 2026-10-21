@@ -32,7 +32,8 @@ test('integration: roundtrip passport-envelope receipt', async () => {
     tool_name: 'web_search',
     decision: 'allow',
     issued_at: '2026-04-19T12:00:00.000Z',
-    issuer_id: 'test-issuer',
+    // issuer_id matches the signature's kid, as §2.2 requires (0.10.27 refuses a mismatch: issuer_kid_mismatch).
+    issuer_id: 'test:key:1',
     sequence: 1,
     previousReceiptHash: null,
   };
@@ -73,7 +74,8 @@ test('integration: a governed receipt surfaces its evidence grade and limitation
     },
   };
   const sigHex = signPayload(privateKey, payload);
-  const receipt = { payload, signature: { alg: 'EdDSA', kid: 'k1', sig: sigHex } };
+  // The signature's kid matches the payload's issuer_id, as §2.2 requires (0.10.27 refuses a mismatch).
+  const receipt = { payload, signature: { alg: 'EdDSA', kid: payload.issuer_id, sig: sigHex } };
 
   const detected = detectFormat(receipt);
   const r = await verifyReceipt(receipt, detected.mode, { publicKey: pubHex });

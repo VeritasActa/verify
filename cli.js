@@ -15,7 +15,7 @@
  *   npx @veritasacta/verify receipt.json
  *   npx @veritasacta/verify receipt.json --key <hex>
  *   npx @veritasacta/verify receipt.json --jwks <url>
- *   npx @veritasacta/verify bundle.json --bundle
+ *   npx @veritasacta/verify bundle.json --bundle --key <hex>
  *   npx @veritasacta/verify ku.json --mode ku
  *   npx @veritasacta/verify receipt.json --disclose field1,field2:salt:value
  *   npx @veritasacta/verify receipt.json --require-context sensor:temp<18
@@ -61,10 +61,12 @@ import { verifyKnowledgeUnit } from './src/engines/knowledge-unit.js';
 import {
   verifySelectiveDisclosure,
   listRedactedFields,
+  signedLegacyCommitments,
 } from './src/engines/selective-disclosure.js';
 import {
   verifyCommittedReceipt,
   loadDisclosuresFromText,
+  signedCommitment,
 } from './src/engines/commitment-mode.js';
 import { selfCheck, evaluateLiveContext } from './src/engines/sigil.js';
 import {
@@ -183,6 +185,7 @@ function parseArgs() {
     allowEmbeddedKey: false,
     allowLegacyCanonicalization: false,
     allowPayloadOnlyLinks: false,
+    trustBundleKeys: false,
     previousFile: null,
     requireContext: [],
     disclose: [],
@@ -263,9 +266,10 @@ function parseArgs() {
       case '--allow-payload-only-links': opts.allowPayloadOnlyLinks = true; break;
       case '--previous': opts.previousFile = next() ?? ''; break;
       case '--allow-embedded-key': opts.allowEmbeddedKey = true; break;
+      case '--trust-bundle-keys': opts.trustBundleKeys = true; break;
       case '--require-context': opts.requireContext.push(next()); break;
       case '--disclose': opts.disclose.push(next()); break;
-      case '--disclosure-file': opts.disclosureFile = next(); break;
+      case '--disclosure-file': opts.disclosureFile = next() ?? ''; break;
       case '--tier': opts.tier = Number(next()); break;
       case '--strict': opts.strict = true; break;
       case '--no-sigil': opts.noSigil = true; break;
@@ -348,15 +352,19 @@ ${bold('Usage:')}
   npx @veritasacta/verify <file.json> --jwks <url>           Fetch key from JWKS
   npx @veritasacta/verify <file.json> --previous <prev.json> Also check it follows the receipt before it
   npx @veritasacta/verify <file.json> --mode receipt|claims|voprf|ku|gate|gate-bundle
-  npx @veritasacta/verify <bundle.json> --bundle             Verify audit bundle
+  npx @veritasacta/verify <bundle.json> --bundle --key <hex> Verify audit bundle
   cat receipt.json | npx @veritasacta/verify --stdin         Read from stdin
   npx @veritasacta/verify <file.json> --json                 Machine-readable output
 
 ${bold('Selective disclosure (AIP-0002 legacy):')}
-  --disclose field:salt:value                               Reveal a field and verify its commitment
+  --disclose field:salt:value                               Reveal a field and verify its commitment in the _commitments
+                                                            map the signature covers (an envelope's payload); one that
+                                                            cannot be applied is undecidable (exit 2)
 
 ${bold('Commitment-mode disclosure (draft-farley-acta-signed-receipts-01):')}
-  --disclosure-file <path.json>                             Verify Merkle inclusion proofs against committed_fields_root
+  --disclosure-file <path.json>                             Verify Merkle inclusion proofs against committed_fields_root,
+                                                            read from the signed bytes (an envelope's payload); a file
+                                                            that cannot be applied is undecidable (exit 2)
 
 ${bold('Live-context verification (Sigil claim 2):')}
   --require-context clock:±5s
@@ -391,7 +399,8 @@ ${bold('Options:')}
                            an absent or null link fails too. Checked beside the signature
                            and the key window, with --key or --jwks
   --require-key-window     Fail unless the key source gives the key a valid_from /
-                           valid_until window (applied to issued_at either way)
+                           valid_until window (applied to the signed issued_at either way:
+                           an envelope's payload.issued_at, a flat receipt's issued_at)
   --trust-anchor <file>    Not implemented, so refused (exit 2): no key was ever read
                            from the file. Pin the key with --key or --jwks <url|file>
   --history-head <hex>     Pin the expected macro track-record history head
@@ -424,6 +433,12 @@ ${bold('Options:')}
                            wrote, not conformant to draft §6.7. --strict disables it
   --allow-embedded-key     DEPRECATED. Accept keys embedded in payloads.
                            Removed in v0.6.0.
+  --trust-bundle-keys      Check an audit bundle's receipts with the keys in its own
+                           verification.signing_keys, reported as keySource "bundle".
+                           Those keys arrive in the file being verified, so they are
+                           not a trust anchor: without this flag, --key or --jwks the
+                           receipts are not checked (no_public_key, exit 2). --strict
+                           disables it
   --allow-partial-voprf    Treat a partial (structural-only) VOPRF result
                            as valid. Default fails closed (exit 2).
                            Full DLEQ verification lands in v0.6.0.
@@ -640,6 +655,28 @@ async function dispatch(input, opts) {
     process.exit(2);
   }
 
+  // --disclosure-file and --disclose are checked against one receipt's commitments: never silently dropped elsewhere.
+  if ((opts.disclosureFile !== null || opts.disclose.length > 0) && !RECEIPT_MODES.includes(detected.mode)) {
+    console.error(red(`verify: ${opts.disclosureFile !== null ? '--disclosure-file' : '--disclose'} checks disclosures against one receipt's commitments. This file reads as ${MODE_LABELS[detected.mode] || 'no format this verifier knows'}, so it does not apply.`));
+    console.error('  Nothing was verified (exit 2).');
+    process.exit(2);
+  }
+
+  // --trust-bundle-keys names the keys an audit bundle carries: it applies to one, never silently to anything else.
+  if (opts.trustBundleKeys && detected.mode !== 'ed25519-bundle') {
+    console.error(red(`verify: --trust-bundle-keys checks an audit bundle with the keys in its verification.signing_keys. This file reads as ${MODE_LABELS[detected.mode] || 'no format this verifier knows'}, so it does not apply.`));
+    console.error('  Nothing was verified (exit 2).');
+    process.exit(2);
+  }
+
+  // An audit bundle takes its keys from --jwks receipt by receipt: the key set is read once, and each receipt gets the
+  // key its own kid names (0.10.27; the bundle used to get the set's first key for every receipt).
+  if (detected.mode === 'ed25519-bundle' && !opts.publicKey && opts.jwksUrl) {
+    const loaded = await loadJwksResolver(opts.jwksUrl);
+    if (loaded.error) return { valid: false, outcome: 'undecidable', error: 'jwks_fetch_failed', format: detected.mode, detail: loaded.error };
+    return await verifyBundle(input, { ...opts, keyResolver: loaded.resolve });
+  }
+
   // Resolve JWKS if needed
   let publicKey = opts.publicKey;
   let keySource = publicKey ? 'provided' : null;
@@ -667,7 +704,7 @@ async function dispatch(input, opts) {
     }
   }
 
-  const subOpts = { ...opts, publicKey, ...(jwksFailure ? { allowEmbeddedKey: false } : {}) };
+  const subOpts = { ...opts, publicKey, ...(publicKey ? { keySource } : {}), ...(jwksFailure ? { allowEmbeddedKey: false } : {}) };
 
   // Route to engine
   switch (detected.mode) {
@@ -774,7 +811,9 @@ async function dispatch(input, opts) {
     case 'ed25519-receipt-v2':
     case 'ed25519-passport': {
       const r = await verifyReceipt(input, detected.mode, subOpts);
-      const details = { signature: jwksFailure || r.detail };
+      // Each check's detail as the engine gave it (a malformed encoding, a carried key, the issuer), the JWKS failure in
+      // place of the signature's when there was one, and below the key window's and the link's.
+      const details = { ...(r.checkDetails || {}), ...(jwksFailure ? { signature: jwksFailure } : {}) };
       if (jwksFailure) r.checks.signature = { result: 'undecidable', code: 'jwks_fetch_failed' };
 
       // Key validity window (-04 §5.5, -03 §9.2): applied whenever the key source carries one, whatever the signature's
@@ -812,45 +851,75 @@ async function dispatch(input, opts) {
       // Selective disclosure: attach if commitments present.
       // Two formats supported:
       //   - Legacy AIP-0002 (_commitments map + --disclose field:salt:value)
-      //   - draft-farley-acta-signed-receipts-01 commitment-mode
-      //     (committed_fields_root + --disclosure-file path)
+      //   - commitment mode, draft §6 (committed_fields_root + --disclosure-file path)
+      // The committed_fields_root and the _commitments map are read from the signed bytes: an envelope's payload, where
+      // draft §2.2 puts the root, or the top level of a flat receipt. A disclosure that cannot be applied (a file that
+      // cannot be read or holds no disclosure, a --disclose value that does not parse, or signed bytes that carry
+      // nothing to check it against) leaves the receipt undecidable, never valid with the disclosure unread (0.10.27).
+      // Before, an envelope's root was not found, so a file given with it was never read, and a root or map beside an
+      // envelope's payload, outside the signature, was checked against instead.
       let disclosureResult = null;
-      const hasCommittedFieldsRoot = detected.signals?.includes('committed_fields_root');
-      const hasLegacyCommitments = detected.signals?.includes('_commitments');
+      const commitment = signedCommitment(input);
+      // The AIP-0002 _commitments map is read from the signed bytes the same way (0.10.27).
+      const legacy = signedLegacyCommitments(input);
 
-      if (hasCommittedFieldsRoot) {
-        // draft-01 commitment-mode path
-        let disclosures = [];
-        if (opts.disclosureFile) {
+      let disclosures = [];
+      let notApplied = null;
+      if (opts.disclosureFile !== null) {
+        if (!commitment) {
+          notApplied = 'the receipt\'s signed bytes carry no committed_fields_root (an envelope carries it in its payload), so there is nothing to check a disclosure against';
+        } else {
           try {
-            const fs = await import('node:fs');
-            const text = fs.readFileSync(opts.disclosureFile, 'utf8');
-            disclosures = loadDisclosuresFromText(text);
+            disclosures = loadDisclosuresFromText(readFileSync(opts.disclosureFile, 'utf8'));
+            if (disclosures.length === 0) notApplied = 'the file holds no disclosure';
           } catch (err) {
-            r.valid = false;
-            r.error = `disclosure_file_load_failed: ${err?.message ?? 'unknown'}`;
+            notApplied = `the file cannot be read as disclosures (${err?.message ?? 'unknown'})`;
           }
         }
-        if (r.valid !== false) {
-          disclosureResult = verifyCommittedReceipt(input, disclosures);
-          r.committedFieldsRoot = input.committed_fields_root;
-          r.committedFieldNames = input.committed_field_names;
+      }
+      if (notApplied) notApplied = `--disclosure-file ${opts.disclosureFile || '(no path given)'}: ${notApplied}`;
+      // --disclose (AIP-0002) applies to a _commitments map in the signed bytes, and every value given must parse.
+      const legacyDisclosures = parseDisclosures(opts.disclose);
+      if (!notApplied && opts.disclose.length > 0) {
+        if (!legacy) {
+          notApplied = '--disclose: the receipt\'s signed bytes carry no _commitments map (an envelope carries it in its payload), so there is nothing to check a disclosure against';
+        } else if (legacyDisclosures.length !== opts.disclose.length) {
+          notApplied = '--disclose: a value is not field:salt:value, so it names no disclosure';
+        }
+      }
+      if (commitment) {
+        r.committedFieldsRoot = commitment.root;
+        r.committedFieldNames = commitment.carrier.committed_field_names;
+        if (r.valid !== false && !notApplied) {
+          disclosureResult = verifyCommittedReceipt(commitment.carrier, disclosures);
           r.disclosedFields = disclosures.map((d) => d.name);
           if (!disclosureResult.valid) {
             r.valid = false;
             r.error = disclosureResult.error || 'commitment_mismatch';
           }
         }
-      } else if (hasLegacyCommitments) {
-        // Legacy AIP-0002 path
-        const disclosures = parseDisclosures(opts.disclose);
-        disclosureResult = verifySelectiveDisclosure(input, disclosures);
-        r.redactedFields = listRedactedFields(input);
-        r.disclosedFields = disclosures.map((d) => d.field);
-        if (!disclosureResult.valid) {
-          r.valid = false;
-          r.error = 'commitment_mismatch';
+      }
+      if (legacy) {
+        // Legacy AIP-0002 path, against the map the signature covers.
+        r.redactedFields = listRedactedFields(legacy.carrier);
+        if (r.valid !== false && !notApplied) {
+          const legacyResult = verifySelectiveDisclosure(legacy.carrier, legacyDisclosures);
+          disclosureResult = disclosureResult
+            ? { ...legacyResult, valid: disclosureResult.valid && legacyResult.valid, disclosuresVerified: (disclosureResult.disclosuresVerified || 0) + legacyResult.disclosuresVerified }
+            : legacyResult;
+          r.disclosedFields = [...(r.disclosedFields || []), ...legacyDisclosures.map((d) => d.field)];
+          if (!legacyResult.valid) {
+            r.valid = false;
+            r.error = r.error || 'commitment_mismatch';
+          }
         }
+      }
+      // A failure already counted stays the outcome (-04 §5.3); otherwise a disclosure that could not be applied leaves
+      // the receipt undecidable.
+      if (notApplied && r.valid) {
+        r.valid = false;
+        r.error = 'disclosure_not_applied';
+        r.detail = `${notApplied}. Nothing in it was verified.`;
       }
 
       // Live-context predicates
@@ -904,6 +973,8 @@ async function dispatch(input, opts) {
 function parseDisclosures(args) {
   const packages = [];
   for (const a of args) {
+    // A value that is missing or not field:salt:value names no disclosure; the caller counts it as not applied.
+    if (typeof a !== 'string') continue;
     const firstColon = a.indexOf(':');
     const secondColon = a.indexOf(':', firstColon + 1);
     if (firstColon < 0 || secondColon < 0) continue;
@@ -1293,6 +1364,26 @@ async function main() {
       console.error(yellow('Warning: --strict overrides --allow-embedded-key (embedded keys always rejected in strict mode).'));
       opts.allowEmbeddedKey = false;
     }
+    if (opts.trustBundleKeys) {
+      console.error(yellow('Warning: --strict overrides --trust-bundle-keys (a bundle\'s own keys are never used in strict mode).'));
+      opts.trustBundleKeys = false;
+    }
+  }
+
+  // --trust-bundle-keys applies to an audit bundle alone, and --disclosure-file and --disclose to one receipt. Each is
+  // refused where it would be dropped, as --previous is.
+  const elsewhere = opts.replayChain ? '--replay-chain' : opts.subcommand ? `verify ${opts.subcommand}` : opts.diff ? '--diff'
+    : opts.selfCheck ? '--self-check' : opts.selfTest ? '--self-test' : null;
+  if (opts.trustBundleKeys && elsewhere) {
+    console.error(red(`verify: --trust-bundle-keys checks an audit bundle with the keys it carries, and does not apply to ${elsewhere}.`));
+    console.error('  Nothing was verified (exit 2).');
+    process.exit(2);
+  }
+  const notOneReceipt = elsewhere || (opts.bundle ? '--bundle' : null);
+  if ((opts.disclosureFile !== null || opts.disclose.length > 0) && notOneReceipt) {
+    console.error(red(`verify: ${opts.disclosureFile !== null ? '--disclosure-file' : '--disclose'} checks disclosures against one receipt's commitments, and does not apply to ${notOneReceipt}.`));
+    console.error('  Nothing was verified (exit 2).');
+    process.exit(2);
   }
 
   // --previous names the receipt this one follows. It is read before anything is verified, and refused where it would

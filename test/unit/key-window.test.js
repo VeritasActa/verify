@@ -40,11 +40,23 @@ test('windowOf reads the JWK window as written and ignores keys without one', ()
   assert.equal(windowOf({ kid: 'a' }), null);
 });
 
-test('receiptIssuedAt reads the envelope, v2 and v1 shapes', () => {
-  assert.equal(receiptIssuedAt({ payload: { issued_at: '2026-03-15T00:00:00Z' } }), '2026-03-15T00:00:00Z');
-  assert.equal(receiptIssuedAt({ v: 2, issued_at: '2026-03-15T00:00:00Z', payload: {} }), '2026-03-15T00:00:00Z');
-  assert.equal(receiptIssuedAt({ v: 1, timestamp: '2026-03-15T00:00:00Z' }), '2026-03-15T00:00:00Z');
-  assert.equal(receiptIssuedAt({ payload: {} }), null);
+test('receiptIssuedAt reads only the signed issued_at, as written (0.10.27)', () => {
+  const sig = { alg: 'EdDSA', kid: 'k1', sig: 'ab' };
+  // The envelope signs its payload alone: the payload's issued_at, and nothing beside it.
+  assert.equal(receiptIssuedAt({ payload: { issued_at: '2026-03-15T00:00:00Z' }, signature: sig }), '2026-03-15T00:00:00Z');
+  assert.equal(receiptIssuedAt({ payload: {}, issued_at: '2026-03-15T00:00:00Z', signature: sig }), null);
+  assert.equal(receiptIssuedAt({ payload: {}, timestamp: '2026-03-15T00:00:00Z', signature: sig }), null);
+  assert.equal(receiptIssuedAt({ payload: { timestamp: '2026-03-15T00:00:00Z' }, signature: sig }), null);
+  // The flat shapes sign the receipt less its signature: the top-level issued_at, and no timestamp in its place.
+  assert.equal(receiptIssuedAt({ v: 2, issued_at: '2026-03-15T00:00:00Z', payload: {}, signature: 'ab' }), '2026-03-15T00:00:00Z');
+  assert.equal(receiptIssuedAt({ v: 1, type: 't', timestamp: '2026-03-15T00:00:00Z', signature: 'ab' }), null);
+  // Not converted: a number is returned as written, and a window cannot be applied to it.
+  assert.equal(receiptIssuedAt({ payload: { issued_at: 1772000000 }, signature: sig }), 1772000000);
+  const kw = checkKeyWindow({ window: WINDOW, issuedAt: 1772000000, keySource: 'jwks' });
+  assert.equal(kw.status, 'unverifiable');
+  assert.equal(kw.error, 'key_window_unverifiable');
+  assert.match(kw.detail, /is a number, not a timestamp/);
+  assert.equal(receiptIssuedAt({ payload: {}, signature: sig }), null);
 });
 
 test('the window is [valid_from, valid_until): inclusive start, exclusive end', () => {

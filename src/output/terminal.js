@@ -138,6 +138,9 @@ const OUTCOME_PHRASES = {
   chain_break: 'chain link does not follow the previous receipt',
   key_outside_validity_window: 'key outside its validity window',
   commitment_mismatch: 'a disclosed value does not match its commitment',
+  disclosure_not_applied: 'the disclosure file cannot be applied',
+  key_mismatch: 'the receipt carries a key that is not the one it was verified with',
+  issuer_kid_mismatch: 'the payload\'s issuer_id is not the signature\'s kid',
   unsupported_chain_hash_algorithm: 'the chain link names a hash algorithm other than SHA-256',
   no_public_key: 'no key was given to check the signature',
   embedded_key_rejected: 'the only key on offer is inside the receipt',
@@ -240,6 +243,10 @@ export function formatReceiptResult(result, opts = {}) {
   if (result.tier) lines.push(`  Tier:       ${result.tier.label} ${dim(`(${result.tier.features.join(', ')})`)}`);
   if (result.tier?.declaredFeatures?.length) lines.push(`  Declared:   ${result.tier.declaredFeatures.join(', ')} (not independently verified)`);
   if (result.warning) lines.push(`  Note:       ${result.warning}`);
+  if (Array.isArray(result.payloadNotes) && result.payloadNotes.length > 0) {
+    lines.push(`  ${bold('Payload notes')} ${dim('(reported, not counted in the outcome):')}`);
+    for (const note of result.payloadNotes) lines.push(`    ${yellow('!')} ${note}`);
+  }
   if (result.nullifier) lines.push(`  Nullifier:  ${result.nullifier.slice(0, 16)}...`);
   if (result.scope) {
     if (typeof result.scope === 'string') {
@@ -308,6 +315,10 @@ export function formatReceiptResult(result, opts = {}) {
 
   if (result.error && !result.valid) {
     lines.push(`  Error:      ${red(result.error)}`);
+    // The detail of the check that decided, when no line above already carries it (a carried key, a disclosure file).
+    if (typeof result.detail === 'string' && result.detail && !lines.some((l) => l.includes(result.detail))) {
+      lines.push(`  Detail:     ${result.detail}`);
+    }
     if (result.errorMeta?.spec) lines.push(`  Spec:       ${dim(result.errorMeta.spec)}`);
     if (result.errorMeta?.hint) lines.push(`  Hint:       ${yellow(result.errorMeta.hint)}`);
   }
@@ -368,6 +379,13 @@ export function formatBundleResult(result, opts = {}) {
   lines.push(`  Total:      ${result.total}`);
   lines.push(`  Passed:     ${green(String(result.passed))}`);
   lines.push(`  Failed:     ${result.failed > 0 ? red(String(result.failed)) : '0'}`);
+  if (result.undecidable !== undefined) lines.push(`  Not checked: ${result.undecidable > 0 ? yellow(String(result.undecidable)) : '0'}`);
+  if (result.keySource !== undefined) {
+    const keys = { provided: 'from --key', jwks: 'from --jwks', bundle: 'from the bundle itself (--trust-bundle-keys)' };
+    lines.push(`  Keys:       ${keys[result.keySource] || 'none given (the bundle\'s own keys are not a trust anchor)'}`);
+  }
+  if (result.detail) lines.push(`  ${yellow('Note:')}       ${result.detail}`);
+  if (result.warning) lines.push(`  ${yellow('Note:')}       ${result.warning}`);
   if (Array.isArray(result.errors) && result.errors.length > 0) {
     lines.push(`\n  ${red('Errors:')}`);
     for (const e of result.errors) lines.push(`    ${red('•')} ${e}`);

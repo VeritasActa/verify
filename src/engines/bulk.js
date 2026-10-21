@@ -225,7 +225,7 @@ export async function replayChain(filePath, opts = {}) {
 
     // Verify the signature, then the checks that do not depend on it, and combine them (-04 §5.3).
     const detected = detectFormat(receipt);
-    const r = await verifyReceipt(receipt, detected.mode, { ...opts, publicKey: key, ...(jwksError ? { allowEmbeddedKey: false } : {}) });
+    const r = await verifyReceipt(receipt, detected.mode, { ...opts, publicKey: key, ...(key ? { keySource } : {}), ...(jwksError ? { allowEmbeddedKey: false } : {}) });
     const checks = { ...(r.checks || {}) };
     if (jwksError) checks.signature = { result: 'undecidable', code: 'jwks_fetch_failed' };
     const kw = checkKeyWindow({ window: keyWindow, issuedAt: receiptIssuedAt(receipt), keySource: jwksError ? null : keySource || r.keySource, require: opts.requireKeyWindow });
@@ -243,6 +243,7 @@ export async function replayChain(filePath, opts = {}) {
       checks,
       keyStatus: kw.report,
       ...(r.warning ? { warning: r.warning } : {}),
+      ...(r.payloadNotes ? { payloadNotes: r.payloadNotes } : {}),
     });
     // The receipt verifier's own warnings (a null link, a historical encoding) are reported here as for one receipt.
     if (r.warning) results.warnings.push(`Line ${i + 1}: ${r.warning}`);
