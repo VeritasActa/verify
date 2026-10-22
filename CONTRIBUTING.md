@@ -31,6 +31,13 @@ can also produce exit 1, so a failure alone does not establish tampering.
 installation. The tests use fixtures and local test servers; ordinary verifier
 development does not require production credentials.
 
+In a standalone checkout, 14 tests currently skip because their fixtures live in
+other source trees; `test:conformance` also reports when its optional monorepo vector
+file is absent. Read the skip messages rather than treating a green run as coverage
+of those cases. Publishing self-contained versions of those fixtures is useful
+maintenance work. The packed sample checks and pinned TRACE comparison run without
+the private monorepo.
+
 ## Make a focused change
 
 For a correctness or interoperability issue, provide a small synthetic fixture,
