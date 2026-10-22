@@ -1,5 +1,10 @@
 # Veritas Acta Implementations Registry: Cloudflare Worker
 
+> **Reference material:** This integration is not release-qualified by the core verifier CI.
+> Commands, package versions and deployment claims below may be historical.
+> Read the [current ecosystem status](../README.md) before using it.
+
+
 Public, read-only registry of Veritas Acta ecosystem implementations.
 Mirrors JSON files from `VeritasActa/agt-integration-profile/implementations/`
 with cached responses and CORS enabled.

@@ -1,3 +1,12 @@
+## 0.10.28: Complete license, contribution guides and checked installation example
+
+- Include the complete Apache License 2.0 text in the published package, preserving the existing copyright notice and license. This does not relicense the project.
+- Add contribution and governance guides, focused issue/PR templates, and accurate support and release-integrity documentation. Git tags are not described as signed; npm provenance and the bundled integrity commitment are separate mechanisms.
+- Replace obsolete roadmap promises and monorepo paths in the ecosystem overview with explicit maintained, experimental and historical status. Nested ecosystem READMEs link to that status before their legacy setup instructions.
+- Extend the existing clean-install release gate to exercise the public receipt example from the packed package: valid with the documented demonstration key, not checked with no key, and failed with a wrong key or changed signed payload. Verification behavior and the pinned TRACE results are unchanged.
+- Update the lockfile's transitive `fast-uri` from 3.1.7 to 3.1.9, within AJV's existing version constraint, resolving npm advisory GHSA-hrr3-gc8f-f4qj. No dependency API or verifier logic changes.
+- Refresh release metadata and the bundled integrity commitment for these source changes. The browser engine bytes are unchanged; its build manifest carries the new package version.
+
 ## 0.10.27: Keys from outside the file, the signed issued_at, and disclosures that are read
 
 Found while checking 0.10.26 against the -04 editor's copy (VeritasActa/drafts). Each fix below names the earlier VALID results it changes.

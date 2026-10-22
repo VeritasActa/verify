@@ -1,5 +1,10 @@
 # Veritas Acta Verify: VS Code Extension (scaffold)
 
+> **Reference material:** This integration is not release-qualified by the core verifier CI.
+> Commands, package versions and deployment claims below may be historical.
+> Read the [current ecosystem status](../README.md) before using it.
+
+
 Planned v0.5.1+ artifact. Provides:
 
 - **Syntax highlighting** for `.receipt.json` files

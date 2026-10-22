@@ -1,5 +1,10 @@
 # Profile: Cursor
 
+> **Reference material:** This integration is not release-qualified by the core verifier CI.
+> Commands, package versions and deployment claims below may be historical.
+> Read the [current ecosystem status](../../README.md) before using it.
+
+
 Run [Cursor](https://www.cursor.com) under sb-runtime + nono + signed receipts.
 
 Baseline is identical to [`claude-code`](../claude-code/) with a tighter network allowlist scoped to Cursor's own backends plus standard developer domains. Use this profile when Cursor's Composer mode, agent tabs, or MCP bridge is active.

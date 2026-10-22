@@ -1,5 +1,10 @@
 # Profile: OpenClaw
 
+> **Reference material:** This integration is not release-qualified by the core verifier CI.
+> Commands, package versions and deployment claims below may be historical.
+> Read the [current ecosystem status](../../README.md) before using it.
+
+
 Run [OpenClaw](https://github.com/openclaw/openclaw) under sb-runtime + nono + signed receipts, **composing with OpenClaw's own guard-rail framework** rather than replacing it.
 
 ## Composition model

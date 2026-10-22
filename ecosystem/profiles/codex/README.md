@@ -1,5 +1,10 @@
 # Profile: OpenAI Codex CLI
 
+> **Reference material:** This integration is not release-qualified by the core verifier CI.
+> Commands, package versions and deployment claims below may be historical.
+> Read the [current ecosystem status](../../README.md) before using it.
+
+
 Stricter default than `claude-code` because Codex CLI's tool behavior is more aggressive and the profile assumes a CI / unattended deployment context.
 
 ## Key differences from claude-code

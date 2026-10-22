@@ -1,5 +1,10 @@
 # Veritas Acta Verify: Claude Code Plugin
 
+> **Reference material:** This integration is not release-qualified by the core verifier CI.
+> Commands, package versions and deployment claims below may be historical.
+> Read the [current ecosystem status](../README.md) before using it.
+
+
 One-click installation of the Veritas Acta receipt-signing pipeline for Claude Code. Every tool call produces a cryptographic receipt you can verify offline.
 
 ## Install

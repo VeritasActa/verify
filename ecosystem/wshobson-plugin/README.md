@@ -1,5 +1,10 @@
 # wshobson/agents: `protect-mcp` plugin (PR-staging)
 
+> **Reference material:** This integration is not release-qualified by the core verifier CI.
+> Commands, package versions and deployment claims below may be historical.
+> Read the [current ecosystem status](../README.md) before using it.
+
+
 PR-ready tree for submitting `protect-mcp` to [wshobson/agents](https://github.com/wshobson/agents), a 33K-star community Claude Code plugin marketplace.
 
 Directly addresses open issue [#471](https://github.com/wshobson/agents/issues/471).

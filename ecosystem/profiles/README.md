@@ -1,5 +1,10 @@
 # Pre-built sandbox profiles
 
+> **Reference material:** This integration is not release-qualified by the core verifier CI.
+> Commands, package versions and deployment claims below may be historical.
+> Read the [current ecosystem status](../README.md) before using it.
+
+
 Drop-in Cedar policies + nono capability manifests for common AI coding assistants and agent CLIs. Each profile is designed so the tool **just works under sb-runtime + nono + signed receipts** without requiring the operator to author a policy from scratch.
 
 ## Available profiles

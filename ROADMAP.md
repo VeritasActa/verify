@@ -1,38 +1,50 @@
-# Roadmap
+# Maintenance priorities and status
 
-What shipped since the last roadmap, what is next, and what is deprecated.
-Release history with the detail is in [CHANGELOG.md](./CHANGELOG.md).
+This page describes the current project boundary and possible next work. It is
+not a delivery schedule. Exact shipped changes are in [CHANGELOG.md](CHANGELOG.md);
+the current release and standards status are in
+[release-manifest.json](release-manifest.json).
 
-## Shipped since 0.5.4
+## Maintained release surface
 
-- **0.6.1** (May 2026): AIP-0007 zero-knowledge compliance proofs, draft; transparency-log anchoring engine (AIP-0005 T4).
-- **0.7.0** (June 2026): restraint receipts, proving what was prevented, offline and position-blind; the release rule for execution evidence.
-- **0.8.0** (June 2026): RFC 6962 transparency log for macro track records; macro-engine snapshots and track-record bundles.
-- **0.9.0** (June 2026): adherence and restraint proof packs.
-- **0.9.3** (July 2026): the 0.9.1/0.9.2 line and this line reconciled into one tree; draft-02 receipts and chain links in `--replay-chain`.
-- **0.9.4 to 0.9.6** (August to September 2026): the chain link is computed over the whole signed receipt and carries the `sha256:` prefix, as draft-farley-acta-signed-receipts-03 section 6.7 specifies; genesis receipts omit `previousReceiptHash`; extra positional arguments are an error rather than a silent drop; the bundled integrity commitment is regenerated as the last step of a release, after 0.9.4 shipped with a stale one.
+- The CLI, its shipped verification profiles and the shared browser receipt engine.
+- Explicit verified, failed and not-checked outcomes, with independent key input
+  for the Acta receipt and audit-bundle paths. Specialist profiles have their own
+  limitations; see the [README](README.md) and [reference](docs/reference.md).
+- Regression tests, packed-install checks, the browser build and the bundled
+  integrity commitment. The commitment alone does not authenticate the publisher.
+- A pinned comparison with [TRACE's Acta fixtures](docs/trace-fixtures.md): 11
+  fixtures and 35 checks. Policy freshness and session binding are not compared.
 
-## Next
+The 0.10.x release history supersedes the old 0.5–0.9 plans on this page. Missing-key
+classification, declared crypto dependencies and chain-link corrections are
+already implemented; they are not outstanding roadmap commitments.
 
-- Report a missing verification key as UNVERIFIABLE (exit 2) rather than INVALID (exit 1); today a receipt with no resolvable key is reported as if its signature failed.
-- Declare `@noble/curves` where it is used so a clean install of the test suite does not depend on hoisting.
-- Cite draft-farley-acta-signed-receipts-03 in every source comment that still names an earlier revision.
-- Framework adapters: publish the ones people use or retire them from the README. `scopeblind-swarms` computes its chain link as base64url and must move to `sha256:` plus hex.
-- Remove `--allow-embedded-key` and `--allow-partial-voprf` (see below).
+## Useful next work
 
-## Deprecations
+1. Expand reproducible compatibility fixtures from independently maintained
+   implementations, with explicit negative and unsupported cases.
+2. Improve clean-install documentation and profile-specific trust-boundary examples.
+3. Review legacy and specialist paths against the current outcome semantics before
+   expanding what a successful result promises.
 
-| Item | Deprecated in | Status at 0.9.6 |
-|---|---|---|
-| `--allow-embedded-key` | 0.4.0 | Still parsed, warns. Removal will be announced one minor release ahead. |
-| `--allow-partial-voprf` | 0.5.0 | Still parsed, no-op since 0.5.0. Same removal rule. |
-| `voprf-p256-sha256` v1 wire format (plain-concat hash) | 0.6.0 | Dual-mode; v1 still accepted. |
+An independent-verifier matrix is **planned work** in the separate
+[conformance project](https://github.com/ScopeBlind/agent-governance-testvectors).
+Multiple producers checked by this verifier are not equivalent to multiple
+independent verifiers agreeing. No grant award or delivery date is implied here.
 
-The removals planned for 0.6.0 and 0.7.0 did not happen. They will be done in
-one release, announced in the CHANGELOG of the release before it.
+## Compatibility and optional integrations
 
-## Commitments
+The CLI still parses `--allow-embedded-key` and `--allow-partial-voprf`. Their effect
+depends on the profile; parsing a legacy flag does not establish that an embedded
+key or a partial proof is acceptable. Use an independently supplied key and read
+the reported checks. Any removal or behavior change should be documented in release
+notes with migration guidance, rather than inferred from an old planned date.
 
-- Every breaking change ships with a dual-mode transition window of at least one minor release.
-- Every wire-format change is accompanied by conformance vectors in [ScopeBlind/agent-governance-testvectors](https://github.com/ScopeBlind/agent-governance-testvectors), where three independent implementations now verify against the same fixtures in CI.
-- `--self-check` continues to compare the installed bytes with the bundled integrity commitment; a release whose commitment does not match its bytes is a defect (0.9.4 was one, fixed in 0.9.5).
+The [ecosystem directory](https://github.com/VeritasActa/verify/tree/main/ecosystem) contains historical adapters,
+examples and design proposals. Their presence does not establish a published,
+deployed or release-tested integration. New production integrations need their own
+maintainer, current format fixtures and clean-install verification.
+
+Propose a bounded contribution through [CONTRIBUTING.md](CONTRIBUTING.md). Decisions
+and release authority are described in [GOVERNANCE.md](GOVERNANCE.md).
