@@ -1,5 +1,10 @@
 # protect-mcp: Cedar policy + signed receipts for Claude Code
 
+> **Reference material:** This integration is not release-qualified by the core verifier CI.
+> Commands, package versions and deployment claims below may be historical.
+> Read the [current ecosystem status](../../README.md) before using it.
+
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 **Every Claude Code tool call is evaluated against a Cedar policy, then signed as an Ed25519 receipt.** Offline-verifiable. Tamper-evident. No vendor lock-in.

@@ -1,6 +1,6 @@
 {
   "name": "@veritasacta/verify",
-  "version": "0.10.27",
+  "version": "0.10.28",
   "mcpName": "io.github.tomjwxf/veritasacta-verify",
   "description": "Offline verification of signed receipts and artifacts, with explicit formats and independently supplied keys.",
   "license": "Apache-2.0",
@@ -17,6 +17,8 @@
     "CHANGELOG.md",
     "THREAT-MODEL.md",
     "SECURITY.md",
+    "CONTRIBUTING.md",
+    "GOVERNANCE.md",
     "ERRORS.md",
     "ROADMAP.md",
     "samples/",

@@ -1,5 +1,10 @@
 # @veritasacta/openai-agents
 
+> **Reference material:** This integration is not release-qualified by the core verifier CI.
+> Commands, package versions and deployment claims below may be historical.
+> Read the [current ecosystem status](../../README.md) before using it.
+
+
 OpenAI Agents SDK adapter for Veritas Acta signed receipts.
 
 ## Status

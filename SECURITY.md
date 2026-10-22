@@ -2,14 +2,14 @@
 
 ## Supported Versions
 
-| Version | Status         | Support through |
-|---------|----------------|-----------------|
-| 0.10.x  | Current        | Next major      |
-| 0.9.x   | Previous line  | Upgrade to the current release for current-format fixes. |
-| < 0.9   | End of life    | Upgrade. 0.9.6 pins the chain link to draft-farley-acta-signed-receipts-03 section 6.7. |
+Security fixes target the latest published release. Older patch releases and
+previous minor lines are not separately maintained; upgrade before relying on
+their verification results. There is no long-term support commitment.
 
-Receipts verified with an EOL version should be re-verified with a
-current version to confirm continued validity.
+The current version is recorded in [release-manifest.json](release-manifest.json)
+and its changes in [CHANGELOG.md](CHANGELOG.md). If a fix affects a profile you use,
+re-verify relevant receipts with the fixed release. A historical verification
+result does not establish that a later-discovered bug was absent.
 
 ## Reporting a Vulnerability
 
@@ -18,7 +18,7 @@ If you believe you have found a security vulnerability in
 
 **Email:** security@scopeblind.com
 
-**Response time:**
+**Response targets** (a maintainer-run project, not a response-time guarantee):
 - Acknowledgment within 48 hours
 - Initial assessment within 5 business days
 - Coordinated disclosure target: 90 days (shorter for actively
@@ -51,7 +51,9 @@ If you believe you have found a security vulnerability in
 
 ### Out of scope
 
-- Bugs in dependencies (report to upstream: @noble/curves, @noble/hashes)
+- Dependency issues that do not affect this verifier (report to the relevant
+  upstream project). Please report affected verification or package paths here
+  as well so we can assess impact and update dependencies.
 - Threat-model non-goals documented in THREAT-MODEL.md (e.g.,
   compromised signing keys, issuer collusion, policy semantics)
 - Usage errors unrelated to verification correctness
@@ -76,22 +78,29 @@ Security researchers who have helped improve @veritasacta/verify:
 
 ## Supply Chain
 
-Each release is published with:
+The current [release workflow](https://github.com/VeritasActa/verify/blob/main/.github/workflows/publish.yml) publishes from
+`main` through the npm environment, using npm trusted publishing and
+`--provenance`. It tests and packs the source, then checks a clean installation
+before publishing that tarball. The 0.10.27 npm release has provenance. Do not
+assume that every historical release has it; inspect the exact version you use.
 
-- `npm publish --provenance`: Sigstore-attested supply chain
-- Sigil commitment in `sigil.json` covering `cli.js`, every shipped
-  executable JavaScript module under `src/`, and the other explicitly
-  declared monitored sources
-- GPG-signed git tag (when the release workflow runs)
+The release also includes a Sigil commitment in `sigil.json` covering `cli.js`,
+every shipped executable JavaScript module under `src/`, and the other explicitly
+declared monitored sources. This is a recomputable integrity commitment, not a
+publisher signature.
+
+Git release tags are not guaranteed to be signed. In particular, `v0.10.27` is a
+lightweight tag pointing to a signed commit; a signed commit is not a signed tag.
+The publish workflow does not create or sign tags.
 
 Verify the integrity of your installation:
 
 ```bash
-# Verify npm provenance
+# In a project that installed the package, check registry signatures/attestations
 npm audit signatures
 
 # Verify local files match the Sigil
-npx @veritasacta/verify --self-check
+verify --self-check
 ```
 
 Obtain the expected Sigil fingerprint through an independently authenticated

@@ -1,5 +1,10 @@
 # @veritasacta/langchain
 
+> **Reference material:** This integration is not release-qualified by the core verifier CI.
+> Commands, package versions and deployment claims below may be historical.
+> Read the [current ecosystem status](../../README.md) before using it.
+
+
 LangChain / LangGraph adapter for Veritas Acta signed decision receipts.
 
 **Apache-2.0 · JS + Python · Runs alongside any LangChain agent**

@@ -1,5 +1,10 @@
 # Veritas Acta Audit Dashboard (scaffold)
 
+> **Reference material:** This integration is not release-qualified by the core verifier CI.
+> Commands, package versions and deployment claims below may be historical.
+> Read the [current ecosystem status](../README.md) before using it.
+
+
 Local-first, offline audit dashboard for signed decision receipts.
 
 Two static files: `index.html` + `dashboard.js`: that together render

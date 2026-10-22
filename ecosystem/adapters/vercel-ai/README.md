@@ -1,5 +1,10 @@
 # @veritasacta/vercel-ai
 
+> **Reference material:** This integration is not release-qualified by the core verifier CI.
+> Commands, package versions and deployment claims below may be historical.
+> Read the [current ecosystem status](../../README.md) before using it.
+
+
 Vercel AI SDK adapter for Veritas Acta signed receipts. Wraps
 `streamText` / `generateText` tool calls with signing hooks.
 

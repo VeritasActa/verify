@@ -1,5 +1,10 @@
 # veritasacta-crewai
 
+> **Reference material:** This integration is not release-qualified by the core verifier CI.
+> Commands, package versions and deployment claims below may be historical.
+> Read the [current ecosystem status](../../README.md) before using it.
+
+
 CrewAI adapter for Veritas Acta signed receipts. Wraps Task / Agent
 tool invocations in CrewAI so every tool call emits a signed receipt.
 

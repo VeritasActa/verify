@@ -1,5 +1,10 @@
 # Veritas Acta Verify: GitHub Action
 
+> **Reference material:** This integration is not release-qualified by the core verifier CI.
+> Commands, package versions and deployment claims below may be historical.
+> Read the [current ecosystem status](../README.md) before using it.
+
+
 Verify signed decision receipts, VOPRF tokens, or Knowledge Units in any CI workflow. Installs `@veritasacta/verify`, compares the installed verifier with its bundled or caller-pinned Sigil commitment, then verifies your receipts. The self-check does not authenticate the publisher unless the expected fingerprint is obtained independently and passed with `pin-sigil`.
 
 ## Usage

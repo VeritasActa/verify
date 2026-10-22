@@ -13,7 +13,7 @@ No account, proxy, signing daemon or onboarding step is required to verify a rec
 ## Verify an existing receipt
 
 ```bash
-npm install -g @veritasacta/verify
+npm install -g @veritasacta/verify@0.10.28
 verify receipt.json --key YOUR_INDEPENDENTLY_OBTAINED_PUBLIC_KEY
 ```
 
@@ -86,6 +86,8 @@ only establishes the checks named in that output, not universal completeness.
 | Understand threats and limitations | [Threat model](THREAT-MODEL.md) |
 | Report a vulnerability | [Security policy](SECURITY.md) |
 | Inspect exact release changes | [Changelog](CHANGELOG.md) |
+| Run the tests or contribute a fixture | [Contributing](CONTRIBUTING.md) |
+| Understand project decisions and stewardship | [Governance](GOVERNANCE.md) |
 
 ## Release integrity, not publisher authentication
 
@@ -101,7 +103,7 @@ relying on it.
 ## Release and standards status
 
 <!-- release-manifest:start -->
-Verifier: **[0.10.27](https://github.com/VeritasActa/verify/releases/tag/v0.10.27)**. Status reviewed 2026-10-21.
+Verifier: **[0.10.28](https://github.com/VeritasActa/verify/releases/tag/v0.10.28)**. Status reviewed 2026-10-22.
 
 - [draft-farley-acta-signed-receipts-03](https://datatracker.ietf.org/doc/draft-farley-acta-signed-receipts/): active individual Internet-Draft.
 - [draft-farley-acta-knowledge-units-00](https://datatracker.ietf.org/doc/draft-farley-acta-knowledge-units/): expired individual Internet-Draft (expired 2026-10-08).
@@ -118,12 +120,13 @@ No draft is revised or resubmitted by this synchronization.
 
 Maintained by Tom Farley / ScopeBlind. Independent verification does not imply
 independent organizational governance. Contributions should include reproducible
-fixtures and negative cases. [Open an issue](https://github.com/VeritasActa/verify/issues)
-for interoperability questions.
+fixtures and negative cases. The [contribution guide](CONTRIBUTING.md) covers a clean
+checkout, package checks and useful first contributions. See the [public project
+evidence](https://github.com/ScopeBlind/agent-governance-testvectors/blob/main/docs/project-evidence.md)
+for reproducible interoperability results and their limits.
 
 ```bash
 npm ci
-npm run build:browser
 npm test
 npm run check:browser
 npm run check:sigil

@@ -1,5 +1,10 @@
 # Profile: Google Gemini CLI
 
+> **Reference material:** This integration is not release-qualified by the core verifier CI.
+> Commands, package versions and deployment claims below may be historical.
+> Read the [current ecosystem status](../../README.md) before using it.
+
+
 Run [Google Gemini CLI](https://github.com/google-gemini/gemini-cli) under sb-runtime + nono + signed receipts.
 
 Baseline is similar to `claude-code` with Google-specific network endpoints (`googleapis.com`, `generativelanguage.googleapis.com`, `google.com`) instead of Anthropic's.

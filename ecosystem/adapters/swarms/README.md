@@ -1,5 +1,10 @@
 # scopeblind-swarms
 
+> **Reference material:** This integration is not release-qualified by the core verifier CI.
+> Commands, package versions and deployment claims below may be historical.
+> Read the [current ecosystem status](../../README.md) before using it.
+
+
 Ed25519 signed decision receipts for [kyegomez/swarms](https://github.com/kyegomez/swarms) multi-agent systems. Wrap any tool with tamper-evident, offline-verifiable receipts in the [Veritas Acta receipt format](https://datatracker.ietf.org/doc/draft-farley-acta-signed-receipts/): the same format used by Microsoft Agent Governance Toolkit, protect-mcp, sb-runtime, hermes-decision-receipts, and Signet.
 
 **MIT · Python · Runs alongside any Swarms agent · No fork of Swarms required**
