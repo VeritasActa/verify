@@ -12,7 +12,7 @@ rather than rely on human-readable text.
 | `tampered` | Signature was tested and failed. Proof of modification. | 1 |
 | `undecidable` | Signature could not be tested (malformed, missing key, unsupported algorithm). | 2 |
 
-A verification that makes several checks combines them as §5.3 of the -04 editor's copy (VeritasActa/drafts) has it (from 0.10.26): invalid (exit 1) if any check ran and failed, even when another could not run; undecidable (exit 2) if none failed and at least one could not run; valid (exit 0) only when every check that applies passed. The `error` reported is the first failure, in the order signing input, signature, chain link, connector action, key window, link to the previous receipt; or, when none failed, the first check that could not run. `--json` gives each check's result in `checks`, and the outcome in `outcome`. `--replay-chain` exits 1 if any line is invalid or any link breaks, else 2 if any line could not be checked, else 0.
+A verification that makes several checks combines them as §5.3 of the -04 editor's copy (VeritasActa/drafts) has it (from 0.10.26): invalid (exit 1) if any check ran and failed, even when another could not run; undecidable (exit 2) if none failed and at least one could not run; valid (exit 0) only when every check that applies passed. The `error` reported is the first failure, in the order signing input, signature, carried key and issuer (both from 0.10.27), chain link, connector action, key window, link to the previous receipt; or, when none failed, the first check that could not run. `--json` gives each check's result in `checks`, and the outcome in `outcome`. `--replay-chain` exits 1 if any line is invalid or any link breaks, else 2 if any line could not be checked, else 0, and from 0.10.27 an audit bundle does the same over its receipts.
 
 ## Codes
 
@@ -40,8 +40,8 @@ A verification that makes several checks combines them as §5.3 of the -04 edito
 
 #### `commitment_mismatch`
 - **Description:** Selective-disclosure commitment does not match the revealed salt+value.
-- **Spec:** `AIP-0002 §Disclosure Package Verification`
-- **Hint:** The disclosed value does not correspond to the committed hash.
+- **Spec:** `AIP-0002 §Disclosure Package Verification`; for `--disclosure-file`, `draft-farley-acta-signed-receipts-03 §6.5 Selective Disclosure`
+- **Hint:** The disclosed value does not correspond to the committed hash. With `--disclosure-file`, each disclosure's Merkle proof must reconstruct the `committed_fields_root` in the receipt's signed bytes (an envelope's payload, a flat receipt's top level). From 0.10.27 a proof's leaf count is read as `tree_size`, as §6.5 names it, and `treeSize` is still accepted. With `--disclose`, the commitment is read from the `_commitments` map in the signed bytes, the same way.
 
 #### `dleq_verification_failed`
 - **Description:** VOPRF DLEQ proof verification failed (issuer or client proof invalid).
@@ -57,8 +57,14 @@ A verification that makes several checks combines them as §5.3 of the -04 edito
 - **Hint:** Each record may still be individually authentic; this code means a cross-record link is inconsistent. Check the `[chain]` entries in the error list.
 
 #### `key_mismatch`
-- **Description:** The verification key carried in the record does not match the key pinned with `--key`.
-- **Hint:** The record was signed by a different identity than the one you required.
+- **Description:** The verification key carried in the record does not match the key pinned with `--key`. For an Acta receipt (from 0.10.27): a `public_key`, `verification_key` or `verification_jwk` member of the signed bytes (an envelope's payload; a flat receipt, and a v2 receipt's payload) is not the key the receipt is verified with, from `--key`, `--jwks` or a bundle trusted with `--trust-bundle-keys`. Keys are compared as 32 bytes (hex in either case, base64 or base64url, or an OKP Ed25519 JWK); a value in none of those forms is not that key.
+- **Spec:** `draft-farley-acta-signed-receipts-03 §9.5 Key Distribution and Trust Anchors`; §5.3 Verification Outcomes of the -04 editor's copy (VeritasActa/drafts)
+- **Hint:** The record names a different identity than the one you required. A key the receipt carries is never used to verify it, and one that is not the trust-anchored key makes it invalid even when the signature verifies. The JSON result reports the check as `checks.carried_key`.
+
+#### `issuer_kid_mismatch`
+- **Description:** An envelope's payload names an `issuer_id` that is not its signature object's `kid`, or names one while the signature object has no `kid`. New in 0.10.27; 0.10.26 never compared the two.
+- **Spec:** `draft-farley-acta-signed-receipts-03 §2.2 Payload` (`issuer_id` "MUST match the kid field in the signature object"); §5.3 Verification Outcomes of the -04 editor's copy (VeritasActa/drafts)
+- **Hint:** The signed payload names a different issuer from the key identifier beside it. The check reads the bytes alone, so it counts with or without a key, beside a signature that could not be checked. A payload with no `issuer_id` is not checked: `payloadNotes` names the gap, and the outcome does not change. The flat shapes are not checked. The JSON result reports the check as `checks.issuer_kid`.
 
 #### `schema_invalid`
 - **Description:** A cryptographically authentic Gate payload violates the semantic contract of its declared schema.
@@ -77,17 +83,17 @@ A verification that makes several checks combines them as §5.3 of the -04 edito
 - **Hint:** Publish `valid_from` / `valid_until` on the JWK, or verify without the flag; the result then reports the key's validity at issuance as not established.
 
 #### `key_window_unverifiable`
-- **Description:** The key source carries a validity window that cannot be applied: a bound that is not an RFC 3339 date-time with its UTC offset written out (`Z` or `±hh:mm`; `null`, a date alone and a time with no offset included), bounds in the wrong order, or a receipt whose `issued_at` is missing or is not such a date-time. The detail names the value and the cause. From 0.10.26 a time with no offset is refused rather than read in the machine's own time zone.
+- **Description:** The key source carries a validity window that cannot be applied: a bound that is not an RFC 3339 date-time with its UTC offset written out (`Z` or `±hh:mm`; `null`, a date alone and a time with no offset included), bounds in the wrong order, or a receipt whose signed `issued_at` is missing or is not such a date-time string. The detail names the value and the cause. From 0.10.26 a time with no offset is refused rather than read in the machine's own time zone. From 0.10.27 only the `issued_at` the signature covers is read: an envelope's `payload.issued_at`, a flat receipt's top-level `issued_at`. An `issued_at` or `timestamp` beside an envelope's payload, a `timestamp` anywhere, and a number are not read in its place.
 - **Spec:** `draft-farley-acta-signed-receipts-03 §9.2 Key Compromise`
 
 #### `embedded_key_rejected`
 - **Description:** Receipt contains a verification key in its payload, which is not trusted by default.
 - **Spec:** `draft-farley-acta-signed-receipts-03 §9.5 Key Distribution and Trust Anchors`
-- **Hint:** Provide `--key` or `--jwks` externally. The deprecated `--allow-embedded-key` restores pre-0.4.0 behaviour for one release cycle.
+- **Hint:** Provide `--key` or `--jwks` externally. The deprecated `--allow-embedded-key` restores pre-0.4.0 behaviour for one release cycle. With a key from `--key` or `--jwks`, a key the receipt carries must be that key: from 0.10.27 one that is not is `key_mismatch` (exit 1).
 
 #### `no_public_key`
-- **Description:** Verification key could not be resolved from `--key`, `--jwks`, or a bundle verification block.
-- **Hint:** Provide `--key <hex>`, or `--jwks <url|file>`. `--trust-anchor` was never implemented and is refused (exit 2) since 0.10.25.
+- **Description:** No verification key from a trust anchor outside the receipt: none was given with `--key` or `--jwks`. From 0.10.27 an audit bundle's own `verification.signing_keys` are not one, since they arrive in the file being verified.
+- **Hint:** Provide `--key <hex>`, or `--jwks <url|file>`. For an audit bundle, `--trust-bundle-keys` checks the receipts with the keys the bundle carries, reported as `keySource: bundle`; a valid result then shows only that the receipts match keys in the same file. `--trust-anchor` was never implemented and is refused (exit 2) since 0.10.25.
 
 #### `missing_signature`
 - **Description:** Input does not contain a `signature` field.
@@ -97,12 +103,17 @@ A verification that makes several checks combines them as §5.3 of the -04 edito
 
 #### `unsupported_algorithm`
 - **Description:** The declared signature algorithm is not supported by this verifier version.
-- **Hint:** Hybrid post-quantum algorithms like `ed25519+ml-dsa-65` require v0.6+ for full PQ verification.
+- **Hint:** ML-DSA-65 is not implemented, alone (`ML-DSA-65`) or in a hybrid such as `ed25519+ml-dsa-65`, so a receipt that declares it is undecidable (`unsupported_algorithm`, exit 2). Verify it with a verifier that implements the algorithm.
 
 #### `unsupported_chain_hash_algorithm`
 - **Description:** `previousReceiptHash` names a hash algorithm other than sha256, which this verifier does not implement.
 - **Spec:** `draft-farley-acta-signed-receipts-03 §6.7 Chain Hash Scope`
 - **Hint:** Draft §6.7 requires refusing a link whose prefix names an unimplemented algorithm rather than assuming SHA-256 from its length.
+
+#### `malformed_encoding`
+- **Description:** The receipt could not be encoded or decoded for the signature check: the signature or the key is not valid hexadecimal, or the signed object cannot be canonicalized (a member name that is not ASCII, as AIP-0001 requires, or a value JCS cannot encode). The detail names the cause.
+- **Spec:** RFC 8785 (JCS); `AIP-0001 §JCS Canonicalization`
+- **Hint:** Supply the key as 64 hexadecimal characters, and check that the receipt's signature is hexadecimal and its member names are ASCII. Nothing about the signature was established. The browser bundle reports input it cannot interpret safely with the same code. Registered in 0.10.27; earlier releases emitted it without an entry, so an audit bundle that failed with it was shown as `INVALID` rather than `NOT CHECKED`.
 
 #### `non_ascii_key`
 - **Description:** An object key contains a non-ASCII character, violating AIP-0001.
@@ -118,8 +129,13 @@ A verification that makes several checks combines them as §5.3 of the -04 edito
 - **Description:** Input does not match any recognized receipt, token, or bundle format.
 - **Hint:** Valid formats: v1 receipt, v2 receipt, Passport envelope, audit bundle, KU bundle, VOPRF token.
 
+#### `disclosure_not_applied`
+- **Description:** A disclosure was given and could not be applied: a `--disclosure-file` that cannot be read or parsed, holds no disclosure, or meets a receipt whose signed bytes carry no `committed_fields_root`; or a `--disclose` value that is not `field:salt:value`, or one given for a receipt whose signed bytes carry no `_commitments` map. New in 0.10.27; 0.10.26 ignored such a disclosure, or reported the unregistered code `disclosure_file_load_failed: <message>` for a file it could not read.
+- **Spec:** `draft-farley-acta-signed-receipts-03 §6.5 Selective Disclosure`; `AIP-0002 §Disclosure Package Verification`
+- **Hint:** The root and the map are read from the signed bytes: an envelope's payload, or the top level of a flat receipt. One beside an envelope's payload is not signed and is not used. Nothing in the disclosure was verified. A failure found by another check stays the outcome.
+
 #### `jwks_fetch_failed`
-- **Description:** JWKS endpoint did not return a valid key set, or the key set has no key for the receipt's `kid`. With `--replay-chain`, a key set that cannot be read stops the replay (exit 2); a line whose `kid` it does not have is undecidable.
+- **Description:** JWKS endpoint did not return a valid key set, or the key set has no key for the receipt's `kid`. With `--replay-chain`, a key set that cannot be read stops the replay (exit 2); a line whose `kid` it does not have is undecidable. From 0.10.27 an audit bundle takes each receipt's key from the set by that receipt's `kid` the same way: a receipt whose `kid` the set lacks is undecidable, and a set that cannot be read checks nothing (exit 2).
 
 #### `context_requirement_unmet`
 - **Description:** One or more `--require-context` predicates evaluated false at verification time.

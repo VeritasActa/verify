@@ -32,9 +32,27 @@ export const DOMAIN_INTERNAL = 0x01;
 /**
  * @typedef {Object} MerkleProof
  * @property {number} index    zero-based index of the leaf
- * @property {number} treeSize total leaf count
+ * @property {number} tree_size total leaf count, as draft §6.5 names it
+ * @property {number} [treeSize] the same count under the name this verifier read before 0.10.27, read for compatibility
  * @property {string[]} siblings hex-encoded SHA-256 siblings, bottom-up
  */
+
+/**
+ * The leaf count a proof gives: `tree_size`, as draft §6.5 names it, or `treeSize`, the name this verifier read before
+ * 0.10.27 (and protect-mcp writes), read for compatibility. A proof that gives both with different values gives none,
+ * and so does one whose count is not a whole number.
+ *
+ * @param {Object} proof
+ * @returns {number | null}
+ */
+export function proofTreeSize(proof) {
+  if (!proof || typeof proof !== 'object') return null;
+  const snake = Object.hasOwn(proof, 'tree_size');
+  const camel = Object.hasOwn(proof, 'treeSize');
+  if (snake && camel && proof.tree_size !== proof.treeSize) return null;
+  const size = snake ? proof.tree_size : proof.treeSize;
+  return Number.isSafeInteger(size) ? size : null;
+}
 
 /**
  * Hash a leaf with RFC 6962 domain separation.
@@ -129,11 +147,12 @@ function reconstructRoot(leafHash, index, treeSize, siblings) {
 export function verifyProof(expectedRootHex, leafHash, proof) {
   if (!proof || typeof proof !== 'object') return false;
   if (!Array.isArray(proof.siblings)) return false;
-  if (typeof proof.index !== 'number' || typeof proof.treeSize !== 'number') {
+  const treeSize = proofTreeSize(proof);
+  if (!Number.isSafeInteger(proof.index) || treeSize === null) {
     return false;
   }
-  if (proof.index < 0 || proof.index >= proof.treeSize) return false;
-  if (proof.treeSize === 1) {
+  if (proof.index < 0 || proof.index >= treeSize) return false;
+  if (treeSize === 1) {
     return (
       proof.siblings.length === 0 &&
       leafHash.toString('hex').toLowerCase() === expectedRootHex.toLowerCase()
@@ -141,7 +160,7 @@ export function verifyProof(expectedRootHex, leafHash, proof) {
   }
   let result;
   try {
-    result = reconstructRoot(leafHash, proof.index, proof.treeSize, proof.siblings);
+    result = reconstructRoot(leafHash, proof.index, treeSize, proof.siblings);
   } catch {
     return false;
   }

@@ -8,7 +8,7 @@ Release history with the detail is in [CHANGELOG.md](./CHANGELOG.md).
 - **0.6.1** (May 2026): AIP-0007 zero-knowledge compliance proofs, draft; transparency-log anchoring engine (AIP-0005 T4).
 - **0.7.0** (June 2026): restraint receipts, proving what was prevented, offline and position-blind; the release rule for execution evidence.
 - **0.8.0** (June 2026): RFC 6962 transparency log for macro track records; macro-engine snapshots and track-record bundles.
-- **0.9.0** (June 2026): Legate adherence and restraint proof packs.
+- **0.9.0** (June 2026): adherence and restraint proof packs.
 - **0.9.3** (July 2026): the 0.9.1/0.9.2 line and this line reconciled into one tree; draft-02 receipts and chain links in `--replay-chain`.
 - **0.9.4 to 0.9.6** (August to September 2026): the chain link is computed over the whole signed receipt and carries the `sha256:` prefix, as draft-farley-acta-signed-receipts-03 section 6.7 specifies; genesis receipts omit `previousReceiptHash`; extra positional arguments are an error rather than a silent drop; the bundled integrity commitment is regenerated as the last step of a release, after 0.9.4 shipped with a stale one.
 

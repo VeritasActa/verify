@@ -3,8 +3,8 @@
  *
  * draft-farley-acta-signed-receipts-03 §9.2 has issuers publish rotated keys
  * with a valid_from / valid_until window in the JWK metadata, and verifiers
- * check it when available. This module applies that window to a receipt's
- * issued_at and says, in every case, what was established:
+ * check it when available. This module applies that window to the issued_at
+ * a receipt's signature covers and says, in every case, what was established:
  *
  *   inside          the key source carried a window and issued_at falls in it
  *   outside         it carried a window and issued_at falls outside it
@@ -98,26 +98,27 @@ export function parseTimestamp(value) {
 const quoted = (value) => (typeof value === 'string' ? `"${value}"` : JSON.stringify(value));
 
 /**
- * A receipt's issued_at, whatever its shape: the draft's envelope
- * ({ payload, signature }), the v2 structure (issued_at beside the payload),
- * or the v1 flat artifact (issued_at or timestamp at the top).
+ * The issued_at a receipt's signature covers, as written: the time -04 §5.5 places in the key's window. The envelope
+ * ({ payload, signature: { alg, kid, sig } }) signs its payload alone, so the payload's issued_at is the signed one and
+ * a member beside the payload is not signed; a flat receipt (a signature that is a string: the v2 structure and the v1
+ * artifact) signs the receipt less its signature, so its top-level issued_at is the signed one. No other member is read
+ * in its place, timestamp included, and the value is not converted: checkKeyWindow applies a window only to an RFC
+ * 3339 date-time string, and anything else, a number among them, leaves the window undecidable
+ * (key_window_unverifiable).
+ *
+ * Before 0.10.27 this read the payload's issued_at, then a top-level issued_at, then a timestamp, and read a number as
+ * epoch seconds or milliseconds, so an envelope whose signed payload had no issued_at was placed in its key's window by
+ * a member the signature does not cover.
  *
  * @param {Record<string, any>} receipt
- * @returns {string|null}
+ * @returns {unknown} the signed issued_at, or null when the signed bytes carry none
  */
 export function receiptIssuedAt(receipt) {
-  if (!receipt || typeof receipt !== 'object') return null;
-  const candidates = [
-    receipt.payload && typeof receipt.payload === 'object' ? receipt.payload.issued_at : undefined,
-    receipt.issued_at,
-    receipt.payload && typeof receipt.payload === 'object' ? receipt.payload.timestamp : undefined,
-    receipt.timestamp,
-  ];
-  for (const value of candidates) {
-    if (typeof value === 'string' && value) return value;
-    if (typeof value === 'number' && Number.isFinite(value)) return new Date(value > 1e12 ? value : value * 1000).toISOString();
-  }
-  return null;
+  const isObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+  if (!isObject(receipt)) return null;
+  const signed = isObject(receipt.signature) ? receipt.payload : receipt;
+  if (!isObject(signed) || !Object.hasOwn(signed, 'issued_at')) return null;
+  return signed.issued_at;
 }
 
 /**
@@ -125,7 +126,7 @@ export function receiptIssuedAt(receipt) {
  *
  * @param {Object} args
  * @param {{ valid_from?: unknown, valid_until?: unknown } | null} args.window  from the key source (windowOf)
- * @param {string|null} args.issuedAt   the receipt's issued_at
+ * @param {unknown} args.issuedAt      the receipt's signed issued_at (receiptIssuedAt), as written
  * @param {string|null} args.keySource  'jwks', 'provided', ...; null when no key was resolved
  * @param {boolean} [args.require]      --require-key-window: no window is undecidable
  * @returns {{ status: string, error: string|null, detail: string, report: Object }}
@@ -159,7 +160,7 @@ export function checkKeyWindow({ window, issuedAt, keySource, require = false })
     return done('unverifiable', 'key_window_unverifiable', 'The key\'s validity window ends before it starts.');
   }
   if (issuedAt === null || issuedAt === undefined || issuedAt === '') {
-    return done('unverifiable', 'key_window_unverifiable', 'The receipt has no issued_at, so the key window cannot be applied.');
+    return done('unverifiable', 'key_window_unverifiable', 'The receipt\'s signed bytes carry no issued_at (an envelope carries it in its payload), so the key window cannot be applied.');
   }
   const at = parseTimestamp(issuedAt);
   if (at.cause) {

@@ -34,7 +34,8 @@ import { hashLeaf, encodeLeaf, verifyProof, base64urlDecode } from '../util/merk
  * @property {string} name field name
  * @property {unknown} value cleartext value
  * @property {string} salt  base64url-encoded salt (no padding)
- * @property {{index: number, treeSize: number, siblings: string[]}} proof
+ * @property {{index: number, tree_size: number, siblings: string[]}} proof  draft §6.5 names the leaf count
+ *   `tree_size`; `treeSize`, which this verifier read before 0.10.27 and protect-mcp writes, is read too
  */
 
 /**
@@ -46,6 +47,31 @@ import { hashLeaf, encodeLeaf, verifyProof, base64urlDecode } from '../util/merk
  */
 
 /**
+ * The committed_fields_root a receipt's signature covers, and the object that carries it. An envelope
+ * ({ payload, signature: { alg, kid, sig } }) signs its payload alone, and draft §2.2 puts the member there; a flat
+ * receipt (a signature that is a string) signs the receipt less its signature, so the root is at its top level, or in
+ * a v2 receipt's payload. A root beside an envelope's payload is outside the signature and is not read. As before, a
+ * root counts only when it is a non-empty string.
+ *
+ * Before 0.10.27 the CLI read the root at the top level of every receipt, so an envelope's signed root was never found
+ * (a disclosure file given with it went unread) and a root beside an envelope's payload was checked against instead.
+ *
+ * @param {Object} receipt
+ * @returns {{ root: string, carrier: Object } | null}
+ */
+export function signedCommitment(receipt) {
+  const isObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+  if (!isObject(receipt)) return null;
+  const carriers = isObject(receipt.signature) ? [receipt.payload] : [receipt, receipt.payload];
+  for (const carrier of carriers) {
+    if (isObject(carrier) && typeof carrier.committed_fields_root === 'string' && carrier.committed_fields_root.length > 0) {
+      return { root: carrier.committed_fields_root, carrier };
+    }
+  }
+  return null;
+}
+
+/**
  * Verify a committed-mode receipt against zero or more disclosures.
  *
  * If disclosures is empty, the function returns valid=true with
@@ -55,7 +81,7 @@ import { hashLeaf, encodeLeaf, verifyProof, base64urlDecode } from '../util/merk
  * If disclosures are provided, each is checked against the receipt's
  * committed_fields_root. All must verify for the result to be valid.
  *
- * @param {Object} receipt the parsed receipt with committed_fields_root
+ * @param {Object} receipt the object that carries committed_fields_root in the signed bytes (signedCommitment's carrier)
  * @param {CommittedDisclosure[]} disclosures
  * @returns {CommitmentVerifyResult}
  */

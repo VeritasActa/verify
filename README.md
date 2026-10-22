@@ -22,6 +22,19 @@ receipt as an independent trust pin. This verification path runs offline once th
 package is installed; installation and explicitly requested URL/JWKS lookups use
 the network.
 
+An Acta receipt or audit bundle is never checked with a key taken from the file
+being checked. A receipt whose signed bytes carry a key (`public_key`,
+`verification_key`, `verification_jwk`) other than the one you supply fails with
+`key_mismatch`, and an envelope whose payload names an `issuer_id` other than its
+signature's `kid` fails with `issuer_kid_mismatch`. An audit bundle's own
+`verification.signing_keys` are used only if you pass `--trust-bundle-keys`, and a
+valid result then shows only that the receipts match keys in the same file. Gate
+records, macro track records, governed receipts, proof packs and context packs still
+verify against the key they carry when you give none, and label the result as
+embedded-key only; pin the key with `--key`. Key windows apply to the `issued_at` the
+signature covers, and disclosures are checked against the commitments the signature
+covers; a disclosure that cannot be applied is not checked (exit 2).
+
 To try the public example, download [this receipt](samples/current-receipt.json)
 and use its **demonstration-only** key:
 
@@ -88,7 +101,7 @@ relying on it.
 ## Release and standards status
 
 <!-- release-manifest:start -->
-Verifier: **[0.10.26](https://github.com/VeritasActa/verify/releases/tag/v0.10.26)**. Status reviewed 2026-10-20.
+Verifier: **[0.10.27](https://github.com/VeritasActa/verify/releases/tag/v0.10.27)**. Status reviewed 2026-10-21.
 
 - [draft-farley-acta-signed-receipts-03](https://datatracker.ietf.org/doc/draft-farley-acta-signed-receipts/): active individual Internet-Draft.
 - [draft-farley-acta-knowledge-units-00](https://datatracker.ietf.org/doc/draft-farley-acta-knowledge-units/): expired individual Internet-Draft (expired 2026-10-08).
@@ -119,4 +132,4 @@ npm run test:conformance
 
 Apache-2.0. See [LICENSE](LICENSE) and [PATENTS.md](PATENTS.md) for the actual terms.
 The Acta public record is a [separate reference application](https://github.com/VeritasActa/Acta).
-ScopeBlind / Legate are commercial applications, not prerequisites for verification.
+ScopeBlind's commercial applications are not prerequisites for verification.

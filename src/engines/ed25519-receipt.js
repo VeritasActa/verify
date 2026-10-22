@@ -15,6 +15,8 @@
  * Embedded keys in the payload are rejected by default (v0.4.0+). An
  * escape hatch (allowEmbeddedKey: true) exists for one release cycle
  * to ease migration; it is deprecated and will be removed in v0.6.
+ * When a key is supplied from outside the receipt, a key the signed
+ * bytes carry must be that key, or the receipt is invalid (0.10.27).
  *
  * References:
  *   - RFC 8032 (EdDSA / Ed25519)
@@ -33,8 +35,159 @@ import { canonicalize, canonicalHash, legacyCanonicalize } from '../util/canonic
 import { hexToBytes, bytesToHex } from '../util/hex.js';
 import { checkConnectorAction } from './connector-action.js';
 import { exitCodeFor } from '../errors.js';
+import { checkKeyWindow, receiptIssuedAt, keyWindowCheck } from '../util/key-window.js';
 
 const EMBEDDED_KEY_FIELDS = ['public_key', 'verification_key', 'verification_jwk'];
+
+const isObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+
+/** Base64 or base64url text as bytes, or null. atob, not Buffer, so the browser bundle can run it too. */
+function base64Bytes(text) {
+  const b64 = text.replace(/-/g, '+').replace(/_/g, '/');
+  let binary;
+  try {
+    binary = atob(b64 + '='.repeat((4 - (b64.length % 4)) % 4));
+  } catch {
+    return null;
+  }
+  return Uint8Array.from(binary, (ch) => ch.charCodeAt(0));
+}
+
+/**
+ * A carried key as 64 lowercase hex characters, or null when the value is not an Ed25519 public key in a form read
+ * here: 64 hex characters, the 32 bytes in base64 or base64url, or an OKP / Ed25519 JWK.
+ */
+function carriedKeyHex(value) {
+  if (typeof value === 'string') {
+    if (/^[0-9a-fA-F]{64}$/.test(value)) return value.toLowerCase();
+    if (/^[A-Za-z0-9+/_-]{43}=?$/.test(value)) {
+      const bytes = base64Bytes(value);
+      return bytes && bytes.length === 32 ? bytesToHex(bytes) : null;
+    }
+    return null;
+  }
+  if (isObject(value) && value.kty === 'OKP' && value.crv === 'Ed25519' && typeof value.x === 'string') {
+    return /^[A-Za-z0-9_-]{43}$/.test(value.x) ? carriedKeyHex(value.x) : null;
+  }
+  return null;
+}
+
+/**
+ * The carried-key check (-04 editor's copy, VeritasActa/drafts, §5.3 and §9.5, as the rule is now being written): a
+ * carried key is the value of a public_key, verification_key or verification_jwk member of the signed bytes (the
+ * signed object, and in the v2 shape its payload). A verifier never verifies with one; and when a key from a trust
+ * anchor outside the receipt is used, a carried key that is not that key makes the receipt invalid (key_mismatch).
+ * Before 0.10.27 the signed bytes were searched for such members only when no key was supplied, so a receipt signed
+ * by the anchored key while naming another key as its own verified.
+ *
+ * @param {unknown} signed the object the signature covers
+ * @param {string} anchoredKey the hex key the receipt is verified with, from --key, --jwks or a trusted bundle
+ * @returns {{ result: string, code?: string } | null} null when the signed bytes carry no key, or there is no key to
+ *   compare with
+ */
+export function carriedKeyCheck(signed, anchoredKey) {
+  if (typeof anchoredKey !== 'string' || !/^[0-9a-fA-F]{64}$/.test(anchoredKey)) return null;
+  const carriers = [signed, isObject(signed) ? signed.payload : null].filter(isObject);
+  const carried = [];
+  for (const carrier of carriers) {
+    for (const name of EMBEDDED_KEY_FIELDS) {
+      const value = carrier[name];
+      if (typeof value === 'string' || isObject(value)) carried.push({ name, value });
+    }
+  }
+  if (carried.length === 0) return null;
+  const anchored = anchoredKey.toLowerCase();
+  const other = carried.find(({ value }) => carriedKeyHex(value) !== anchored);
+  if (!other) return { result: 'pass' };
+  const hex = carriedKeyHex(other.value);
+  return {
+    result: 'fail',
+    code: 'key_mismatch',
+    detail: hex
+      ? `The signed bytes carry ${other.name} ${hex.slice(0, 16)}..., which is not the key the receipt was verified with (${anchored.slice(0, 16)}...). A carried key that is not the trust-anchored key makes the receipt invalid (§5.3 and §9.5 of the -04 editor's copy, VeritasActa/drafts).`
+      : `The signed bytes carry ${other.name}, which is not an Ed25519 public key in a form this verifier reads (64 hex characters, 32 bytes in base64url, or an OKP JWK), so it is not the key the receipt was verified with. A carried key that is not the trust-anchored key makes the receipt invalid (§5.3 and §9.5 of the -04 editor's copy, VeritasActa/drafts).`,
+  };
+}
+
+/**
+ * What the declared receipt types of the -04 editor's copy (VeritasActa/drafts, §3.1.1 and §3.2.1) require of their
+ * payload: the REQUIRED members, and the closed sets their values come from.
+ */
+const DECLARED_TYPES = {
+  'protectmcp:decision': {
+    section: '§3.1.1',
+    required: ['tool_name', 'decision'],
+    values: { decision: ['allow', 'deny', 'rate_limit', 'require_approval'], agent_tier: ['unknown', 'signed-known', 'evidenced', 'privileged'] },
+  },
+  'protectmcp:restraint': {
+    section: '§3.2.1',
+    required: ['agent_id', 'agent_manifest_version', 'tool_name', 'decision'],
+    values: { decision: ['allow', 'deny'], denial_type: ['policy-block', 'agent-refusal'] },
+  },
+};
+
+/**
+ * The issuer check of an envelope (§2.2 of the -04 editor's copy, VeritasActa/drafts: issuer_id "MUST match the kid
+ * field in the signature object"), as the draft now reads it: a payload that names an issuer_id names the signer, and
+ * when that is not signature.kid, or the signature object has no kid to match, the receipt is invalid
+ * (issuer_kid_mismatch). A payload with no issuer_id is not checked here; envelopePayloadNotes names the gap. Before
+ * 0.10.27 the two were never compared, so a receipt whose signed payload named one issuer and whose signature named
+ * another key verified.
+ *
+ * @param {unknown} payload the envelope's payload
+ * @param {unknown} signature the envelope's signature object
+ * @returns {{ result: string, code?: string, detail?: string } | null} null when the payload names no issuer_id
+ */
+export function issuerKidCheck(payload, signature) {
+  if (!isObject(payload) || !Object.hasOwn(payload, 'issuer_id')) return null;
+  const draft = "§2.2 of the -04 editor's copy (VeritasActa/drafts)";
+  if (!isObject(signature) || !Object.hasOwn(signature, 'kid')) {
+    return {
+      result: 'fail',
+      code: 'issuer_kid_mismatch',
+      detail: `The payload names issuer_id ${JSON.stringify(payload.issuer_id)}, and the signature object has no kid for it to match; ${draft} says issuer_id MUST match the kid, so the receipt is invalid.`,
+    };
+  }
+  if (payload.issuer_id === signature.kid) return { result: 'pass' };
+  return {
+    result: 'fail',
+    code: 'issuer_kid_mismatch',
+    detail: `The payload's issuer_id ${JSON.stringify(payload.issuer_id)} is not signature.kid ${JSON.stringify(signature.kid)}; ${draft} says it MUST match, so the receipt is invalid.`,
+  };
+}
+
+/**
+ * Notes on an envelope's payload, reported beside the result and never counted in its outcome: a member -04 §2.2
+ * makes REQUIRED of every payload that is missing (type, issued_at, issuer_id), a missing kid when no issuer_id names
+ * one (§2.1.1), and the members and values the declared type requires (§3). An issuer_id that does not match the kid
+ * is not a note: issuerKidCheck makes it invalid. The flat shapes, still being settled with implementers, get none.
+ *
+ * @param {unknown} payload
+ * @param {unknown} signature the envelope's signature object
+ * @returns {string[]}
+ */
+export function envelopePayloadNotes(payload, signature) {
+  if (!isObject(payload)) return [];
+  const notes = [];
+  const draft = "of the -04 editor's copy (VeritasActa/drafts)";
+  const either = (names) => (names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} or ${names[names.length - 1]}`);
+  const missing = ['type', 'issued_at', 'issuer_id'].filter((name) => !Object.hasOwn(payload, name));
+  if (missing.length) notes.push(`The payload has no ${either(missing)}, which §2.2 ${draft} makes REQUIRED of every payload.`);
+  if (!Object.hasOwn(payload, 'issuer_id') && !(isObject(signature) && Object.hasOwn(signature, 'kid'))) {
+    notes.push(`The signature object has no kid, which §2.1.1 ${draft} makes REQUIRED.`);
+  }
+  const declared = typeof payload.type === 'string' && Object.hasOwn(DECLARED_TYPES, payload.type) ? DECLARED_TYPES[payload.type] : undefined;
+  if (declared) {
+    const absent = declared.required.filter((name) => !Object.hasOwn(payload, name));
+    if (absent.length) notes.push(`This ${payload.type} payload has no ${either(absent)}, which ${declared.section} ${draft} makes REQUIRED for the type.`);
+    for (const [name, allowed] of Object.entries(declared.values)) {
+      if (Object.hasOwn(payload, name) && !allowed.includes(payload[name])) {
+        notes.push(`The payload's ${name} ${JSON.stringify(payload[name])} is not one of ${allowed.join(', ')}, the values ${declared.section} ${draft} allows for ${payload.type}.`);
+      }
+    }
+  }
+  return notes;
+}
 
 // Draft §6.7: a chain link is "sha256:" followed by 64 lowercase hex characters. A prefix naming another algorithm
 // is refused rather than read as SHA-256 from its length, and the bare 64-character digest of earlier revisions is
@@ -75,9 +228,11 @@ export function checkChainLinkSyntax(signed) {
 
 /**
  * The checks one receipt can be put through, in the order a result names them. A failure reported is the first in
- * this order, and so is a check that could not run when none failed.
+ * this order, and so is a check that could not run when none failed. Two are made only when they apply (0.10.27):
+ * carried_key, when a key from outside the receipt is used and the signed bytes carry a key; and issuer_kid, when an
+ * envelope's payload names an issuer_id.
  */
-export const CHECK_ORDER = Object.freeze(['signing_input', 'signature', 'chain_link', 'connector', 'key_window', 'previous']);
+export const CHECK_ORDER = Object.freeze(['signing_input', 'signature', 'carried_key', 'issuer_kid', 'chain_link', 'connector', 'key_window', 'previous']);
 
 /**
  * Combine the checks a verification made into one outcome, as §5.3 of the -04 editor's copy (VeritasActa/drafts) has it: invalid if any check ran and failed,
@@ -109,7 +264,9 @@ const signatureCheck = (code) => ({ result: exitCodeFor(code) === 1 ? 'fail' : '
 /**
  * @typedef {Object} VerifyReceiptOptions
  * @property {string} [publicKey]    hex-encoded Ed25519 public key (64 chars)
+ * @property {string} [keySource]    where publicKey came from: 'provided' (the default), 'jwks' or 'bundle'
  * @property {boolean} [allowEmbeddedKey]  pre-0.4.0 compat; deprecated
+ * @property {boolean} [trustBundleKeys]  verifyBundle: check receipts with the keys the bundle carries (--trust-bundle-keys)
  * @property {string} [mode]         detected or forced mode
  */
 
@@ -166,14 +323,30 @@ export async function verifyReceipt(input, detectedMode, opts = {}) {
   // or cannot be checked; combineChecks decides what it means beside the rest.
   const chainLink = checkChainLinkSyntax(signedPayload);
   const linkCheck = chainLinkCheck(chainLink);
+  // With a key from outside the receipt, a key the signed bytes carry must be that key (§5.3 and §9.5 of the -04
+  // editor's copy, VeritasActa/drafts). It needs no signature, so it is checked beside the rest, like the link.
+  const carried = carriedKeyCheck(signedPayload, opts.publicKey);
+  // An envelope whose payload names an issuer_id must name the signature's kid (§2.2 of the -04 editor's copy). It is a
+  // property of the bytes, so it too is checked beside the rest.
+  const issuerCheck = format === 'passport' ? issuerKidCheck(input.payload, input.signature) : null;
+  const asCheck = (c) => ({ result: c.result, ...(c.code ? { code: c.code } : {}) });
+  const extraChecks = { ...(carried ? { carried_key: asCheck(carried) } : {}), ...(issuerCheck ? { issuer_kid: asCheck(issuerCheck) } : {}) };
+  // Each check's detail, by check name, kept on the result as a property JSON output never shows; cli.js reads it.
+  const checkDetails = { ...(carried?.detail ? { carried_key: carried.detail } : {}), ...(issuerCheck?.detail ? { issuer_kid: issuerCheck.detail } : {}) };
+  const decidedDetail = (combined) => (checkDetails[combined.check] ? { detail: checkDetails[combined.check] } : {});
+  // Notes on an envelope's payload (§2.2 and §3 of the -04 editor's copy), reported and never counted in the outcome.
+  const notes = format === 'passport' ? envelopePayloadNotes(input.payload, input.signature) : [];
+  const noteFields = notes.length ? { payloadNotes: notes } : {};
   // An outcome reached before the signature could be checked, with the link's syntax beside it.
   const early = (signature, fields, signingInput = { result: 'pass' }) => {
-    const checks = { signing_input: signingInput, signature, chain_link: linkCheck };
+    const checks = { signing_input: signingInput, signature, ...extraChecks, chain_link: linkCheck };
     const combined = combineChecks(checks);
-    return {
+    const details = { ...checkDetails, ...(typeof fields.detail === 'string' ? { signature: fields.detail } : {}) };
+    return withCheckDetails({
       valid: false, error: combined.error, outcome: combined.outcome, checks, format, kid, issuer, algorithm, ...fields,
-      chainLink: chainLink.form, ...(chainLink.warning ? { warning: chainLink.warning } : {}),
-    };
+      ...decidedDetail(combined),
+      chainLink: chainLink.form, ...(chainLink.warning ? { warning: chainLink.warning } : {}), ...noteFields,
+    }, details);
   };
 
   // Draft §6.6: the object canonicalized never carries a signature member, not even as null or the empty string. A
@@ -187,9 +360,10 @@ export async function verifyReceipt(input, detectedMode, opts = {}) {
     return early(signatureCheck('unsupported_algorithm'), { type: input.type || input.payload?.type });
   }
 
-  // Key resolution with embedded-key rejection.
+  // Key resolution with embedded-key rejection. A key given by the caller is labelled with where it came from:
+  // --key ('provided'), --jwks ('jwks') or a bundle trusted with --trust-bundle-keys ('bundle').
   let publicKey = opts.publicKey;
-  let keySource = publicKey ? 'provided' : null;
+  let keySource = publicKey ? (opts.keySource || 'provided') : null;
 
   if (!publicKey) {
     const payload = input.payload || input;
@@ -286,12 +460,13 @@ export async function verifyReceipt(input, detectedMode, opts = {}) {
     }
   }
 
-  // The checks combine as -04 §5.3 has them (combineChecks): the link's syntax counts whatever the signature's
-  // result, and the first failure in CHECK_ORDER is the one reported, so a tampered receipt still reports
+  // The checks combine as -04 §5.3 has them (combineChecks): the link's syntax, a carried key and the issuer count
+  // whatever the signature's result, and the first failure in CHECK_ORDER is the one reported, so a tampered receipt still reports
   // invalid_signature. The connector-action profile is checked once the receipt's own checks pass.
   const checks = {
     signing_input: { result: 'pass' },
     signature: result.valid ? { result: 'pass' } : signatureCheck(normalizedError),
+    ...extraChecks,
     chain_link: linkCheck,
   };
   if (connectorAction) {
@@ -302,11 +477,13 @@ export async function verifyReceipt(input, detectedMode, opts = {}) {
   const combined = combineChecks(checks);
   if (!combined.valid) normalizedError = combined.error;
 
-  return {
+  return withCheckDetails({
     valid: combined.valid,
     outcome: combined.outcome,
     checks,
     error: normalizedError,
+    ...decidedDetail(combined),
+    ...noteFields,
     connectorAction,
     format,
     type: payload.type || input.type,
@@ -326,7 +503,13 @@ export async function verifyReceipt(input, detectedMode, opts = {}) {
     chainLink: chainLink.form,
     warning: [result.warning, chainLink.warning, format === 'legacy-browser-1.0'
       ? 'Historical website format: public_key is outside the signed payload. Not draft-03 conformance.' : null].filter(Boolean).join(' ') || undefined,
-  };
+  }, checkDetails);
+}
+
+/** Attach each check's detail to a result as a property that JSON output and object spreads leave out. */
+function withCheckDetails(result, details) {
+  Object.defineProperty(result, 'checkDetails', { value: details, enumerable: false });
+  return result;
 }
 
 /**
@@ -361,8 +544,23 @@ function collectPayloadFields(payload) {
 }
 
 /**
- * Verify an audit bundle: multiple receipts + a verification block with
- * signing_keys.
+ * Verify an audit bundle: several receipts (and anchors), and a verification block whose signing_keys name keys for
+ * them.
+ *
+ * The keys in verification.signing_keys arrive in the file being verified, so they are not a trust anchor: anyone who
+ * can write a bundle can name a key there for any receipts (§9.5 of the -04 editor's copy, VeritasActa/drafts). Each
+ * receipt is checked with the key the caller gives, and without one it is undecidable (no_public_key): --key
+ * (publicKey) for every receipt, or --jwks (keyResolver), whose key set gives each receipt the key its own kid names,
+ * with that key's validity window applied to the receipt's signed issued_at, as for a single file. A kid the set lacks
+ * leaves that receipt undecidable (jwks_fetch_failed). trustBundleKeys (--trust-bundle-keys) opts in to the bundle's
+ * own keys, used only when neither is given: each receipt is then checked with the key its kid names there, or the
+ * bundle's first key, and reported with keySource 'bundle'. Before 0.10.27 those keys were used by default and
+ * reported as 'provided', so a bundle carrying its own key verified, exit 0, for any receipts; and --jwks gave every
+ * receipt the key set's first Ed25519 key, whatever its kid.
+ *
+ * The bundle's outcome combines its receipts' as -04 §5.3 combines checks: invalid if any receipt is invalid, else
+ * undecidable if any receipt could not be checked, else valid. `error` is the code of the first receipt with that
+ * outcome; `failed` counts invalid receipts and `undecidable` the ones that could not be checked.
  *
  * @param {Object} bundle
  * @param {VerifyReceiptOptions} [opts]
@@ -374,6 +572,7 @@ export async function verifyBundle(bundle, opts = {}) {
     total: 0,
     passed: 0,
     failed: 0,
+    undecidable: 0,
     errors: [],
     receipts: [],
   };
@@ -382,60 +581,86 @@ export async function verifyBundle(bundle, opts = {}) {
     return { valid: false, error: 'unknown_format', detail: 'bundle missing receipts array' };
   }
 
-  // Build key lookup from bundle.verification.signing_keys (JWK -> hex).
+  // A key set from --jwks, read once by the caller: each receipt's key is the one its kid names.
+  const resolver = !opts.publicKey && typeof opts.keyResolver === 'function' ? opts.keyResolver : null;
+  // The bundle's own keys (JWK -> hex), read only when the caller opts in to them and gives no key of its own.
+  const trustBundleKeys = opts.trustBundleKeys === true && !opts.publicKey && !resolver;
   const keyMap = new Map();
-  if (Array.isArray(bundle.verification?.signing_keys)) {
+  if (trustBundleKeys && Array.isArray(bundle.verification?.signing_keys)) {
     for (const jwk of bundle.verification.signing_keys) {
-      if (jwk.kty === 'OKP' && jwk.crv === 'Ed25519' && jwk.x) {
-        const raw = Buffer.from(jwk.x.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
-        const hex = bytesToHex(new Uint8Array(raw.buffer, raw.byteOffset, raw.byteLength));
+      if (jwk && jwk.kty === 'OKP' && jwk.crv === 'Ed25519' && typeof jwk.x === 'string') {
+        const raw = base64Bytes(jwk.x);
+        if (!raw) continue;
+        const hex = bytesToHex(raw);
         if (jwk.kid) keyMap.set(jwk.kid, hex);
         if (!keyMap.has('default')) keyMap.set('default', hex);
       }
     }
   }
 
-  for (const receipt of bundle.receipts) {
+  const { detectFormat } = await import('../detect.js');
+  const check = async (item, label) => {
     results.total++;
     let key = opts.publicKey;
-    if (!key) {
-      const receiptKid = receipt.kid || receipt.signature?.kid;
-      key = keyMap.get(receiptKid) || keyMap.get('default');
+    let keySource = opts.keySource;
+    let keyWindow = null;
+    let jwksError = null;
+    if (resolver) {
+      const resolved = resolver(item?.kid || item?.signature?.kid);
+      if (resolved.key) {
+        key = resolved.key;
+        keySource = 'jwks';
+        keyWindow = resolved.window || null;
+      } else {
+        jwksError = resolved.error || 'the key set gives no key for this receipt';
+      }
+    } else if (!key && trustBundleKeys) {
+      key = keyMap.get(item?.kid || item?.signature?.kid) || keyMap.get('default');
+      keySource = key ? 'bundle' : undefined;
     }
-
-    // Detect format of this sub-receipt and recurse.
-    const { detectFormat } = await import('../detect.js');
-    const detected = detectFormat(receipt);
-    const subOpts = { ...opts, publicKey: key };
-    const r = await verifyReceipt(receipt, detected.mode, subOpts);
+    const detected = detectFormat(item);
+    const r = await verifyReceipt(item, detected.mode, { ...opts, publicKey: key, keySource, ...(jwksError ? { allowEmbeddedKey: false } : {}) });
+    if (resolver) {
+      // As for a single file: the key the set gave, or the reason it gave none, and that key's window (-04 §5.5).
+      const checks = { ...(r.checks || {}) };
+      if (jwksError) checks.signature = { result: 'undecidable', code: 'jwks_fetch_failed' };
+      const kw = checkKeyWindow({ window: keyWindow, issuedAt: receiptIssuedAt(item), keySource: jwksError ? null : keySource, require: opts.requireKeyWindow });
+      checks.key_window = keyWindowCheck(kw);
+      const combined = combineChecks(checks);
+      r.checks = checks;
+      r.keyStatus = kw.report;
+      r.valid = combined.valid;
+      r.outcome = combined.outcome;
+      r.error = combined.error;
+      if (jwksError && combined.check === 'signature') r.detail = jwksError;
+      else if (combined.check === 'key_window') r.detail = kw.detail;
+    }
     results.receipts.push(r);
     if (r.valid) {
       results.passed++;
     } else {
-      results.failed++;
-      results.valid = false;
-      results.errors.push(`Receipt ${results.total}: ${r.error}`);
+      if (r.outcome === 'invalid') results.failed++;
+      else results.undecidable++;
+      results.errors.push(`${label}: ${r.error}${jwksError && r.error === 'jwks_fetch_failed' ? ` (${jwksError})` : ''}`);
     }
-  }
+  };
 
+  for (const receipt of bundle.receipts) await check(receipt, `Receipt ${results.total + 1}`);
   // Verify anchors if present.
   if (Array.isArray(bundle.anchors)) {
-    for (const anchor of bundle.anchors) {
-      results.total++;
-      const key = opts.publicKey || keyMap.get(anchor.kid) || keyMap.get('default');
-      const { detectFormat } = await import('../detect.js');
-      const detected = detectFormat(anchor);
-      const r = await verifyReceipt(anchor, detected.mode, { ...opts, publicKey: key });
-      results.receipts.push(r);
-      if (r.valid) {
-        results.passed++;
-      } else {
-        results.failed++;
-        results.valid = false;
-        results.errors.push(`Anchor: ${r.error}`);
-      }
-    }
+    for (const anchor of bundle.anchors) await check(anchor, 'Anchor');
   }
 
+  results.outcome = results.failed > 0 ? 'invalid' : results.undecidable > 0 ? 'undecidable' : 'valid';
+  results.valid = results.outcome === 'valid';
+  const deciding = results.receipts.find((r) => !r.valid && r.outcome === results.outcome);
+  if (deciding) results.error = deciding.error;
+  results.keySource = opts.publicKey ? (opts.keySource || 'provided') : resolver ? 'jwks' : trustBundleKeys ? 'bundle' : null;
+  if (!opts.publicKey && !resolver && !trustBundleKeys && results.undecidable > 0) {
+    results.detail = 'No key was given. The keys in verification.signing_keys arrive in the file being verified, so they are not a trust anchor. Give the issuer\'s key with --key or --jwks, or pass --trust-bundle-keys to check the receipts with the keys the bundle carries.';
+  }
+  if (trustBundleKeys) {
+    results.warning = 'Keys taken from the bundle itself (--trust-bundle-keys): a valid result shows that the receipts match keys carried in the same file, not that those keys are the issuer\'s.';
+  }
   return results;
 }

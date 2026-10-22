@@ -63,7 +63,9 @@ The verifier does NOT protect against:
   `nullifier`, `scope`, and timestamp fields that enable the caller to
   implement replay guards.
 - **Time authority**: `issued_at` is self-asserted by the signer. The
-  verifier does not independently time-stamp. Applications requiring a
+  verifier does not independently time-stamp. Key validity windows are
+  applied to the `issued_at` the signature covers and never to an
+  unsigned member beside an envelope's payload (0.10.27). Applications requiring a
   trusted timestamp must combine signed receipts with transparency-log
   inclusion proofs or an external timestamping authority.
 - **Holder possession**: when `holder_binding` is present in a receipt,
@@ -88,7 +90,17 @@ The verifier takes a public key as input (via `--key`, or `--jwks` with
 a URL or a local file). The authenticity of that key is the caller's
 responsibility. The verifier does NOT accept keys embedded in the
 receipt payload itself (this was the `embedded_key_rejected` issue
-fixed in 0.4.0).
+fixed in 0.4.0), nor keys carried in the same file as the receipts: an
+audit bundle's `verification.signing_keys` are used only when the caller
+passes `--trust-bundle-keys`, and the result then says the keys came from
+the bundle (0.10.27). When the caller does supply a key, a receipt whose
+signed bytes carry a different `public_key`, `verification_key` or
+`verification_jwk` is invalid (`key_mismatch`, 0.10.27). Gate records, macro
+track records, governed receipts, proof packs and trusted context packs are
+the exception: given no key, they verify against the key they carry and
+label the result as embedded-key only (`embedded-tuple`, `embedded-pack`,
+`embedded-receipt`, or `identityStatus: embedded_key_only`), which shows
+integrity, not who holds the key.
 
 Recommended key distribution mechanisms:
 
@@ -173,9 +185,9 @@ the verifier. A future release will impose a built-in default limit.
 
 The verifier requires an explicit algorithm identifier in the signature
 envelope. Unknown algorithms trigger `unsupported_algorithm`, not
-silent fallback to a weaker algorithm. Hybrid post-quantum algorithms
-(`ed25519+ml-dsa-65`) are recognized structurally but fully verified
-only when full PQ support lands (v0.6+).
+silent fallback to a weaker algorithm. ML-DSA-65, alone or in the
+hybrid `ed25519+ml-dsa-65`, is recognized and not implemented, so a
+receipt that declares it is undecidable (`unsupported_algorithm`).
 
 ### 4.7 JWKS endpoint compromise
 
@@ -205,8 +217,9 @@ caller's responsibility.
    implement the claimed primitives, verified by third-party audit.
 
 Any future quantum computer sufficient to break Ed25519 invalidates
-signatures created under Ed25519. The verifier's hybrid PQ support
-path (`ed25519+ml-dsa-65`) provides forward compatibility.
+signatures created under Ed25519. The verifier recognizes ML-DSA-65 and
+the hybrid `ed25519+ml-dsa-65` but does not implement them, so receipts
+that declare them are undecidable until an implementation lands.
 
 ## 6. Supply Chain
 

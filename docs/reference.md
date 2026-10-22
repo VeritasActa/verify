@@ -36,10 +36,10 @@ Part of the [Veritas Acta](https://veritasacta.com) protocol for machine-decisio
 | Ed25519 + attestation | Receipts with `attestation_mode` or `anchor_uri` | T3 |
 | VOPRF token | Anonymous credential tokens (RFC 9497, BRASS wire format). Full Schnorr DLEQ verification for both πI (issuer) and πC (client). | T4 |
 | Knowledge Unit | Multi-model deliberation bundles (draft-farley-acta-knowledge-units-00) | varies |
-| Audit bundle | Multiple receipts with embedded signing keys | varies |
+| Audit bundle | Multiple receipts and a `verification.signing_keys` block. Checked with `--key` or `--jwks`; the bundle's own keys are used only with `--trust-bundle-keys` (0.10.27) | varies |
 | Gate receipt / bundle | ScopeBlind Gate receipt tuples (`scopeblind.gate.*`) and signed-manifest `scopeblind.gate.evidence-bundle/2` exports with semantic and exact chain checks | T1 |
 | Macro track record | Signed macro snapshots, append-only manifest sequence, and signed history checkpoints | T1 |
-| ScopeBlind standard files | A signed standard (`scopeblind.proof_request.v1`), a recipient decision (`scopeblind.admission_decision.v1`), or an action assurance bundle (`scopeblind.action_assurance_bundle.v1`), verified by the same core the Legate site runs, bundled here | T1 |
+| ScopeBlind standard files | A signed standard (`scopeblind.proof_request.v1`), a recipient decision (`scopeblind.admission_decision.v1`), or an action assurance bundle (`scopeblind.action_assurance_bundle.v1`), verified by the same core the ScopeBlind website runs, bundled here | T1 |
 | ScopeBlind run manifest | A harness's signed account of a governed run (`scopeblind.run_manifest.v1`): a benchmark submission made with every tool call through the gateway. Alone it verifies as intact but unbound. Add the files beside it to bind it: `--standard` (the pins, the policy, the tool list, the attempts, the time limit), `--receipts` (the chain head and every receipt), `--calls` (each call behind its receipt), `--regrade` (a second grading; repeat it for gradings made elsewhere), `--provenance` (the run's Sigstore bundles, verified offline against the pinned trust root and tied to the exact bytes given), `--model-calls` with `--model-attestation` (every model call signed inside the provider's TEE, each key bound in an Intel TDX quote chained to the pinned Intel root), and `--maintainer-key` (pin the key that must have signed the standard). With companion files the exit status is 0 only when the run binds to all of them. Example: `npx @veritasacta/verify manifest.json --standard standard.json --receipts receipts.jsonl --calls calls.jsonl --regrade regrade.json --provenance provenance` | T1 |
 
 ## Subcommands
@@ -143,7 +143,7 @@ log; retain or independently timestamp checkpoint heads.
   commitment over the verifier surface. This detects byte drift relative to
   that copy; it is not a publisher signature or independent supply-chain
   attestation unless the fingerprint is separately pinned.
-- **Algorithm-agile.** Hybrid PQ (`ed25519+ml-dsa-65`) recognized; full PQ in v0.6+.
+- **Algorithm-agile.** An algorithm the verifier does not implement is reported undecidable (`unsupported_algorithm`, exit 2), never as a bad signature. ML-DSA-65, alone or in the hybrid `ed25519+ml-dsa-65`, is recognized and not implemented.
 - **Zero telemetry.** The verifier never phones home.
 
 ## Quick start: frictionless onboarding
@@ -279,7 +279,7 @@ Gates verification on live context (NTP, sensors, feeds). Predicate fails → ve
 
 - `Ed25519` / `EdDSA` (RFC 8032)
 - `voprf-p256-sha256` (RFC 9497, structural; full DLEQ extraction in progress)
-- Hybrid PQ recognized: `ed25519+ml-dsa-65`, `ed25519+dilithium3` (v0.6+)
+- Recognized, not implemented: `ML-DSA-65`, `ed25519+ml-dsa-65`, `ed25519+dilithium3`. A receipt that declares one is undecidable (`unsupported_algorithm`, exit 2).
 
 ## Conformance tiers
 
@@ -387,6 +387,37 @@ verify --pin-sigil <fingerprint> # enforce a specific release
 Apache-2.0.
 
 Patent-adjacent; covered by the Apache-2.0 patent grant (§3). See [PATENTS.md](.././PATENTS.md).
+
+### Keys from outside the file (0.10.27)
+
+An Acta receipt or audit bundle is never checked with a key taken from the file being checked. An audit bundle's `verification.signing_keys` arrive in that file, so they are not a trust anchor: without `--key` or `--jwks` its receipts are undecidable (`no_public_key`, exit 2), and the result's `detail` says why. To check them against the keys the bundle carries anyway, pass `--trust-bundle-keys`; each receipt, and the bundle, then reports `keySource: bundle`, and the `warning` says that a valid result shows only that the receipts match keys in the same file. `--strict` disables the flag, and it is refused (exit 2) for a file that is not an audit bundle. With `--jwks`, the key set is read once and each receipt gets the key its own `kid` names, with that key's window applied to its signed `issued_at`; a receipt whose `kid` the set lacks is undecidable (`jwks_fetch_failed`). Earlier releases gave every receipt the set's first key. `--key` takes precedence over `--jwks`, and either over `--trust-bundle-keys`.
+
+Gate receipt tuples and evidence bundles, macro track records, governed receipts, proof packs and trusted context packs are not changed: given no key, they verify against the key they carry, and label the result `embedded-tuple`, `embedded-receipt` or `embedded-pack` (`identityStatus: embedded_key_only` for a macro track record), which shows integrity, not who holds the key. Pin the key with `--key`.
+
+```bash
+verify bundle.json --key ISSUER_PUBLIC_KEY --json
+verify bundle.json --trust-bundle-keys --json      # the bundle's own keys, labelled as such
+```
+
+A bundle's outcome combines its receipts': invalid (exit 1) if any receipt is invalid, else undecidable (exit 2) if any could not be checked, else valid. The result carries `outcome`, `error`, `keySource` and `undecidable`, and `failed` counts invalid receipts only.
+
+A key carried in a receipt's signed bytes, the value of a `public_key`, `verification_key` or `verification_jwk` member (in an envelope's payload; at the top level of a flat receipt, or in a v2 receipt's payload), is never used to verify it. When the key comes from `--key`, `--jwks` or a trusted bundle, a carried key that is not that key makes the receipt invalid (`key_mismatch`, exit 1), as §5.3 of the -04 editor's copy (VeritasActa/drafts) has it, even when the signature verifies. Keys are compared as 32 bytes: 64 hex characters in either case, base64 or base64url, or an OKP Ed25519 JWK. The JSON reports the check as `checks.carried_key` (`pass` or `fail`) when there is a carried key and a key to compare it with. A key from `--jwks` is reported as `keySource: jwks`.
+
+An envelope whose payload names an `issuer_id` must name its signature's `kid`, as §2.2 says. One that names another, or names one while the signature object has no `kid`, is invalid (`issuer_kid_mismatch`, exit 1), whatever key was used, or none; the JSON reports the check as `checks.issuer_kid`. A payload with no `issuer_id` is not checked, and `payloadNotes` names the gap. The flat shapes are not checked.
+
+### The signed issued_at, and disclosures against the signed root (0.10.27)
+
+A key's `valid_from` / `valid_until` window is applied to the `issued_at` the signature covers and nothing else: `payload.issued_at` in the envelope shape, the top-level `issued_at` in the flat shapes, read only as an RFC 3339 date-time string. An `issued_at` or `timestamp` beside an envelope's payload is outside the signature, a `timestamp` is not an `issued_at`, and a number is not a date-time, so with any of those in its place the window is undecidable (`key_window_unverifiable`, exit 2). Without a window nothing changes.
+
+`--disclosure-file` is checked against the `committed_fields_root` the signature covers: in an envelope's payload, where draft §2.2 puts it, or at the top level of a flat receipt (or in a v2 receipt's payload). `--disclose` (AIP-0002) is checked against the `_commitments` map the signature covers, read the same way. A root or map beside an envelope's payload is not signed and is not used. A disclosure that cannot be applied, because the file cannot be read, is not JSON or holds no disclosure, because a `--disclose` value is not `field:salt:value`, or because the signed bytes carry nothing to check it against, is undecidable (`disclosure_not_applied`, exit 2); a failure another check found stays the outcome. Both flags apply to one receipt, and are refused (exit 2) with an audit bundle, `--replay-chain`, `--diff` or a subcommand. Each proof gives its leaf count as `tree_size`, as draft §6.5 names it; `treeSize`, which earlier releases read and protect-mcp writes, is accepted too, and a proof that gives both with different values does not verify.
+
+```bash
+verify committed.json --key ISSUER_PUBLIC_KEY --disclosure-file disclosure.json --json
+```
+
+### Payload notes (0.10.27)
+
+For an envelope, `payloadNotes` lists what the payload lacks against §2.2 of the -04 editor's copy (VeritasActa/drafts): a `type`, `issued_at` or `issuer_id`, or a signature object with no `kid` when no `issuer_id` names one (an `issuer_id` that does not match the `kid` is `issuer_kid_mismatch`, above); and against its declared type, for `protectmcp:decision` (§3.1.1: `tool_name` and `decision` are REQUIRED, and `decision` is one of `allow`, `deny`, `rate_limit`, `require_approval`) and `protectmcp:restraint` (§3.2.1). The terminal prints them under "Payload notes". They are reported only and never change the outcome or the exit status. The flat shapes get none.
 
 ### A receipt and the one before it (0.10.26)
 

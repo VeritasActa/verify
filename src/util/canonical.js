@@ -1,7 +1,7 @@
 /**
  * JCS canonicalization utilities.
  *
- * Implements RFC 8785 (JCS — JSON Canonicalization Scheme) with the
+ * Implements RFC 8785 (JCS, the JSON Canonicalization Scheme) with the
  * AIP-0001 extension requiring ASCII-only object keys. This restriction
  * sidesteps the Unicode normalization surface at the cost of rejecting
  * non-ASCII keys.

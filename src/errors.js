@@ -85,9 +85,17 @@ export const ERROR_REGISTRY = {
   },
   key_mismatch: {
     code: 'key_mismatch',
-    description: 'The verification key carried in the record does not match the key pinned with --key.',
+    description: 'The verification key carried in the record does not match the key pinned with --key. For an Acta receipt (from 0.10.27): a public_key, verification_key or verification_jwk member of the signed bytes is not the key from --key, --jwks or a bundle trusted with --trust-bundle-keys.',
     class: 'tampered',
-    hint: 'The record was signed by a different identity than the one you required.',
+    spec: 'draft-farley-acta-signed-receipts-03 §9.5 Key Distribution and Trust Anchors; §5.3 Verification Outcomes of the -04 editor\'s copy (VeritasActa/drafts)',
+    hint: 'The record names a different identity than the one you required. A key the receipt carries is never used to verify it, and one that is not the trust-anchored key makes it invalid even when the signature verifies.',
+  },
+  issuer_kid_mismatch: {
+    code: 'issuer_kid_mismatch',
+    description: 'An envelope\'s payload names an issuer_id that is not its signature object\'s kid, or names one while the signature object has no kid.',
+    class: 'tampered',
+    spec: 'draft-farley-acta-signed-receipts-03 §2.2 Payload (issuer_id MUST match the kid); §5.3 Verification Outcomes of the -04 editor\'s copy (VeritasActa/drafts)',
+    hint: 'The signed payload names a different issuer from the key identifier beside it. A payload with no issuer_id is reported in payloadNotes and does not change the outcome.',
   },
   schema_invalid: {
     code: 'schema_invalid',
@@ -106,9 +114,9 @@ export const ERROR_REGISTRY = {
   },
   no_public_key: {
     code: 'no_public_key',
-    description: 'Verification key could not be resolved from --key, --jwks, or bundle verification block.',
+    description: 'No verification key from a trust anchor outside the receipt: none was given with --key or --jwks. An audit bundle\'s own verification.signing_keys are not one, since they arrive in the file being verified (0.10.27).',
     class: 'undecidable',
-    hint: 'Provide --key <hex>, or --jwks <url|file>.',
+    hint: 'Provide --key <hex>, or --jwks <url|file>. For an audit bundle, --trust-bundle-keys checks the receipts with the keys it carries, reported as keySource "bundle".',
   },
   missing_signature: {
     code: 'missing_signature',
@@ -124,7 +132,7 @@ export const ERROR_REGISTRY = {
     code: 'unsupported_algorithm',
     description: 'The declared signature algorithm is not supported by this verifier version.',
     class: 'undecidable',
-    hint: 'Hybrid post-quantum algorithms like ed25519+ml-dsa-65 require v0.6+ for full PQ verification.',
+    hint: 'ML-DSA-65, alone or in a hybrid such as ed25519+ml-dsa-65, is not implemented, so a receipt that declares it is undecidable (unsupported_algorithm). Verify it with a verifier that implements the algorithm.',
   },
   unsupported_chain_hash_algorithm: {
     code: 'unsupported_chain_hash_algorithm',
@@ -132,6 +140,13 @@ export const ERROR_REGISTRY = {
     class: 'undecidable',
     spec: 'draft-farley-acta-signed-receipts-03 §6.7 Chain Hash Scope',
     hint: 'Draft §6.7 requires refusing a link whose prefix names an unimplemented algorithm rather than assuming SHA-256 from its length.',
+  },
+  malformed_encoding: {
+    code: 'malformed_encoding',
+    description: 'The receipt could not be encoded or decoded for the signature check: the signature or the key is not valid hexadecimal, or the signed object cannot be canonicalized (a member name that is not ASCII, or a value JCS cannot encode).',
+    class: 'undecidable',
+    spec: 'RFC 8785 (JCS); AIP-0001 §JCS Canonicalization',
+    hint: 'Supply the key as 64 hexadecimal characters, and check that the receipt\'s signature is hexadecimal and its member names are ASCII. Nothing about the signature was established; the detail names the cause.',
   },
   non_ascii_key: {
     code: 'non_ascii_key',
@@ -171,9 +186,16 @@ export const ERROR_REGISTRY = {
   },
   key_window_unverifiable: {
     code: 'key_window_unverifiable',
-    description: 'The key source carries a validity window that cannot be applied: a bound that is not an RFC 3339 date-time with its UTC offset written out (null included), bounds in the wrong order, or a receipt whose issued_at is missing or is not such a date-time.',
+    description: 'The key source carries a validity window that cannot be applied: a bound that is not an RFC 3339 date-time with its UTC offset written out (null included), bounds in the wrong order, or a receipt whose signed issued_at (an envelope\'s payload.issued_at, a flat receipt\'s issued_at) is missing or is not such a date-time string.',
     class: 'undecidable',
     spec: 'draft-farley-acta-signed-receipts-03 §9.2 Key Compromise',
+  },
+  disclosure_not_applied: {
+    code: 'disclosure_not_applied',
+    description: 'A --disclosure-file was given and could not be applied: it cannot be read or parsed, it holds no disclosure, or the receipt\'s signed bytes carry no committed_fields_root to check it against.',
+    class: 'undecidable',
+    spec: 'draft-farley-acta-signed-receipts-03 §6.5 Selective Disclosure',
+    hint: 'The root is read from the signed bytes: an envelope\'s payload, or the top level of a flat receipt. Nothing in the file was verified.',
   },
   jwks_fetch_failed: {
     code: 'jwks_fetch_failed',

@@ -1,15 +1,15 @@
 {
   "sigil_version": 1,
-  "fingerprint": "fe738faa",
-  "name": "Bold Tide",
-  "sigil_hash": "fe738faac96001e3ca38436ba1343d21f5614ec6b394f50f85606d21adc590ce",
+  "fingerprint": "d735887f",
+  "name": "Fair Thread",
+  "sigil_hash": "d735887f21563d9293731c904760df87a31cbed82bb77c48adcad5ff95b70e00",
   "project_public_key": "fe665e861867cec7e171c0c13bbc873c3362079faef21f54df7804b7fb9ae8af",
   "commitment_authentication": "public_recomputable_integrity_only",
   "policy": {
     "version": 3,
     "package": "@veritasacta/verify",
-    "package_version": "0.10.26",
-    "source_hash": "8f02450f82381fd5ca066798a091a0a202c019a7cdd8966be930c7219961703b",
+    "package_version": "0.10.27",
+    "source_hash": "a356b213d03bd3ae507568ade18cbd80ddc26f12beaeb9d7777ec2e8876869ce",
     "monitored_files": [
       "README.md",
       "browser/receipt-verifier.js",
@@ -84,6 +84,6 @@
     ],
     "created_at": 1784267169966
   },
-  "policy_hash": "a4865945e6297ae7bc0164f9f1c432c1d4cbf8a69c0936edfc7358449d27706c",
+  "policy_hash": "ff0be9f598bf15154dbbddd910b12d271e29e2bd6ba987f44dc0d756a8ecbb7e",
   "derived_at": "2026-07-17T05:46:09.966Z"
 }
