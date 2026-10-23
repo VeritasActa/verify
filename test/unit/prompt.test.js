@@ -65,7 +65,7 @@ test('verifyPrompt: missing source → error', async () => {
   assert.match(r.error, /missing_source/);
 });
 
-test('verifyPrompt: via receipt.payload.prompt_hash → valid', async () => {
+test('verifyPrompt: via receipt.payload.prompt_hash → undecidable: the receipt\'s signature is not checked', async () => {
   const dir = tmp();
   const p = join(dir, 'skill.md');
   writeFileSync(p, 'receipt prompt hash');
@@ -85,12 +85,16 @@ test('verifyPrompt: via receipt.payload.prompt_hash → valid', async () => {
   writeFileSync(rp, JSON.stringify(receipt));
 
   const r = await verifyPrompt({ promptPath: p, receiptPath: rp });
-  assert.equal(r.valid, true);
+  // The hash matches, but the signature ('dead') was never checked: that is not verified provenance.
+  assert.equal(r.valid, false);
+  assert.equal(r.outcome, 'undecidable');
+  assert.equal(r.error, 'signature_not_checked');
+  assert.match(r.detail, /signature was not checked/);
   assert.equal(r.source, 'receipt');
   assert.equal(r.receipt_summary.kid, 'test-kid');
 });
 
-test('verifyPrompt: via receipt.payload.instruction_hash alias → valid', async () => {
+test('verifyPrompt: via receipt.payload.instruction_hash alias → undecidable', async () => {
   const dir = tmp();
   const p = join(dir, 'CLAUDE.md');
   writeFileSync(p, 'instruction alias');
@@ -102,7 +106,9 @@ test('verifyPrompt: via receipt.payload.instruction_hash alias → valid', async
   const rp = join(dir, 'receipt.json');
   writeFileSync(rp, JSON.stringify(receipt));
   const r = await verifyPrompt({ promptPath: p, receiptPath: rp });
-  assert.equal(r.valid, true);
+  assert.equal(r.valid, false);
+  assert.equal(r.outcome, 'undecidable');
+  assert.equal(r.error, 'signature_not_checked');
 });
 
 test('verifyPrompt: via receipt without prompt-hash fields → missing field error', async () => {
@@ -120,7 +126,7 @@ test('verifyPrompt: via receipt without prompt-hash fields → missing field err
   assert.equal(r.error, 'receipt_missing_prompt_hash_field');
 });
 
-test('verifyPrompt: Sigstore DSSE bundle subject matches → valid', async () => {
+test('verifyPrompt: Sigstore DSSE bundle subject matches → undecidable: the bundle is not verified', async () => {
   const dir = tmp();
   const p = join(dir, 'SKILLS.md');
   writeFileSync(p, 'sigstore-ok');
@@ -145,7 +151,10 @@ test('verifyPrompt: Sigstore DSSE bundle subject matches → valid', async () =>
   writeFileSync(bp, JSON.stringify(bundle));
 
   const r = await verifyPrompt({ promptPath: p, sigstoreBundle: bp });
-  assert.equal(r.valid, true);
+  // The bundle carries no signature at all; a subject that matches is not verified provenance.
+  assert.equal(r.valid, false);
+  assert.equal(r.outcome, 'undecidable');
+  assert.equal(r.error, 'signature_not_checked');
   assert.equal(r.source, 'sigstore');
 });
 

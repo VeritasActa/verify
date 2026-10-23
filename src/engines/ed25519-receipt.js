@@ -336,7 +336,8 @@ export async function verifyReceipt(input, detectedMode, opts = {}) {
   const decidedDetail = (combined) => (checkDetails[combined.check] ? { detail: checkDetails[combined.check] } : {});
   // Notes on an envelope's payload (§2.2 and §3 of the -04 editor's copy), reported and never counted in the outcome.
   const notes = format === 'passport' ? envelopePayloadNotes(input.payload, input.signature) : [];
-  const noteFields = notes.length ? { payloadNotes: notes } : {};
+  const unchecked = notCheckedMembers(input, signedPayload);
+  const noteFields = { ...(notes.length ? { payloadNotes: notes } : {}), ...(unchecked.length ? { notChecked: unchecked } : {}) };
   // An outcome reached before the signature could be checked, with the link's syntax beside it.
   const early = (signature, fields, signingInput = { result: 'pass' }) => {
     const checks = { signing_input: signingInput, signature, ...extraChecks, chain_link: linkCheck };
@@ -504,6 +505,24 @@ export async function verifyReceipt(input, detectedMode, opts = {}) {
     warning: [result.warning, chainLink.warning, format === 'legacy-browser-1.0'
       ? 'Historical website format: public_key is outside the signed payload. Not draft-03 conformance.' : null].filter(Boolean).join(' ') || undefined,
   }, checkDetails);
+}
+
+/**
+ * What a receipt carries that this verifier does not check: envelope cosignatures, and an authorization's
+ * delegation_chain (AIP-0006). Reported so a valid result is never read as covering them; they never change the
+ * outcome. Before, the output said nothing of either, though the 0.5.3 changelog said delegation chains were walked.
+ *
+ * @param {Object} input the receipt
+ * @param {Object} signedPayload the object the signature covers
+ * @returns {string[]}
+ */
+export function notCheckedMembers(input, signedPayload) {
+  const notes = [];
+  const cosignatures = input && Array.isArray(input.cosignatures) ? input.cosignatures : [];
+  if (cosignatures.length > 0) notes.push(`cosignatures: ${cosignatures.length} present, not checked; only the primary signature was verified.`);
+  const chain = signedPayload && typeof signedPayload === 'object' ? signedPayload.authorization?.delegation_chain : undefined;
+  if (chain !== undefined && chain !== null) notes.push(`authorization.delegation_chain: ${Array.isArray(chain) ? `${chain.length} delegation(s) named` : 'present'}, not checked; nothing here establishes who authorized the action.`);
+  return notes;
 }
 
 /** Attach each check's detail to a result as a property that JSON output and object spreads leave out. */

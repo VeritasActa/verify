@@ -247,6 +247,10 @@ export function formatReceiptResult(result, opts = {}) {
     lines.push(`  ${bold('Payload notes')} ${dim('(reported, not counted in the outcome):')}`);
     for (const note of result.payloadNotes) lines.push(`    ${yellow('!')} ${note}`);
   }
+  if (Array.isArray(result.notChecked) && result.notChecked.length > 0) {
+    lines.push(`  ${bold('Not checked')} ${dim('(present in the receipt, not verified here):')}`);
+    for (const note of result.notChecked) lines.push(`    ${yellow('!')} ${note}`);
+  }
   if (result.nullifier) lines.push(`  Nullifier:  ${result.nullifier.slice(0, 16)}...`);
   if (result.scope) {
     if (typeof result.scope === 'string') {
@@ -368,6 +372,7 @@ export function formatRunManifestResult(result, opts = {}) {
     for (const l of String(result.in_plain_words).split('\n')) lines.push(`    ${l}`);
   }
   if (result.error && !result.valid) lines.push(`  Error:      ${red(result.error)}`);
+  if (result.detail && !result.valid) lines.push(`  Detail:     ${result.detail}`);
   lines.push('');
   return lines.join('\n');
 }
@@ -386,6 +391,8 @@ export function formatBundleResult(result, opts = {}) {
   }
   if (result.detail) lines.push(`  ${yellow('Note:')}       ${result.detail}`);
   if (result.warning) lines.push(`  ${yellow('Note:')}       ${result.warning}`);
+  const unchecked = (result.receipts || []).filter((r) => Array.isArray(r?.notChecked) && r.notChecked.length > 0).length;
+  if (unchecked > 0) lines.push(`  ${yellow('Not checked:')} ${unchecked} receipt(s) carry cosignatures or a delegation chain, not verified here (see --json)`);
   if (Array.isArray(result.errors) && result.errors.length > 0) {
     lines.push(`\n  ${red('Errors:')}`);
     for (const e of result.errors) lines.push(`    ${red('•')} ${e}`);
@@ -755,6 +762,7 @@ export function formatGateBundleResult(result, opts = {}) {
     lines.push(`\n  ${red('Failures:')} ${dim('([crypto] record forged or modified; [chain] record authentic but link inconsistent)')}`);
     for (const e of result.errors) lines.push(`    ${red('•')} ${e}`);
   }
+  if (!result.valid && result.detail) lines.push(`  ${yellow('Note:')}        ${result.detail}`);
 
   if (result.valid) {
     lines.push('');
@@ -822,6 +830,7 @@ export function formatMacroTrackRecordResult(result, opts = {}) {
     lines.push(`\n  ${red('Failures:')} ${dim('([crypto] record forged or modified; [chain] custody, manifest, or history-head inconsistent)')}`);
     for (const e of result.errors) lines.push(`    ${red('•')} ${e}`);
   }
+  if (!result.valid && result.detail) lines.push(`  ${yellow('Note:')}        ${result.detail}`);
 
   if (result.valid) {
     lines.push('');
@@ -843,8 +852,9 @@ export function formatKuResult(result, opts = {}) {
   lines.push(`\n${icon} Knowledge Unit: ${status}`);
   if (result.topic) lines.push(`  Topic:        "${result.topic}"`);
   if (result.totalReceipts !== undefined) {
-    lines.push(`  Receipts:     ${result.verifiedReceipts}/${result.totalReceipts} verified`);
+    lines.push(`  Receipts:     ${result.verifiedReceipts}/${result.totalReceipts} verified${result.uncheckedReceipts ? `, ${yellow(`${result.uncheckedReceipts} not checked`)}` : ''}`);
   }
+  if (result.detail) lines.push(`  Detail:       ${result.detail}`);
   if (result.models) lines.push(`  Models:       ${result.models.join(', ')}`);
   if (result.rounds) lines.push(`  Rounds:       ${result.rounds}`);
   if (result.consensusLevel) lines.push(`  Consensus:    ${result.consensusLevel}`);
@@ -853,6 +863,10 @@ export function formatKuResult(result, opts = {}) {
   }
   if (result.tier) lines.push(`  Tier:         ${result.tier.label}`);
   lines.push(`  Protocol:     ${dim('draft-farley-acta-knowledge-units-00')}`);
+  if (Array.isArray(result.notChecked) && result.notChecked.length > 0) {
+    lines.push(`  ${bold('Not checked:')}`);
+    for (const note of result.notChecked) lines.push(`    ${yellow('!')} ${note}`);
+  }
   if (result.errors) {
     lines.push(`\n  ${red('Errors:')}`);
     for (const e of result.errors) lines.push(`    ${red('•')} ${e}`);

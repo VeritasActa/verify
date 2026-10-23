@@ -13,6 +13,7 @@
  * @license Apache-2.0
  */
 import { readFileSync } from 'node:fs';
+import { parseJsonStrict } from './strict-json.js';
 
 /**
  * Load and merge issuer label maps (hex public key -> label). A bundled default is
@@ -28,7 +29,7 @@ export function loadKnownIssuers(userPath, bundledPath) {
   for (const p of [bundledPath, userPath]) {
     if (!p) continue;
     try {
-      const obj = JSON.parse(readFileSync(p, 'utf8'));
+      const obj = parseJsonStrict(readFileSync(p, 'utf8'));
       if (obj && typeof obj === 'object') {
         for (const [k, v] of Object.entries(obj)) {
           if (k.startsWith('_')) continue; // _comment / _note keys are documentation

@@ -71,6 +71,27 @@ export const ERROR_REGISTRY = {
     spec: 'RFC 9497 (VOPRF DLEQ proofs)',
     hint: 'The VOPRF token was not produced by a valid issuer, or the proof is malformed.',
   },
+  invalid_piI: {
+    code: 'invalid_piI',
+    description: 'A VOPRF token\'s issuer DLEQ proof does not verify against the issuer key given with --key.',
+    class: 'tampered',
+    spec: 'RFC 9497 (VOPRF DLEQ proofs)',
+    hint: 'The token was not issued under that key, or the proof was altered.',
+  },
+  invalid_piC: {
+    code: 'invalid_piC',
+    description: 'A VOPRF token\'s client DLEQ proof does not verify over its own transcript.',
+    class: 'tampered',
+    spec: 'RFC 9497 (VOPRF DLEQ proofs)',
+    hint: 'A member the client proof binds (the scope, the request digest, the nonce) was altered after redemption.',
+  },
+  issuer_key_mismatch: {
+    code: 'issuer_key_mismatch',
+    description: 'A VOPRF token carries an issuer_public_key that is not the issuer key given with --key.',
+    class: 'tampered',
+    spec: 'draft-farley-acta-signed-receipts-03 §9.5 Key Distribution and Trust Anchors',
+    hint: 'The token names a different issuer from the one you required. A key the token carries is never used to verify it.',
+  },
   digest_mismatch: {
     code: 'digest_mismatch',
     description: 'Recomputed SHA-256 of the canonical payload does not match the digest carried in the record.',
@@ -107,10 +128,10 @@ export const ERROR_REGISTRY = {
   // --- Undecidable (exit 2) ---
   embedded_key_rejected: {
     code: 'embedded_key_rejected',
-    description: 'Receipt contains a verification key in its payload, which is not trusted by default.',
+    description: 'The record carries the key it would be verified with, and no key from outside the file was given. A carried key is not trusted.',
     class: 'undecidable',
     spec: 'draft-farley-acta-signed-receipts-03 §9.5 Key Distribution and Trust Anchors',
-    hint: 'Provide --key or --jwks externally. Pass --allow-embedded-key (deprecated, removed in 0.6) to restore pre-0.4.0 behaviour.',
+    hint: 'Provide --key or --jwks externally. For an Acta receipt, --allow-embedded-key (deprecated) restores pre-0.4.0 behaviour; for a Gate, macro, governed-receipt, pack, repository-evidence, standard or run-manifest file, --allow-carried-key accepts the result, which then proves nothing about who signed. --strict refuses both.',
   },
   no_public_key: {
     code: 'no_public_key',
@@ -123,10 +144,43 @@ export const ERROR_REGISTRY = {
     description: 'Input does not contain a signature field.',
     class: 'undecidable',
   },
+  missing_issuer_public_key: {
+    code: 'missing_issuer_public_key',
+    description: 'No issuer key was given with --key for a VOPRF token. The issuer_public_key a token carries is not one, since anyone can issue a token under a key of their own.',
+    class: 'undecidable',
+    spec: 'draft-farley-acta-signed-receipts-03 §9.5 Key Distribution and Trust Anchors',
+    hint: 'Give the issuer\'s public key (base64url compressed P-256 point) with --key.',
+  },
+  issuer_key_pin_required: {
+    code: 'issuer_key_pin_required',
+    description: 'No issuer key was given with --key for a BRASS 2.0 redemption.',
+    class: 'undecidable',
+    hint: 'Give the issuer\'s public key (base64url compressed P-256 point) with --key.',
+  },
   missing_payload: {
     code: 'missing_payload',
     description: 'Input does not contain a payload field.',
     class: 'undecidable',
+  },
+  signature_not_checked: {
+    code: 'signature_not_checked',
+    description: 'verify prompt: the receipt or Sigstore bundle asserts the prompt\'s hash, but its own signature is not checked, so nothing establishes who made the assertion.',
+    class: 'undecidable',
+    hint: 'Verify the receipt with verify <receipt.json> --key <hex>, or the bundle with a Sigstore verifier. --expected-hash checks the prompt against a hash you supply.',
+  },
+  receipt_binding_not_checked: {
+    code: 'receipt_binding_not_checked',
+    description: 'A Knowledge Unit\'s receipt_sig and receipt_hash are present and not checked, so nothing binds its content to its receipts.',
+    class: 'undecidable',
+    spec: 'draft-farley-acta-knowledge-units-00 §8 Receipt Binding; §11 Security Considerations (Receipt Replay)',
+    hint: '§8 does not say which receipts form each round, whether receipt_hash is bare hex or "sha256:"-prefixed, or whether receipt_sig signs the digest\'s bytes or its text, so this verifier does not recompute it. Its embedded receipts are still checked, and one that fails makes the KU invalid.',
+  },
+  no_receipts: {
+    code: 'no_receipts',
+    description: 'A Knowledge Unit carries no receipts, so nothing in it was verified.',
+    class: 'undecidable',
+    spec: 'draft-farley-acta-knowledge-units-00 §8',
+    hint: 'A KU is checked through the receipts it carries; its receipt_sig and receipt_hash are not checked by this verifier.',
   },
   unsupported_algorithm: {
     code: 'unsupported_algorithm',

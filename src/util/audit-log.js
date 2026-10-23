@@ -14,8 +14,34 @@
  * @license Apache-2.0
  */
 
-import { appendFileSync } from 'node:fs';
+import { appendFileSync, readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
+import { parseJsonStrict } from './strict-json.js';
+
+/**
+ * The _chain_hash of the last entry in an audit log, for the next entry to chain to; the empty string for a log
+ * that does not exist yet or holds no entry. Throws when the last entry cannot be read or carries no chain hash, so
+ * an entry is never appended as if it started a new chain.
+ *
+ * @param {string} filePath
+ * @returns {string}
+ */
+export function lastChainHash(filePath) {
+  let text;
+  try {
+    text = readFileSync(filePath, 'utf8');
+  } catch (e) {
+    if (e.code === 'ENOENT') return '';
+    throw e;
+  }
+  const lines = text.split('\n').filter((l) => l.trim());
+  if (lines.length === 0) return '';
+  const last = parseJsonStrict(lines[lines.length - 1]);
+  if (typeof last?._chain_hash !== 'string' || !/^[0-9a-f]{64}$/.test(last._chain_hash)) {
+    throw new Error('the last entry carries no _chain_hash, so a new entry cannot be chained to it');
+  }
+  return last._chain_hash;
+}
 
 /**
  * @typedef {Object} AuditEntry

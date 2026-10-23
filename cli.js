@@ -42,7 +42,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { detectFormat } from './src/detect.js';
-import { parseReceiptJson } from './src/util/strict-json.js';
+import { parseReceiptJson, parseJsonStrict } from './src/util/strict-json.js';
 import { verifyReceipt, verifyBundle, combineChecks } from './src/engines/ed25519-receipt.js';
 import { verifyGateTuple, verifyGateBundle } from './src/engines/gate-receipt.js';
 import { verifyMacroTrackRecord } from './src/engines/macro-snapshot.js';
@@ -89,8 +89,8 @@ import { detectTier } from './src/conformance.js';
 import { resolveFromJwks, loadJwksResolver } from './src/util/jwks.js';
 import { checkKeyWindow, receiptIssuedAt, keyWindowCheck } from './src/util/key-window.js';
 import { loadKnownIssuers, labelFor } from './src/util/known-issuers.js';
-import { appendAuditEntry } from './src/util/audit-log.js';
-import { fipsStatus } from './src/util/fips.js';
+import { appendAuditEntry, lastChainHash } from './src/util/audit-log.js';
+import { fipsStatus, verifiedAlgorithms } from './src/util/fips.js';
 import { renderHtmlReport } from './src/output/html-report.js';
 import { getError, exitCodeFor } from './src/errors.js';
 import { readSigilMonitoredSource } from './src/sigil-policy.js';
@@ -140,6 +140,34 @@ function legateModeLabel(r) {
 /** The single-receipt modes, the only ones --previous applies to. */
 const RECEIPT_MODES = ['ed25519-browser-legacy', 'ed25519-receipt-v1', 'ed25519-receipt-v2', 'ed25519-passport'];
 
+/** What a result accepted with --allow-carried-key says, in the JSON and the terminal. */
+const CARRIED_KEY_NOTICE = 'Checked only against the key the file carries (--allow-carried-key): the signature shows the file matches that key, and proves nothing about who signed it.';
+
+/**
+ * A key the file carries is never a trust anchor (draft §9.5), so a result that rests only on one is undecidable
+ * (embedded_key_rejected, exit 2), never valid. `carried` names what was checked only against a key in the file, or
+ * is null when a key from outside it was applied. --allow-carried-key accepts such a result (exit 0) and marks it
+ * carriedKeyOnly, with CARRIED_KEY_NOTICE; --strict refuses it even then. Before, these formats exited 0 on the key
+ * they carry by default and under --strict, so a Gate record signed by any fresh key passed.
+ */
+function refuseCarriedKey(result, opts, carried) {
+  // A check that ran and failed stays the outcome (-04 §5.3): only a result that would otherwise pass is refused.
+  if (!exitOk(result) || !carried) return result;
+  if (opts.allowCarriedKey && !opts.strict) {
+    return { ...result, carriedKeyOnly: true, warning: [result.warning, CARRIED_KEY_NOTICE].filter(Boolean).join(' ') };
+  }
+  return {
+    ...result,
+    valid: false,
+    error: 'embedded_key_rejected',
+    carriedKeyOnly: true,
+    detail: opts.strict
+      ? `--strict: ${carried} was checked only against a key it carries, which is not a trust anchor; --strict refuses it even with --allow-carried-key. Pin the key with --key.`
+      : `${carried} was checked only against a key it carries, which is not a trust anchor. Pin the key with --key; --allow-carried-key accepts it, proving nothing about who signed.`,
+    ...(typeof result.title === 'string' ? { title: 'Not checked: no key from outside the file was given' } : {}),
+  };
+}
+
 const MODE_LABELS = {
   'ed25519-browser-legacy': 'Historical browser receipt 1.0 (not draft-03)',
   'ed25519-receipt-v1': 'Ed25519 receipt v1 (RFC 8032)',
@@ -183,6 +211,7 @@ function parseArgs() {
     selfCheck: false,
     capabilities: false,
     allowEmbeddedKey: false,
+    allowCarriedKey: false,
     allowLegacyCanonicalization: false,
     allowPayloadOnlyLinks: false,
     trustBundleKeys: false,
@@ -266,6 +295,7 @@ function parseArgs() {
       case '--allow-payload-only-links': opts.allowPayloadOnlyLinks = true; break;
       case '--previous': opts.previousFile = next() ?? ''; break;
       case '--allow-embedded-key': opts.allowEmbeddedKey = true; break;
+      case '--allow-carried-key': opts.allowCarriedKey = true; break;
       case '--trust-bundle-keys': opts.trustBundleKeys = true; break;
       case '--require-context': opts.requireContext.push(next()); break;
       case '--disclose': opts.disclose.push(next()); break;
@@ -391,7 +421,8 @@ ${bold('Subcommands:')}
                               [--trace-id <id>]  Stamp a workflow trace_id on every receipt
 
 ${bold('Options:')}
-  --key, -k <hex>          Ed25519 public key (64 hex chars)
+  --key, -k <hex>          Ed25519 public key (64 hex chars); for a VOPRF token, the issuer's
+                           compressed P-256 key in base64url
   --platform-key <kid>=<hex>  Platform key for a connector context (repeatable)
   --jwks <url|file>        JWKS endpoint or file to take the signing key from, by kid
   --previous <file>        The receipt this one follows. Fails with chain_break (exit 1)
@@ -410,7 +441,7 @@ ${bold('Options:')}
   --standard <file>        Legate run manifest: the signed standard to check the pins and policy against
   --receipts <file>        Legate run manifest: the gateway's receipt log (JSONL or array) to check the chain against
   --calls <file>           Legate run manifest: the calls log (JSONL), one call per receipt, to open the input digests
-  --maintainer-key <hex|file>  Legate run manifest: pin the maintainer key that must have signed the standard (a hex key, or a maintainer-key.json); a trust root from outside the files
+  --maintainer-key <hex|file>  Run manifest with --standard: pin the maintainer key that must have signed the standard (a hex key, or a maintainer-key.json); a trust root from outside the files. Refused without --standard (exit 2)
   --regrade <file>         Legate run manifest: a second grading (scopeblind.run_regrade.v1) to reconcile with the manifest; repeatable: the first is the run's own, any further one a grading made elsewhere
   --provenance <path>      Legate run manifest: Sigstore provenance bundle(s) (.sigstore.jsonl, or a directory of them), verified here against the pinned trust root; repeatable
   --model-calls <file>     Legate run manifest: the model-calls log (model-calls.jsonl), each call signed inside the model's TEE
@@ -420,7 +451,9 @@ ${bold('Options:')}
   --verbose, -v            Detailed verification info
   --tier N                 Require minimum conformance tier (1-5)
   --pin-sigil <hex>        Require installed Sigil fingerprint to match
-  --strict                 Disable all deprecated fallbacks
+  --strict                 Disable all deprecated fallbacks. A result that rests only on a key
+                           the file carries is undecidable (embedded_key_rejected, exit 2), even
+                           with --allow-carried-key
   --fips                   Enforce FIPS-approved algorithms only
   --audit-log <file>       Append verification event to a local JSONL audit log
   --self-test              Verify bundled sample artifacts
@@ -433,6 +466,13 @@ ${bold('Options:')}
                            wrote, not conformant to draft §6.7. --strict disables it
   --allow-embedded-key     DEPRECATED. Accept keys embedded in payloads.
                            Removed in v0.6.0.
+  --allow-carried-key      Accept a result that rests only on a key the file carries: a Gate
+                           tuple or bundle, a macro snapshot or track record, a governed receipt,
+                           a proof or context pack, repository evidence, a standard file or a
+                           run manifest checked without --key. Without it such a result is
+                           undecidable (embedded_key_rejected, exit 2); with it, exit 0, and the
+                           output says the signature proves nothing about who signed.
+                           --strict refuses it
   --trust-bundle-keys      Check an audit bundle's receipts with the keys in its own
                            verification.signing_keys, reported as keySource "bundle".
                            Those keys arrive in the file being verified, so they are
@@ -662,6 +702,14 @@ async function dispatch(input, opts) {
     process.exit(2);
   }
 
+  // --maintainer-key pins the key that signed the standard a run manifest is checked against, so it applies only with
+  // --standard. Elsewhere it was dropped, and a run manifest or a standard verified as if the pin had held.
+  if (opts.maintainerKey && !(detected.mode === 'legate-standard' && input?.type === 'scopeblind.run_manifest.v1' && opts.standardFile)) {
+    console.error(red('verify: --maintainer-key pins the key that signed the standard, and applies to a run manifest checked with --standard <file>. Here it would not be applied.'));
+    console.error('  To pin the key that signed a standard, a decision or a manifest itself, use --key. Nothing was verified (exit 2).');
+    process.exit(2);
+  }
+
   // --trust-bundle-keys names the keys an audit bundle carries: it applies to one, never silently to anything else.
   if (opts.trustBundleKeys && detected.mode !== 'ed25519-bundle') {
     console.error(red(`verify: --trust-bundle-keys checks an audit bundle with the keys in its verification.signing_keys. This file reads as ${MODE_LABELS[detected.mode] || 'no format this verifier knows'}, so it does not apply.`));
@@ -711,50 +759,54 @@ async function dispatch(input, opts) {
     case 'ed25519-bundle': {
       return await verifyBundle(input, subOpts);
     }
+    // A key given with --key (or --jwks) is pinned by each of these engines: a record signed with another is
+    // key_mismatch. Without one, each verifies against the key the file carries, which is refused unless
+    // --allow-carried-key accepts it.
     case 'gate-evidence-bundle': {
       const r = verifyGateBundle(input, subOpts);
-      return { ...r, modeLabel: MODE_LABELS['gate-evidence-bundle'] };
+      return refuseCarriedKey({ ...r, modeLabel: MODE_LABELS['gate-evidence-bundle'] }, opts, publicKey ? null : 'the bundle');
     }
     case 'macro-track-record': {
       const r = verifyMacroTrackRecord(input, subOpts);
-      return { ...r, modeLabel: MODE_LABELS['macro-track-record'] };
+      return refuseCarriedKey({ ...r, modeLabel: MODE_LABELS['macro-track-record'] }, opts, publicKey ? null : 'the track record');
     }
     case 'gate-receipt-tuple': {
       const r = verifyGateTuple(input, subOpts);
-      return { ...r, modeLabel: MODE_LABELS['gate-receipt-tuple'] };
+      return refuseCarriedKey({ ...r, modeLabel: MODE_LABELS['gate-receipt-tuple'] }, opts, publicKey ? null : 'the tuple');
     }
     case 'legate-governed-receipt': {
       const r = verifyLegateGovernedReceipt(input, subOpts);
-      return { ...r, modeLabel: MODE_LABELS['legate-governed-receipt'] };
+      return refuseCarriedKey({ ...r, modeLabel: MODE_LABELS['legate-governed-receipt'] }, opts, publicKey ? null : 'the receipt');
     }
     case 'repository-evidence': {
       const r = await verifyRepositoryArtifact(input, subOpts);
-      return { ...r, modeLabel: MODE_LABELS['repository-evidence'] };
+      return refuseCarriedKey({ ...r, modeLabel: MODE_LABELS['repository-evidence'] }, opts, publicKey ? null : 'the evidence');
     }
     case 'legate-proof-pack': {
       const r = verifyLegateProofPack(input, subOpts);
-      return { ...r, modeLabel: MODE_LABELS['legate-proof-pack'] };
+      return refuseCarriedKey({ ...r, modeLabel: MODE_LABELS['legate-proof-pack'] }, opts, publicKey ? null : 'the pack');
     }
     case 'legate-standard': {
       // A run manifest binds to a standard and a receipt log; both are optional files beside it.
       if (input?.type === 'scopeblind.run_manifest.v1') {
         const { readFileSync } = await import('node:fs');
-        if (opts.standardFile) subOpts.standard = JSON.parse(readFileSync(opts.standardFile, 'utf8'));
+        // The files beside a manifest are read as the main input is: a duplicate member is refused, never resolved.
+        if (opts.standardFile) subOpts.standard = parseJsonStrict(readFileSync(opts.standardFile, 'utf8'));
         if (opts.receiptsFile) {
           const text = readFileSync(opts.receiptsFile, 'utf8').trim();
-          subOpts.receipts = text.startsWith('[') ? JSON.parse(text) : text.split('\n').filter(Boolean).map((l) => JSON.parse(l));
+          subOpts.receipts = text.startsWith('[') ? parseJsonStrict(text) : text.split('\n').filter(Boolean).map((l) => parseJsonStrict(l));
         }
         if (opts.callsFile) {
           const text = readFileSync(opts.callsFile, 'utf8').trim();
-          subOpts.calls = (text.startsWith('[') ? JSON.parse(text) : text.split('\n').filter(Boolean).map((l) => JSON.parse(l))).map((c) => ({ tool: c.tool, input: c.input }));
+          subOpts.calls = (text.startsWith('[') ? parseJsonStrict(text) : text.split('\n').filter(Boolean).map((l) => parseJsonStrict(l))).map((c) => ({ tool: c.tool, input: c.input }));
         }
-        if (opts.regradeFiles?.length) { subOpts.regrade = JSON.parse(readFileSync(opts.regradeFiles[0], 'utf8')); subOpts.regrades = opts.regradeFiles.slice(1).map((f) => ({ regrade: JSON.parse(readFileSync(f, 'utf8')), bytes: readFileSync(f) })); }
+        if (opts.regradeFiles?.length) { subOpts.regrade = parseJsonStrict(readFileSync(opts.regradeFiles[0], 'utf8')); subOpts.regrades = opts.regradeFiles.slice(1).map((f) => ({ regrade: parseJsonStrict(readFileSync(f, 'utf8')), bytes: readFileSync(f) })); }
         // Provenance bundles name exact bytes, so the files as given on the command line are read again as bytes.
         if (opts.provenanceFiles?.length) {
           const { readdirSync, statSync } = await import('node:fs');
           const { join } = await import('node:path');
           const paths = opts.provenanceFiles.flatMap((p) => (statSync(p).isDirectory() ? readdirSync(p).filter((f) => /\.sigstore\.jsonl?$/.test(f)).sort().map((f) => join(p, f)) : [p]));
-          const bundles = paths.flatMap((p) => readFileSync(p, 'utf8').split('\n').filter((l) => l.trim()).map((l) => JSON.parse(l)));
+          const bundles = paths.flatMap((p) => readFileSync(p, 'utf8').split('\n').filter((l) => l.trim()).map((l) => parseJsonStrict(l)));
           const bytes = {};
           if (opts.file) bytes.manifest = readFileSync(opts.file);
           if (opts.standardFile) bytes.standard = readFileSync(opts.standardFile);
@@ -764,7 +816,7 @@ async function dispatch(input, opts) {
           if (Array.isArray(subOpts.regrades)) for (const r of subOpts.regrades) r.bundles = bundles;
         }
         if (opts.modelCallsFile) subOpts.modelCalls = readFileSync(opts.modelCallsFile, 'utf8');
-        if (opts.modelAttestationFile) { const v = JSON.parse(readFileSync(opts.modelAttestationFile, 'utf8')); subOpts.modelAttestations = Array.isArray(v) ? v : [v]; }
+        if (opts.modelAttestationFile) { const v = parseJsonStrict(readFileSync(opts.modelAttestationFile, 'utf8')); subOpts.modelAttestations = Array.isArray(v) ? v : [v]; }
         // The manifest digests the receipt log and the calls log as files, so the files given are handed over as bytes as well as records.
         const fileBytes = {};
         if (opts.receiptsFile) fileBytes.receipts = readFileSync(opts.receiptsFile);
@@ -773,17 +825,21 @@ async function dispatch(input, opts) {
         if (opts.maintainerKey) {
           const { existsSync } = await import('node:fs');
           let pin = opts.maintainerKey.trim();
-          if (existsSync(pin)) { const raw = readFileSync(pin, 'utf8').trim(); try { const j = JSON.parse(raw); pin = String(j.public_key ?? j.verification_key ?? ''); } catch { pin = raw; } }
+          if (existsSync(pin)) { const raw = readFileSync(pin, 'utf8').trim(); try { const j = parseJsonStrict(raw); pin = String(j.public_key ?? j.verification_key ?? ''); } catch { pin = raw; } }
           if (!/^[0-9a-f]{64}$/i.test(pin)) { console.error('--maintainer-key: expected a 64-hex Ed25519 public key or a maintainer-key.json carrying public_key'); process.exit(2); }
           subOpts.pins = { maintainer_key: pin };
         }
       }
       const r = await verifyLegateStandard(input, subOpts);
-      return { ...r, modeLabel: legateModeLabel(r) };
+      // A run manifest also rests on a key from outside the files when its harness key is one the standard accepts
+      // and the standard is signed by the maintainer key pinned with --maintainer-key.
+      const passed = (id) => Array.isArray(r.checks) && r.checks.some((c) => c.id === id && c.ok);
+      const pinnedElsewhere = r.artifact_type === 'scopeblind.run_manifest.v1' && passed('maintainer_pin') && passed('harness_key');
+      return refuseCarriedKey({ ...r, modeLabel: legateModeLabel(r) }, opts, publicKey || pinnedElsewhere ? null : 'the file');
     }
     case 'trusted-context-pack': {
       const r = verifyTrustedContextPack(input, subOpts);
-      return { ...r, modeLabel: MODE_LABELS['trusted-context-pack'] };
+      return refuseCarriedKey({ ...r, modeLabel: MODE_LABELS['trusted-context-pack'] }, opts, publicKey ? null : 'the pack');
     }
     case 'scopeblind-claims-v2.1.1': {
       const r = verifyClaimsArtifactV211(input, subOpts);
@@ -795,7 +851,8 @@ async function dispatch(input, opts) {
       return { ...r, tier };
     }
     case 'voprf-token': {
-      const r = await verifyVoprfToken(input, subOpts);
+      // The engine takes the issuer key as issuerPublicKey; it was handed --key as publicKey, which it never read.
+      const r = await verifyVoprfToken(input, { ...subOpts, issuerPublicKey: publicKey || undefined });
       const tier = detectTier({
         mode: 'voprf-token',
         valid: r.valid === true,
@@ -1106,8 +1163,8 @@ async function runReplayChain(opts) {
  * --diff A B: show structural differences between two receipts.
  */
 async function runDiff(opts) {
-  const a = JSON.parse(await readInput(opts) || '{}');
-  const b = JSON.parse(readFileSync(opts.diff, 'utf-8'));
+  const a = parseJsonStrict(await readInput(opts) || '{}');
+  const b = parseJsonStrict(readFileSync(opts.diff, 'utf-8'));
   const d = diffReceipts(a, b);
   if (opts.json) {
     console.log(JSON.stringify(d, null, 2));
@@ -1169,12 +1226,15 @@ async function runPromptVerify(opts) {
     }
     if (result.valid) {
       console.log(`  ${green('\u2713')} prompt matches the asserted provenance`);
+    } else if (result.outcome === 'undecidable') {
+      console.log(`  ${yellow('?')} not checked (${result.error}): ${result.detail || 'the signature was not checked'}`);
     } else {
       console.log(`  ${red('\u2717')} ${result.error || 'verification failed'}`);
     }
     console.log('');
   }
-  process.exit(exitOk(result) ? 0 : 1);
+  // A hash matched in a receipt or a bundle whose signature was not checked is undecidable (exit 2), never valid.
+  process.exit(exitOk(result) ? 0 : result.outcome === 'undecidable' ? 2 : 1);
 }
 
 /**
@@ -1368,6 +1428,9 @@ async function main() {
       console.error(yellow('Warning: --strict overrides --trust-bundle-keys (a bundle\'s own keys are never used in strict mode).'));
       opts.trustBundleKeys = false;
     }
+    if (opts.allowCarriedKey) {
+      console.error(yellow('Warning: --strict overrides --allow-carried-key (a key the file carries is never accepted in strict mode).'));
+    }
   }
 
   // --trust-bundle-keys applies to an audit bundle alone, and --disclosure-file and --disclose to one receipt. Each is
@@ -1527,28 +1590,35 @@ async function main() {
     process.exit(2);
   }
 
-  // FIPS enforcement (if set, checks algorithm compliance before verify)
-  if (opts.fips) {
-    const claimedAlgo = input.algorithm || input.signature?.alg || 'ed25519';
-    const f = fipsStatus(claimedAlgo);
-    if (!f.approved) {
-      const result = {
+  let result = await dispatch(input, opts);
+  result = applyTierGate(result, opts.tier);
+
+  // FIPS mode: a valid result stands only when every algorithm the engine verified is FIPS-approved. The algorithm is
+  // the one the engine reports it verified, never a label in the file: earlier releases read the unsigned top-level
+  // `algorithm` member before verifying, so an Ed25519 record labelled ml-dsa-65 passed. A result that names no
+  // algorithm cannot be confirmed and is refused. A result that does not pass anyway is reported as it is.
+  if (opts.fips && exitOk(result)) {
+    const algorithms = verifiedAlgorithms(result);
+    const refused = algorithms.length === 0
+      ? { algorithm: null, reason: 'This format does not report the algorithm it verified, so FIPS mode cannot confirm it.' }
+      : algorithms.map((a) => ({ algorithm: a, ...fipsStatus(a) })).find((f) => !f.approved);
+    if (refused) {
+      const rejection = {
         valid: false,
         error: 'unsupported_algorithm',
-        detail: `FIPS mode: ${f.reason}`,
+        detail: `FIPS mode: ${refused.reason}`,
         format: 'fips-rejected',
+        fips: { algorithms, approved: false },
       };
-      if (opts.json) console.log(JSON.stringify(result, null, 2));
+      if (opts.json) console.log(JSON.stringify(rejection, null, 2));
       else {
-        console.error(red(`✗ FIPS mode rejects algorithm "${claimedAlgo}"`));
-        console.error(yellow(f.reason));
+        console.error(red(refused.algorithm ? `✗ FIPS mode rejects algorithm "${refused.algorithm}"` : '✗ FIPS mode cannot confirm the algorithm'));
+        console.error(yellow(refused.reason));
       }
       process.exit(2);
     }
+    result.fips = { algorithms, approved: true };
   }
-
-  let result = await dispatch(input, opts);
-  result = applyTierGate(result, opts.tier);
   // The checks made after a receipt's own (a disclosure, a live-context predicate, --tier) can still fail it, so the
   // outcome is read again from the final result: a failure of any of them is invalid, one that could not run is
   // undecidable (-04 §5.3).
@@ -1581,7 +1651,9 @@ async function main() {
   if (opts.auditLog) {
     const sigil = loadSigil();
     try {
-      appendAuditEntry(opts.auditLog, result, { sigil, org: opts.attestOrg });
+      // Each entry chains to the one before it. Before, no previous hash was passed, so every entry was hashed as if it
+      // were the first and the chain hash chained nothing.
+      appendAuditEntry(opts.auditLog, result, { sigil, org: opts.attestOrg, prevHash: lastChainHash(opts.auditLog) });
     } catch (e) {
       console.error(yellow(`Warning: failed to append audit log: ${e.message}`));
     }
@@ -1634,6 +1706,8 @@ async function main() {
     }
     console.log(JSON.stringify(obj, null, 2));
   } else {
+    // A result accepted with --allow-carried-key says so first: its signature proves nothing about who signed.
+    if (result.carriedKeyOnly && result.valid) console.log(yellow(`\n! ${CARRIED_KEY_NOTICE}`));
     if (result.format === 'knowledge-unit') console.log(formatKuResult(result, opts));
     else if (result.format === 'gate-evidence-bundle') console.log(formatGateBundleResult(result, opts));
     else if (result.format === 'macro-track-record') console.log(formatMacroTrackRecordResult(result, opts));

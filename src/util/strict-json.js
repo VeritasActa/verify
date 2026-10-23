@@ -48,3 +48,14 @@ export function parseReceiptJson(text, { maxBytes = 1024 * 1024, maxDepth = 64 }
     throw error;
   }
 }
+
+/**
+ * Parse any other JSON a verification reads (a file beside the input, a line of a chain, a key set, a label map) as
+ * the main input is read: duplicate members refused, with the CLI's limits. JSON.parse keeps the last of two members
+ * that share a name and another parser may keep the first, so a duplicate could read one way here and another way
+ * elsewhere. Before, these were read with JSON.parse, so a receipt refused as the main input verified on
+ * --replay-chain. Throws as parseReceiptJson does.
+ */
+export function parseJsonStrict(text) {
+  return parseReceiptJson(text, { maxBytes: 50 * 1024 * 1024, maxDepth: 128 });
+}

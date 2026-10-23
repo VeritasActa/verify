@@ -73,3 +73,12 @@ test('numeric-looking keys use lexical order at every depth',()=>{
 test('non-JSON values and invalid Unicode are rejected',()=>{
  for(const x of [NaN,Infinity,undefined,{x:undefined},[undefined],new Date(),String.fromCharCode(0xd800)]) assert.throws(()=>canonicalize(x));
 });
+
+test('canonical: the number "normalization" that could never change a number is gone, and so is the old CLI copy', async () => {
+  // Its condition (not an integer, and an integer) could never hold, and nothing called it; cli-v0.4.0.js.bak was a
+  // stale copy of the CLI kept in the repository.
+  const mod = await import('../../src/util/canonical.js');
+  assert.equal(mod.normalizeNumbers, undefined);
+  const { existsSync } = await import('node:fs');
+  assert.equal(existsSync(new URL('../../cli-v0.4.0.js.bak', import.meta.url)), false);
+});

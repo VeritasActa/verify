@@ -1,31 +1,36 @@
 /**
  * FIPS mode enforcement.
  *
- * When --fips is set, the verifier accepts only algorithms that are
- * approved for FIPS 140-3 use. Ed25519 is NOT FIPS 140-3 approved as
- * of 2026; hybrid ed25519+ml-dsa-65 is conditionally approved once
- * NIST finalizes ML-DSA (FIPS 204).
+ * When --fips is set, a result is valid only when every signature
+ * algorithm the verifier actually checked is approved for FIPS use. The
+ * algorithm is the one the engine reports it verified, never a label in
+ * the file being checked.
  *
- * This v0.5.0 implementation marks Ed25519 as non-FIPS and returns a
- * clear error in FIPS mode. Full FIPS support waits for v0.6+ when
- * hybrid PQ verification lands.
+ * Ed25519 is approved: FIPS 186-5 (2023) adds EdDSA over Ed25519 and Ed448
+ * to the approved digital signature algorithms. Earlier releases of this
+ * module refused it, and read the file's own unsigned `algorithm` member,
+ * so an Ed25519 record labelled ml-dsa-65 passed. ML-DSA (FIPS 204) is
+ * approved but not implemented here, so a record that declares it is
+ * undecidable (unsupported_algorithm) whatever --fips says.
  *
  * @module verify-cli/src/util/fips
  * @license Apache-2.0
  */
 
 /**
- * FIPS-approved algorithm list (per FIPS 140-3 plus drafts).
+ * FIPS-approved algorithm list.
  * Notes on status:
- *   - EdDSA / Ed25519: NOT FIPS 140-3 approved as of 2026-04.
- *   - ML-DSA-65 (FIPS 204): approved but not yet implemented in v0.5.0.
- *   - Hybrid classical+PQ: conditional, pending NIST guidance.
+ *   - EdDSA / Ed25519: approved, FIPS 186-5.
+ *   - ML-DSA-65, ML-DSA-87 (FIPS 204): approved; not implemented in this verifier.
+ *   - Hybrid classical+PQ: conditional, pending NIST guidance; not implemented.
  */
 const FIPS_APPROVED = new Set([
+  'ed25519',
+  'eddsa',
   'ml-dsa-65',
   'ml-dsa-87',
   // Hybrid modes are conditionally approved; the verifier accepts them in FIPS mode
-  // but v0.5.0 cannot fully verify them (returns unsupported_algorithm).
+  // but cannot verify them (returns unsupported_algorithm).
   'ed25519+ml-dsa-65',
   'ed25519+ml-dsa-87',
 ]);
@@ -50,13 +55,26 @@ export function fipsApproves(algorithm) {
 export function fipsStatus(algorithm) {
   const lower = (algorithm || '').toLowerCase();
   if (lower === 'ed25519' || lower === 'eddsa') {
-    return {
-      approved: false,
-      reason: 'Ed25519 / EdDSA is not FIPS 140-3 approved as of 2026. For FIPS deployments use ed25519+ml-dsa-65 (requires v0.6+ for full verification).',
-    };
+    return { approved: true, reason: 'Ed25519 (EdDSA) is an approved signature algorithm under FIPS 186-5.' };
   }
   if (FIPS_APPROVED.has(lower)) {
     return { approved: true, reason: 'Algorithm is FIPS-approved or conditionally approved (hybrid).' };
   }
-  return { approved: false, reason: `Algorithm "${algorithm}" is not on the FIPS 140-3 approved list.` };
+  return { approved: false, reason: `Algorithm "${algorithm}" is not on the FIPS approved list.` };
+}
+
+/**
+ * The signature algorithms a result says its engine verified: each receipt's for an audit bundle, the result's own
+ * otherwise. An empty list means the engine does not report one for this format.
+ *
+ * @param {Object} result
+ * @returns {string[]}
+ */
+export function verifiedAlgorithms(result) {
+  const named = (a) => typeof a === 'string' && a.length > 0;
+  if (Array.isArray(result?.receipts) && result.total !== undefined) {
+    const list = result.receipts.map((r) => r?.algorithm);
+    return list.length > 0 && list.every(named) ? list : [];
+  }
+  return named(result?.algorithm) ? [result.algorithm] : [];
 }

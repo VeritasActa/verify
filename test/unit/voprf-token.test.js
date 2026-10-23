@@ -208,10 +208,13 @@ function modInverse(a, m) {
 
 // ─── Tests ─────────────────────────────────────────────────────────────────
 
+// The issuer key is pinned from outside the token, as --key gives it; a token never verifies against its own key.
+const pinned = (token, extra = {}) => ({ issuerPublicKey: token.issuer_public_key, ...extra });
+
 test('VOPRF: valid token verifies with both piI and piC', async () => {
   const issuerK = randomScalar();
   const token = generateToken({ issuerK });
-  const result = await verifyVoprfToken(token);
+  const result = await verifyVoprfToken(token, pinned(token));
   assert.equal(result.valid, true, `unexpected result: ${JSON.stringify(result)}`);
   assert.equal(result.error, undefined);
   assert.equal(result.dleq.issuer, true);
@@ -222,7 +225,7 @@ test('VOPRF: valid token verifies with both piI and piC', async () => {
 test('VOPRF: issuer-only token verifies (no piC)', async () => {
   const issuerK = randomScalar();
   const token = generateToken({ issuerK, withClientProof: false });
-  const result = await verifyVoprfToken(token);
+  const result = await verifyVoprfToken(token, pinned(token));
   assert.equal(result.valid, true);
   assert.equal(result.dleq.client, null);
 });
@@ -230,7 +233,7 @@ test('VOPRF: issuer-only token verifies (no piC)', async () => {
 test('VOPRF: tampered issuer r fails verification', async () => {
   const issuerK = randomScalar();
   const token = generateToken({ issuerK, tamperIssuerR: true });
-  const result = await verifyVoprfToken(token);
+  const result = await verifyVoprfToken(token, pinned(token));
   assert.equal(result.valid, false);
   assert.equal(result.error, 'invalid_piI');
 });
@@ -238,7 +241,7 @@ test('VOPRF: tampered issuer r fails verification', async () => {
 test('VOPRF: tampered client r fails verification', async () => {
   const issuerK = randomScalar();
   const token = generateToken({ issuerK, tamperClientR: true });
-  const result = await verifyVoprfToken(token);
+  const result = await verifyVoprfToken(token, pinned(token));
   assert.equal(result.valid, false);
   assert.equal(result.error, 'invalid_piC');
 });
@@ -250,7 +253,7 @@ test('VOPRF: tampered AADr breaks piC bind (production tokens) but piI is not AA
   const issuerK = randomScalar();
   const token = generateToken({ issuerK });
   token.AADr = 'scope=attacker.example.com|policy=elevated';
-  const result = await verifyVoprfToken(token);
+  const result = await verifyVoprfToken(token, pinned(token));
   assert.equal(result.valid, false);
   assert.equal(result.error, 'invalid_piC');
 });
@@ -259,17 +262,31 @@ test('VOPRF: wrong issuer public key fails piI', async () => {
   const issuerK = randomScalar();
   const token = generateToken({ issuerK });
   const otherK = randomScalar();
-  token.issuer_public_key = Buffer.from(G.multiply(otherK).toRawBytes(true)).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  const result = await verifyVoprfToken(token);
+  const otherKey = Buffer.from(G.multiply(otherK).toRawBytes(true)).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  // A token that names no issuer key, checked under a key that did not issue it.
+  const bare = { ...token };
+  delete bare.issuer_public_key;
+  const result = await verifyVoprfToken(bare, { issuerPublicKey: otherKey });
   assert.equal(result.valid, false);
   assert.equal(result.error, 'invalid_piI');
+  // A token that names its own issuer key, checked under another: the carried key is refused before the proof.
+  const mismatch = await verifyVoprfToken(token, { issuerPublicKey: otherKey });
+  assert.equal(mismatch.valid, false);
+  assert.equal(mismatch.error, 'issuer_key_mismatch');
+});
+
+test('VOPRF: a token is never verified against the issuer key it carries', async () => {
+  const token = generateToken({ issuerK: randomScalar() });
+  const result = await verifyVoprfToken(token);
+  assert.equal(result.valid, false);
+  assert.equal(result.error, 'missing_issuer_public_key');
 });
 
 test('VOPRF: missing required field yields explicit error', async () => {
   const issuerK = randomScalar();
   const token = generateToken({ issuerK });
   delete token.M;
-  const result = await verifyVoprfToken(token);
+  const result = await verifyVoprfToken(token, pinned(token));
   assert.equal(result.valid, false);
   assert.equal(result.error, 'missing_field:M');
 });
@@ -292,7 +309,7 @@ test('VOPRF: missing issuer public key yields explicit error', async () => {
 test('VOPRF: scope-mismatch rejection (opts.expectedScope)', async () => {
   const issuerK = randomScalar();
   const token = generateToken({ issuerK, origin: 'https://api.example.com' });
-  const result = await verifyVoprfToken(token, { expectedScope: 'https://other.example.com' });
+  const result = await verifyVoprfToken(token, pinned(token, { expectedScope: 'https://other.example.com' }));
   assert.equal(result.valid, false);
   assert.equal(result.error, 'scope_mismatch');
 });
@@ -300,7 +317,7 @@ test('VOPRF: scope-mismatch rejection (opts.expectedScope)', async () => {
 test('VOPRF: requireClientProof rejects issuer-only token', async () => {
   const issuerK = randomScalar();
   const token = generateToken({ issuerK, withClientProof: false });
-  const result = await verifyVoprfToken(token, { requireClientProof: true });
+  const result = await verifyVoprfToken(token, pinned(token, { requireClientProof: true }));
   assert.equal(result.valid, false);
   assert.equal(result.error, 'missing_piC');
 });
@@ -311,9 +328,9 @@ test('VOPRF: nullifier is deterministic for same inputs', async () => {
   // The nullifier output must be identical because it is a pure
   // hash of those inputs.
   const token1 = generateToken({ issuerK });
-  const r1 = await verifyVoprfToken(token1);
+  const r1 = await verifyVoprfToken(token1, pinned(token1));
   const token2 = { ...token1, piC: undefined };  // strip piC, reverify
-  const r2 = await verifyVoprfToken(token2);
+  const r2 = await verifyVoprfToken(token2, pinned(token1));
   assert.equal(r1.valid, true);
   assert.equal(r2.valid, true);
   assert.equal(r1.nullifier, r2.nullifier);

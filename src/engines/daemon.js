@@ -37,6 +37,7 @@ import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { sign, createPrivateKey, createHash } from 'node:crypto';
 import { canonicalize } from '../util/canonical.js';
+import { hashToolInput } from './proxy.js';
 
 function loadKey(keyPath) {
   if (!existsSync(keyPath)) {
@@ -117,15 +118,19 @@ export async function runDaemon(opts = {}) {
         const decision = body.decision || 'allow';
         const policyId = body.policy_id || 'veritasacta:daemon:default';
 
+        // The RFC 8785 canonical form of the full arguments, hashed as the proxy hashes them (jcs-sha256-v1). Before, the
+        // member names passed to JSON.stringify as a replacer kept only the top-level names at every depth, so
+        // {query:{sql:"DROP TABLE users"}} and {query:{}} hashed the same. It is hashed before the sequence advances,
+        // so arguments that cannot be canonicalized sign nothing and leave no gap.
+        const toolInputHash = hashToolInput(args);
         sequence++;
-        const argStr = JSON.stringify(args, Object.keys(args).sort ? Object.keys(args).sort() : undefined);
-        const toolInputHash = 'sha256:' + createHash('sha256').update(argStr, 'utf-8').digest('hex');
 
         const payload = {
           type: 'veritasacta:daemon:decision',
           spec: 'draft-farley-acta-signed-receipts-03',
           tool_name: tool,
           tool_input_hash: toolInputHash,
+          tool_input_hash_method: 'jcs-sha256-v1',
           decision,
           policy_id: policyId,
           issued_at: new Date().toISOString(),

@@ -123,14 +123,15 @@ test('a manifest edited after attestation is not the bytes the provenance names'
 
 test('the CLI takes --standard, --receipts, and --provenance and reports the binding', () => {
   const cli = join(here, '..', '..', 'cli.js');
-  const r = spawnSync(process.execPath, [cli, fixturePath('run-manifest.json'), '--standard', fixturePath('run-standard.json'), '--receipts', fixturePath('run-receipts.jsonl'), '--calls', fixturePath('run-calls.jsonl'), '--regrade', fixturePath('run-regrade.json'), '--provenance', fixturePath('run-provenance.sigstore.jsonl'), '--model-calls', fixturePath('run-model-calls.jsonl'), '--model-attestation', fixturePath('run-model-attestation.json'), '--json'], { encoding: 'utf8' });
+  const r = spawnSync(process.execPath, [cli, fixturePath('run-manifest.json'), '--standard', fixturePath('run-standard.json'), '--receipts', fixturePath('run-receipts.jsonl'), '--calls', fixturePath('run-calls.jsonl'), '--regrade', fixturePath('run-regrade.json'), '--provenance', fixturePath('run-provenance.sigstore.jsonl'), '--model-calls', fixturePath('run-model-calls.jsonl'), '--model-attestation', fixturePath('run-model-attestation.json'), '--maintainer-key', fixture('run-standard.json').recipient.verification_key, '--json'], { encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr);
   const out = JSON.parse(r.stdout);
   assert.equal(out.valid, true);
   assert.equal(out.binding, 'bound', JSON.stringify(out.checks.filter((c) => !c.ok)));
   assert.equal(out.provenance.verified, true);
   assert.equal(out.model_attestation.verified, true);
-  const alone = spawnSync(process.execPath, [cli, fixturePath('run-manifest.json')], { encoding: 'utf8', env: { ...process.env, NO_COLOR: '1' } });
+  // Alone it rests only on the key it carries: accepted only with --allow-carried-key.
+  const alone = spawnSync(process.execPath, [cli, fixturePath('run-manifest.json'), '--allow-carried-key'], { encoding: 'utf8', env: { ...process.env, NO_COLOR: '1' } });
   assert.equal(alone.status, 0, alone.stderr);
   assert.match(alone.stdout, /Run manifest verifies: \d+ of \d+ passed, unbound/);
   assert.match(alone.stdout, /manifest only \(add --standard, --receipts, --calls, --regrade to bind\)/);
@@ -161,7 +162,7 @@ test('a grading made elsewhere whose verdict was changed after signing fails its
 
 test('--regrade may be given more than once: the first is the run\'s own, the rest gradings made elsewhere', () => {
   const cli = join(here, '..', '..', 'cli.js');
-  const r = spawnSync(process.execPath, [cli, fixturePath('run-manifest.json'), '--standard', fixturePath('run-standard.json'), '--receipts', fixturePath('run-receipts.jsonl'), '--calls', fixturePath('run-calls.jsonl'), '--regrade', fixturePath('run-regrade.json'), '--regrade', fixturePath('run-regrade.json'), '--json'], { encoding: 'utf8' });
+  const r = spawnSync(process.execPath, [cli, fixturePath('run-manifest.json'), '--standard', fixturePath('run-standard.json'), '--receipts', fixturePath('run-receipts.jsonl'), '--calls', fixturePath('run-calls.jsonl'), '--regrade', fixturePath('run-regrade.json'), '--regrade', fixturePath('run-regrade.json'), '--maintainer-key', fixture('run-standard.json').recipient.verification_key, '--json'], { encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr || r.stdout);
   assert.match(r.stdout, /"id":\s*"regrade_2",\s*"label":\s*"Grading 3",\s*"ok":\s*true/);
 });
@@ -191,7 +192,7 @@ test('the gate policy digest is recomputed from the policy text the standard car
   assert.ok(policy && policy.ok && /recomputed here/.test(policy.detail), JSON.stringify(policy));
 });
 
-test('the exit status is 1 when a run manifest fails to bind to a companion file, and 0 alone or when bound', async () => {
+test('the exit status is 1 when a run manifest fails to bind to a companion file, 0 when bound under a pinned key, and 2 alone', async () => {
   const { mkdtempSync, writeFileSync } = await import('node:fs');
   const { tmpdir } = await import('node:os');
   const cli = join(here, '..', '..', 'cli.js');
@@ -205,6 +206,8 @@ test('the exit status is 1 when a run manifest fails to bind to a companion file
   const good = spawnSync(process.execPath, [cli, fixturePath('run-manifest.json'), '--standard', fixturePath('run-standard.json'), '--receipts', fixturePath('run-receipts.jsonl'), '--calls', fixturePath('run-calls.jsonl'), '--regrade', fixturePath('run-regrade.json'), '--maintainer-key', fixture('run-standard.json').recipient.verification_key, '--json'], { encoding: 'utf8' });
   assert.equal(good.status, 0, good.stdout.slice(0, 300));
   assert.match(good.stdout, /"id":\s*"maintainer_pin",\s*"label":\s*"Maintainer key pinned",\s*"ok":\s*true/);
+  // Alone it rests only on the key it carries: undecidable, or 0 with --allow-carried-key.
   const alone = spawnSync(process.execPath, [cli, fixturePath('run-manifest.json'), '--json'], { encoding: 'utf8' });
-  assert.equal(alone.status, 0);
+  assert.equal(alone.status, 2);
+  assert.equal(spawnSync(process.execPath, [cli, fixturePath('run-manifest.json'), '--allow-carried-key', '--json'], { encoding: 'utf8' }).status, 0);
 });

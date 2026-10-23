@@ -96,11 +96,13 @@ passes `--trust-bundle-keys`, and the result then says the keys came from
 the bundle (0.10.27). When the caller does supply a key, a receipt whose
 signed bytes carry a different `public_key`, `verification_key` or
 `verification_jwk` is invalid (`key_mismatch`, 0.10.27). Gate records, macro
-track records, governed receipts, proof packs and trusted context packs are
-the exception: given no key, they verify against the key they carry and
-label the result as embedded-key only (`embedded-tuple`, `embedded-pack`,
-`embedded-receipt`, or `identityStatus: embedded_key_only`), which shows
-integrity, not who holds the key.
+track records, governed receipts, proof packs, trusted context packs,
+repository evidence, standard files and run manifests carry their own key.
+From 0.11.0, given no key, they are undecidable (`embedded_key_rejected`,
+exit 2). `--allow-carried-key` accepts such a result, marks it
+`carriedKeyOnly`, and says it shows integrity, not who holds the key;
+`--strict` refuses it even then. Before 0.11.0 they verified against the key
+they carry by default.
 
 Recommended key distribution mechanisms:
 

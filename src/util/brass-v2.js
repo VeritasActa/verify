@@ -145,7 +145,8 @@ export function verifyBrassV2(input, opts = {}) {
     return {
       valid: true,
       format: "voprf-token",
-      algorithm: input.algorithm,
+      // The algorithm verified here, not the label the token carries.
+      algorithm: "voprf-p256-sha256",
       scope: input.scope,
       nullifier,
       kid: input.kid,

@@ -33,6 +33,7 @@
  */
 
 import { createHash, verify as cryptoVerify, createPublicKey } from 'node:crypto';
+import { canonicalize } from '../util/canonical.js';
 
 /**
  * @typedef {Object} RekorInclusionProof
@@ -72,8 +73,9 @@ import { createHash, verify as cryptoVerify, createPublicKey } from 'node:crypto
 
 /**
  * Verify a receipt's transparency-log anchor against a supplied
- * offline inclusion proof, or return `undecidable` if no proof is
- * supplied.
+ * offline inclusion proof and the log's signed tree head, verified
+ * against the key pinned for that log in logTrustAnchors, or return
+ * `undecidable` if either is missing.
  *
  * @param {RekorVerifyOptions} opts
  * @returns {RekorVerifyResult}
@@ -98,9 +100,14 @@ export function verifyRekorAnchor(opts) {
     return { valid: false, error: 'anchor_uri_mismatch', mode: 'undecidable' };
   }
 
-  // Compute the receipt's own hash — the value we expect to find in
+  // Compute the receipt's own hash: the value we expect to find in
   // the log's Merkle path.
-  const receiptHash = computeReceiptHash(receipt);
+  let receiptHash;
+  try {
+    receiptHash = computeReceiptHash(receipt);
+  } catch {
+    return { valid: false, error: 'malformed_encoding', mode: 'undecidable' };
+  }
 
   if (!proof) {
     return {
@@ -131,22 +138,41 @@ export function verifyRekorAnchor(opts) {
     };
   }
 
-  // If a Signed Tree Head is supplied AND we have a trust anchor for
-  // this log ID, verify the STH signature. Otherwise STH is
-  // unverified (strong proof without, weaker with).
-  let sthValid = null;
-  if (proof.signedTreeHead && logTrustAnchors[proof.logID]) {
-    try {
-      sthValid = verifySignedNote(proof.signedTreeHead, logTrustAnchors[proof.logID]);
-    } catch {
-      sthValid = false;
-    }
+  // A path to a root proves nothing until the log has signed that root:
+  // anyone can build a one-leaf tree whose root is the receipt's hash.
+  // So the signed tree head is required, verified against the pinned key
+  // for this log, and must name this root and tree size. Before, a proof
+  // with no signed tree head, or with no key pinned for its log, was valid.
+  const pinnedLogKey = Object.hasOwn(logTrustAnchors, String(proof.logID)) ? logTrustAnchors[proof.logID] : null;
+  if (!proof.signedTreeHead || !pinnedLogKey) {
+    return {
+      valid: false,
+      error: !proof.signedTreeHead ? 'signed_tree_head_missing' : 'no_log_trust_anchor',
+      mode: 'undecidable',
+      receipt_hash: receiptHash,
+      log_id: proof.logID,
+    };
+  }
+  let sthValid;
+  try {
+    sthValid = verifySignedNote(proof.signedTreeHead, pinnedLogKey);
+  } catch {
+    sthValid = false;
   }
 
-  if (sthValid === false) {
+  if (!sthValid) {
     return {
       valid: false,
       error: 'signed_tree_head_signature_invalid',
+      mode: 'proof',
+      receipt_hash: receiptHash,
+      log_id: proof.logID,
+    };
+  }
+  if (!checkpointBinds(proof.signedTreeHead, proof.treeSize, proof.rootHash)) {
+    return {
+      valid: false,
+      error: 'signed_tree_head_mismatch',
       mode: 'proof',
       receipt_hash: receiptHash,
       log_id: proof.logID,
@@ -185,12 +211,34 @@ export function verifyRekorAnchor(opts) {
  * in the Rekor log's leaf set.
  */
 export function computeReceiptHash(receipt) {
-  // Rekor indexes by sha256 of the entry body (base64), but for
-  // receipts anchored via in-toto/DSSE, the convention is sha256 over
-  // the canonical payload. Callers should confirm the anchoring
-  // service's convention for their deployment.
-  const body = JSON.stringify(receipt, Object.keys(receipt).sort());
-  return createHash('sha256').update(body, 'utf-8').digest('hex');
+  // Rekor indexes by sha256 of the entry body (base64); this engine
+  // expects the receipt hash of draft §6.7: the SHA-256 of the RFC 8785
+  // (JCS) form of the whole receipt, signature included. Callers should
+  // confirm the anchoring service's convention for their deployment.
+  // Before, the member names passed to JSON.stringify as a replacer kept
+  // only "payload" and "signature" at every depth, so every
+  // {payload, signature} receipt hashed to the same value.
+  return createHash('sha256').update(canonicalize(receipt), 'utf-8').digest('hex');
+}
+
+/**
+ * Whether a signed checkpoint (c2sp.org/tlog-checkpoint: origin, tree
+ * size, base64 root hash) names exactly this tree size and root hash.
+ * A signature over a checkpoint for another tree vouches for nothing here.
+ *
+ * @param {string} noteText
+ * @param {number} treeSize
+ * @param {string} rootHash hex
+ * @returns {boolean}
+ */
+export function checkpointBinds(noteText, treeSize, rootHash) {
+  if (typeof noteText !== 'string') return false;
+  const lines = noteText.split('\n\n')[0].split('\n');
+  if (lines.length < 3 || !/^\d+$/.test(lines[1])) return false;
+  const root = Buffer.from(lines[2], 'base64');
+  return Number(lines[1]) === treeSize
+    && root.toString('base64') === lines[2]
+    && root.toString('hex') === normalizeHex(rootHash);
 }
 
 /**

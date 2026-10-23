@@ -27,6 +27,7 @@
 
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { parseJsonStrict } from '../util/strict-json.js';
 
 // ───── Framework mappings ─────
 
@@ -331,7 +332,7 @@ function loadReceipts(dir, warnings) {
     if (!st.isFile()) continue;
 
     let receipt;
-    try { receipt = JSON.parse(readFileSync(p, 'utf-8')); }
+    try { receipt = parseJsonStrict(readFileSync(p, 'utf-8')); }
     catch { warnings.push(`skipped: non-JSON or malformed: ${entry}`); continue; }
     if (!receipt.payload || !receipt.signature) {
       warnings.push(`skipped: missing payload/signature: ${entry}`);

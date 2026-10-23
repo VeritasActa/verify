@@ -28,6 +28,7 @@ import { join, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 
 import { canonicalize } from '../util/canonical.js';
+import { parseJsonStrict } from '../util/strict-json.js';
 import { checkChainLinkSyntax } from './ed25519-receipt.js';
 import { COMPATIBILITY_NOTE } from './bulk.js';
 
@@ -105,7 +106,7 @@ export async function exploreChain(opts) {
   const startPath = resolve(receiptPath);
   let startReceipt;
   try {
-    startReceipt = JSON.parse(readFileSync(startPath, 'utf-8'));
+    startReceipt = parseJsonStrict(readFileSync(startPath, 'utf-8'));
   } catch (err) {
     return {
       valid: false,
@@ -213,7 +214,7 @@ export async function exploreChain(opts) {
 
     let ancestor;
     try {
-      ancestor = JSON.parse(readFileSync(ancestorPath, 'utf-8'));
+      ancestor = parseJsonStrict(readFileSync(ancestorPath, 'utf-8'));
     } catch (err) {
       node.link_valid = false;
       linksBroken++;
@@ -308,7 +309,7 @@ function buildReceiptIndex(dir) {
     }
     if (!st.isFile() || !entry.endsWith('.json')) continue;
     try {
-      const receipt = JSON.parse(readFileSync(p, 'utf-8'));
+      const receipt = parseJsonStrict(readFileSync(p, 'utf-8'));
       if (!receipt.payload || !receipt.signature) continue;
       byReceipt.set(receiptDigest(receipt), p);
       if (typeof receipt.payload === 'object') byPayload.set(payloadDigest(receipt), p);

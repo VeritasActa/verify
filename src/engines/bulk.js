@@ -23,6 +23,7 @@ import { createHash } from 'node:crypto';
 import { detectFormat } from '../detect.js';
 import { verifyReceipt, checkChainLinkSyntax, combineChecks } from './ed25519-receipt.js';
 import { canonicalize } from '../util/canonical.js';
+import { parseJsonStrict } from '../util/strict-json.js';
 import { checkKeyWindow, receiptIssuedAt, keyWindowCheck } from '../util/key-window.js';
 
 const sha256Hex = (text) => createHash('sha256').update(text, 'utf-8').digest('hex');
@@ -149,7 +150,8 @@ export async function replayChain(filePath, opts = {}) {
   for (let i = 0; i < lines.length; i++) {
     let receipt;
     try {
-      receipt = JSON.parse(lines[i]);
+      // Read as the main input is: a duplicate member is refused, where JSON.parse kept the last one.
+      receipt = parseJsonStrict(lines[i]);
     } catch (e) {
       // -04 §5.3: input that is not well-formed JSON cannot be checked, so the line is undecidable.
       results.undecidable++;
@@ -244,9 +246,12 @@ export async function replayChain(filePath, opts = {}) {
       keyStatus: kw.report,
       ...(r.warning ? { warning: r.warning } : {}),
       ...(r.payloadNotes ? { payloadNotes: r.payloadNotes } : {}),
+      ...(r.notChecked ? { notChecked: r.notChecked } : {}),
     });
-    // The receipt verifier's own warnings (a null link, a historical encoding) are reported here as for one receipt.
+    // The receipt verifier's own warnings (a null link, a historical encoding) are reported here as for one receipt,
+    // and so is what it carries that is not checked (cosignatures, a delegation chain).
     if (r.warning) results.warnings.push(`Line ${i + 1}: ${r.warning}`);
+    for (const note of r.notChecked || []) results.warnings.push(`Line ${i + 1}: ${note}`);
 
     if (combined.outcome === 'valid') {
       results.verified++;

@@ -22,6 +22,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { base64urlToBytes, bytesToHex } from './hex.js';
 import { windowOf } from './key-window.js';
+import { parseJsonStrict } from './strict-json.js';
 
 /**
  * @typedef {Object} JwksResolveResult
@@ -57,7 +58,7 @@ async function loadJwks(source) {
   if (target.type === 'file') {
     const resolved = resolve(target.path);
     return {
-      jwks: JSON.parse(await readFile(resolved, 'utf8')),
+      jwks: parseJsonStrict(await readFile(resolved, 'utf8')),
       source: { type: 'file', resolved },
     };
   }
@@ -70,7 +71,7 @@ async function loadJwks(source) {
   const response = await fetch(parsed);
   if (!response.ok) throw new Error(`JWKS fetch failed: HTTP ${response.status}`);
   return {
-    jwks: await response.json(),
+    jwks: parseJsonStrict(await response.text()),
     source: { type: 'url', resolved: parsed.href },
   };
 }

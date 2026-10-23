@@ -18,6 +18,11 @@
  * exact prompt bytes lets downstream auditors prove the agent operated
  * under an unmodified set of instructions.
  *
+ * The receipt's or the bundle's own signature is not checked here, so a
+ * hash that matches one is undecidable (signature_not_checked, exit 2),
+ * never verified provenance: verify the receipt or bundle separately.
+ * Only --expected-hash, a hash the caller supplies, gives a valid result.
+ *
  * @module verify-cli/src/engines/prompt
  * @license Apache-2.0
  */
@@ -26,6 +31,7 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 
 import { canonicalHash } from '../util/canonical.js';
+import { parseJsonStrict } from '../util/strict-json.js';
 
 /**
  * @typedef {Object} PromptVerifyOptions
@@ -124,7 +130,7 @@ export async function verifyPrompt(opts) {
 function verifyViaReceipt({ promptPath, promptHash, receiptPath }) {
   let receipt;
   try {
-    receipt = JSON.parse(readFileSync(receiptPath, 'utf-8'));
+    receipt = parseJsonStrict(readFileSync(receiptPath, 'utf-8'));
   } catch (err) {
     return {
       valid: false,
@@ -159,9 +165,13 @@ function verifyViaReceipt({ promptPath, promptHash, receiptPath }) {
 
   const normalised = asserted.startsWith('sha256:') ? asserted : `sha256:${asserted}`;
   const ok = normalised === promptHash;
+  // The receipt's signature is not checked here, so a matching hash shows only that the file asserts it: anyone can
+  // write one. Before, a match was reported as verified provenance (exit 0), unsigned receipts included.
   return {
-    valid: ok,
-    error: ok ? undefined : 'hash_mismatch',
+    valid: false,
+    outcome: ok ? 'undecidable' : 'invalid',
+    error: ok ? 'signature_not_checked' : 'hash_mismatch',
+    ...(ok ? { detail: 'The receipt asserts this prompt\'s hash, but its signature was not checked. Verify the receipt itself, with verify <receipt.json> --key <hex>.' } : {}),
     format: 'prompt-verify',
     prompt_path: promptPath,
     prompt_hash: promptHash,
@@ -174,7 +184,7 @@ function verifyViaReceipt({ promptPath, promptHash, receiptPath }) {
 function verifyViaSigstore({ promptPath, promptHash, bundlePath }) {
   let bundle;
   try {
-    bundle = JSON.parse(readFileSync(bundlePath, 'utf-8'));
+    bundle = parseJsonStrict(readFileSync(bundlePath, 'utf-8'));
   } catch (err) {
     return {
       valid: false,
@@ -205,9 +215,13 @@ function verifyViaSigstore({ promptPath, promptHash, bundlePath }) {
   const target = promptHash.replace(/^sha256:/, '');
   const matched = subjects.find((s) => (s.digest && (s.digest.sha256 === target)));
   const ok = Boolean(matched);
+  // Neither the bundle's signature nor its certificate is checked here, so a matching subject shows only that the file
+  // names it. Before, a match was reported as verified provenance (exit 0), for a bundle anyone could write.
   return {
-    valid: ok,
-    error: ok ? undefined : 'sigstore_subject_hash_mismatch',
+    valid: false,
+    outcome: ok ? 'undecidable' : 'invalid',
+    error: ok ? 'signature_not_checked' : 'sigstore_subject_hash_mismatch',
+    ...(ok ? { detail: 'The bundle names this prompt\'s hash as a subject, but its signature and certificate were not checked. Verify the bundle with a Sigstore verifier, such as gh attestation verify or cosign verify-blob.' } : {}),
     format: 'prompt-verify',
     prompt_path: promptPath,
     prompt_hash: promptHash,
@@ -246,7 +260,7 @@ function extractSigstoreSubjects(bundle) {
   if (!statement && bundle.dsseEnvelope && bundle.dsseEnvelope.payload) {
     try {
       const payload = Buffer.from(bundle.dsseEnvelope.payload, 'base64').toString('utf-8');
-      statement = JSON.parse(payload);
+      statement = parseJsonStrict(payload);
     } catch {
       // fall through
     }

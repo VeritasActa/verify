@@ -191,8 +191,8 @@ export function detectFormat(input) {
     return { mode: 'legate-governed-receipt', signals, hasSelectiveDisclosure: false, isBundle: false };
   }
 
-  // VOPRF token detection: token value N, DLEQ proofs, scope
-  if (input.token || input.N || input.nullifier) {
+  // VOPRF token detection: token value N, DLEQ proofs, scope; or a BRASS 2.0 redemption, which names its protocol
+  if (input.token || input.N || input.nullifier || input.protocol === 'BRASS') {
     signals.push('voprf-marker');
     if (input.proof_I || input.proof_C || input.dleq) signals.push('dleq-proof');
     if (input.scope || (input.origin && input.epoch)) signals.push('scope');

@@ -34,13 +34,13 @@ Part of the [Veritas Acta](https://veritasacta.com) protocol for machine-decisio
 | Ed25519 receipt | Signed decision receipts (v1, v2, Passport envelope) | T1 |
 | Ed25519 + AIP-0002 | Selective-disclosure receipts with `_commitments` | T2 |
 | Ed25519 + attestation | Receipts with `attestation_mode` or `anchor_uri` | T3 |
-| VOPRF token | Anonymous credential tokens (RFC 9497, BRASS wire format). Full Schnorr DLEQ verification for both πI (issuer) and πC (client). | T4 |
-| Knowledge Unit | Multi-model deliberation bundles (draft-farley-acta-knowledge-units-00) | varies |
+| VOPRF token | Anonymous credential tokens (RFC 9497, BRASS wire format, and BRASS 2.0 redemptions). Full Schnorr DLEQ verification for both πI (issuer) and πC (client), against the issuer key given with `--key` (base64url compressed P-256 point); a token is never verified against the `issuer_public_key` it carries, and one that carries another key is invalid (`issuer_key_mismatch`). | T4 |
+| Knowledge Unit | Multi-model deliberation bundles (draft-farley-acta-knowledge-units-00), checked through the receipts they carry: one that fails makes the KU invalid (exit 1). The aggregate `receipt_sig` and `receipt_hash` are not checked, since §8 does not define their preimage unambiguously, so otherwise the KU is undecidable (exit 2, `receipt_binding_not_checked`, or the receipts' own reason), never valid; `notChecked` says so | varies |
 | Audit bundle | Multiple receipts and a `verification.signing_keys` block. Checked with `--key` or `--jwks`; the bundle's own keys are used only with `--trust-bundle-keys` (0.10.27) | varies |
 | Gate receipt / bundle | ScopeBlind Gate receipt tuples (`scopeblind.gate.*`) and signed-manifest `scopeblind.gate.evidence-bundle/2` exports with semantic and exact chain checks | T1 |
 | Macro track record | Signed macro snapshots, append-only manifest sequence, and signed history checkpoints | T1 |
-| ScopeBlind standard files | A signed standard (`scopeblind.proof_request.v1`), a recipient decision (`scopeblind.admission_decision.v1`), or an action assurance bundle (`scopeblind.action_assurance_bundle.v1`), verified by the same core the ScopeBlind website runs, bundled here | T1 |
-| ScopeBlind run manifest | A harness's signed account of a governed run (`scopeblind.run_manifest.v1`): a benchmark submission made with every tool call through the gateway. Alone it verifies as intact but unbound. Add the files beside it to bind it: `--standard` (the pins, the policy, the tool list, the attempts, the time limit), `--receipts` (the chain head and every receipt), `--calls` (each call behind its receipt), `--regrade` (a second grading; repeat it for gradings made elsewhere), `--provenance` (the run's Sigstore bundles, verified offline against the pinned trust root and tied to the exact bytes given), `--model-calls` with `--model-attestation` (every model call signed inside the provider's TEE, each key bound in an Intel TDX quote chained to the pinned Intel root), and `--maintainer-key` (pin the key that must have signed the standard). With companion files the exit status is 0 only when the run binds to all of them. Example: `npx @veritasacta/verify manifest.json --standard standard.json --receipts receipts.jsonl --calls calls.jsonl --regrade regrade.json --provenance provenance` | T1 |
+| ScopeBlind standard files | A signed standard (`scopeblind.proof_request.v1`), a recipient decision (`scopeblind.admission_decision.v1`), or an action assurance bundle (`scopeblind.action_assurance_bundle.v1`), verified by the same core the ScopeBlind website runs, bundled here. `--key` pins the key that signed it (the recipient key of a standard or a decision, the gate key of a bundle); a file signed with another key is invalid (`key_mismatch`, exit 1) | T1 |
+| ScopeBlind run manifest | A harness's signed account of a governed run (`scopeblind.run_manifest.v1`): a benchmark submission made with every tool call through the gateway. Alone it verifies as intact but unbound. Add the files beside it to bind it: `--standard` (the pins, the policy, the tool list, the attempts, the time limit), `--receipts` (the chain head and every receipt), `--calls` (each call behind its receipt), `--regrade` (a second grading; repeat it for gradings made elsewhere), `--provenance` (the run's Sigstore bundles, verified offline against the pinned trust root and tied to the exact bytes given), `--model-calls` with `--model-attestation` (every model call signed inside the provider's TEE, each key bound in an Intel TDX quote chained to the pinned Intel root), and `--maintainer-key` (with `--standard`: pin the key that must have signed the standard; refused without it). `--key` pins the harness key that signed the manifest. With companion files the exit status is 0 only when the run binds to all of them. Example: `npx @veritasacta/verify manifest.json --standard standard.json --receipts receipts.jsonl --calls calls.jsonl --regrade regrade.json --provenance provenance` | T1 |
 
 ## Subcommands
 
@@ -73,6 +73,8 @@ verify prompt CLAUDE.md --sigstore-bundle bundle.json
 verify prompt SKILL.md --expected-hash <sha256-hex>
 ```
 
+`verify prompt` does not check the signature of a receipt or a Sigstore bundle. A receipt or bundle that names the prompt's hash is undecidable (`signature_not_checked`, exit 2), never verified provenance: verify the receipt itself with `verify prompt-receipt.json --key <hex>`, or the bundle with a Sigstore verifier. One that names another hash fails (exit 1). Only `--expected-hash`, a hash you supply, gives a valid result (exit 0).
+
 ### Chain exploration
 
 Walks the `previousReceiptHash` chain from a chain tip back to its root, validating every link's SHA-256.
@@ -88,17 +90,16 @@ Links are read by the rules of draft §6.7 that the receipt verifier applies: `s
 
 ### ScopeBlind Gate receipts
 
-Verifies the receipt tuples emitted by the ScopeBlind Gate (the pre-trade mandate gate): single decisions, batch decisions and their exact signed legs, PM co-sign approvals, execution fills, held-remainder states, and issuer-signed mandate delegations. Version 2 evidence bundles add a gate-signed completeness manifest that enumerates every exported digest. Tuples sign the SHA-256 of the deep-key-sorted payload; the Ed25519 signature covers the digest bytes and verifies against the `verification_key` carried in the tuple.
+Verifies the receipt tuples emitted by the ScopeBlind Gate (the pre-trade mandate gate): single decisions, batch decisions and their exact signed legs, PM co-sign approvals, execution fills, held-remainder states, and issuer-signed mandate delegations. Version 2 evidence bundles add a gate-signed completeness manifest that enumerates every exported digest. Tuples sign the SHA-256 of the deep-key-sorted payload; the Ed25519 signature covers the digest bytes. The tuple carries its `verification_key`, which is never a trust anchor: without `--key` the result is undecidable (`embedded_key_rejected`, exit 2), and `--allow-carried-key` accepts it with a notice that the signature proves nothing about who signed.
 
 ```bash
-verify gate-receipt.json                      # auto-detected tuple
-verify gate-bundle.json                       # schemas, exact links, and signed manifest checked
 verify gate-receipt.json --key <gate-pubkey>  # pin the expected signer
-verify gate-bundle.json --key <gate-pubkey>   # pin the bundle trust anchor
-verify samples/sample-gate-bundle.json        # try it (deterministic demo keys)
+verify gate-bundle.json --key <gate-pubkey>   # schemas, exact links, and signed manifest checked
+verify gate-receipt.json --allow-carried-key  # integrity only, against the key the tuple carries
+verify samples/sample-gate-bundle.json --key 0f37d844c1934a03851a48d7927e5109be76d8cbed6eac1dc8684ed89d977790  # try it (deterministic demo key)
 ```
 
-A VALID result proves cryptographic authenticity, payload integrity, recognized-schema validity, exact parent-child consistency, fail-closed partial-fill handling, and that the signed manifest exactly covers the records in the export. It does NOT prove the risk inputs were correct, that a demo fill came from an independent production custodian, or that records outside the manifest's declared history scope do not exist. Verification keys travel inside the records, so pin the expected gate signer with `--key` for identity assurance. Crypto and chain failures are reported separately (`[crypto]` vs `[chain]`): a record can be individually authentic while its semantic or cross-record relationship is invalid.
+A VALID result proves cryptographic authenticity, payload integrity, recognized-schema validity, exact parent-child consistency, fail-closed partial-fill handling, and that the signed manifest exactly covers the records in the export. It does NOT prove the risk inputs were correct, that a demo fill came from an independent production custodian, or that records outside the manifest's declared history scope do not exist. Verification keys travel inside the records, so pin the expected gate signer with `--key`; without it the result is undecidable. Crypto and chain failures are reported separately (`[crypto]` vs `[chain]`): a record can be individually authentic while its semantic or cross-record relationship is invalid.
 
 Legacy `scopeblind.gate.evidence-bundle/1` files are detected but fail closed because they do not contain a signed completeness manifest. Re-export them as `/2`.
 
@@ -115,8 +116,10 @@ The verifier checks these records offline. It does not fetch or execute preview 
 ### ScopeBlind macro track records
 
 Macro exports verify offline. An embedded key proves internal signature
-integrity, not who controls that key. Pin the operator key and an independently
-retained anti-rollback head for identity and historical assurance:
+integrity, not who controls that key, so without `--key` the result is
+undecidable (exit 2) unless `--allow-carried-key` accepts it. Pin the operator
+key and an independently retained anti-rollback head for identity and historical
+assurance:
 
 ```bash
 npx @veritasacta/verify@0.10.4 legate-macro-track-record.json \
@@ -195,7 +198,7 @@ $ curl --unix-socket /tmp/veritasacta-$UID.sock -X POST http://_/sign \
 { "payload": {...}, "signature": {"alg":"EdDSA","kid":"...","sig":"..."} }
 ```
 
-One daemon, N agents, zero SDK embedding.
+One daemon, N agents, zero SDK embedding. Each receipt's `tool_input_hash` is the SHA-256 of the RFC 8785 canonical form of the full `args`, recorded as `tool_input_hash_method: jcs-sha256-v1`, as the proxy writes it.
 
 ## Local-integrity attestation
 
@@ -255,10 +258,11 @@ fingerprint determine whether a recipient should trust it.
 | Flag | Purpose |
 |---|---|
 | `--pin-sigil <hex>` | Require the installed Sigil fingerprint to match (supply-chain enforcement) |
-| `--audit-log <file>` | Append every verification event to a chain-hashed JSONL log |
+| `--audit-log <file>` | Append every verification event to a chain-hashed JSONL log: each entry's `_chain_hash` is the SHA-256 of the previous entry's `_chain_hash` followed by the entry, and an entry is not appended to a log whose last line carries none |
 | `--audit-report` | Render an HTML audit report (self-contained, auditor-ready) |
-| `--fips` | Enforce FIPS-approved algorithms only |
-| `--strict` | Disable all deprecated fallbacks |
+| `--fips` | Enforce FIPS-approved algorithms only: a valid result stands only when every algorithm the engine verified is approved (Ed25519 is, under FIPS 186-5). The algorithm is the one the engine reports it verified, never a label in the file; a format that reports none is refused (exit 2) |
+| `--strict` | Disable all deprecated fallbacks, `--allow-carried-key` included |
+| `--allow-carried-key` | Accept a result that rests only on a key the file carries: a Gate tuple or bundle, a macro snapshot or track record, a governed receipt, a proof or context pack, repository evidence, a standard file or a run manifest checked without `--key`. Without it such a result is undecidable (`embedded_key_rejected`, exit 2); with it, exit 0, `carriedKeyOnly: true`, and a notice that the signature proves nothing about who signed. `--strict` refuses it |
 | `--tier N` | Require minimum conformance tier (1-5) |
 | `--replay-chain <file>` | Verify every receipt in a JSONL file in turn, and each §6.7 link to the receipt before it; reports the chains the file holds. Keys come from `--key`, or from `--jwks` by each receipt's `kid`. Exits 1 if a line is invalid or a link breaks, else 2 if a line could not be checked, else 0 |
 | `--allow-payload-only-links` | Read a chain link over the previous receipt's payload alone as a legacy link, counted and warned: a compatibility mode for 0.9.3-era chains, not conformant to draft §6.7, marked `conformant: false` (disabled by `--strict`) |
@@ -392,7 +396,7 @@ Patent-adjacent; covered by the Apache-2.0 patent grant (§3). See [PATENTS.md](
 
 An Acta receipt or audit bundle is never checked with a key taken from the file being checked. An audit bundle's `verification.signing_keys` arrive in that file, so they are not a trust anchor: without `--key` or `--jwks` its receipts are undecidable (`no_public_key`, exit 2), and the result's `detail` says why. To check them against the keys the bundle carries anyway, pass `--trust-bundle-keys`; each receipt, and the bundle, then reports `keySource: bundle`, and the `warning` says that a valid result shows only that the receipts match keys in the same file. `--strict` disables the flag, and it is refused (exit 2) for a file that is not an audit bundle. With `--jwks`, the key set is read once and each receipt gets the key its own `kid` names, with that key's window applied to its signed `issued_at`; a receipt whose `kid` the set lacks is undecidable (`jwks_fetch_failed`). Earlier releases gave every receipt the set's first key. `--key` takes precedence over `--jwks`, and either over `--trust-bundle-keys`.
 
-Gate receipt tuples and evidence bundles, macro track records, governed receipts, proof packs and trusted context packs are not changed: given no key, they verify against the key they carry, and label the result `embedded-tuple`, `embedded-receipt` or `embedded-pack` (`identityStatus: embedded_key_only` for a macro track record), which shows integrity, not who holds the key. Pin the key with `--key`.
+Gate receipt tuples and evidence bundles, macro track records, governed receipts, proof packs and trusted context packs are not changed: given no key, they verify against the key they carry, and label the result `embedded-tuple`, `embedded-receipt` or `embedded-pack` (`identityStatus: embedded_key_only` for a macro track record), which shows integrity, not who holds the key. Pin the key with `--key`. From 0.11.0 such a result is undecidable (`embedded_key_rejected`, exit 2), for these formats and for repository evidence, standard files and run manifests, unless `--allow-carried-key` accepts it, which marks it `carriedKeyOnly` and says the signature proves nothing about who signed.
 
 ```bash
 verify bundle.json --key ISSUER_PUBLIC_KEY --json

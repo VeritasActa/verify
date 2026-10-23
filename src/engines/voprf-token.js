@@ -54,7 +54,8 @@ import { verifyBrassV2 } from '../util/brass-v2.js';
 
 /**
  * @typedef {Object} VoprfVerifyOptions
- * @property {string} [issuerPublicKey]  override issuer public key (base64url)
+ * @property {string} [issuerPublicKey]  the issuer public key (base64url), from outside the token; without it nothing
+ *   is verified (missing_issuer_public_key)
  * @property {string} [verifierSalt]     unused here; nullifier surfaces from token's eta
  * @property {string} [expectedScope]    require a specific scope origin
  * @property {boolean} [requireClientProof] when true, reject tokens
@@ -103,7 +104,10 @@ export async function verifyVoprfToken(input, opts = {}) {
     };
   }
 
-  const issuerPubKey = opts.issuerPublicKey || input.issuer_public_key;
+  // The issuer key comes from outside the token (--key). A key the token carries never verifies it: anyone can issue
+  // a token under a key of their own (draft §9.5). Before, a token checked with no key used its own
+  // issuer_public_key, and the CLI passed --key under another name, so a self-issued token verified under any key.
+  const issuerPubKey = opts.issuerPublicKey;
   if (!issuerPubKey) {
     return {
       valid: false,
@@ -147,6 +151,22 @@ export async function verifyVoprfToken(input, opts = {}) {
       format: 'voprf-token',
       algorithm,
     };
+  }
+
+  // A key the token carries must be the pinned key: one that differs makes the token invalid, as the BRASS 2.0 path
+  // has it (issuer_key_mismatch).
+  if (input.issuer_public_key !== undefined) {
+    let carried = null;
+    try { carried = decodePoint(input.issuer_public_key); } catch { carried = null; }
+    if (!carried || !carried.equals(Y)) {
+      return {
+        valid: false,
+        error: 'issuer_key_mismatch',
+        format: 'voprf-token',
+        algorithm,
+        kid: input.kid || input.KID,
+      };
+    }
   }
 
   // \u03c0I: issuer proof.

@@ -48,6 +48,21 @@ A verification that makes several checks combines them as §5.3 of the -04 edito
 - **Spec:** `RFC 9497 (VOPRF DLEQ proofs)`
 - **Hint:** The VOPRF token was not produced by a valid issuer, or the proof is malformed.
 
+#### `invalid_piI`
+- **Description:** A VOPRF token's issuer DLEQ proof does not verify against the issuer key given with `--key`.
+- **Spec:** `RFC 9497 (VOPRF DLEQ proofs)`
+- **Hint:** The token was not issued under that key, or the proof was altered. Exit 1 from 0.11.0; 0.10.28 exited 2 for it and checked the proof against the key the token carries.
+
+#### `invalid_piC`
+- **Description:** A VOPRF token's client DLEQ proof does not verify over its own transcript.
+- **Spec:** `RFC 9497 (VOPRF DLEQ proofs)`
+- **Hint:** A member the client proof binds (the scope, the request digest, the nonce) was altered after redemption. Exit 1 from 0.11.0; 0.10.28 exited 2 for it.
+
+#### `issuer_key_mismatch`
+- **Description:** A VOPRF token carries an `issuer_public_key` that is not the issuer key given with `--key`.
+- **Spec:** `draft-farley-acta-signed-receipts-03 §9.5 Key Distribution and Trust Anchors`
+- **Hint:** The token names a different issuer from the one you required. A key the token carries is never used to verify it. A BRASS 2.0 redemption reported this code before, with exit 2.
+
 #### `digest_mismatch`
 - **Description:** Recomputed SHA-256 of the canonical payload does not match the digest carried in the record (ScopeBlind Gate tuples).
 - **Hint:** The payload was modified after the digest was computed, or the digest field was altered.
@@ -89,7 +104,7 @@ A verification that makes several checks combines them as §5.3 of the -04 edito
 #### `embedded_key_rejected`
 - **Description:** Receipt contains a verification key in its payload, which is not trusted by default.
 - **Spec:** `draft-farley-acta-signed-receipts-03 §9.5 Key Distribution and Trust Anchors`
-- **Hint:** Provide `--key` or `--jwks` externally. The deprecated `--allow-embedded-key` restores pre-0.4.0 behaviour for one release cycle. With a key from `--key` or `--jwks`, a key the receipt carries must be that key: from 0.10.27 one that is not is `key_mismatch` (exit 1).
+- **Hint:** Provide `--key` or `--jwks` externally. The deprecated `--allow-embedded-key` restores pre-0.4.0 behaviour for one release cycle. With a key from `--key` or `--jwks`, a key the receipt carries must be that key: from 0.10.27 one that is not is `key_mismatch` (exit 1). From 0.11.0 it is also the code for any other file checked only against a key it carries (a Gate tuple or bundle, a macro snapshot or track record, a governed receipt, a proof or context pack, repository evidence, a standard file or a run manifest, with no `--key`): undecidable by default. `--allow-carried-key` accepts such a result, marked `carriedKeyOnly` with a notice that the signature proves nothing about who signed; `--strict` refuses it even then.
 
 #### `no_public_key`
 - **Description:** No verification key from a trust anchor outside the receipt: none was given with `--key` or `--jwks`. From 0.10.27 an audit bundle's own `verification.signing_keys` are not one, since they arrive in the file being verified.
@@ -98,8 +113,31 @@ A verification that makes several checks combines them as §5.3 of the -04 edito
 #### `missing_signature`
 - **Description:** Input does not contain a `signature` field.
 
+#### `missing_issuer_public_key`
+- **Description:** No issuer key was given with `--key` for a VOPRF token. The `issuer_public_key` a token carries is not one, since anyone can issue a token under a key of their own.
+- **Spec:** `draft-farley-acta-signed-receipts-03 §9.5 Key Distribution and Trust Anchors`
+- **Hint:** Give the issuer's public key (base64url compressed P-256 point) with `--key`. Before 0.11.0 a token checked with no key was verified against the key it carries.
+
+#### `issuer_key_pin_required`
+- **Description:** No issuer key was given with `--key` for a BRASS 2.0 redemption.
+- **Hint:** Give the issuer's public key (base64url compressed P-256 point) with `--key`.
+
 #### `missing_payload`
 - **Description:** Input does not contain a `payload` field.
+
+#### `signature_not_checked`
+- **Description:** `verify prompt`: the receipt or Sigstore bundle names the prompt's hash, but its own signature is not checked, so nothing establishes who made the assertion. 0.10.28 reported this as verified provenance (exit 0).
+- **Hint:** Verify the receipt with `verify <receipt.json> --key <hex>`, or the bundle with a Sigstore verifier. `--expected-hash` checks the prompt against a hash you supply.
+
+#### `no_receipts`
+- **Description:** A Knowledge Unit carries no receipts, so nothing in it was verified.
+- **Spec:** `draft-farley-acta-knowledge-units-00 §8`
+- **Hint:** A KU is checked through the receipts it carries: invalid if one fails, else undecidable if there is none or one cannot be checked (a receipt in a format this verifier does not read is reported as `unknown_format`). Its `receipt_sig` and `receipt_hash` are not checked either (`receipt_binding_not_checked`), so a KU is never valid. 0.10.28 reported a KU with no receipts, or only unreadable ones, as valid.
+
+#### `receipt_binding_not_checked`
+- **Description:** A Knowledge Unit's `receipt_sig` and `receipt_hash` are present and not checked, so nothing binds its question, answers or consensus to its receipts. New in 0.11.0, which reports such a KU undecidable; 0.10.28 reported it valid when its receipts verified.
+- **Spec:** `draft-farley-acta-knowledge-units-00 §8 Receipt Binding`; §11 Security Considerations (Receipt Replay): verifiers MUST recompute the chain
+- **Hint:** §8 does not say which receipts form each round (a KU has no member for them, and round 2 records carry no slot), whether `receipt_hash` is bare hex (§3.6) or `sha256:`-prefixed (the §10 example), or whether `receipt_sig` signs the digest's bytes or its text, so this verifier does not recompute it. The embedded receipts are still checked, and one that fails makes the KU invalid (exit 1).
 
 #### `unsupported_algorithm`
 - **Description:** The declared signature algorithm is not supported by this verifier version.

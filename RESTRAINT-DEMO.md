@@ -9,16 +9,19 @@ from doing.
 From `packages/verify-cli` (works right now, local):
 
 ```
-node cli.js samples/sample-restraint-receipt.json
+node cli.js samples/sample-restraint-receipt.json --key 409cb9511071b8687f7884cd9cde813d7a0907bef16bd68a80a8b0bac045cd34
 ```
 
 The published one-liner (after the next npm publish, see below):
 
 ```
-npx @veritasacta/verify samples/sample-restraint-receipt.json
+npx @veritasacta/verify samples/sample-restraint-receipt.json --key 409cb9511071b8687f7884cd9cde813d7a0907bef16bd68a80a8b0bac045cd34
 ```
 
-That is the whole demo. One command. No servers contacted.
+That is the whole demo. One command. No servers contacted. The `--key` is the
+demonstration gate's public key, pinned from outside the file: without it the
+receipt rests only on the key it carries, and the verifier reports it undecidable
+(exit 2). Pin your own gate's key in practice.
 
 ## What the viewer sees, and what to say
 
@@ -42,7 +45,7 @@ Optional, and it lands hard. Alter the disclosed detail and run it again:
 ```
 # claim the blocked order was smaller than it was, then verify
 node -e "const fs=require('fs');const r=JSON.parse(fs.readFileSync('samples/sample-restraint-receipt.json'));r.restraint.proposed.notional=1;fs.writeFileSync('/tmp/forged.json',JSON.stringify(r))"
-node cli.js /tmp/forged.json
+node cli.js /tmp/forged.json --key 409cb9511071b8687f7884cd9cde813d7a0907bef16bd68a80a8b0bac045cd34
 ```
 
 The signature stays `VALID` (the signed hashes were not touched), but the binding
@@ -58,7 +61,7 @@ openable to a regulator on demand. To show it:
 
 ```
 node -e "const fs=require('fs');const r=JSON.parse(fs.readFileSync('samples/sample-restraint-receipt.json'));r.restraint.proposed=null;fs.writeFileSync('/tmp/blind.json',JSON.stringify(r))"
-node cli.js /tmp/blind.json
+node cli.js /tmp/blind.json --key 409cb9511071b8687f7884cd9cde813d7a0907bef16bd68a80a8b0bac045cd34
 ```
 
 "The desk can prove it was restrained without disclosing the position itself."

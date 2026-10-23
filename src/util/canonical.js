@@ -66,32 +66,6 @@ export function sortKeysDeep(obj) {
 }
 
 /**
- * Normalize numbers per ECMAScript JSON.stringify: whole-number floats
- * collapse to integers. Matches the Acta implementation convention.
- *
- * @param {unknown} obj
- * @returns {unknown}
- */
-export function normalizeNumbers(obj) {
-  if (obj === null || obj === undefined) return obj;
-  if (typeof obj === 'boolean') return obj;
-  if (typeof obj === 'number') {
-    // Only normalize finite whole-number floats; leave integers alone.
-    if (Number.isFinite(obj) && !Number.isInteger(obj) && Number.isInteger(obj)) {
-      return obj | 0;
-    }
-    return obj;
-  }
-  if (Array.isArray(obj)) return obj.map(normalizeNumbers);
-  if (typeof obj === 'object') {
-    const out = {};
-    for (const k of Object.keys(obj)) out[k] = normalizeNumbers(obj[k]);
-    return out;
-  }
-  return obj;
-}
-
-/**
  * Produce the canonical JCS string for a given value, enforcing
  * AIP-0001 ASCII-only keys.
  *
