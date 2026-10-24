@@ -12,6 +12,7 @@ jobs:
         with:
           node-version: '22.22.3'
       - run: npm ci
+      - run: npm run check:fixtures
       - run: npm test
       - run: npm run check:browser && npm run check:sigil && npm run self-check && npm run test:conformance
       - run: npm pack --json > packed.json

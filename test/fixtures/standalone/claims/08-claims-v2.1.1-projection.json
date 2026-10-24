@@ -1,0 +1,153 @@
+{
+  "_meta": {
+    "provenance": "synthetic public test data; not a normative corpus or production-issuer assertion",
+    "generator": "scripts/generate-standalone-fixtures.mjs",
+    "test_key": "RFC 8032 test vector 1; never use in production"
+  },
+  "vectors": [
+    {
+      "id": "satisfied",
+      "input": {
+        "structural_valid": true,
+        "assessment_supported": true,
+        "material_conflict": false,
+        "indication": "SUPPORTS",
+        "contradiction_final": false,
+        "blocking_gap": false,
+        "establishment": "ESTABLISHED"
+      },
+      "expected": {
+        "verification_status": "accepted_for_projection",
+        "projection": "satisfied"
+      }
+    },
+    {
+      "id": "invalid",
+      "input": {
+        "structural_valid": false,
+        "assessment_supported": true,
+        "material_conflict": false,
+        "indication": "SUPPORTS",
+        "contradiction_final": false,
+        "blocking_gap": false,
+        "establishment": "ESTABLISHED"
+      },
+      "expected": {
+        "verification_status": "rejected",
+        "projection": null
+      }
+    },
+    {
+      "id": "unsupported-precedes-conflict",
+      "input": {
+        "structural_valid": true,
+        "assessment_supported": false,
+        "material_conflict": true,
+        "indication": "SUPPORTS",
+        "contradiction_final": false,
+        "blocking_gap": false,
+        "establishment": "ESTABLISHED"
+      },
+      "expected": {
+        "verification_status": "accepted_for_projection",
+        "projection": "not_assessable"
+      }
+    },
+    {
+      "id": "conflict-precedes-violation",
+      "input": {
+        "structural_valid": true,
+        "assessment_supported": true,
+        "material_conflict": true,
+        "indication": "CONTRADICTS",
+        "contradiction_final": true,
+        "blocking_gap": false,
+        "establishment": "ESTABLISHED"
+      },
+      "expected": {
+        "verification_status": "accepted_for_projection",
+        "projection": "conflict"
+      }
+    },
+    {
+      "id": "violation-precedes-gap",
+      "input": {
+        "structural_valid": true,
+        "assessment_supported": true,
+        "material_conflict": false,
+        "indication": "CONTRADICTS",
+        "contradiction_final": true,
+        "blocking_gap": true,
+        "establishment": "ESTABLISHED"
+      },
+      "expected": {
+        "verification_status": "accepted_for_projection",
+        "projection": "violated"
+      }
+    },
+    {
+      "id": "gap-precedes-supported",
+      "input": {
+        "structural_valid": true,
+        "assessment_supported": true,
+        "material_conflict": false,
+        "indication": "SUPPORTS",
+        "contradiction_final": false,
+        "blocking_gap": true,
+        "establishment": "ESTABLISHED"
+      },
+      "expected": {
+        "verification_status": "accepted_for_projection",
+        "projection": "incomplete"
+      }
+    },
+    {
+      "id": "nonfinal-contradiction",
+      "input": {
+        "structural_valid": true,
+        "assessment_supported": true,
+        "material_conflict": false,
+        "indication": "CONTRADICTS",
+        "contradiction_final": false,
+        "blocking_gap": false,
+        "establishment": "ESTABLISHED"
+      },
+      "expected": {
+        "verification_status": "accepted_for_projection",
+        "projection": "not_assessable"
+      }
+    },
+    {
+      "id": "unestablished-support",
+      "input": {
+        "structural_valid": true,
+        "assessment_supported": true,
+        "material_conflict": false,
+        "indication": "SUPPORTS",
+        "contradiction_final": false,
+        "blocking_gap": false,
+        "establishment": "UNESTABLISHED"
+      },
+      "expected": {
+        "verification_status": "accepted_for_projection",
+        "projection": "not_assessable"
+      }
+    },
+    {
+      "id": "indeterminate",
+      "input": {
+        "structural_valid": true,
+        "assessment_supported": true,
+        "material_conflict": false,
+        "indication": "INDETERMINATE",
+        "contradiction_final": false,
+        "blocking_gap": false,
+        "establishment": "ESTABLISHED"
+      },
+      "expected": {
+        "verification_status": "accepted_for_projection",
+        "projection": "not_assessable"
+      }
+    }
+  ]
+}
