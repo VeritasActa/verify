@@ -23,6 +23,7 @@
     "ROADMAP.md",
     "samples/",
     "test/conformance.js",
+    "test/fixtures/standalone/test-vectors-v2.json",
     "known-issuers.json",
     "browser/",
     "release-manifest.json",
@@ -67,7 +68,8 @@
     "generate-sigil": "node generate-sigil.mjs",
     "build:browser": "node scripts/build-browser.mjs",
     "check:browser": "node scripts/build-browser.mjs --check",
-    "check:public": "node scripts/sync-public-metadata.mjs --check"
+    "check:public": "node scripts/sync-public-metadata.mjs --check",
+    "check:fixtures": "node scripts/generate-standalone-fixtures.mjs --check"
   },
   "repository": {
     "type": "git",

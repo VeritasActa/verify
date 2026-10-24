@@ -1,78 +1,41 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-import { existsSync } from "node:fs";
-import { createRequire } from "node:module";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { readFileSync } from 'node:fs';
+import { verifyVoprfToken } from '../../src/engines/voprf-token.js';
 
-// brass-voprf.js is a monorepo module (functions/fn/_lib). A standalone checkout
-// of this package does not have it, so these tests skip there with a reason.
-// The module resolves @noble from the repository root; when nothing is installed
-// there, Node keeps walking up the directory tree and can land on an unrelated
-// install outside the repository (a different major, different exports), which
-// fails inside the import with a message that points nowhere useful. Resolve the
-// dependency first and say plainly what was found.
-const BRASS_LIB = resolve(fileURLToPath(new URL("../../../../functions/fn/_lib/brass-voprf.js", import.meta.url)));
-const REPO_ROOT = resolve(dirname(BRASS_LIB), "../../..");
-const brassDependencies = () => {
-  if (!existsSync(BRASS_LIB)) return "needs fixtures from the monorepo root; not present in a standalone checkout";
-  let found;
-  try { found = createRequire(BRASS_LIB).resolve("@noble/curves/p256"); } catch (e) { return `@noble/curves is not installed for functions/fn/_lib (${e.code ?? e.message}); run npm ci at the repository root`; }
-  if (!found.startsWith(REPO_ROOT)) return `@noble/curves for functions/fn/_lib resolves outside the repository (${found}); run npm ci at the repository root`;
-  return false;
-};
-const SKIP = brassDependencies();
-const MONOREPO = !SKIP;
-const needsMonorepo = { skip: SKIP };
-const brass = MONOREPO ? await import(pathToFileURL(BRASS_LIB).href) : {};
-const { G, clientBlind, clientBuildRedemption, clientUnblind, encodePoint, issuerBlindEvaluate, issuerPublicKey, randScalar } = brass;
-import { verifyVoprfToken } from "../../src/engines/voprf-token.js";
+// Synthetic frozen transcript, constructed separately by the fixture generator.
+// No production issuer or private monorepo is needed; see fixtures/README.md.
+const fixture = JSON.parse(readFileSync(new URL('../fixtures/standalone/brass-v2.json', import.meta.url), 'utf8'));
+const options = { issuerPublicKey: fixture.issuer_public_key, expectedKid: fixture.token.kid };
 
-function ceremony() {
-  const secret = randScalar();
-  const issuerPublic = issuerPublicKey(secret);
-  const scope = "opaque-scope-test";
-  const kid = "brass-v2-test";
-  const { r, M } = clientBlind(scope);
-  const issued = issuerBlindEvaluate(secret, M);
-  const Zprime = clientUnblind(r, issued.Z);
-  const proof = clientBuildRedemption({
-    scope,
-    r,
-    kid,
-    issuerPkB64: issuerPublic,
-    origin: "https://scopeblind.com",
-    epoch: 1,
-    policy: "legate-run-entitlement",
-    window: 1,
-    Mb64: M,
-    Zb64: issued.Z,
-    ZprimeB64: Zprime,
-    cNonce: encodePoint(G.multiply(randScalar())),
-    d: "run-digest",
-    aadr: "run:test",
-  });
-  proof.type = "scopeblind.brass.redemption.v2";
-  proof.piI = issued.piI;
-  return { proof, issuerPublic, kid };
-}
-
-test("canonical BRASS v2 verifies only with the pinned issuer key", needsMonorepo, async () => {
-  const { proof, issuerPublic, kid } = ceremony();
-  const ok = await verifyVoprfToken(proof, { issuerPublicKey: issuerPublic, expectedKid: kid });
+test('synthetic BRASS v2 verifies only with the pinned issuer key', async () => {
+  const ok = await verifyVoprfToken(fixture.token, options);
   assert.equal(ok.valid, true, ok.error);
   assert.equal(ok.dleq.issuer, true);
   assert.equal(ok.dleq.client, true);
-
-  const unpinned = await verifyVoprfToken(proof);
+  assert.equal(ok.nullifier, fixture.expected_nullifier);
+  const unpinned = await verifyVoprfToken(fixture.token);
   assert.equal(unpinned.valid, false);
-  assert.equal(unpinned.error, "issuer_key_pin_required");
+  assert.equal(unpinned.error, 'issuer_key_pin_required');
+  const wrongKey = await verifyVoprfToken(fixture.token, { ...options, issuerPublicKey: 'other' });
+  assert.equal(wrongKey.valid, false);
+  assert.equal(wrongKey.error, 'issuer_key_mismatch');
+  const wrongKid = await verifyVoprfToken(fixture.token, { ...options, expectedKid: 'other' });
+  assert.equal(wrongKid.valid, false);
+  assert.equal(wrongKid.error, 'kid_mismatch');
 });
 
-test("canonical BRASS v2 rejects transcript tampering", needsMonorepo, async () => {
-  const { proof, issuerPublic, kid } = ceremony();
-  proof.d = "different-run";
-  const result = await verifyVoprfToken(proof, { issuerPublicKey: issuerPublic, expectedKid: kid });
-  assert.equal(result.valid, false);
-  assert.equal(result.error, "invalid_piC");
+test('synthetic BRASS v2 rejects transcript tampering', async () => {
+  for (const field of ['d', 'c_nonce', 'origin', 'policy']) {
+    const proof = { ...fixture.token, [field]: 'changed' };
+    const result = await verifyVoprfToken(proof, options);
+    assert.equal(result.valid, false, field);
+    assert.equal(result.error, 'invalid_piC', field);
+  }
+  const changedScope = await verifyVoprfToken({ ...fixture.token, scope: 'changed' }, options);
+  assert.equal(changedScope.error, 'scope_point_mismatch');
+  const changedIssuerProof = await verifyVoprfToken({ ...fixture.token, piI: { ...fixture.token.piI, z: 'AQ' } }, options);
+  assert.equal(changedIssuerProof.error, 'invalid_piI');
+  const missingProof = await verifyVoprfToken({ ...fixture.token, piC: null }, options);
+  assert.equal(missingProof.error, 'missing_proofs');
 });

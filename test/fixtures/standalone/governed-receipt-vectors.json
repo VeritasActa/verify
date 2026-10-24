@@ -1,0 +1,71 @@
+{
+  "_meta": {
+    "provenance": "synthetic public test data; not a normative corpus or production-issuer assertion",
+    "generator": "scripts/generate-standalone-fixtures.mjs",
+    "test_key": "RFC 8032 test vector 1; never use in production"
+  },
+  "legate_receipt_payload": [
+    {
+      "name": "approval",
+      "input": {
+        "id": "synthetic-001",
+        "tool": "gate.approve",
+        "decision": "allow",
+        "input_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "result_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "at": "2026-01-01T00:00:00Z"
+      },
+      "expected": "scopeblind.receipt.v1|synthetic-001|gate.approve|allow|aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb|2026-01-01T00:00:00Z"
+    },
+    {
+      "name": "deny-with-unbound-extra",
+      "input": {
+        "id": "synthetic-001",
+        "tool": "gate.approve",
+        "decision": "deny",
+        "input_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "result_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "at": "2026-01-01T00:00:00Z",
+        "note": "not in this wire payload"
+      },
+      "expected": "scopeblind.receipt.v1|synthetic-001|gate.approve|deny|aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb|2026-01-01T00:00:00Z"
+    }
+  ],
+  "canonical_json": [
+    {
+      "name": "nested-objects-arrays",
+      "input": {
+        "z": [
+          {
+            "b": 2,
+            "a": 1
+          }
+        ],
+        "a": false
+      },
+      "expected": "{\"a\":false,\"z\":[{\"a\":1,\"b\":2}]}"
+    },
+    {
+      "name": "null-and-escaped-string",
+      "input": {
+        "z": null,
+        "a": "line\nquoted\""
+      },
+      "expected": "{\"a\":\"line\\nquoted\\\"\",\"z\":null}"
+    }
+  ],
+  "gate_tuple_digest": [
+    {
+      "name": "nested-context",
+      "payload": {
+        "decision": "allow",
+        "context": {
+          "z": 3,
+          "a": 1
+        }
+      },
+      "expected_canonical": "{\"context\":{\"a\":1,\"z\":3},\"decision\":\"allow\"}",
+      "expected_sha256": "874470a30731f21ababe9c953184db604d4866fc6b2c698e566394b9fe40ae70"
+    }
+  ]
+}

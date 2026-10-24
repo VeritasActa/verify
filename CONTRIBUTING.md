@@ -16,6 +16,7 @@ git clone https://github.com/VeritasActa/verify.git
 cd verify
 npm ci
 node cli.js samples/current-receipt.json --key ebb8cf3efc78717c50e7c438c0ad5498f8fa4e09607fea1e030ac129b5965225 --json
+npm run check:fixtures
 npm test
 npm run test:conformance
 npm run check:browser
@@ -31,12 +32,17 @@ can also produce exit 1, so a failure alone does not establish tampering.
 installation. The tests use fixtures and local test servers; ordinary verifier
 development does not require production credentials.
 
-In a standalone checkout, 14 tests currently skip because their fixtures live in
-other source trees; `test:conformance` also reports when its optional monorepo vector
-file is absent. Read the skip messages rather than treating a green run as coverage
-of those cases. Publishing self-contained versions of those fixtures is useful
-maintenance work. The packed sample checks and pinned TRACE comparison run without
-the private monorepo.
+The standalone suite includes all fixtures it needs. Missing fixture files fail
+instead of silently skipping coverage. The connector-action cases are pinned to a
+public protect-mcp producer commit. BRASS, governed payloads and Claims v2.1.1 use
+explicitly synthetic regression fixtures; they do not establish equivalence to the
+unpublished producer corpus or independently assess the protocol. See
+[test/fixtures/README.md](test/fixtures/README.md) for provenance, coverage and how
+maintainers can additionally exercise an external producer corpus.
+
+`check:fixtures` verifies deterministic regeneration without rewriting the committed
+expected results. Review fixture changes separately from verifier changes. The
+packed package also includes and runs its v2 envelope conformance vectors.
 
 ## Make a focused change
 

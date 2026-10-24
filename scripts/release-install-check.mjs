@@ -43,6 +43,9 @@ try {
     assert.equal(JSON.parse(run.stdout).outcome, outcome, name);
     console.log(`Packed receipt check: ${name} -> ${outcome} (exit ${status}).`);
   }
+  execFileSync(process.execPath, [join(packageDir, 'test/conformance.js')], {
+    cwd: dir, stdio: 'inherit', timeout: 30000,
+  });
   console.log('The packed package installs and its documented verification flow runs in an empty directory.');
 } finally {
   rmSync(dir, { recursive: true, force: true });

@@ -1,0 +1,122 @@
+{
+  "_meta": {
+    "provenance": "synthetic public test data; not a normative corpus or production-issuer assertion",
+    "generator": "scripts/generate-standalone-fixtures.mjs",
+    "test_key": "RFC 8032 test vector 1; never use in production"
+  },
+  "public_jwk": {
+    "crv": "Ed25519",
+    "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+    "kty": "OKP"
+  },
+  "key_fingerprint": "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k",
+  "signed_payload": "{\"canonicalization\":{\"duplicate_key_policy\":\"reject\",\"number_profile\":\"I-JSON-safe\",\"suite\":\"RFC8785-JCS\",\"unicode_policy\":\"preserve-scalars-no-compat-normalization\"},\"expires_at\":\"2026-02-01T00:00:00Z\",\"implementation\":{\"build_digest\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"language\":\"JavaScript\",\"name\":\"Synthetic fixture producer\",\"version\":\"1\"},\"issued_at\":\"2026-01-01T00:00:00Z\",\"manifest_id\":\"synthetic-manifest-001\",\"modules\":[{\"id\":\"C0\",\"implementation_digest\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"schema_set_digest\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"specification_digest\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"vector_set_digest\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"version\":\"2.1.1\"}],\"protocol_release\":\"2.1.1\",\"required_modules\":[\"C0@2.1.1\"],\"supported_artifact_types\":[\"scopeblind.claims_conformance_manifest.v1\"],\"type\":\"scopeblind.claims_conformance_manifest.v1\",\"version\":1}",
+  "artifact": {
+    "type": "scopeblind.claims_conformance_manifest.v1",
+    "version": 1,
+    "manifest_id": "synthetic-manifest-001",
+    "protocol_release": "2.1.1",
+    "modules": [
+      {
+        "id": "C0",
+        "version": "2.1.1",
+        "specification_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "schema_set_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "vector_set_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "implementation_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    ],
+    "required_modules": [
+      "C0@2.1.1"
+    ],
+    "canonicalization": {
+      "suite": "RFC8785-JCS",
+      "number_profile": "I-JSON-safe",
+      "duplicate_key_policy": "reject",
+      "unicode_policy": "preserve-scalars-no-compat-normalization"
+    },
+    "implementation": {
+      "name": "Synthetic fixture producer",
+      "version": "1",
+      "language": "JavaScript",
+      "build_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "supported_artifact_types": [
+      "scopeblind.claims_conformance_manifest.v1"
+    ],
+    "issued_at": "2026-01-01T00:00:00Z",
+    "expires_at": "2026-02-01T00:00:00Z",
+    "digest": "e1c0f57293449490cc9d5dd59d13491a79534a82e97987e35cb69bfd4573cda0",
+    "signature": {
+      "algorithm": "Ed25519",
+      "key_fingerprint": "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k",
+      "signed_at": "2026-01-01T00:00:00Z",
+      "value": "lt4-zsTuy9F3YUPcgpnt1lK-usavZtREtKslnwQm5Z98TTFDvI7nz2CWjZnPL13BkHjYBRetcLzig9DsoXhUDg"
+    }
+  },
+  "invalid_cases": [
+    {
+      "id": "changed-payload",
+      "artifact_patch": {
+        "implementation": {
+          "version": "2"
+        }
+      },
+      "expected_verified": false
+    },
+    {
+      "id": "changed-digest",
+      "artifact_patch": {
+        "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "expected_verified": false
+    },
+    {
+      "id": "changed-signature",
+      "artifact_patch": {
+        "signature": {
+          "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      },
+      "expected_verified": false
+    },
+    {
+      "id": "changed-fingerprint",
+      "artifact_patch": {
+        "signature": {
+          "key_fingerprint": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+        }
+      },
+      "expected_verified": false
+    },
+    {
+      "id": "changed-signed-time",
+      "artifact_patch": {
+        "signature": {
+          "signed_at": "2026-01-02T00:00:00Z"
+        }
+      },
+      "expected_verified": false
+    }
+  ],
+  "invalid_keys": [
+    {
+      "id": "wrong-ed25519-key",
+      "public_jwk": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE"
+      },
+      "expected_verified": false
+    },
+    {
+      "id": "wrong-curve",
+      "public_jwk": {
+        "crv": "X25519",
+        "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+        "kty": "OKP"
+      },
+      "expected_verified": false
+    }
+  ]
+}

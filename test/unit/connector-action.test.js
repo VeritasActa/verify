@@ -4,12 +4,13 @@
  * gate's recorded check on trust.
  *
  * The vectors are built by protect-mcp (src/connector-vectors.test.ts) and
- * committed at packages/protect-mcp/vectors/connector-action.v1.json.
+ * vendored from a pinned public gateway commit; provenance and MIT license
+ * are recorded in test/fixtures/README.md and test/fixtures/connector/LICENSE.
  */
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { detectFormat } from '../../src/detect.js';
@@ -17,16 +18,17 @@ import { verifyReceipt } from '../../src/engines/ed25519-receipt.js';
 import { checkConnectorAction, connectorSchemaErrors } from '../../src/engines/connector-action.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const VECTORS = join(here, '..', '..', '..', 'protect-mcp', 'vectors', 'connector-action.v1.json');
-const suite = existsSync(VECTORS) ? JSON.parse(readFileSync(VECTORS, 'utf8')) : null;
+const VECTORS = process.env.ACTA_CONNECTOR_VECTORS_FILE
+  || join(here, '..', 'fixtures', 'connector', 'connector-action.v1.json');
+const suite = JSON.parse(readFileSync(VECTORS, 'utf8'));
 
-test('the shared vectors are present', { skip: suite ? false : 'protect-mcp vectors not checked out beside this package' }, () => {
+test('the pinned public producer vectors are present', () => {
   assert.equal(suite.type, 'acta.connector-action.vectors.v1');
   assert.equal(suite.profile, 'draft-farley-acta-connector-action-00');
   assert.ok(suite.vectors.length >= 7);
 });
 
-for (const v of suite?.vectors ?? []) {
+for (const v of suite.vectors) {
   test(`vector ${v.id}: ${v.expect.verdict_with_platform_key} with the platform key, ${v.expect.verdict_without_platform_key} without`, async () => {
     const mode = detectFormat(v.receipt).mode;
     const withKey = await verifyReceipt(v.receipt, mode, { publicKey: suite.gate_public_key, platformKeys: suite.platform_keys });
@@ -64,7 +66,6 @@ test('a receipt without the member is untouched by the profile', async () => {
 });
 
 test('a tampered connector member breaks the gate signature before the profile is even consulted', async () => {
-  if (!suite) return;
   const v = suite.vectors.find((x) => x.id === 'signed-context-valid-confirmed');
   const tampered = JSON.parse(JSON.stringify(v.receipt));
   tampered.payload.connector.context.grant.purpose = 'Merge whatever is open';

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -16,10 +16,11 @@ import {
   verifyClaimsEnvelopeV211Independent,
 } from '../../src/engines/claims-v211.js';
 
-const packageRoot = resolve(fileURLToPath(new URL('../..', import.meta.url)));
-const vectorRoot = resolve(packageRoot, '../../specs/conformance/test-vectors');
-const MONOREPO = existsSync(vectorRoot);
-const needsMonorepo = { skip: !MONOREPO && 'needs fixtures from the monorepo root; not present in a standalone checkout' };
+// Checked-in synthetic fixtures exercise this public verifier. They are not
+// represented as the unpublished normative producer corpus. Maintainers can
+// additionally point at that corpus with ACTA_CLAIMS_VECTORS_DIR.
+const vectorRoot = process.env.ACTA_CLAIMS_VECTORS_DIR
+  || fileURLToPath(new URL('../fixtures/standalone/claims/', import.meta.url));
 
 function vector(name) {
   return JSON.parse(readFileSync(resolve(vectorRoot, name), 'utf8'));
@@ -36,19 +37,19 @@ function deepMerge(base, patch) {
   return output;
 }
 
-test('independent verifier matches every five-state projection vector', needsMonorepo, () => {
+test('independent verifier matches every five-state projection vector', () => {
   for (const item of vector('08-claims-v2.1.1-projection.json').vectors) {
     assert.deepEqual(projectClaimsV211Independent(item.input), item.expected, item.id);
   }
 });
 
-test('independent verifier matches every operator-finality vector', needsMonorepo, () => {
+test('independent verifier matches every operator-finality vector', () => {
   for (const item of vector('09-claims-v2.1.1-operator-finality.json').vectors) {
     assert.deepEqual(evaluateOperatorV211Independent(item.input), item.expected, item.id);
   }
 });
 
-test('independent module and recipient-decision logic matches normative vectors', needsMonorepo, () => {
+test('independent module and recipient-decision logic matches locked standalone vectors', () => {
   const document = vector('10-claims-v2.1.1-modules-and-decisions.json');
   for (const item of document.module_vectors) {
     const result = negotiateClaimsModulesV211Independent(item.required, item.supported);
@@ -64,7 +65,7 @@ test('independent module and recipient-decision logic matches normative vectors'
   }
 });
 
-test('independent evidence admission matches normative vectors', needsMonorepo, () => {
+test('independent evidence admission matches locked standalone vectors', () => {
   const document = vector('11-claims-v2.1.1-evidence-admission.json');
   for (const item of document.vectors) {
     const candidate = deepMerge(document.base.candidate, item.candidate_patch);
@@ -77,7 +78,7 @@ test('independent evidence admission matches normative vectors', needsMonorepo, 
   }
 });
 
-test('independent strict parser and canonicalizer match normative vectors', needsMonorepo, () => {
+test('independent strict parser and canonicalizer match locked standalone vectors', () => {
   for (const item of vector('12-claims-v2.1.1-parser.json').vectors) {
     const source = item.deep_array_depth
       ? `${'['.repeat(item.deep_array_depth)}0${']'.repeat(item.deep_array_depth)}`
@@ -98,7 +99,7 @@ test('independent strict parser and canonicalizer match normative vectors', need
   }
 });
 
-test('independent verifier validates the production-generated raw-JCS envelope vector', needsMonorepo, () => {
+test('independent verifier validates the synthetic Node-crypto-signed raw-JCS envelope vector', () => {
   const document = vector('13-claims-v2.1.1-envelope.json');
   assert.equal(fingerprintEd25519JwkIndependent(document.public_jwk), document.key_fingerprint);
   assert.equal(
@@ -128,7 +129,7 @@ test('independent verifier validates the production-generated raw-JCS envelope v
   }
 });
 
-test('independent verifier rejects a signed artifact with malformed nested schema', needsMonorepo, () => {
+test('independent verifier rejects a signed artifact with malformed nested schema', () => {
   const document = vector('13-claims-v2.1.1-envelope.json');
   const malformed = deepMerge(document.artifact, {
     modules: [{ ...document.artifact.modules[0], id: 42 }],
@@ -138,7 +139,7 @@ test('independent verifier rejects a signed artifact with malformed nested schem
   assert.equal(result.verified, false);
 });
 
-test('independent verifier never upgrades signature validity into trust or acceptance', needsMonorepo, () => {
+test('independent verifier never upgrades signature validity into trust or acceptance', () => {
   const document = vector('13-claims-v2.1.1-envelope.json');
   const result = verifyClaimsArtifactV211(document.artifact, { publicJwk: document.public_jwk });
   assert.equal(result.valid, true);

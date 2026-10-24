@@ -1,0 +1,329 @@
+{
+  "_meta": {
+    "provenance": "synthetic public test data; not a normative corpus or production-issuer assertion",
+    "generator": "scripts/generate-standalone-fixtures.mjs",
+    "test_key": "RFC 8032 test vector 1; never use in production"
+  },
+  "base": {
+    "candidate": {
+      "schema_valid": true,
+      "signature_valid": true,
+      "issued_at": "2026-01-02T12:00:00Z",
+      "expires_at": "2026-01-02T13:00:00Z",
+      "as_of": "2026-01-02T11:00:00Z",
+      "issuer_key_fingerprint": "synthetic-key",
+      "issuer_role": "observer",
+      "fact_class": "test-result",
+      "source_id": "ci",
+      "population_id": "run-001",
+      "population_digest": "population-digest",
+      "source_assurance": "source_signed",
+      "state_domain_digest": "domain-digest",
+      "state": "passed",
+      "subject_digest": "revision-digest",
+      "purpose": "acceptance",
+      "period_starts_at": "2026-01-02T00:00:00Z",
+      "period_ends_at": "2026-01-03T00:00:00Z",
+      "required_modules": [
+        "C0@2.1.1"
+      ],
+      "artifact_type": "synthetic:test",
+      "artifact_digest": "artifact-digest",
+      "replay_scope": "claim-and-source",
+      "replay_identity": "04c176b9c59595c65fb412567e783eb71e9ccbd6c26c995c8eaf1583b004d0d0"
+    },
+    "context": {
+      "evaluated_at": "2026-01-02T12:30:00Z",
+      "authorized_issuers": [
+        {
+          "key_fingerprint": "synthetic-key",
+          "roles": [
+            "observer"
+          ],
+          "fact_classes": [
+            "test-result"
+          ],
+          "source_ids": [
+            "ci"
+          ],
+          "valid_from": "2026-01-01T00:00:00Z",
+          "valid_until": "2026-01-04T00:00:00Z"
+        }
+      ],
+      "key_observations": [
+        {
+          "key_fingerprint": "synthetic-key",
+          "status": "active",
+          "observed_at": "2026-01-02T12:00:00Z"
+        }
+      ],
+      "revoked_keys": [],
+      "contract": {
+        "max_lifetime_seconds": 3600,
+        "max_age_seconds": 3600,
+        "minimum_source_assurance": "authenticated_pull",
+        "source_ids": [
+          "ci"
+        ],
+        "population_id": "run-001",
+        "population_digest": "population-digest",
+        "state_domain_digest": "domain-digest",
+        "state_values": [
+          "passed",
+          "failed"
+        ],
+        "subject_digest": "revision-digest",
+        "purpose": "acceptance",
+        "period_starts_at": "2026-01-02T00:00:00Z",
+        "period_ends_at": "2026-01-03T00:00:00Z"
+      },
+      "policy": {
+        "max_lifetime_seconds": 3600,
+        "max_age_seconds": 3600
+      },
+      "accepted_sources": [
+        {
+          "source_id": "ci",
+          "population_id": "run-001",
+          "minimum_assurance": "source_signed"
+        }
+      ],
+      "source_observations": [
+        {
+          "source_id": "ci",
+          "status": "trusted",
+          "assurance": "source_signed",
+          "observed_at": "2026-01-02T12:00:00Z"
+        }
+      ],
+      "supported_modules": [
+        "C0@2.1.1"
+      ],
+      "replay_observations": []
+    }
+  },
+  "vectors": [
+    {
+      "id": "admitted",
+      "candidate_patch": {},
+      "context_patch": {},
+      "expected_issue_codes": []
+    },
+    {
+      "id": "schema-invalid",
+      "candidate_patch": {
+        "schema_valid": false
+      },
+      "context_patch": {},
+      "expected_issue_codes": [
+        "SCHEMA_INVALID"
+      ]
+    },
+    {
+      "id": "bad-signature",
+      "candidate_patch": {
+        "signature_valid": false
+      },
+      "context_patch": {},
+      "expected_issue_codes": [
+        "SIGNATURE_INVALID"
+      ]
+    },
+    {
+      "id": "no-authority",
+      "candidate_patch": {},
+      "context_patch": {
+        "authorized_issuers": []
+      },
+      "expected_issue_codes": [
+        "UNAUTHORIZED_ISSUER"
+      ]
+    },
+    {
+      "id": "revoked-key",
+      "candidate_patch": {},
+      "context_patch": {
+        "revoked_keys": [
+          {
+            "key_fingerprint": "synthetic-key",
+            "revoked_at": "2026-01-02T12:00:00Z"
+          }
+        ]
+      },
+      "expected_issue_codes": [
+        "KEY_REVOKED"
+      ]
+    },
+    {
+      "id": "unobserved-key",
+      "candidate_patch": {},
+      "context_patch": {
+        "key_observations": []
+      },
+      "expected_issue_codes": [
+        "UNAUTHORIZED_ISSUER"
+      ]
+    },
+    {
+      "id": "expired",
+      "candidate_patch": {},
+      "context_patch": {
+        "evaluated_at": "2026-01-02T14:00:00Z"
+      },
+      "expected_issue_codes": [
+        "STALE_EVIDENCE"
+      ]
+    },
+    {
+      "id": "long-lived",
+      "candidate_patch": {
+        "expires_at": "2026-01-03T12:00:00Z"
+      },
+      "context_patch": {},
+      "expected_issue_codes": [
+        "STALE_EVIDENCE"
+      ]
+    },
+    {
+      "id": "future-issued",
+      "candidate_patch": {
+        "issued_at": "2026-01-02T12:45:00Z"
+      },
+      "context_patch": {},
+      "expected_issue_codes": [
+        "FUTURE_DATED_EVIDENCE"
+      ]
+    },
+    {
+      "id": "wrong-population",
+      "candidate_patch": {},
+      "context_patch": {
+        "contract": {
+          "population_digest": "other"
+        }
+      },
+      "expected_issue_codes": [
+        "SOURCE_OUTSIDE_POPULATION"
+      ]
+    },
+    {
+      "id": "low-assurance",
+      "candidate_patch": {
+        "source_assurance": "self_attested"
+      },
+      "context_patch": {},
+      "expected_issue_codes": [
+        "SOURCE_OUTSIDE_POPULATION"
+      ]
+    },
+    {
+      "id": "inflated-assurance",
+      "candidate_patch": {
+        "source_assurance": "independent_witness"
+      },
+      "context_patch": {},
+      "expected_issue_codes": [
+        "SOURCE_OUTSIDE_POPULATION"
+      ]
+    },
+    {
+      "id": "missing-source",
+      "candidate_patch": {},
+      "context_patch": {
+        "source_observations": []
+      },
+      "expected_issue_codes": [
+        "SOURCE_OUTSIDE_POPULATION"
+      ]
+    },
+    {
+      "id": "wrong-state",
+      "candidate_patch": {
+        "state": "unknown"
+      },
+      "context_patch": {},
+      "expected_issue_codes": [
+        "STATE_DOMAIN_MISMATCH"
+      ]
+    },
+    {
+      "id": "wrong-domain",
+      "candidate_patch": {
+        "state_domain_digest": "other"
+      },
+      "context_patch": {},
+      "expected_issue_codes": [
+        "STATE_DOMAIN_MISMATCH"
+      ]
+    },
+    {
+      "id": "wrong-purpose",
+      "candidate_patch": {
+        "purpose": "other"
+      },
+      "context_patch": {},
+      "expected_issue_codes": [
+        "UNAUTHORIZED_ISSUER"
+      ]
+    },
+    {
+      "id": "wrong-period",
+      "candidate_patch": {
+        "period_ends_at": "2026-01-04T00:00:00Z"
+      },
+      "context_patch": {},
+      "expected_issue_codes": [
+        "SOURCE_OUTSIDE_POPULATION"
+      ]
+    },
+    {
+      "id": "unsupported-module",
+      "candidate_patch": {
+        "required_modules": [
+          "X@1"
+        ]
+      },
+      "context_patch": {},
+      "expected_issue_codes": [
+        "UNSUPPORTED_REQUIRED_MODULE"
+      ]
+    },
+    {
+      "id": "wrong-replay-id",
+      "candidate_patch": {
+        "replay_identity": "other"
+      },
+      "context_patch": {},
+      "expected_issue_codes": [
+        "ARTIFACT_TYPE_REPLAY"
+      ]
+    },
+    {
+      "id": "wrong-replay-scope",
+      "candidate_patch": {
+        "replay_scope": "global"
+      },
+      "context_patch": {},
+      "expected_issue_codes": [
+        "ARTIFACT_TYPE_REPLAY"
+      ]
+    },
+    {
+      "id": "replayed",
+      "candidate_patch": {},
+      "context_patch": {
+        "replay_observations": [
+          {
+            "artifact_type": "synthetic:test",
+            "replay_scope": "claim-and-source",
+            "identity": "04c176b9c59595c65fb412567e783eb71e9ccbd6c26c995c8eaf1583b004d0d0",
+            "seen_before": true
+          }
+        ]
+      },
+      "expected_issue_codes": [
+        "REPLAY_DETECTED"
+      ]
+    }
+  ]
+}
