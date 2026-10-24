@@ -44,36 +44,34 @@ if (!vectors || !/^[0-9a-f]{64}$/i.test(vectors._meta?.keypair?.public_key ?? ''
   throw new Error('Invalid envelope vector corpus: expected a public key and nonempty vectors');
 }
 
-if (vectors) {
-  const publicKey = vectors._meta.keypair.public_key;
+const vectorKey = vectors._meta.keypair.public_key;
 
-  for (const vector of vectors.vectors) {
-    const result = verifyArtifact(vector.signed_artifact, publicKey);
-    assert(result.valid === true, `Vector: ${vector.name}`);
+for (const vector of vectors.vectors) {
+  const result = verifyArtifact(vector.signed_artifact, vectorKey);
+  assert(result.valid === true, `Vector: ${vector.name}`);
 
-    if (vector.verification?.hash) {
-      assert(result.hash === vector.verification.hash, `  Hash match: ${vector.name}`);
-    }
+  if (vector.verification?.hash) {
+    assert(result.hash === vector.verification.hash, `  Hash match: ${vector.name}`);
   }
-
-  // Negative test: tampered artifact should fail
-  const tampered = JSON.parse(JSON.stringify(vectors.vectors[0].signed_artifact));
-  tampered.payload.decision = tampered.payload.decision === 'deny' ? 'allow' : 'deny';
-  const tamperedResult = verifyArtifact(tampered, publicKey);
-  assert(tamperedResult.valid === false, 'Tampered artifact correctly rejected');
-
-  // Wrong key should fail
-  const wrongKey = '0000000000000000000000000000000000000000000000000000000000000000';
-  const wrongKeyResult = verifyArtifact(vectors.vectors[0].signed_artifact, wrongKey);
-  assert(wrongKeyResult.valid === false, 'Wrong public key correctly rejected');
 }
+
+// Negative test: tampered artifact should fail
+const tampered = JSON.parse(JSON.stringify(vectors.vectors[0].signed_artifact));
+tampered.payload.decision = tampered.payload.decision === 'deny' ? 'allow' : 'deny';
+const tamperedResult = verifyArtifact(tampered, vectorKey);
+assert(tamperedResult.valid === false, 'Tampered artifact correctly rejected');
+
+// Wrong key should fail
+const wrongKey = '0000000000000000000000000000000000000000000000000000000000000000';
+const wrongKeyResult = verifyArtifact(vectors.vectors[0].signed_artifact, wrongKey);
+assert(wrongKeyResult.valid === false, 'Wrong public key correctly rejected');
 
 // ── Sample Artifacts ────────────────────────────────────────────
 
 console.log('\n⬢ Sample artifact verification\n');
 
 const sampleReceipt = JSON.parse(readFileSync(join(pkgRoot, 'samples', 'sample-receipt.json'), 'utf-8'));
-// Independently documented public demonstration key for these existing samples.
+// RFC 8032 section 7.1 test 1 public key, the public demonstration key for these existing samples.
 const sampleKey = 'd75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a';
 const receiptResult = verifyArtifact(sampleReceipt, sampleKey);
 assert(receiptResult.valid === true, 'Sample receipt verifies with the documented sample key');

@@ -26,7 +26,8 @@ const publicJwk = createPublicKey(key).export({ format: 'jwk' });
 const keyFingerprint = createHash('sha256').update(jcs(publicJwk)).digest('base64url');
 const meta = { provenance: 'synthetic public test data; not a normative corpus or production-issuer assertion', generator: 'scripts/generate-standalone-fixtures.mjs', test_key: 'RFC 8032 test vector 1; never use in production' };
 
-// BRASS v2: independent deterministic prover for the published transcript.
+// BRASS v2: separately written deterministic prover (same maintainer; does not import the verifier)
+// for the transcript this verifier implements in src/util/brass-v2.js.
 // Tiny scalars and fixed nonces are intentionally insecure TEST DATA only.
 const G = p256.ProjectivePoint.BASE, N = p256.CURVE.n;
 const mod = x => (x % N + N) % N;

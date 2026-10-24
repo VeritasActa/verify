@@ -7,8 +7,8 @@ monorepo checkout. Missing files are test errors, not skipped tests.
 
 | Corpus | Source and coverage | Limit |
 | --- | --- | --- |
-| `connector/connector-action.v1.json` | Byte-for-byte copy of the public protect-mcp producer's seven positive/negative connector-action vectors at commit `9579b6f47d4bfabf12511bd3859d449f3b04e5d0` | Producer/verifier compatibility for this corpus only, not independent authorship or operational evidence |
-| `standalone/brass-v2.json` | Synthetic P-256 transcript, generated from the public transcript definition with fixed test-only scalars/nonces | Not a live issuer ceremony, formal proof or original monorepo producer integration |
+| `connector/connector-action.v1.json` | Byte-for-byte copy of the public protect-mcp producer's seven positive/negative connector-action vectors at commit `9579b6f47d4bfabf12511bd3859d449f3b04e5d0` | Producer/verifier compatibility for this corpus only, not independent authorship or operational evidence. These producer test receipts carry spec draft-farley-acta-signed-receipts-04, a label set by the vector generator inside the signed payload; the posted revision is -03 and the verifier only displays this member. |
+| `standalone/brass-v2.json` | Synthetic P-256 transcript with fixed test-only scalars/nonces, generated from the public transcript definition, which is this verifier's own `src/util/brass-v2.js` | Not a live issuer ceremony, formal proof or original monorepo producer integration |
 | `standalone/governed-receipt-vectors.json` | Two pipe-delimited receipt payloads, two object-order vectors and one nested gate digest | Synthetic regressions for these wire examples, not a full canonicalization suite |
 | `standalone/claims/` | Nine projection cases; 30 operator/finality cases; six module and ten decision cases; 21 evidence-admission cases; 12 strict-parser cases; one signed envelope with seven invalid variants | Explicitly synthetic regression corpus, not the unpublished normative Claims corpus or independent protocol validation |
 | `standalone/test-vectors-v2.json` | Two synthetic envelopes signed by Node crypto using the public RFC 8032 test key; signature, digest, payload mutation and wrong-key checks | This file ships with `test/conformance.js` in the npm package; these keys establish no real issuer identity |
@@ -32,7 +32,7 @@ node --test test/unit/brass-v2.test.js test/unit/canonical-vectors.test.js test/
 npm run test:conformance
 ```
 
-`check:fixtures` compares the committed synthetic files with independent fixture
+`check:fixtures` compares the committed synthetic files with a separate fixture
 construction. It never imports the verifier or its producer implementations and
 never rewrites fixtures. Expected semantic verdicts are specified explicitly in
 the generator. To deliberately regenerate after review:
