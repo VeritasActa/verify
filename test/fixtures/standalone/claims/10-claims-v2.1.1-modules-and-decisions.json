@@ -1,0 +1,450 @@
+{
+  "_meta": {
+    "provenance": "synthetic public test data; not a normative corpus or production-issuer assertion",
+    "generator": "scripts/generate-standalone-fixtures.mjs",
+    "test_key": "RFC 8032 test vector 1; never use in production"
+  },
+  "module_vectors": [
+    {
+      "id": "base",
+      "required": [
+        "C0@2.1.1"
+      ],
+      "supported": [
+        "C0@2.1.1"
+      ],
+      "expected": {
+        "supported": true,
+        "issues": []
+      }
+    },
+    {
+      "id": "closure",
+      "required": [
+        "C0@2.1.1",
+        "C1@2.1.1",
+        "C2a@2.1.1"
+      ],
+      "supported": [
+        "C0@2.1.1",
+        "C1@2.1.1",
+        "C2a@2.1.1"
+      ],
+      "expected": {
+        "supported": true,
+        "issues": []
+      }
+    },
+    {
+      "id": "missing-supported",
+      "required": [
+        "C0@2.1.1"
+      ],
+      "supported": [],
+      "expected": {
+        "supported": false,
+        "issues": [
+          "UNSUPPORTED_REQUIRED_MODULE"
+        ]
+      }
+    },
+    {
+      "id": "missing-dependency",
+      "required": [
+        "C1@2.1.1"
+      ],
+      "supported": [
+        "C0@2.1.1",
+        "C1@2.1.1"
+      ],
+      "expected": {
+        "supported": false,
+        "issues": [
+          "DOWNGRADE_ATTEMPT"
+        ]
+      }
+    },
+    {
+      "id": "old-version",
+      "required": [
+        "C0@2.0.0"
+      ],
+      "supported": [
+        "C0@2.1.1"
+      ],
+      "expected": {
+        "supported": false,
+        "issues": [
+          "DOWNGRADE_ATTEMPT"
+        ]
+      }
+    },
+    {
+      "id": "unknown-module",
+      "required": [
+        "X@1"
+      ],
+      "supported": [],
+      "expected": {
+        "supported": false,
+        "issues": [
+          "UNSUPPORTED_REQUIRED_MODULE"
+        ]
+      }
+    }
+  ],
+  "decision_vectors": [
+    {
+      "id": "accepted-satisfied",
+      "decision": {
+        "report_digest": "report",
+        "claim_contract_digest": "contract",
+        "trust_policy_digest": "policy",
+        "trust_snapshot_digest": "snapshot",
+        "conformance_manifest_digest": "manifest",
+        "acknowledged_result": {
+          "indication": "SUPPORTS",
+          "establishment": "ESTABLISHED",
+          "projection": "satisfied"
+        },
+        "decision": "accept",
+        "reason_code": "requirements_met",
+        "exceptions": []
+      },
+      "report": {
+        "digest": "report",
+        "claim_contract_digest": "contract",
+        "trust_policy_digest": "policy",
+        "trust_snapshot_digest": "snapshot",
+        "conformance_manifest_digest": "manifest",
+        "indication": "SUPPORTS",
+        "establishment": "ESTABLISHED",
+        "projection": "satisfied"
+      },
+      "expected": {
+        "bindings_match": true,
+        "acknowledged": true,
+        "exception_required": false,
+        "exception_valid": true,
+        "semantically_valid": true
+      }
+    },
+    {
+      "id": "wrong-report_digest",
+      "decision": {
+        "report_digest": "other",
+        "claim_contract_digest": "contract",
+        "trust_policy_digest": "policy",
+        "trust_snapshot_digest": "snapshot",
+        "conformance_manifest_digest": "manifest",
+        "acknowledged_result": {
+          "indication": "SUPPORTS",
+          "establishment": "ESTABLISHED",
+          "projection": "satisfied"
+        },
+        "decision": "accept",
+        "reason_code": "requirements_met",
+        "exceptions": []
+      },
+      "report": {
+        "digest": "report",
+        "claim_contract_digest": "contract",
+        "trust_policy_digest": "policy",
+        "trust_snapshot_digest": "snapshot",
+        "conformance_manifest_digest": "manifest",
+        "indication": "SUPPORTS",
+        "establishment": "ESTABLISHED",
+        "projection": "satisfied"
+      },
+      "expected": {
+        "bindings_match": false,
+        "acknowledged": true,
+        "exception_required": false,
+        "exception_valid": true,
+        "semantically_valid": false
+      }
+    },
+    {
+      "id": "wrong-claim_contract_digest",
+      "decision": {
+        "report_digest": "report",
+        "claim_contract_digest": "other",
+        "trust_policy_digest": "policy",
+        "trust_snapshot_digest": "snapshot",
+        "conformance_manifest_digest": "manifest",
+        "acknowledged_result": {
+          "indication": "SUPPORTS",
+          "establishment": "ESTABLISHED",
+          "projection": "satisfied"
+        },
+        "decision": "accept",
+        "reason_code": "requirements_met",
+        "exceptions": []
+      },
+      "report": {
+        "digest": "report",
+        "claim_contract_digest": "contract",
+        "trust_policy_digest": "policy",
+        "trust_snapshot_digest": "snapshot",
+        "conformance_manifest_digest": "manifest",
+        "indication": "SUPPORTS",
+        "establishment": "ESTABLISHED",
+        "projection": "satisfied"
+      },
+      "expected": {
+        "bindings_match": false,
+        "acknowledged": true,
+        "exception_required": false,
+        "exception_valid": true,
+        "semantically_valid": false
+      }
+    },
+    {
+      "id": "wrong-trust_policy_digest",
+      "decision": {
+        "report_digest": "report",
+        "claim_contract_digest": "contract",
+        "trust_policy_digest": "other",
+        "trust_snapshot_digest": "snapshot",
+        "conformance_manifest_digest": "manifest",
+        "acknowledged_result": {
+          "indication": "SUPPORTS",
+          "establishment": "ESTABLISHED",
+          "projection": "satisfied"
+        },
+        "decision": "accept",
+        "reason_code": "requirements_met",
+        "exceptions": []
+      },
+      "report": {
+        "digest": "report",
+        "claim_contract_digest": "contract",
+        "trust_policy_digest": "policy",
+        "trust_snapshot_digest": "snapshot",
+        "conformance_manifest_digest": "manifest",
+        "indication": "SUPPORTS",
+        "establishment": "ESTABLISHED",
+        "projection": "satisfied"
+      },
+      "expected": {
+        "bindings_match": false,
+        "acknowledged": true,
+        "exception_required": false,
+        "exception_valid": true,
+        "semantically_valid": false
+      }
+    },
+    {
+      "id": "wrong-trust_snapshot_digest",
+      "decision": {
+        "report_digest": "report",
+        "claim_contract_digest": "contract",
+        "trust_policy_digest": "policy",
+        "trust_snapshot_digest": "other",
+        "conformance_manifest_digest": "manifest",
+        "acknowledged_result": {
+          "indication": "SUPPORTS",
+          "establishment": "ESTABLISHED",
+          "projection": "satisfied"
+        },
+        "decision": "accept",
+        "reason_code": "requirements_met",
+        "exceptions": []
+      },
+      "report": {
+        "digest": "report",
+        "claim_contract_digest": "contract",
+        "trust_policy_digest": "policy",
+        "trust_snapshot_digest": "snapshot",
+        "conformance_manifest_digest": "manifest",
+        "indication": "SUPPORTS",
+        "establishment": "ESTABLISHED",
+        "projection": "satisfied"
+      },
+      "expected": {
+        "bindings_match": false,
+        "acknowledged": true,
+        "exception_required": false,
+        "exception_valid": true,
+        "semantically_valid": false
+      }
+    },
+    {
+      "id": "wrong-conformance_manifest_digest",
+      "decision": {
+        "report_digest": "report",
+        "claim_contract_digest": "contract",
+        "trust_policy_digest": "policy",
+        "trust_snapshot_digest": "snapshot",
+        "conformance_manifest_digest": "other",
+        "acknowledged_result": {
+          "indication": "SUPPORTS",
+          "establishment": "ESTABLISHED",
+          "projection": "satisfied"
+        },
+        "decision": "accept",
+        "reason_code": "requirements_met",
+        "exceptions": []
+      },
+      "report": {
+        "digest": "report",
+        "claim_contract_digest": "contract",
+        "trust_policy_digest": "policy",
+        "trust_snapshot_digest": "snapshot",
+        "conformance_manifest_digest": "manifest",
+        "indication": "SUPPORTS",
+        "establishment": "ESTABLISHED",
+        "projection": "satisfied"
+      },
+      "expected": {
+        "bindings_match": false,
+        "acknowledged": true,
+        "exception_required": false,
+        "exception_valid": true,
+        "semantically_valid": false
+      }
+    },
+    {
+      "id": "unacknowledged",
+      "decision": {
+        "report_digest": "report",
+        "claim_contract_digest": "contract",
+        "trust_policy_digest": "policy",
+        "trust_snapshot_digest": "snapshot",
+        "conformance_manifest_digest": "manifest",
+        "acknowledged_result": {
+          "indication": "SUPPORTS",
+          "establishment": "ESTABLISHED",
+          "projection": "incomplete"
+        },
+        "decision": "accept",
+        "reason_code": "requirements_met",
+        "exceptions": []
+      },
+      "report": {
+        "digest": "report",
+        "claim_contract_digest": "contract",
+        "trust_policy_digest": "policy",
+        "trust_snapshot_digest": "snapshot",
+        "conformance_manifest_digest": "manifest",
+        "indication": "SUPPORTS",
+        "establishment": "ESTABLISHED",
+        "projection": "satisfied"
+      },
+      "expected": {
+        "bindings_match": true,
+        "acknowledged": false,
+        "exception_required": false,
+        "exception_valid": true,
+        "semantically_valid": false
+      }
+    },
+    {
+      "id": "incomplete-without-exception",
+      "decision": {
+        "report_digest": "report",
+        "claim_contract_digest": "contract",
+        "trust_policy_digest": "policy",
+        "trust_snapshot_digest": "snapshot",
+        "conformance_manifest_digest": "manifest",
+        "acknowledged_result": {
+          "indication": "SUPPORTS",
+          "establishment": "ESTABLISHED",
+          "projection": "incomplete"
+        },
+        "decision": "accept",
+        "reason_code": "requirements_met",
+        "exceptions": []
+      },
+      "report": {
+        "digest": "report",
+        "claim_contract_digest": "contract",
+        "trust_policy_digest": "policy",
+        "trust_snapshot_digest": "snapshot",
+        "conformance_manifest_digest": "manifest",
+        "indication": "SUPPORTS",
+        "establishment": "ESTABLISHED",
+        "projection": "incomplete"
+      },
+      "expected": {
+        "bindings_match": true,
+        "acknowledged": true,
+        "exception_required": true,
+        "exception_valid": false,
+        "semantically_valid": false
+      }
+    },
+    {
+      "id": "incomplete-with-exception",
+      "decision": {
+        "report_digest": "report",
+        "claim_contract_digest": "contract",
+        "trust_policy_digest": "policy",
+        "trust_snapshot_digest": "snapshot",
+        "conformance_manifest_digest": "manifest",
+        "acknowledged_result": {
+          "indication": "SUPPORTS",
+          "establishment": "ESTABLISHED",
+          "projection": "incomplete"
+        },
+        "decision": "accept",
+        "reason_code": "exception_accepted",
+        "exceptions": [
+          "synthetic explicit exception"
+        ]
+      },
+      "report": {
+        "digest": "report",
+        "claim_contract_digest": "contract",
+        "trust_policy_digest": "policy",
+        "trust_snapshot_digest": "snapshot",
+        "conformance_manifest_digest": "manifest",
+        "indication": "SUPPORTS",
+        "establishment": "ESTABLISHED",
+        "projection": "incomplete"
+      },
+      "expected": {
+        "bindings_match": true,
+        "acknowledged": true,
+        "exception_required": true,
+        "exception_valid": true,
+        "semantically_valid": true
+      }
+    },
+    {
+      "id": "reject-incomplete",
+      "decision": {
+        "report_digest": "report",
+        "claim_contract_digest": "contract",
+        "trust_policy_digest": "policy",
+        "trust_snapshot_digest": "snapshot",
+        "conformance_manifest_digest": "manifest",
+        "acknowledged_result": {
+          "indication": "SUPPORTS",
+          "establishment": "ESTABLISHED",
+          "projection": "incomplete"
+        },
+        "decision": "reject",
+        "reason_code": "requirements_met",
+        "exceptions": []
+      },
+      "report": {
+        "digest": "report",
+        "claim_contract_digest": "contract",
+        "trust_policy_digest": "policy",
+        "trust_snapshot_digest": "snapshot",
+        "conformance_manifest_digest": "manifest",
+        "indication": "SUPPORTS",
+        "establishment": "ESTABLISHED",
+        "projection": "incomplete"
+      },
+      "expected": {
+        "bindings_match": true,
+        "acknowledged": true,
+        "exception_required": false,
+        "exception_valid": true,
+        "semantically_valid": true
+      }
+    }
+  ]
+}

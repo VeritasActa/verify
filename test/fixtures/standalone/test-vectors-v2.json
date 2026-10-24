@@ -1,0 +1,58 @@
+{
+  "_meta": {
+    "provenance": "synthetic public test data; not a normative corpus or production-issuer assertion",
+    "generator": "scripts/generate-standalone-fixtures.mjs",
+    "test_key": "RFC 8032 test vector 1; never use in production",
+    "keypair": {
+      "public_key": "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"
+    }
+  },
+  "vectors": [
+    {
+      "name": "synthetic-v2-allow",
+      "signed_artifact": {
+        "v": 2,
+        "type": "decision_receipt",
+        "algorithm": "ed25519",
+        "kid": "rfc8032-test-key",
+        "issuer": "https://example.test",
+        "issued_at": "2026-01-01T00:00:00Z",
+        "payload": {
+          "decision": "allow",
+          "tool": "synthetic_tool",
+          "context": {
+            "account": "demo",
+            "amount": 50
+          }
+        },
+        "signature": "d2d249ee006797094464acfa67c74dca5a91489f21ad61e9fe2000928bb63f2a341d70ab9898a0275c4d8ab4cc36c3c343f428130344dbb0f48f4d9977adf502"
+      },
+      "verification": {
+        "hash": "38907237d38579a96f3f8f2ad1f54b130b0a7897e524a1438aaa43036c266864"
+      }
+    },
+    {
+      "name": "synthetic-v2-deny",
+      "signed_artifact": {
+        "v": 2,
+        "type": "decision_receipt",
+        "algorithm": "ed25519",
+        "kid": "rfc8032-test-key",
+        "issuer": "https://example.test",
+        "issued_at": "2026-01-01T00:00:00Z",
+        "payload": {
+          "decision": "deny",
+          "tool": "synthetic_tool",
+          "context": {
+            "account": "demo",
+            "amount": 50
+          }
+        },
+        "signature": "2a5b3d268c1838fcd15534bc859fb700b567e7bc7be16b1d89c4d67a20a2d56bc1b01d5fa846a295a2cc1b456b0984ff5b371cd62fdeffe77eebac15518c2b0f"
+      },
+      "verification": {
+        "hash": "6016243a59bad42376606c47225d18f78d09faec70f6786e39783422ec7e4f90"
+      }
+    }
+  ]
+}

@@ -1,0 +1,658 @@
+{
+  "_meta": {
+    "provenance": "synthetic public test data; not a normative corpus or production-issuer assertion",
+    "generator": "scripts/generate-standalone-fixtures.mjs",
+    "test_key": "RFC 8032 test vector 1; never use in production"
+  },
+  "vectors": [
+    {
+      "id": "all-closed",
+      "input": {
+        "population_closed": true,
+        "period_closed": true,
+        "empty_population_semantics": "not_assessable",
+        "allow_vacuous_truth": false,
+        "operator": "for_all",
+        "values": [
+          "ok",
+          "ok"
+        ],
+        "expected": "ok"
+      },
+      "expected": {
+        "indication": "SUPPORTS",
+        "support_final": true,
+        "contradiction_final": false,
+        "material_conflict": false,
+        "assessment_supported": true
+      }
+    },
+    {
+      "id": "all-open",
+      "input": {
+        "population_closed": false,
+        "period_closed": true,
+        "empty_population_semantics": "not_assessable",
+        "allow_vacuous_truth": false,
+        "operator": "for_all",
+        "values": [
+          "ok"
+        ],
+        "expected": "ok"
+      },
+      "expected": {
+        "indication": "INDETERMINATE",
+        "support_final": false,
+        "contradiction_final": false,
+        "material_conflict": false,
+        "assessment_supported": true
+      }
+    },
+    {
+      "id": "all-counterexample-open",
+      "input": {
+        "population_closed": true,
+        "period_closed": false,
+        "empty_population_semantics": "not_assessable",
+        "allow_vacuous_truth": false,
+        "operator": "for_all",
+        "values": [
+          "bad"
+        ],
+        "expected": "ok"
+      },
+      "expected": {
+        "indication": "CONTRADICTS",
+        "support_final": false,
+        "contradiction_final": true,
+        "material_conflict": false,
+        "assessment_supported": true
+      }
+    },
+    {
+      "id": "none-closed",
+      "input": {
+        "population_closed": true,
+        "period_closed": true,
+        "empty_population_semantics": "not_assessable",
+        "allow_vacuous_truth": false,
+        "operator": "none",
+        "values": [
+          "ok"
+        ],
+        "expected": "bad"
+      },
+      "expected": {
+        "indication": "SUPPORTS",
+        "support_final": true,
+        "contradiction_final": false,
+        "material_conflict": false,
+        "assessment_supported": true
+      }
+    },
+    {
+      "id": "none-counterexample",
+      "input": {
+        "population_closed": false,
+        "period_closed": true,
+        "empty_population_semantics": "not_assessable",
+        "allow_vacuous_truth": false,
+        "operator": "none",
+        "values": [
+          "bad"
+        ],
+        "expected": "bad"
+      },
+      "expected": {
+        "indication": "CONTRADICTS",
+        "support_final": false,
+        "contradiction_final": true,
+        "material_conflict": false,
+        "assessment_supported": true
+      }
+    },
+    {
+      "id": "exists-witness-open",
+      "input": {
+        "population_closed": false,
+        "period_closed": true,
+        "empty_population_semantics": "not_assessable",
+        "allow_vacuous_truth": false,
+        "operator": "exists",
+        "values": [
+          "ok"
+        ],
+        "expected": "ok"
+      },
+      "expected": {
+        "indication": "SUPPORTS",
+        "support_final": true,
+        "contradiction_final": false,
+        "material_conflict": false,
+        "assessment_supported": true
+      }
+    },
+    {
+      "id": "exists-absent-closed",
+      "input": {
+        "population_closed": true,
+        "period_closed": true,
+        "empty_population_semantics": "not_assessable",
+        "allow_vacuous_truth": false,
+        "operator": "exists",
+        "values": [
+          "bad"
+        ],
+        "expected": "ok"
+      },
+      "expected": {
+        "indication": "CONTRADICTS",
+        "support_final": false,
+        "contradiction_final": true,
+        "material_conflict": false,
+        "assessment_supported": true
+      }
+    },
+    {
+      "id": "exists-absent-open",
+      "input": {
+        "population_closed": true,
+        "period_closed": false,
+        "empty_population_semantics": "not_assessable",
+        "allow_vacuous_truth": false,
+        "operator": "exists",
+        "values": [],
+        "expected": "ok"
+      },
+      "expected": {
+        "indication": "INDETERMINATE",
+        "support_final": false,
+        "contradiction_final": false,
+        "material_conflict": false,
+        "assessment_supported": true
+      }
+    },
+    {
+      "id": "count-equal-closed",
+      "input": {
+        "population_closed": true,
+        "period_closed": true,
+        "empty_population_semantics": "not_assessable",
+        "allow_vacuous_truth": false,
+        "operator": "count_eq",
+        "values": [
+          1,
+          2
+        ],
+        "expected": 2
+      },
+      "expected": {
+        "indication": "SUPPORTS",
+        "support_final": true,
+        "contradiction_final": false,
+        "material_conflict": false,
+        "assessment_supported": true
+      }
+    },
+    {
+      "id": "count-equal-open",
+      "input": {
+        "population_closed": true,
+        "period_closed": false,
+        "empty_population_semantics": "not_assessable",
+        "allow_vacuous_truth": false,
+        "operator": "count_eq",
+        "values": [
+          1,
+          2
+        ],
+        "expected": 2
+      },
+      "expected": {
+        "indication": "INDETERMINATE",
+        "support_final": false,
+        "contradiction_final": false,
+        "material_conflict": false,
+        "assessment_supported": true
+      }
+    },
+    {
+      "id": "count-over-open",
+      "input": {
+        "population_closed": false,
+        "period_closed": true,
+        "empty_population_semantics": "not_assessable",
+        "allow_vacuous_truth": false,
+        "operator": "count_eq",
+        "values": [
+          1,
+          2,
+          3
+        ],
+        "expected": 2
+      },
+      "expected": {
+        "indication": "CONTRADICTS",
+        "support_final": false,
+        "contradiction_final": true,
+        "material_conflict": false,
+        "assessment_supported": true
+      }
+    },
+    {
+      "id": "count-short-closed",
+      "input": {
+        "population_closed": true,
+        "period_closed": true,
+        "empty_population_semantics": "not_assessable",
+        "allow_vacuous_truth": false,
+        "operator": "count_eq",
+        "values": [
+          1
+        ],
+        "expected": 2
+      },
+      "expected": {
+        "indication": "CONTRADICTS",
+        "support_final": false,
+        "contradiction_final": true,
+        "material_conflict": false,
+        "assessment_supported": true
+      }
+    },
+    {
+      "id": "count-invalid",
+      "input": {
+        "population_closed": true,
+        "period_closed": true,
+        "empty_population_semantics": "not_assessable",
+        "allow_vacuous_truth": false,
+        "operator": "count_eq",
+        "values": [
+          1
+        ],
+        "expected": -1
+      },
+      "expected": {
+        "indication": "INDETERMINATE",
+        "support_final": false,
+        "contradiction_final": false,
+        "material_conflict": false,
+        "assessment_supported": false
+      }
+    },
+    {
+      "id": "count-cap-closed",
+      "input": {
+        "population_closed": true,
+        "period_closed": true,
+        "empty_population_semantics": "not_assessable",
+        "allow_vacuous_truth": false,
+        "operator": "count_lte",
+        "values": [
+          1,
+          2
+        ],
+        "expected": 2
+      },
+      "expected": {
+        "indication": "SUPPORTS",
+        "support_final": true,
+        "contradiction_final": false,
+        "material_conflict": false,
+        "assessment_supported": true
+      }
+    },
+    {
+      "id": "count-cap-open",
+      "input": {
+        "population_closed": false,
+        "period_closed": true,
+        "empty_population_semantics": "not_assessable",
+        "allow_vacuous_truth": false,
+        "operator": "count_lte",
+        "values": [
+          1
+        ],
+        "expected": 2
+      },
+      "expected": {
+        "indication": "INDETERMINATE",
+        "support_final": false,
+        "contradiction_final": false,
+        "material_conflict": false,
+        "assessment_supported": true
+      }
+    },
+    {
+      "id": "count-cap-over",
+      "input": {
+        "population_closed": true,
+        "period_closed": true,
+        "empty_population_semantics": "not_assessable",
+        "allow_vacuous_truth": false,
+        "operator": "count_lte",
+        "values": [
+          1,
+          2,
+          3
+        ],
+        "expected": 2
+      },
+      "expected": {
+        "indication": "CONTRADICTS",
+        "support_final": false,
+        "contradiction_final": true,
+        "material_conflict": false,
+        "assessment_supported": true
+      }
+    },
+    {
+      "id": "sum-cap",
+      "input": {
+        "population_closed": true,
+        "period_closed": true,
+        "empty_population_semantics": "not_assessable",
+        "allow_vacuous_truth": false,
+        "operator": "sum_lte",
+        "values": [
+          2,
+          3
+        ],
+        "expected": 5
+      },
+      "expected": {
+        "indication": "SUPPORTS",
+        "support_final": true,
+        "contradiction_final": false,
+        "material_conflict": false,
+        "assessment_supported": true
+      }
+    },
+    {
+      "id": "sum-open",
+      "input": {
+        "population_closed": true,
+        "period_closed": false,
+        "empty_population_semantics": "not_assessable",
+        "allow_vacuous_truth": false,
+        "operator": "sum_lte",
+        "values": [
+          2
+        ],
+        "expected": 5
+      },
+      "expected": {
+        "indication": "INDETERMINATE",
+        "support_final": false,
+        "contradiction_final": false,
+        "material_conflict": false,
+        "assessment_supported": true
+      }
+    },
+    {
+      "id": "sum-over",
+      "input": {
+        "population_closed": false,
+        "period_closed": true,
+        "empty_population_semantics": "not_assessable",
+        "allow_vacuous_truth": false,
+        "operator": "sum_lte",
+        "values": [
+          2,
+          4
+        ],
+        "expected": 5
+      },
+      "expected": {
+        "indication": "CONTRADICTS",
+        "support_final": false,
+        "contradiction_final": true,
+        "material_conflict": false,
+        "assessment_supported": true
+      }
+    },
+    {
+      "id": "negative-sum-unsupported",
+      "input": {
+        "population_closed": true,
+        "period_closed": true,
+        "empty_population_semantics": "not_assessable",
+        "allow_vacuous_truth": false,
+        "operator": "sum_lte",
+        "values": [
+          -1,
+          4
+        ],
+        "expected": 5
+      },
+      "expected": {
+        "indication": "INDETERMINATE",
+        "support_final": false,
+        "contradiction_final": false,
+        "material_conflict": false,
+        "assessment_supported": false
+      }
+    },
+    {
+      "id": "equals",
+      "input": {
+        "population_closed": true,
+        "period_closed": true,
+        "empty_population_semantics": "not_assessable",
+        "allow_vacuous_truth": false,
+        "operator": "equals",
+        "values": [
+          {
+            "b": 2,
+            "a": 1
+          },
+          {
+            "a": 1,
+            "b": 2
+          }
+        ],
+        "expected": {
+          "a": 1,
+          "b": 2
+        }
+      },
+      "expected": {
+        "indication": "SUPPORTS",
+        "support_final": true,
+        "contradiction_final": false,
+        "material_conflict": false,
+        "assessment_supported": true
+      }
+    },
+    {
+      "id": "unequal",
+      "input": {
+        "population_closed": true,
+        "period_closed": true,
+        "empty_population_semantics": "not_assessable",
+        "allow_vacuous_truth": false,
+        "operator": "equals",
+        "values": [
+          "x"
+        ],
+        "expected": "y"
+      },
+      "expected": {
+        "indication": "CONTRADICTS",
+        "support_final": false,
+        "contradiction_final": true,
+        "material_conflict": false,
+        "assessment_supported": true
+      }
+    },
+    {
+      "id": "conflicting-values",
+      "input": {
+        "population_closed": true,
+        "period_closed": true,
+        "empty_population_semantics": "not_assessable",
+        "allow_vacuous_truth": false,
+        "operator": "equals",
+        "values": [
+          "x",
+          "y"
+        ],
+        "expected": "x"
+      },
+      "expected": {
+        "indication": "INDETERMINATE",
+        "support_final": false,
+        "contradiction_final": false,
+        "material_conflict": true,
+        "assessment_supported": true
+      }
+    },
+    {
+      "id": "member",
+      "input": {
+        "population_closed": true,
+        "period_closed": true,
+        "empty_population_semantics": "not_assessable",
+        "allow_vacuous_truth": false,
+        "operator": "in_set",
+        "values": [
+          "x"
+        ],
+        "expected": [
+          "x",
+          "y"
+        ]
+      },
+      "expected": {
+        "indication": "SUPPORTS",
+        "support_final": true,
+        "contradiction_final": false,
+        "material_conflict": false,
+        "assessment_supported": true
+      }
+    },
+    {
+      "id": "nonmember",
+      "input": {
+        "population_closed": true,
+        "period_closed": true,
+        "empty_population_semantics": "not_assessable",
+        "allow_vacuous_truth": false,
+        "operator": "in_set",
+        "values": [
+          "z"
+        ],
+        "expected": [
+          "x",
+          "y"
+        ]
+      },
+      "expected": {
+        "indication": "CONTRADICTS",
+        "support_final": false,
+        "contradiction_final": true,
+        "material_conflict": false,
+        "assessment_supported": true
+      }
+    },
+    {
+      "id": "unknown-operator",
+      "input": {
+        "population_closed": true,
+        "period_closed": true,
+        "empty_population_semantics": "not_assessable",
+        "allow_vacuous_truth": false,
+        "operator": "average",
+        "values": [
+          1,
+          2
+        ],
+        "expected": 2
+      },
+      "expected": {
+        "indication": "INDETERMINATE",
+        "support_final": false,
+        "contradiction_final": false,
+        "material_conflict": false,
+        "assessment_supported": false
+      }
+    },
+    {
+      "id": "empty-no-opt-in",
+      "input": {
+        "population_closed": true,
+        "period_closed": true,
+        "empty_population_semantics": "not_assessable",
+        "allow_vacuous_truth": false,
+        "operator": "for_all",
+        "values": [],
+        "expected": "x"
+      },
+      "expected": {
+        "indication": "INDETERMINATE",
+        "support_final": false,
+        "contradiction_final": false,
+        "material_conflict": false,
+        "assessment_supported": true
+      }
+    },
+    {
+      "id": "empty-vacuous-opt-in",
+      "input": {
+        "population_closed": true,
+        "period_closed": true,
+        "empty_population_semantics": "vacuous_truth_recipient_opt_in",
+        "allow_vacuous_truth": true,
+        "operator": "for_all",
+        "values": [],
+        "expected": "x"
+      },
+      "expected": {
+        "indication": "SUPPORTS",
+        "support_final": true,
+        "contradiction_final": false,
+        "material_conflict": false,
+        "assessment_supported": true
+      }
+    },
+    {
+      "id": "empty-vacuous-without-opt-in",
+      "input": {
+        "population_closed": true,
+        "period_closed": true,
+        "empty_population_semantics": "vacuous_truth_recipient_opt_in",
+        "allow_vacuous_truth": false,
+        "operator": "none",
+        "values": [],
+        "expected": "x"
+      },
+      "expected": {
+        "indication": "INDETERMINATE",
+        "support_final": false,
+        "contradiction_final": false,
+        "material_conflict": false,
+        "assessment_supported": true
+      }
+    },
+    {
+      "id": "empty-violated",
+      "input": {
+        "population_closed": true,
+        "period_closed": true,
+        "empty_population_semantics": "violated",
+        "allow_vacuous_truth": false,
+        "operator": "for_all",
+        "values": [],
+        "expected": "x"
+      },
+      "expected": {
+        "indication": "CONTRADICTS",
+        "support_final": false,
+        "contradiction_final": true,
+        "material_conflict": false,
+        "assessment_supported": true
+      }
+    }
+  ]
+}

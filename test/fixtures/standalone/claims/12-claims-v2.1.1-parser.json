@@ -1,0 +1,81 @@
+{
+  "_meta": {
+    "provenance": "synthetic public test data; not a normative corpus or production-issuer assertion",
+    "generator": "scripts/generate-standalone-fixtures.mjs",
+    "test_key": "RFC 8032 test vector 1; never use in production"
+  },
+  "vectors": [
+    {
+      "id": "numeric-key-order",
+      "json": "{\"2\":2,\"10\":10}",
+      "expected_valid": true,
+      "expected_canonical": "{\"10\":10,\"2\":2}"
+    },
+    {
+      "id": "nested-sort",
+      "json": "{\"z\":[{\"b\":2,\"a\":1}],\"a\":null}",
+      "expected_valid": true,
+      "expected_canonical": "{\"a\":null,\"z\":[{\"a\":1,\"b\":2}]}"
+    },
+    {
+      "id": "negative-zero",
+      "json": "{\"a\":-0}",
+      "expected_valid": true,
+      "expected_canonical": "{\"a\":0}"
+    },
+    {
+      "id": "duplicate",
+      "json": "{\"a\":1,\"a\":2}",
+      "expected_valid": false,
+      "error_contains": "duplicate"
+    },
+    {
+      "id": "escaped-duplicate",
+      "json": "{\"a\":1,\"\\u0061\":2}",
+      "expected_valid": false,
+      "error_contains": "duplicate"
+    },
+    {
+      "id": "nested-duplicate",
+      "json": "{\"a\":{\"b\":1,\"b\":2}}",
+      "expected_valid": false,
+      "error_contains": "duplicate"
+    },
+    {
+      "id": "unsafe-integer",
+      "json": "9007199254740992",
+      "expected_valid": false,
+      "error_contains": "safe range"
+    },
+    {
+      "id": "infinity",
+      "json": "1e999",
+      "expected_valid": false,
+      "error_contains": "non-finite"
+    },
+    {
+      "id": "surrogate",
+      "json": "\"\\ud800\"",
+      "expected_valid": false,
+      "error_contains": "surrogate"
+    },
+    {
+      "id": "bom",
+      "json": "﻿{}",
+      "expected_valid": false,
+      "error_contains": "bom"
+    },
+    {
+      "id": "too-deep",
+      "deep_array_depth": 66,
+      "expected_valid": false,
+      "error_contains": "depth"
+    },
+    {
+      "id": "trailing-input",
+      "json": "{}true",
+      "expected_valid": false,
+      "error_contains": "trailing"
+    }
+  ]
+}

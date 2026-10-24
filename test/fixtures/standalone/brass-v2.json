@@ -1,0 +1,37 @@
+{
+  "_meta": {
+    "provenance": "synthetic public test data; not a normative corpus or production-issuer assertion",
+    "generator": "scripts/generate-standalone-fixtures.mjs",
+    "test_key": "fixed P-256 test scalars and nonces; never use in production"
+  },
+  "issuer_public_key": "Ao5TO2-gv3tGJbswZnwB-2B--fi4qA_vWzAGKHAxh7Kj",
+  "expected_nullifier": "6nk8tWs-H_UL9adWDzvXlEKqWMnktCn6aqBEWmT8jfo",
+  "token": {
+    "type": "scopeblind.brass.redemption.v2",
+    "protocol": "BRASS",
+    "version": "2.0",
+    "algorithm": "voprf-p256-sha256",
+    "scope": "synthetic-scope",
+    "kid": "synthetic-brass-v2",
+    "issuer_public_key": "Ao5TO2-gv3tGJbswZnwB-2B--fi4qA_vWzAGKHAxh7Kj",
+    "origin": "https://example.test",
+    "epoch": 1,
+    "policy": "test-policy",
+    "window": 1,
+    "P": "AmqxvMPfLQEk6TlO1NmcS8ks5-j1Go5xY0qHYP7gLmXu",
+    "M": "AyF8z3x9iUyqIzr9qlK2mdH9jvt1vlFXQYMBH2xnHX3c",
+    "Z": "A_IrXODMMvn3zmF6wNug8AYY51Y5d87TtJ0AXxaQ2gWb",
+    "Zprime": "AsxEi_E3vIUvlgGY9BqOWwrKKRdFfVMiVPpoWzSN4oU8",
+    "c_nonce": "Ahd8g3rgrElaYYBd8the4vx5LihLZerVipjhXZ1GBywB",
+    "d": "synthetic-run-digest",
+    "aadr": "run:synthetic",
+    "piI": {
+      "c": "5le4y3CNB7yqt0snIY2yB-fv3k4QqspA7gcqJs0-UUE",
+      "z": "s5nyaOwkyd5U_PHuFSAhxtLBxp0c-c3cJ-JkRUoBzIE"
+    },
+    "piC": {
+      "c": "84BnxWhSKOkwGTS4BmVXK8KduHveOJDboi4LnlrTf4g",
+      "z": "iXuKeYR4PgXu6rwXuaVBG8El2COhlZZGgQE2kvEsH7Y"
+    }
+  }
+}
