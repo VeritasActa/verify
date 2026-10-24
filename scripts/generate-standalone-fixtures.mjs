@@ -55,7 +55,7 @@ put('brass-v2.json', { _meta: { ...meta, test_key: 'fixed P-256 test scalars and
 const receipt = { id: 'synthetic-001', tool: 'gate.approve', decision: 'allow', input_sha256: 'a'.repeat(64), result_sha256: 'b'.repeat(64), at: '2026-01-01T00:00:00Z' };
 put('governed-receipt-vectors.json', { _meta: meta,
   legate_receipt_payload: [ { name: 'approval', input: receipt, expected: 'scopeblind.receipt.v1|synthetic-001|gate.approve|allow|' + 'a'.repeat(64) + '|' + 'b'.repeat(64) + '|2026-01-01T00:00:00Z' }, { name: 'deny-with-unbound-extra', input: { ...receipt, decision: 'deny', note: 'not in this wire payload' }, expected: 'scopeblind.receipt.v1|synthetic-001|gate.approve|deny|' + 'a'.repeat(64) + '|' + 'b'.repeat(64) + '|2026-01-01T00:00:00Z' } ],
-  canonical_json: [ { name: 'nested-objects-arrays', input: { z: [{ b: 2, a: 1 }], a: false }, expected: '{"a":false,"z":[{"a":1,"b":2}]}' }, { name: 'null-and-escaped-string', input: { z: null, a: 'line\nquoted"' }, expected: '{"a":"line\\nquoted\\\"","z":null}' } ],
+  canonical_json: [ { name: 'nested-objects-arrays', input: { z: [{ b: 2, a: 1 }], a: false }, expected: '{"a":false,"z":[{"a":1,"b":2}]}' }, { name: 'null-and-escaped-string', input: { z: null, a: 'line\nquoted"' }, expected: '{"a":"line\\nquoted\\\"","z":null}' }, { name: 'arrays-keep-order', input: { b: [3, 1, 2], a: [{ z: 1, y: 2 }, { x: 0 }] }, expected: '{"a":[{"y":2,"z":1},{"x":0}],"b":[3,1,2]}' }, { name: 'numbers', input: { delta: -3, amount: 0.9, count: 10 }, expected: '{"amount":0.9,"count":10,"delta":-3}' } ],
   gate_tuple_digest: [ { name: 'nested-context', payload: { decision: 'allow', context: { z: 3, a: 1 } }, expected_canonical: '{"context":{"a":1,"z":3},"decision":"allow"}', expected_sha256: hash('{"context":{"a":1,"z":3},"decision":"allow"}') } ],
 });
 
@@ -180,6 +180,8 @@ put('claims/13-claims-v2.1.1-envelope.json', { _meta: meta, public_jwk: publicJw
   { id: 'changed-signature', artifact_patch: { signature: { value: 'A'.repeat(86) } }, expected_verified: false },
   { id: 'changed-fingerprint', artifact_patch: { signature: { key_fingerprint: 'B'.repeat(43) } }, expected_verified: false },
   { id: 'changed-signed-time', artifact_patch: { signature: { signed_at: '2026-01-02T00:00:00Z' } }, expected_verified: false },
+  // A valid signature under the same key, made over the 32-byte SHA-256 digest instead of the raw JCS bytes.
+  { id: 'digest-prehash-substitution', artifact_patch: { signature: { value: sign(null, Buffer.from(artifact.digest, 'hex'), key).toString('base64url') } }, expected_verified: false },
  ], invalid_keys: [ { id: 'wrong-ed25519-key', public_jwk: { kty: 'OKP', crv: 'Ed25519', x: Buffer.alloc(32, 1).toString('base64url') }, expected_verified: false }, { id: 'wrong-curve', public_jwk: { ...publicJwk, crv: 'X25519' }, expected_verified: false } ] });
 // Conformance v2 envelopes use the same public demonstration key as existing samples.
 const artifacts = ['allow','deny'].map(decision => {

@@ -97,6 +97,15 @@
         }
       },
       "expected_verified": false
+    },
+    {
+      "id": "digest-prehash-substitution",
+      "artifact_patch": {
+        "signature": {
+          "value": "Qvsz2o4564oRlxG6fcjV0znJMz5jV-TLRbbkaEehUmI0RM3xto4hPjgzSE45CoVSUtlknWQJFyUwTCdVXxt8Dw"
+        }
+      },
+      "expected_verified": false
     }
   ],
   "invalid_keys": [

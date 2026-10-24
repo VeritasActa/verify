@@ -52,6 +52,35 @@
         "a": "line\nquoted\""
       },
       "expected": "{\"a\":\"line\\nquoted\\\"\",\"z\":null}"
+    },
+    {
+      "name": "arrays-keep-order",
+      "input": {
+        "b": [
+          3,
+          1,
+          2
+        ],
+        "a": [
+          {
+            "z": 1,
+            "y": 2
+          },
+          {
+            "x": 0
+          }
+        ]
+      },
+      "expected": "{\"a\":[{\"y\":2,\"z\":1},{\"x\":0}],\"b\":[3,1,2]}"
+    },
+    {
+      "name": "numbers",
+      "input": {
+        "delta": -3,
+        "amount": 0.9,
+        "count": 10
+      },
+      "expected": "{\"amount\":0.9,\"count\":10,\"delta\":-3}"
     }
   ],
   "gate_tuple_digest": [
