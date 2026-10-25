@@ -13,7 +13,7 @@ No account, proxy, signing daemon or onboarding step is required to verify a rec
 ## Verify an existing receipt
 
 ```bash
-npm install -g @veritasacta/verify@0.11.0
+npm install -g @veritasacta/verify@0.11.1
 verify receipt.json --key YOUR_INDEPENDENTLY_OBTAINED_PUBLIC_KEY
 ```
 
@@ -105,7 +105,7 @@ relying on it.
 ## Release and standards status
 
 <!-- release-manifest:start -->
-Verifier: **[0.11.0](https://github.com/VeritasActa/verify/releases/tag/v0.11.0)**. Status reviewed 2026-10-23.
+Verifier: **[0.11.1](https://github.com/VeritasActa/verify/releases/tag/v0.11.1)**. Status reviewed 2026-10-25.
 
 - [draft-farley-acta-signed-receipts-03](https://datatracker.ietf.org/doc/draft-farley-acta-signed-receipts/): active individual Internet-Draft.
 - [draft-farley-acta-knowledge-units-00](https://datatracker.ietf.org/doc/draft-farley-acta-knowledge-units/): expired individual Internet-Draft (expired 2026-10-08).
