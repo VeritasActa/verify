@@ -3,13 +3,19 @@
  * ended each run with process.exit(), which ends the process at once, while Node can still be writing stdout to a pipe
  * or a socket: whatever the reader had not yet taken was lost. `verify --replay-chain receipts.jsonl --key <hex> --json
  * | jq` read the first 64 KiB of the report, and the exit status was still 0. Each run here sends several times that
- * through stdout, reads all of it and checks the exit status, for each outcome.
+ * (290 to 500 KB) through stdout, reads all of it and checks the exit status, for each outcome.
+ *
+ * Where these cases failed before the fix. Through a shell pipe, on macOS and on Linux alike: Node writes stdout to a
+ * pipe asynchronously on both, and 65,536 or 131,072 bytes arrived. Through Node's spawn, on macOS only: a child that
+ * Node starts with stdout piped (spawn, execFile) writes to a socket pair, not a pipe, and on Linux that socket took
+ * the whole report before the process exited, while on macOS it took 64 KiB. So on Linux the first case passes with
+ * or without the fix, and the shell-pipe cases are the ones that catch it there.
  */
-import test from 'node:test';
+import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -42,6 +48,7 @@ for (let i = 0; i < COUNT; i++) {
   receipts.push(sign(payload));
 }
 const dir = mkdtempSync(join(tmpdir(), 'verify-piped-output-'));
+after(() => rmSync(dir, { recursive: true, force: true }));
 const file = (name, text) => { const path = join(dir, name); writeFileSync(path, text); return path; };
 const jsonl = (list) => list.map((r) => JSON.stringify(r)).join('\n') + '\n';
 const chain = file('receipts.jsonl', jsonl(receipts));
@@ -63,7 +70,9 @@ function spawned(args) {
 function piped(args) {
   const run = spawnSync('sh', ['-c', '{ "$0" "$@"; echo "$?" >&3; } | cat', process.execPath, cli, ...args], { ...options, stdio: ['ignore', 'pipe', 'pipe', 'pipe'] });
   if (run.error) throw run.error;
-  return { status: Number(run.output[3]), stdout: run.stdout, stderr: run.stderr };
+  const status = run.output[3].trim();
+  if (!/^\d+$/.test(status)) throw new Error(`the pipeline gave no exit status (sh exit ${run.status}): ${run.stderr}`);
+  return { status: Number(status), stdout: run.stdout, stderr: run.stderr };
 }
 const noShell = process.platform === 'win32' && 'needs a POSIX shell';
 

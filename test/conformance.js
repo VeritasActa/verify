@@ -173,4 +173,5 @@ console.log(`\n─────────────────────�
 console.log(`  ${passed} passed, ${failed} failed`);
 console.log(`──────────────────────────────────────\n`);
 
-process.exit(failed > 0 ? 1 : 0);
+// The exit status is set, not exited with, so that output still being written to a pipe is not cut off.
+process.exitCode = failed > 0 ? 1 : 0;

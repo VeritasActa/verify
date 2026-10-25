@@ -119,6 +119,21 @@ import { formatAsJson } from './src/output/json.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PKG = JSON.parse(readFileSync(join(__dirname, 'package.json'), 'utf-8'));
 
+/** What parseArgs, enforcePinSigil and dispatch return when they refuse the run, having said why on stderr: exit 2. */
+const REFUSED = Symbol('refused');
+
+/**
+ * Exits with `code` once stdout and stderr have taken everything written to them. Every other run ends by returning
+ * its exit status, and the process then ends by itself once its output is written. Up to 0.11.0 each run ended with
+ * process.exit(), which ends the process at once, while Node can still be writing stdout to a pipe: a reader such as
+ * `| jq` got the first 64 KiB of a larger report, and the exit status of a complete one. The proxy exits here because
+ * its relay goes on reading stdin after the child has exited, which would keep the process alive.
+ */
+function exitWhenWritten(code) {
+  process.exitCode = code;
+  process.stdout.write('', () => process.stderr.write('', () => process.exit(code)));
+}
+
 /** Exit 0 means the answer is the good one: valid, and, when companion files were given, bound to all of them. A run manifest that verifies alone is exit 0 and says unbound; one that fails to bind to what was supplied is exit 1, however valid its own signature. */
 function exitOk(result) {
   if (!result || !result.valid) return false;
@@ -264,7 +279,7 @@ function parseArgs() {
       case '--platform-key': {
         const v = next() || '';
         const eq = v.indexOf('=');
-        if (eq < 1 || eq === v.length - 1) { console.error('--platform-key expects <kid>=<hex public key>'); process.exit(2); }
+        if (eq < 1 || eq === v.length - 1) { console.error('--platform-key expects <kid>=<hex public key>'); return REFUSED; }
         opts.platformKeys[v.slice(0, eq)] = v.slice(eq + 1);
         break;
       }
@@ -366,7 +381,7 @@ function parseArgs() {
       `  Each receipt is verified by its own invocation. Earlier releases verified only\n` +
       `  the last file given and silently discarded the rest (exit 2, nothing verified).`
     );
-    process.exit(2);
+    return REFUSED;
   }
   return opts;
 }
@@ -580,7 +595,7 @@ async function runSelfCheck() {
   } catch {
     console.log(`\n  ${red('✗')} No sigil.json found: this verifier has no Sigil commitment.`);
     console.log(`    This may be a development build or a fork.\n`);
-    process.exit(2);
+    return 2;
   }
 
   let installedSourceBytes;
@@ -590,14 +605,14 @@ async function runSelfCheck() {
     console.log(bold('@veritasacta/verify self-check'));
     console.log(`\n  ${red('✗')} ${error.message}`);
     console.log('    Refusing to compare a reduced verifier surface.\n');
-    process.exit(1);
+    return 1;
   }
 
   const r = selfCheck({ sigil, installedSourceBytes });
   r.projectPublicKey = sigil.project_public_key;
   console.log(bold('@veritasacta/verify self-check'));
   console.log(formatSelfCheckResult(r));
-  process.exit(r.canonical ? 0 : 1);
+  return r.canonical ? 0 : 1;
 }
 
 // ──────────────────────────────────────────────────────────────────
@@ -652,7 +667,7 @@ async function runSelfTest(opts) {
     console.log(`  ${red('Some self-tests failed.')} Check the output above.`);
   }
   console.log('');
-  process.exit(allPassed ? 0 : 1);
+  return allPassed ? 0 : 1;
 }
 
 // ──────────────────────────────────────────────────────────────────
@@ -692,14 +707,14 @@ async function dispatch(input, opts) {
   if (opts.previousReceipt && !RECEIPT_MODES.includes(detected.mode)) {
     console.error(red(`verify: --previous checks the link of one Ed25519 receipt. This file reads as ${MODE_LABELS[detected.mode] || 'no format this verifier knows'}, so it does not apply.`));
     console.error('  Nothing was verified (exit 2).');
-    process.exit(2);
+    return REFUSED;
   }
 
   // --disclosure-file and --disclose are checked against one receipt's commitments: never silently dropped elsewhere.
   if ((opts.disclosureFile !== null || opts.disclose.length > 0) && !RECEIPT_MODES.includes(detected.mode)) {
     console.error(red(`verify: ${opts.disclosureFile !== null ? '--disclosure-file' : '--disclose'} checks disclosures against one receipt's commitments. This file reads as ${MODE_LABELS[detected.mode] || 'no format this verifier knows'}, so it does not apply.`));
     console.error('  Nothing was verified (exit 2).');
-    process.exit(2);
+    return REFUSED;
   }
 
   // --maintainer-key pins the key that signed the standard a run manifest is checked against, so it applies only with
@@ -707,14 +722,14 @@ async function dispatch(input, opts) {
   if (opts.maintainerKey && !(detected.mode === 'legate-standard' && input?.type === 'scopeblind.run_manifest.v1' && opts.standardFile)) {
     console.error(red('verify: --maintainer-key pins the key that signed the standard, and applies to a run manifest checked with --standard <file>. Here it would not be applied.'));
     console.error('  To pin the key that signed a standard, a decision or a manifest itself, use --key. Nothing was verified (exit 2).');
-    process.exit(2);
+    return REFUSED;
   }
 
   // --trust-bundle-keys names the keys an audit bundle carries: it applies to one, never silently to anything else.
   if (opts.trustBundleKeys && detected.mode !== 'ed25519-bundle') {
     console.error(red(`verify: --trust-bundle-keys checks an audit bundle with the keys in its verification.signing_keys. This file reads as ${MODE_LABELS[detected.mode] || 'no format this verifier knows'}, so it does not apply.`));
     console.error('  Nothing was verified (exit 2).');
-    process.exit(2);
+    return REFUSED;
   }
 
   // An audit bundle takes its keys from --jwks receipt by receipt: the key set is read once, and each receipt gets the
@@ -826,7 +841,7 @@ async function dispatch(input, opts) {
           const { existsSync } = await import('node:fs');
           let pin = opts.maintainerKey.trim();
           if (existsSync(pin)) { const raw = readFileSync(pin, 'utf8').trim(); try { const j = parseJsonStrict(raw); pin = String(j.public_key ?? j.verification_key ?? ''); } catch { pin = raw; } }
-          if (!/^[0-9a-f]{64}$/i.test(pin)) { console.error('--maintainer-key: expected a 64-hex Ed25519 public key or a maintainer-key.json carrying public_key'); process.exit(2); }
+          if (!/^[0-9a-f]{64}$/i.test(pin)) { console.error('--maintainer-key: expected a 64-hex Ed25519 public key or a maintainer-key.json carrying public_key'); return REFUSED; }
           subOpts.pins = { maintainer_key: pin };
         }
       }
@@ -889,7 +904,7 @@ async function dispatch(input, opts) {
         } catch (e) {
           console.error(red(`verify: --previous ${opts.previousFile}: the receipt does not canonicalize (${e.message}), so it has no draft §6.7 link.`));
           console.error('  Nothing was verified (exit 2).');
-          process.exit(2);
+          return REFUSED;
         }
         r.previous = { file: opts.previousFile, ...p };
         r.checks.previous = !p.error ? { result: 'pass' } : { result: exitCodeFor(p.error) === 1 ? 'fail' : 'undecidable', code: p.error };
@@ -1083,13 +1098,13 @@ function enforcePinSigil(expected) {
   const sigil = loadSigil();
   if (!sigil) {
     console.error(red('--pin-sigil requires a sigil.json; none found.'));
-    process.exit(2);
+    return REFUSED;
   }
   if (sigil.fingerprint !== expected) {
     console.error(red(`--pin-sigil: mismatch (expected ${expected}, got ${sigil.fingerprint})`));
     console.error(yellow(`Installed verifier is "${sigil.name}" (${sigil.fingerprint}); expected fingerprint ${expected}.`));
     console.error(dim(`Ensure you have installed the expected release: npm install @veritasacta/verify@<version>`));
-    process.exit(2);
+    return REFUSED;
   }
 }
 
@@ -1105,7 +1120,7 @@ async function runReplayChain(opts) {
     if (loaded.error) {
       console.error(red(`verify: --jwks ${opts.jwksUrl}: ${loaded.error}`));
       console.error('  Nothing was verified (exit 2).');
-      process.exit(2);
+      return 2;
     }
     keyResolver = loaded.resolve;
   }
@@ -1128,7 +1143,7 @@ async function runReplayChain(opts) {
     } else {
       console.log(html);
     }
-    process.exit(replayExit);
+    return replayExit;
   }
 
   if (opts.json) {
@@ -1156,7 +1171,7 @@ async function runReplayChain(opts) {
     }
     console.log('');
   }
-  process.exit(replayExit);
+  return replayExit;
 }
 
 /**
@@ -1184,7 +1199,7 @@ async function runDiff(opts) {
     }
     console.log('');
   }
-  process.exit(d.hash_equal && d.signature_equal ? 0 : 1);
+  return d.hash_equal && d.signature_equal ? 0 : 1;
 }
 
 /**
@@ -1197,7 +1212,7 @@ async function runPromptVerify(opts) {
   if (!opts.file) {
     console.error(red('  verify prompt requires a file path to the prompt'));
     console.error(dim('  usage: verify prompt <path> [--prompt-receipt <receipt.json> | --sigstore-bundle <bundle.json> | --expected-hash <hex>]'));
-    process.exit(2);
+    return 2;
   }
   const result = await verifyPrompt({
     promptPath: opts.file,
@@ -1234,7 +1249,7 @@ async function runPromptVerify(opts) {
     console.log('');
   }
   // A hash matched in a receipt or a bundle whose signature was not checked is undecidable (exit 2), never valid.
-  process.exit(exitOk(result) ? 0 : result.outcome === 'undecidable' ? 2 : 1);
+  return exitOk(result) ? 0 : result.outcome === 'undecidable' ? 2 : 1;
 }
 
 /**
@@ -1248,11 +1263,11 @@ async function runChainExplore(opts) {
   if (opts.chainVerb !== 'explore') {
     console.error(red(`  unknown chain subcommand: ${opts.chainVerb || '(none)'}`));
     console.error(dim('  usage: verify chain explore <receipt.json> [--search-dir <dir>] [--max-depth N]'));
-    process.exit(2);
+    return 2;
   }
   if (!opts.file) {
     console.error(red('  verify chain explore requires a receipt file path'));
-    process.exit(2);
+    return 2;
   }
   const result = await exploreChain({
     receiptPath: opts.file,
@@ -1267,7 +1282,7 @@ async function runChainExplore(opts) {
     console.log(renderChainTree(result));
   }
   // A link refused for its form exits as the receipt verifier would: 1 malformed, 2 an unimplemented algorithm.
-  process.exit(exitOk(result) ? 0 : result.code ? exitCodeFor(result.code) : 1);
+  return exitOk(result) ? 0 : result.code ? exitCodeFor(result.code) : 1;
 }
 
 /**
@@ -1284,7 +1299,7 @@ async function runCompliance(opts) {
     console.error(red('  verify compliance requires --receipts-dir <dir>'));
     console.error(dim('  usage: verify compliance --receipts-dir <dir> [--framework soc2|iso42001|eu-ai-act|all]'));
     console.error(dim('                            [--start-date ISO] [--end-date ISO] [--org "<name>"] [--output <file>] [--json]'));
-    process.exit(2);
+    return 2;
   }
   let result;
   try {
@@ -1297,7 +1312,7 @@ async function runCompliance(opts) {
     });
   } catch (err) {
     console.error(red(`  compliance export failed: ${err.message}`));
-    process.exit(2);
+    return 2;
   }
 
   if (opts.output) {
@@ -1362,7 +1377,7 @@ async function runDashboard(opts) {
     });
   } catch (err) {
     console.error(red(`  dashboard failed to start: ${err.message}`));
-    process.exit(2);
+    return 2;
   }
   console.log('');
   console.log(bold('  Veritas Acta dashboard'));
@@ -1400,10 +1415,11 @@ function selfCheckResult(sigil) {
 
 async function main() {
   const opts = parseArgs();
+  if (opts === REFUSED) return 2;
 
-  if (opts.help) { printHelp(); process.exit(0); }
-  if (opts.version) { console.log(PKG.version); process.exit(0); }
-  if (opts.capabilities) { printCapabilities(); process.exit(0); }
+  if (opts.help) { printHelp(); return 0; }
+  if (opts.version) { console.log(PKG.version); return 0; }
+  if (opts.capabilities) { printCapabilities(); return 0; }
 
   // --trust-anchor was parsed and never read, so no key was ever taken from the file: a receipt was then refused for
   // want of a key, and a bundle, a Gate record or an embedded key verified against the keys it carried itself. A trust
@@ -1412,7 +1428,7 @@ async function main() {
     console.error(red(`verify: --trust-anchor is not implemented, so no key would be read from ${opts.trustAnchor || 'the file'}.`));
     console.error('  Earlier releases accepted the flag and ignored it. Pin the key with --key <hex>, or with --jwks <url|file>');
     console.error('  for a single file. Nothing was verified (exit 2).');
-    process.exit(2);
+    return 2;
   }
 
   // --strict disables every compatibility fallback, on every path. It is applied before any subcommand or replay
@@ -1440,13 +1456,13 @@ async function main() {
   if (opts.trustBundleKeys && elsewhere) {
     console.error(red(`verify: --trust-bundle-keys checks an audit bundle with the keys it carries, and does not apply to ${elsewhere}.`));
     console.error('  Nothing was verified (exit 2).');
-    process.exit(2);
+    return 2;
   }
   const notOneReceipt = elsewhere || (opts.bundle ? '--bundle' : null);
   if ((opts.disclosureFile !== null || opts.disclose.length > 0) && notOneReceipt) {
     console.error(red(`verify: ${opts.disclosureFile !== null ? '--disclosure-file' : '--disclose'} checks disclosures against one receipt's commitments, and does not apply to ${notOneReceipt}.`));
     console.error('  Nothing was verified (exit 2).');
-    process.exit(2);
+    return 2;
   }
 
   // --previous names the receipt this one follows. It is read before anything is verified, and refused where it would
@@ -1460,30 +1476,30 @@ async function main() {
         : `verify: --previous checks one receipt against the receipt before it, and does not apply to ${other}.`));
       if (opts.replayChain) console.error('  --replay-chain reads the order from the file and checks every link in it.');
       console.error('  Nothing was verified (exit 2).');
-      process.exit(2);
+      return 2;
     }
     try {
       opts.previousReceipt = parseReceiptJson(readFileSync(opts.previousFile, 'utf-8'), { maxBytes: 50 * 1024 * 1024, maxDepth: 128 });
     } catch (e) {
       console.error(red(`verify: --previous ${opts.previousFile}: ${e.message}`));
       console.error('  Nothing was verified (exit 2).');
-      process.exit(2);
+      return 2;
     }
     if (!opts.previousReceipt || typeof opts.previousReceipt !== 'object' || Array.isArray(opts.previousReceipt)) {
       console.error(red(`verify: --previous ${opts.previousFile} holds no receipt: a receipt is one JSON object.`));
       console.error('  Nothing was verified (exit 2).');
-      process.exit(2);
+      return 2;
     }
   }
 
-  if (opts.pinSigil) enforcePinSigil(opts.pinSigil);
+  if (opts.pinSigil && enforcePinSigil(opts.pinSigil) === REFUSED) return 2;
 
   // Subcommands
   if (opts.subcommand === 'init') {
     const result = await runInit({ framework: opts.frameworkOverride, org: opts.attestOrg, force: opts.force });
     if (result.status === 'exists') {
       console.error(yellow(result.message));
-      process.exit(1);
+      return 1;
     }
     console.log('');
     if (!process.env.CI && !process.env.NO_COLOR) {
@@ -1508,7 +1524,7 @@ async function main() {
     console.log(dim(`Protocol: https://veritasacta.com`));
     console.log(dim(`Managed:  https://scopeblind.com (optional)`));
     console.log('');
-    process.exit(0);
+    return 0;
   }
 
   if (opts.subcommand === 'proxy') {
@@ -1522,7 +1538,9 @@ async function main() {
       serverKey: opts.serverKey,
       traceId: opts.traceId,
     });
-    process.exit(code);
+    // The relay goes on reading stdin after the child has exited, so the proxy exits once the child's output is written.
+    exitWhenWritten(code);
+    return;
   }
 
   if (opts.subcommand === 'daemon') {
@@ -1535,29 +1553,25 @@ async function main() {
   }
 
   if (opts.subcommand === 'prompt') {
-    await runPromptVerify(opts);
-    return;
+    return runPromptVerify(opts);
   }
 
   if (opts.subcommand === 'chain') {
-    await runChainExplore(opts);
-    return;
+    return runChainExplore(opts);
   }
 
   if (opts.subcommand === 'compliance') {
-    await runCompliance(opts);
-    return;
+    return runCompliance(opts);
   }
 
   if (opts.subcommand === 'dashboard') {
-    await runDashboard(opts);
-    return;
+    return runDashboard(opts);
   }
 
-  if (opts.selfCheck) { await runSelfCheck(); return; }
-  if (opts.selfTest) { await runSelfTest(opts); return; }
-  if (opts.replayChain) { await runReplayChain(opts); return; }
-  if (opts.diff) { await runDiff(opts); return; }
+  if (opts.selfCheck) return runSelfCheck();
+  if (opts.selfTest) return runSelfTest(opts);
+  if (opts.replayChain) return runReplayChain(opts);
+  if (opts.diff) return runDiff(opts);
 
   // --attest without a file: emit a standalone local-integrity attestation.
   // The wire type and legacy `canonical` field remain compatibility aliases.
@@ -1570,14 +1584,14 @@ async function main() {
     const output = JSON.stringify(att, null, 2);
     if (opts.output) { writeFileSync(opts.output, output); console.error(dim(`wrote ${opts.output}`)); }
     else console.log(output);
-    process.exit(0);
+    return 0;
   }
 
   const raw = await readInput(opts);
   if (raw === null) {
     console.error(red('Error: no input file specified.'));
     console.error('Usage: npx @veritasacta/verify <file.json> [--key <hex>]');
-    process.exit(2);
+    return 2;
   }
 
   let input;
@@ -1587,10 +1601,11 @@ async function main() {
       : parseReceiptJson(raw, { maxBytes: 50 * 1024 * 1024, maxDepth: 128 });
   } catch (e) {
     console.error(red(`Error: invalid JSON: ${e.message}`));
-    process.exit(2);
+    return 2;
   }
 
   let result = await dispatch(input, opts);
+  if (result === REFUSED) return 2;
   result = applyTierGate(result, opts.tier);
 
   // FIPS mode: a valid result stands only when every algorithm the engine verified is FIPS-approved. The algorithm is
@@ -1615,7 +1630,7 @@ async function main() {
         console.error(red(refused.algorithm ? `✗ FIPS mode rejects algorithm "${refused.algorithm}"` : '✗ FIPS mode cannot confirm the algorithm'));
         console.error(yellow(refused.reason));
       }
-      process.exit(2);
+      return 2;
     }
     result.fips = { algorithms, approved: true };
   }
@@ -1644,7 +1659,7 @@ async function main() {
     } else {
       console.log(out);
     }
-    process.exit(exitOk(result) ? 0 : result.valid ? 1 : exitCodeFor(result.error));
+    return exitOk(result) ? 0 : result.valid ? 1 : exitCodeFor(result.error);
   }
 
   // Audit log
@@ -1676,7 +1691,7 @@ async function main() {
     } else {
       console.log(html);
     }
-    process.exit(exitOk(result) ? 0 : result.valid ? 1 : exitCodeFor(result.error));
+    return exitOk(result) ? 0 : result.valid ? 1 : exitCodeFor(result.error);
   }
 
   // Resolve a human label for the signer key, if one is known. Display aid only;
@@ -1757,20 +1772,25 @@ async function main() {
           '  Pass --allow-partial-voprf to treat a partial result as valid.\n'
         ));
       }
-      process.exit(2);
+      return 2;
     }
     if (!exitOk(result)) {
       if (!opts.json) console.error(red(`\n  Exit 1: the file verifies on its own, but does not bind to what was supplied (${result.binding}). Read the failed checks above.\n`));
-      process.exit(1);
+      return 1;
     }
-    process.exit(0);
+    return 0;
   }
   // -04 §5.3: the exit status tells the three outcomes apart.
-  process.exit(result.outcome === 'invalid' ? 1 : result.outcome === 'undecidable' ? 2 : exitCodeFor(result.error));
+  return result.outcome === 'invalid' ? 1 : result.outcome === 'undecidable' ? 2 : exitCodeFor(result.error);
 }
 
-main().catch((e) => {
-  console.error(red(`Fatal error: ${e.message}`));
-  if (process.env.DEBUG) console.error(e.stack);
-  process.exit(2);
-});
+// main() returns the exit status, and the process ends by itself once stdout and stderr have taken everything written
+// to them (see exitWhenWritten).
+main().then(
+  (code) => { if (code !== undefined) process.exitCode = code; },
+  (e) => {
+    console.error(red(`Fatal error: ${e.message}`));
+    if (process.env.DEBUG) console.error(e.stack);
+    process.exitCode = 2;
+  },
+);
