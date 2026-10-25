@@ -6,12 +6,12 @@
     "url": "https://github.com/VeritasActa/verify",
     "source": "github"
   },
-  "version": "0.11.0",
+  "version": "0.11.1",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@veritasacta/verify",
-      "version": "0.11.0",
+      "version": "0.11.1",
       "transport": {
         "type": "stdio"
       },

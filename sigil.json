@@ -1,15 +1,15 @@
 {
   "sigil_version": 1,
-  "fingerprint": "b065b1da",
-  "name": "Fair Field",
-  "sigil_hash": "b065b1da9ec442c53f88287b260a3a524d1ab3f095b530954228520a6e9c609b",
+  "fingerprint": "5086ea09",
+  "name": "Keen Wind",
+  "sigil_hash": "5086ea09859bcd77a879fc395ae7e41da3b14e498b479878733104be9e5a9788",
   "project_public_key": "fe665e861867cec7e171c0c13bbc873c3362079faef21f54df7804b7fb9ae8af",
   "commitment_authentication": "public_recomputable_integrity_only",
   "policy": {
     "version": 3,
     "package": "@veritasacta/verify",
-    "package_version": "0.11.0",
-    "source_hash": "444149dc6ab7196c899aaa9121bab0f7453680565efbc34c91daaf13f3406265",
+    "package_version": "0.11.1",
+    "source_hash": "09bcb206429ee51025e761fd3a396e54fb2600f4d8e8b0026c070ca1e216931f",
     "monitored_files": [
       "README.md",
       "browser/receipt-verifier.js",
@@ -84,6 +84,6 @@
     ],
     "created_at": 1784267169966
   },
-  "policy_hash": "0b6c5c7f0795f1c8bd8b042f942a76ca8a27fc3e1b8100975e7309cf701482ac",
+  "policy_hash": "2f144e4a049a30b37fbc94d97ac1429b7229ad4e9136f62d8959d2b43fc00620",
   "derived_at": "2026-07-17T05:46:09.966Z"
 }

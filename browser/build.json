@@ -1,5 +1,5 @@
 {
-  "version": "0.11.0",
+  "version": "0.11.1",
   "sha256": "41fbef66f2a8faf8306a7e55b34e0e4b6f5676038bdf3c61ce0487cc41825130",
   "entry": "src/browser.js",
   "engine": "src/engines/ed25519-receipt.js"
